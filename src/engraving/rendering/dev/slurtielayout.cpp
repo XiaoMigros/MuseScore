@@ -2495,8 +2495,8 @@ void SlurTieLayout::computeMidThickness(SlurTieSegment* slurTieSeg, double slurT
     const double mag = slurTieSeg->staff() ? slurTieSeg->staff()->staffMag(slurTieSeg->slurTie()->tick()) : 1.0;
     const double minTieLength = mag * slurTieSeg->style().styleS(Sid::MinTieLength).val();
     const double shortTieLimit = mag * 4.0;
-    const double minTieThickness = mag * (0.15 * slurTieSeg->spatium() - slurTieSeg->style().styleMM(Sid::SlurEndWidth));
-    const double normalThickness = mag * (slurTieSeg->style().styleMM(Sid::SlurMidWidth) - slurTieSeg->style().styleMM(Sid::SlurEndWidth));
+    const double minTieThickness = mag * (0.15 * slurTieSeg->spatium() - slurTieSeg->style().styleMM(Sid::TieEndWidth));
+    const double normalThickness = mag * (slurTieSeg->style().styleMM(Sid::TieMidWidth) - slurTieSeg->style().styleMM(Sid::TieEndWidth));
 
     bool invalid = RealIsEqualOrMore(minTieLength, shortTieLimit);
 
