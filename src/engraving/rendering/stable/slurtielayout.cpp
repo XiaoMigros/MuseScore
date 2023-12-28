@@ -1485,7 +1485,7 @@ TieSegment* SlurTieLayout::tieLayoutFor(Tie* item, System* system)
     }
 
     item->calculateDirection();
-    item->calculateIsInside();
+    item->calculateIsInside(item->up());
 
     SlurTiePos sPos;
     sPos.p1 = computeDefaultStartOrEndPoint(item, Grip::START);

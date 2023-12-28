@@ -93,7 +93,7 @@ public:
     bool isCrossStaff() const;
 
     void calculateDirection();
-    void calculateIsInside();
+    void calculateIsInside(bool isUp);
 
     PropertyValue getProperty(Pid propertyId) const override;
     PropertyValue propertyDefault(Pid id) const override;

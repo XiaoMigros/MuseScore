@@ -355,7 +355,7 @@ void Tie::calculateDirection()
     }
 }
 
-void Tie::calculateIsInside()
+void Tie::calculateIsInside(bool isUp)
 {
     if (_tiePlacement != TiePlacement::AUTO) {
         setIsInside(_tiePlacement == TiePlacement::INSIDE);
@@ -366,19 +366,56 @@ void Tie::calculateIsInside()
     const Chord* startChord = startN ? startN->chord() : nullptr;
     const Note* endN = endNote();
     const Chord* endChord = endN ? endN->chord() : nullptr;
+    std::vector<Note*> startNotes = startChord->notes();
+    std::vector<Note*> endNotes   = endChord->notes();
+    size_t n_start = startNotes.size();
+    size_t n_end   = endNotes.size();
 
     if (!startChord || !endChord) {
         setIsInside(false);
         return;
     }
 
-    const bool startIsSingleNote = startChord->notes().size() <= 1;
-    const bool endIsSingleNote = endChord->notes().size() <= 1;
-
-    if (startIsSingleNote && endIsSingleNote) {
+    if (n_start <= 1 && n_end <= 1) {
         setIsInside(style().styleV(Sid::tiePlacementSingleNote).value<TiePlacement>() == TiePlacement::INSIDE);
     } else {
-        setIsInside(style().styleV(Sid::tiePlacementChord).value<TiePlacement>() == TiePlacement::INSIDE);
+        if (style().styleV(Sid::tiePlacementChord).value<TiePlacement>() == TiePlacement::AUTO) {
+            int startNotesAbove = 0, startNotesBelow = 0;
+            int endNotesAbove   = 0, endNotesBelow   = 0;
+            for (size_t i = 0; i < n_start; ++i) {
+                if (startNotes[i] == startN || !startNotes[i]->visible()) {
+                    continue;
+                }
+                int noteDiff = compareNotesPos(startN, startNotes[i]);
+                if (noteDiff == 0) {  // unison
+                    continue;
+                }
+                if (noteDiff < 0) { // the note is above startNote
+                    startNotesAbove++;
+                }
+                if (noteDiff > 0) { // the note is below startNote
+                    startNotesBelow++;
+                }
+            }
+            for (size_t i = 0; i < n_end; ++i) {
+                if (endNotes[i] == endN || !endNotes[i]->visible()) {
+                    continue;
+                }
+                int noteDiff = compareNotesPos(endN, endNotes[i]);
+                if (noteDiff == 0) {  // unison
+                    continue;
+                }
+                if (noteDiff < 0) { // the note is above startNote
+                    endNotesAbove++;
+                }
+                if (noteDiff > 0) { // the note is below startNote
+                    endNotesBelow++;
+                }
+            }
+            setIsInside(isUp ? (startNotesAbove > 0 || endNotesAbove > 0) : (startNotesBelow > 0 || endNotesBelow > 0));
+        } else {
+            setIsInside(style().styleV(Sid::tiePlacementChord).value<TiePlacement>() == TiePlacement::INSIDE);
+        }
     }
 }
 
