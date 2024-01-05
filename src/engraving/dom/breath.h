@@ -71,6 +71,9 @@ public:
     EngravingItem* prevSegmentElement() override;
     String accessibleInfo() const override;
 
+    int subtype() const override { return int(m_symId); }
+    String translatedSubtypeUserName() const override;
+
     bool isCaesura() const;
 
     static const std::vector<BreathType> BREATH_LIST;

@@ -183,6 +183,15 @@ String Breath::accessibleInfo() const
     return SymNames::translatedUserNameForSymId(m_symId);
 }
 
+//---------------------------------------------------------
+//   translatedSubtypeUserName
+//---------------------------------------------------------
+
+String Breath::translatedSubtypeUserName() const
+{
+    return SymNames::translatedUserNameForSymId(m_symId);
+}
+
 void Breath::added()
 {
     IF_ASSERT_FAILED(score()) {

@@ -120,6 +120,8 @@ public:
     ArticulationTextType textType() const { return m_textType; }
     TranslatableString typeUserName() const override;
     String translatedTypeUserName() const override;
+    TranslatableString subtypeUserName() const override;
+    String translatedSubtypeUserName() const override;
     String articulationName() const;    // type-name of articulation; used for midi rendering
     static String symId2ArticulationName(SymId symId);
 

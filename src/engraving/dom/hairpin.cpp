@@ -82,11 +82,6 @@ HairpinSegment::HairpinSegment(Hairpin* sp, System* parent)
 {
 }
 
-int HairpinSegment::subtype() const
-{
-    return hairpin()->subtype();
-}
-
 bool HairpinSegment::acceptDrop(EditData& data) const
 {
     EngravingItem* e = data.dropElement;
@@ -330,11 +325,6 @@ Hairpin::Hairpin(Segment* parent)
     m_playHairpin           = true;
 }
 
-int Hairpin::subtype() const
-{
-    return static_cast<int>(m_hairpinType);
-}
-
 DynamicType Hairpin::dynamicTypeFrom() const
 {
     ByteArray ba = beginText().toAscii();
@@ -543,5 +533,30 @@ String Hairpin::accessibleInfo() const
         rez += u": " + mtrc("engraving", "Custom");
     }
     return rez;
+}
+//---------------------------------------------------------
+//   translatedSubtypeUserName
+//---------------------------------------------------------
+
+String Hairpin::translatedSubtypeUserName() const
+{
+    switch (hairpinType()) {
+    case HairpinType::CRESC_HAIRPIN:
+        return mtrc("engraving", "Crescendo");
+    case HairpinType::DECRESC_HAIRPIN:
+        return mtrc("engraving", "Decrescendo");
+    default:
+        return mtrc("engraving", "Custom");
+    }
+}
+
+String HairpinSegment::translatedSubtypeUserName() const
+{
+    return hairpin()->translatedSubtypeUserName();
+}
+
+int HairpinSegment::subtype() const
+{
+    return hairpin()->subtype();
 }
 }

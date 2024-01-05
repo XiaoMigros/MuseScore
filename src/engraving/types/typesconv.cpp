@@ -1627,11 +1627,16 @@ DirectionH TConv::fromXml(const AsciiStringView& tag, DirectionH def)
 }
 
 static const std::vector<Item<LayoutBreakType> > LAYOUTBREAK_TYPES = {
-    { LayoutBreakType::LINE, "line" },
-    { LayoutBreakType::PAGE, "page" },
-    { LayoutBreakType::SECTION, "section" },
-    { LayoutBreakType::NOBREAK, "nobreak" }
+    { LayoutBreakType::LINE,    "line",    TranslatableString("engraving/layoutbreaktype", "System break") },
+    { LayoutBreakType::PAGE,    "page",    TranslatableString("engraving/layoutbreaktype", "Page break") },
+    { LayoutBreakType::SECTION, "section", TranslatableString("engraving/layoutbreaktype", "Section break") },
+    { LayoutBreakType::NOBREAK, "nobreak", TranslatableString("engraving/layoutbreaktype", "No break") }
 };
+
+const TranslatableString& TConv::userName(LayoutBreakType v)
+{
+    return findUserNameByType<LayoutBreakType>(LAYOUTBREAK_TYPES, v);
+}
 
 AsciiStringView TConv::toXml(LayoutBreakType v)
 {
@@ -1793,12 +1798,22 @@ TremoloType TConv::fromXml(const AsciiStringView& tag, TremoloType def)
 }
 
 static const std::vector<Item<BracketType> > BRACKET_TYPES = {
-    { BracketType::NORMAL, "Normal" },
-    { BracketType::BRACE, "Brace" },
-    { BracketType::SQUARE, "Square" },
-    { BracketType::LINE, "Line" },
-    { BracketType::NO_BRACKET, "NoBracket" }
+    { BracketType::NORMAL,     "Normal",    TranslatableString("engraving/brackettype", "Normal") },
+    { BracketType::BRACE,      "Brace",     TranslatableString("engraving/brackettype", "Brace") },
+    { BracketType::SQUARE,     "Square",    TranslatableString("engraving/brackettype", "Square") },
+    { BracketType::LINE,       "Line",      TranslatableString("engraving/brackettype", "Line") },
+    { BracketType::NO_BRACKET, "NoBracket", TranslatableString("engraving/brackettype", "No Bracket") }
 };
+
+const TranslatableString& TConv::userName(BracketType v)
+{
+    return findUserNameByType<BracketType>(BRACKET_TYPES, v);
+}
+
+String TConv::translatedUserName(BracketType v)
+{
+    return findUserNameByType<BracketType>(BRACKET_TYPES, v).translated();
+}
 
 AsciiStringView TConv::toXml(BracketType v)
 {

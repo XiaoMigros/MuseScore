@@ -23,6 +23,8 @@
 
 #include "draw/types/pen.h"
 
+#include "types/typesconv.h"
+
 #include "chord.h"
 #include "mscoreview.h"
 #include "note.h"
@@ -409,5 +411,31 @@ void SlurTie::reset()
     EngravingItem::reset();
     undoResetProperty(Pid::SLUR_DIRECTION);
     undoResetProperty(Pid::SLUR_STYLE_TYPE);
+}
+
+TranslatableString SlurTie::subtypeUserName() const
+{
+    switch(m_styleType) {
+    case SlurStyleType::Solid:
+        return TranslatableString("engraving/slurstyletype", "Solid");
+    case SlurStyleType::Dotted:
+        return TranslatableString("engraving/slurstyletype", "Dotted");
+    case SlurStyleType::Dashed:
+        return TranslatableString("engraving/slurstyletype", "Dashed");
+    case SlurStyleType::WideDashed:
+        return TranslatableString("engraving/slurstyletype", "Wide Dashed");
+    default:
+        return TranslatableString("engraving/slurstyletype", "Undefined");
+    }
+}
+
+int SlurTieSegment::subtype() const
+{
+    return slurTie()->subtype();
+}
+
+TranslatableString SlurTieSegment::subtypeUserName() const
+{
+    return slurTie()->subtypeUserName();
 }
 }

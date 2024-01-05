@@ -22,6 +22,8 @@
 
 #include "spacer.h"
 
+#include "types/typesconv.h"
+
 #include "draw/types/pen.h"
 
 #include "measure.h"
@@ -222,4 +224,22 @@ PropertyValue Spacer::propertyDefault(Pid id) const
         return EngravingItem::propertyDefault(id);
     }
 }
+
+//---------------------------------------------------------
+//   subtypeUserName
+//---------------------------------------------------------
+
+String Spacer::translatedSubtypeUserName() const
+{
+    switch (m_spacerType) {
+    case SpacerType::UP:
+        return QT_TRANSLATE_NOOP("palette", "Staff spacer up");
+    case SpacerType::DOWN:
+        return QT_TRANSLATE_NOOP("palette", "Staff spacer down");
+    case SpacerType::FIXED:
+        return QT_TRANSLATE_NOOP("palette", "Staff spacer fixed down");
+    }
+	return String(u"");
+}
+
 }

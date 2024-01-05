@@ -24,6 +24,7 @@
 
 #include "translation.h"
 #include "types/symnames.h"
+#include "types/typesconv.h"
 
 #include "articulation.h"
 #include "factory.h"
@@ -1082,6 +1083,20 @@ EngravingItem* BarLine::nextSegmentElement()
 EngravingItem* BarLine::prevSegmentElement()
 {
     return segment()->lastInPrevSegments(staffIdx());       //score()->inputState().prevTrack() / VOICES);
+}
+
+//---------------------------------------------------------
+//   subtypeUserName
+//---------------------------------------------------------
+
+TranslatableString BarLine::subtypeUserName() const
+{
+    for (const auto& i : barLineTable) {
+        if (i.type == barLineType()) {
+            return TranslatableString("engraving/sym", i.userName);
+        }
+    }
+    return TranslatableString();
 }
 
 //---------------------------------------------------------
