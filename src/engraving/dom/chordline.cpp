@@ -22,6 +22,8 @@
 
 #include "chordline.h"
 
+#include "translation.h"
+
 #include "types/translatablestring.h"
 #include "types/typesconv.h"
 
@@ -264,6 +266,11 @@ String ChordLine::accessibleInfo() const
         rez = String(u"%1: %2").arg(rez, chordLineTypeName().translated());
     }
     return rez;
+}
+
+muse::TranslatableString ChordLine::subtypeUserName() const
+{
+    return chordLineTypeName();
 }
 
 //---------------------------------------------------------
