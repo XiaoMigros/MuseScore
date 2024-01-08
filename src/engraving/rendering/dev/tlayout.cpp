@@ -5143,8 +5143,7 @@ void TLayout::layoutStemSlash(const StemSlash* item, StemSlash::LayoutData* ldat
         }
         endX = hook->ldata()->bbox().translated(hook->ldata()->pos()).right(); // always ends at the right bbox margin of the hook
         endY = startY + up * (endX - startX) * tan(angle);
-    }
-    if (beam) {
+    } else if (beam) {
         PointF p1 = beam->startAnchor();
         PointF p2 = beam->endAnchor();
         double beamAngle = p2.x() > p1.x() ? atan((p2.y() - p1.y()) / (p2.x() - p1.x())) : 0;
@@ -5156,6 +5155,10 @@ void TLayout::layoutStemSlash(const StemSlash* item, StemSlash::LayoutData* ldat
         }
         endX = startX + length * cos(angle);
         endY = startY + up * length * sin(angle);
+    } else {
+        double rightHang = conf.noteHeadWidth() * mag / 2;
+        endX = stem->ldata()->bbox().translated(stem->pos()).right() + rightHang
+        endY = startY + up * (endX - startX) * tan(angle);
     }
 
     ldata->line = LineF(PointF(startX, startY), PointF(endX, endY));
