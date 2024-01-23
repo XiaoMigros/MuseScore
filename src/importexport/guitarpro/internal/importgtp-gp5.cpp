@@ -1125,30 +1125,32 @@ GuitarPro::ReadNoteResult GuitarPro5::readNoteEffects(Note* note)
             note_type = NoteType::APPOGGIATURA;
         }
 
-        int grace_pitch = note->staff()->part()->instrument()->stringData()->getPitch(note->string(), fret, nullptr);
-
-        auto gnote = score->setGraceNote(note->chord(), grace_pitch, note_type, grace_len);
-        score->deselect(gnote);
+        Chord* gc = score->setGraceNote(note->chord(), { note }, note_type, grace_len);
+        score->deselect(gc);
 
         // gp5 not supports more than one grace note,
         // so it's always should be shown as eight note
-        gnote->chord()->setDurationType(Fraction { 1, 8 });
+        gc->setDurationType(Fraction { 1, 8 });
 
-        gnote->setString(note->string());
+        Note* gn = gc->notes().front();
+        gn->setPitch(note->staff()->part()->instrument()->stringData()->getPitch(note->string(), fret, nullptr));
+        gn->setTpcFromPitch();
+        gn->setString(note->string());
         auto sd = note->part()->instrument()->stringData();
-        gnote->setFret(grace_pitch - sd->stringList().at(sd->stringList().size() - note->string() - 1).pitch);
+        gn->setFret(gn->pitch() - sd->stringList().at(sd->stringList().size() - note->string() - 1).pitch);
+
         if (transition == 0) {
             // no transition
         } else if (transition == 1) {
         } else if (transition == 3) {
             Slur* slur1 = Factory::createSlur(score->dummy());
             slur1->setAnchor(Spanner::Anchor::CHORD);
-            slur1->setStartElement(gnote->chord());
+            slur1->setStartElement(gc);
             slur1->setEndElement(note->chord());
             slur1->setParent(0);
             slur1->setTrack(note->staffIdx());
             slur1->setTrack2(note->staffIdx());
-            slur1->setTick(gnote->chord()->tick());
+            slur1->setTick(gc->tick());
             slur1->setTick2(note->chord()->tick());
             score->addElement(slur1);
             //TODO: Add a 'slide' guitar effect when implemented

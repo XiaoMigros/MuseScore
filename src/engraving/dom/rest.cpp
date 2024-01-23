@@ -170,7 +170,15 @@ bool Rest::acceptDrop(EditData& data) const
 {
     EngravingItem* e = data.dropElement;
     ElementType type = e->type();
-    if ((type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::BEAM_AUTO)
+    if ((type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::ACCIACCATURA)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::APPOGGIATURA)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::GRACE4)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::GRACE16)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::GRACE32)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::GRACE8_AFTER)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::GRACE16_AFTER)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::GRACE32_AFTER)
+        || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::BEAM_AUTO)
         || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::BEAM_NONE)
         || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::BEAM_BREAK_LEFT)
         || (type == ElementType::ACTION_ICON && toActionIcon(e)->actionType() == ActionIconType::BEAM_BREAK_INNER_8TH)
@@ -239,7 +247,7 @@ EngravingItem* Rest::drop(EditData& data)
         Articulation* a = toArticulation(e);
         if (!a->isFermata() || !score()->toggleArticulation(this, a)) {
             delete e;
-            e = 0;
+            e = nullptr;
         }
     }
         return e;
@@ -278,7 +286,7 @@ EngravingItem* Rest::drop(EditData& data)
     default:
         return ChordRest::drop(data);
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------

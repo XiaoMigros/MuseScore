@@ -468,9 +468,8 @@ static bool findChordRests(BasicDrawObj const* const o, Score* score, const int 
         }
         ChordRest* cr = toChordRest(seg->element(track));
         if (cr) {
-            if ((graceNumber1 > 0) && cr->isChord()) {       // the spanner is starting from a grace note
-                Chord* chord = toChord(cr);
-                for (Chord* cc : chord->graceNotes()) {
+            if (graceNumber1 > 0) {       // the spanner is starting from a grace note
+                for (Chord* cc : cr->graceNotes()) {
                     --graceNumber1;
                     if ((graceNumber1 == 0) && (!cr1)) {
                         cr1 = toChordRest(cc);             // found first ChordRest
@@ -489,9 +488,8 @@ static bool findChordRests(BasicDrawObj const* const o, Score* score, const int 
         }
         ChordRest* cr = toChordRest(seg->element(track));
         if (cr) {
-            if ((graceNumber > 0) && cr->isChord()) {       // the spanner is ending on a grace note
-                Chord* chord = toChord(cr);
-                for (Chord* cc : chord->graceNotes()) {
+            if (graceNumber > 0) {       // the spanner is ending on a grace note
+                for (Chord* cc : cr->graceNotes()) {
                     --graceNumber;
                     if ((graceNumber == 0) && (!cr2)) {
                         cr2 = toChordRest(cc);             // found 2nd ChordRest
@@ -615,6 +613,15 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
                 rest->setTrack(track);
                 rest->setVisible(!o->invisible);
                 s->add(rest);
+                // append grace notes before
+                int ii = -1;
+                for (ii = graceNotes.size() - 1; ii >= 0; ii--) {
+                    Chord* gc = graceNotes[ii];
+                    if (gc->voice() == rest->voice()) {
+                        rest->add(gc);
+                    }
+                }
+                graceNotes.clear();
                 if (tuplet) {
                     tuplet->add(rest);
                 }

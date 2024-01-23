@@ -659,14 +659,18 @@ void GuitarBend::adaptBendsFromTabToStandardStaff(const Staff* staff)
         }
         for (track_idx_t track = startTrack; track < endTrack; ++track) {
             EngravingItem* item = segment->elementAt(track);
-            if (!item || !item->isChord()) {
+            if (!item || !item->isChordRest()) {
+                continue;
+            }
+            ChordRest* cr = toChordRest(item);
+            for (Chord* grace : cr->graceNotes()) {
+                processBends(grace);
+            }
+            if (!item->isChord()) {
                 continue;
             }
             Chord* chord = toChord(item);
             processBends(chord);
-            for (Chord* grace : chord->graceNotes()) {
-                processBends(grace);
-            }
         }
     }
 }

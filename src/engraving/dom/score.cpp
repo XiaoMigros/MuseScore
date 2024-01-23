@@ -5164,7 +5164,35 @@ void Score::changeSelectedNotesVoice(voice_idx_t voice)
     std::vector<EngravingItem*> el;
     std::vector<EngravingItem*> oel = selection().elements();       // make copy
     for (EngravingItem* e : oel) {
-        if (e->type() != ElementType::NOTE) {
+        if (!e->isNote() && !e->isRest()) {
+            continue;
+        }
+
+        if (e->isRest()) {
+            Rest* rest = toRest(e);
+            // if there were grace notes, move them
+            Segment* s = rest->segment();
+            track_idx_t dstTrack = rest->track() + voice;
+
+            if (excerpt() && muse::key(excerpt()->tracksMapping(), dstTrack, muse::nidx) == muse::nidx) {
+                break;
+            }
+
+            // set up destination chord
+
+            ChordRest* dstCR = toChordRest(s->element(dstTrack));
+            if (dstCR) {
+                // since only moving grace notes;
+                //   can simply move note in
+                while (!rest->graceNotes().empty()) {
+                    Chord* gc = rest->graceNotes().front();
+                    Chord* ngc = Factory::copyChord(*gc);
+                    undoRemoveElement(gc);
+                    ngc->setParent(dstCR);
+                    ngc->setTrack(dstCR->track());
+                    undoAddElement(ngc);
+                }
+            }
             continue;
         }
 

@@ -99,12 +99,9 @@ void SegmentLayout::setChordMag(const Staff* staff, const Segment& segment, trac
             m *= smallNoteMag;
         }
 
-        if (cr->isChord()) {
-            double graceMag = m * graceNoteMag;
-            Chord* chord = toChord(cr);
-            for (Chord* c : chord->graceNotes()) {
-                c->mutldata()->setMag(graceMag);
-            }
+        double graceMag = m * graceNoteMag;
+        for (Chord* c : cr->graceNotes()) {
+            c->mutldata()->setMag(graceMag);
         }
         cr->mutldata()->setMag(m);
     }
@@ -170,16 +167,17 @@ void SegmentLayout::layoutChordDrumset(const Staff* staff, const Segment& segmen
 
     double spatium = conf.spatium();
     for (track_idx_t t = startTrack; t < endTrack; ++t) {
-        Chord* chord = item_cast<Chord*>(segment.element(t), CastMode::MAYBE_BAD); // maybe Rest
-        if (!chord) {
+        ChordRest* cr = toChordRest(segment.element(t));
+        if (!cr) {
             continue;
         }
-
-        for (Chord* c : chord->graceNotes()) {
+        for (Chord* c : cr->graceNotes()) {
             layoutDrumset(c, drumset, st, spatium);
         }
-
-        layoutDrumset(chord, drumset, st, spatium);
+        if (!cr->isChord()) {
+            continue;
+        }
+        layoutDrumset(toChord(cr), drumset, st, spatium);
     }
 }
 
@@ -195,14 +193,12 @@ void SegmentLayout::computeChordsUp(const Segment& segment, track_idx_t startTra
             continue;
         }
 
+        for (Chord* c : cr->graceNotes()) {
+            ChordLayout::computeUp(c, ctx);
+        }
+
         if (cr->isChord()) {
-            Chord* chord = toChord(cr);
-
-            for (Chord* c : chord->graceNotes()) {
-                ChordLayout::computeUp(c, ctx);
-            }
-
-            ChordLayout::computeUp(chord, ctx);
+            ChordLayout::computeUp(toChord(cr), ctx);
         }
     }
 }
@@ -218,15 +214,12 @@ void SegmentLayout::layoutChordsStem(const Segment& segment, track_idx_t startTr
         if (!cr) {
             continue;
         }
+        for (Chord* c : cr->graceNotes()) {
+            ChordLayout::layoutStem(c, ctx);
+        }
 
         if (cr->isChord()) {
-            Chord* chord = toChord(cr);
-
-            for (Chord* c : chord->graceNotes()) {
-                ChordLayout::layoutStem(c, ctx);
-            }
-
-            ChordLayout::layoutStem(chord, ctx);
+            ChordLayout::layoutStem(toChord(cr), ctx);
             // stem direction can change later during beam processing
         }
     }

@@ -26,14 +26,17 @@
 
 #include "types/typesconv.h"
 
+#include "accidental.h"
 #include "actionicon.h"
 #include "barline.h"
 #include "beam.h"
 #include "breath.h"
 #include "chord.h"
 #include "clef.h"
+#include "drumset.h"
 #include "factory.h"
 #include "figuredbass.h"
+#include "guitarbend.h"
 #include "harmony.h"
 #include "harppedaldiagram.h"
 #include "hook.h"
@@ -43,6 +46,7 @@
 #include "measure.h"
 #include "navigate.h"
 #include "note.h"
+#include "ornament.h"
 #include "page.h"
 #include "part.h"
 #include "rehearsalmark.h"
@@ -53,6 +57,8 @@
 #include "stafftype.h"
 #include "system.h"
 #include "tuplet.h"
+#include "tie.h"
+#include "trill.h"
 #include "utils.h"
 
 #include "log.h"
@@ -72,9 +78,10 @@ ChordRest::ChordRest(const ElementType& type, Segment* parent)
     m_beam         = 0;
     m_tabDur       = 0;
     m_beamMode     = BeamMode::AUTO;
-    m_isSmall     = false;
+    m_isSmall      = false;
     m_melismaEnd   = false;
     m_crossMeasure = CrossMeasure::UNKNOWN;
+    m_graceIndex   = 0;
 }
 
 ChordRest::ChordRest(const ChordRest& cr, bool link)
@@ -83,13 +90,14 @@ ChordRest::ChordRest(const ChordRest& cr, bool link)
     m_durationType = cr.m_durationType;
     m_staffMove    = cr.m_staffMove;
     m_beam         = 0;
-    m_tabDur       = 0;    // tab sur. symb. depends upon context: can't be
+    m_tabDur       = 0;    // tab dur. symb. depends upon context: can't be
                            // simply copied from another CR
 
     m_beamMode     = cr.m_beamMode;
-    m_isSmall     = cr.m_isSmall;
+    m_isSmall      = cr.m_isSmall;
     m_melismaEnd   = cr.m_melismaEnd;
     m_crossMeasure = cr.m_crossMeasure;
+    m_graceIndex   = cr.m_graceIndex;
 
     for (Lyrics* l : cr.m_lyrics) {          // make deep copy
         Lyrics* nl = Factory::copyLyrics(*l);
@@ -99,6 +107,16 @@ ChordRest::ChordRest(const ChordRest& cr, bool link)
         nl->setParent(this);
         nl->setTrack(track());
         m_lyrics.push_back(nl);
+    }
+    for (Chord* gn : cr.graceNotes()) {
+        Chord* nc = Factory::copyChord(*gn);
+        if (link) {
+            nc->linkTo(gn);
+        }
+        add(nc);
+        //nc->setParent(this);
+        //nc->setTrack(track());
+        //m_graceNotes.push_back(nc);
     }
 }
 
@@ -112,6 +130,9 @@ void ChordRest::undoUnlink()
     for (Lyrics* l : m_lyrics) {
         l->undoUnlink();
     }
+    for (Chord* gn : graceNotes()) {
+        gn->undoUnlink();
+    }
 }
 
 //---------------------------------------------------------
@@ -121,6 +142,7 @@ void ChordRest::undoUnlink()
 ChordRest::~ChordRest()
 {
     muse::DeleteAll(m_lyrics);
+    muse::DeleteAll(m_graceNotes);
     muse::DeleteAll(m_el);
     delete m_tabDur;
 
@@ -371,6 +393,30 @@ EngravingItem* ChordRest::drop(EditData& data)
     case ElementType::ACTION_ICON:
     {
         switch (toActionIcon(e)->actionType()) {
+        case ActionIconType::ACCIACCATURA:
+            score()->setGraceNote(this, { }, NoteType::ACCIACCATURA, Constants::DIVISION / 2);
+            break;
+        case ActionIconType::APPOGGIATURA:
+            score()->setGraceNote(this, { }, NoteType::APPOGGIATURA, Constants::DIVISION / 2);
+            break;
+        case ActionIconType::GRACE4:
+            score()->setGraceNote(this, { }, NoteType::GRACE4, Constants::DIVISION);
+            break;
+        case ActionIconType::GRACE16:
+            score()->setGraceNote(this, { }, NoteType::GRACE16,  Constants::DIVISION / 4);
+            break;
+        case ActionIconType::GRACE32:
+            score()->setGraceNote(this, { }, NoteType::GRACE32, Constants::DIVISION / 8);
+            break;
+        case ActionIconType::GRACE8_AFTER:
+            score()->setGraceNote(this, { }, NoteType::GRACE8_AFTER, Constants::DIVISION / 2);
+            break;
+        case ActionIconType::GRACE16_AFTER:
+            score()->setGraceNote(this, { }, NoteType::GRACE16_AFTER, Constants::DIVISION / 4);
+            break;
+        case ActionIconType::GRACE32_AFTER:
+            score()->setGraceNote(this, { }, NoteType::GRACE32_AFTER, Constants::DIVISION / 8);
+            break;
         case ActionIconType::BEAM_AUTO:
             undoChangeProperty(Pid::BEAM_MODE, BeamMode::AUTO);
             break;
@@ -429,9 +475,9 @@ EngravingItem* ChordRest::drop(EditData& data)
         }
         LOGD("cannot drop %s", e->typeName());
         delete e;
-        return 0;
+        return nullptr;
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------
@@ -560,6 +606,11 @@ void ChordRest::add(EngravingItem* e)
         m_lyrics.push_back(toLyrics(e));
         e->added();
         break;
+    case ElementType::CHORD:
+        assert(toChord(e)->noteType() != NoteType::NORMAL);
+        toChord(e)->setFlag(ElementFlag::MOVABLE, true);
+        m_graceNotes.insert(m_graceNotes.begin() + toChord(e)->graceIndex(), toChord(e));
+        break;
     default:
         ASSERT_X(u"ChordRest::add: unknown element " + String::fromAscii(e->typeName()));
         break;
@@ -582,6 +633,14 @@ void ChordRest::remove(EngravingItem* e)
         } else {
             LOGD("ChordRest::remove: %s %p not found", e->typeName(), e);
         }
+    }
+    break;
+    case ElementType::CHORD:
+    {
+        auto i = std::find(m_graceNotes.begin(), m_graceNotes.end(), toChord(e));
+        Chord* grace = *i;
+        grace->setGraceIndex(i - m_graceNotes.begin());
+        m_graceNotes.erase(i);
     }
     break;
     default:
@@ -686,6 +745,9 @@ void ChordRest::localSpatiumChanged(double oldValue, double newValue)
 {
     DurationElement::localSpatiumChanged(oldValue, newValue);
     for (EngravingItem* e : lyrics()) {
+        e->localSpatiumChanged(oldValue, newValue);
+    }
+    for (EngravingItem* e : graceNotes()) {
         e->localSpatiumChanged(oldValue, newValue);
     }
     for (EngravingItem* e : el()) {
@@ -870,6 +932,9 @@ void ChordRest::processSiblings(std::function<void(EngravingItem*)> func)
     for (EngravingItem* e : m_el) {
         func(e);
     }
+    for (Chord* chord : m_graceNotes) {    // process grace notes last, needed for correct shape calculation
+        func(chord);
+    }
 }
 
 //---------------------------------------------------------
@@ -978,6 +1043,26 @@ EngravingItem* ChordRest::prevElement()
         e = score()->selection().elements().back();
     }
     switch (e->type()) {
+    case ElementType::REST:
+    {
+        GraceNotesGroup& graceNotesBefore = this->graceNotesBefore();
+        if (!graceNotesBefore.empty()) {
+            if (Chord* graceNotesBeforeLastChord = graceNotesBefore.back()) {
+                Note* prevNote = graceNotesBeforeLastChord->notes().back();
+                if (prevNote->isPreBendStart() || prevNote->isGraceBendStart()) {
+                    return prevNote->bendFor()->frontSegment();
+                }
+                ChordRest* next = prevChordRest(this);
+                if (next) {
+                    if (next->isChord()) {
+                        return toChord(next)->notes().back();
+                    }
+                    return toEngravingItem(next);
+                }
+            }
+        }
+    }
+    break;
     case ElementType::ARTICULATION:
     case ElementType::ORNAMENT:
     case ElementType::LYRICS: {
@@ -1041,6 +1126,9 @@ void ChordRest::scanElements(void* data, void (* func)(void*, EngravingItem*), b
     for (Lyrics* l : m_lyrics) {
         l->scanElements(data, func, all);
     }
+    for (Chord* chord : m_graceNotes) {
+        chord->scanElements(data, func, all);
+    }
     DurationElement* de = this;
     while (de->tuplet() && de->tuplet()->elements().front() == de) {
         de->tuplet()->scanElements(data, func, all);
@@ -1063,6 +1151,16 @@ EngravingItem* ChordRest::prevSegmentElement()
 String ChordRest::accessibleExtraInfo() const
 {
     String rez;
+
+    for (const Chord* c : graceNotes()) {
+        if (!score()->selectionFilter().canSelect(c)) {
+            continue;
+        }
+        for (const Note* n : c->notes()) {
+            rez = String(u"%1 %2").arg(rez, n->screenReaderInfo());
+        }
+    }
+
     for (EngravingItem* l : lyrics()) {
         if (!score()->selectionFilter().canSelect(l)) {
             continue;
@@ -1214,13 +1312,13 @@ bool ChordRest::isBefore(const ChordRest* o) const
         bool oGrace      = o->isGrace();
         bool grace       = isGrace();
         // normal note are initialized at graceIndex 0 and graceIndex is 0 based
-        size_t oGraceIndex  = oGrace ? toChord(o)->graceIndex() + 1 : 0;
-        size_t graceIndex   = grace ? toChord(this)->graceIndex() + 1 : 0;
+        size_t oGraceIndex  = oGrace ? toChordRest(o)->graceIndex() + 1 : 0;
+        size_t graceIndex   = grace ? toChordRest(this)->graceIndex() + 1 : 0;
         if (oGrace) {
-            oGraceIndex = toChord(o->explicitParent())->graceNotes().size() - oGraceIndex;
+            oGraceIndex = toChordRest(o->explicitParent())->graceNotes().size() - oGraceIndex;
         }
         if (grace) {
-            graceIndex = toChord(explicitParent())->graceNotes().size() - graceIndex;
+            graceIndex = toChordRest(explicitParent())->graceNotes().size() - graceIndex;
         }
         otick = otick + (oGraceAfter ? 1 : -1) * static_cast<int>(oGraceIndex);
         t     = t + (graceAfter ? 1 : -1) * static_cast<int>(graceIndex);
@@ -1283,6 +1381,223 @@ void ChordRest::checkStaffMoveValidity()
     if (isDestinationValid) {
         // Move valid, clear stored move
         m_storedStaffMove = 0;
+    }
+}
+
+//---------------------------------
+// GRACE NOTES
+//---------------------------------
+
+GraceNotesGroup::GraceNotesGroup(ChordRest* c)
+    : EngravingItem(ElementType::GRACE_NOTES_GROUP, c), _parent(c) {}
+
+void GraceNotesGroup::setPos(double x, double y)
+{
+    EngravingItem::setPos(x, y);
+    for (unsigned i = 0; i < this->size(); ++i) {
+        Chord* chord = this->at(i);
+        chord->mutldata()->move(PointF(x, y));
+    }
+}
+
+void GraceNotesGroup::addToShape()
+{
+    for (Chord* grace : *this) {
+        staff_idx_t staffIdx = grace->staffIdx();
+        staff_idx_t vStaffIdx = grace->vStaffIdx();
+        Shape& s = _appendedSegment->staffShape(staffIdx);
+        s.add(grace->shape(LD_ACCESS::PASS).translate(grace->pos()));
+        if (vStaffIdx != staffIdx) {
+            // Cross-staff grace notes add their shape to both the origin and the destination staff
+            Shape& s2 = _appendedSegment->staffShape(vStaffIdx);
+            s2.add(grace->shape().translate(grace->pos()));
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   graceNotesBefore
+//---------------------------------------------------------
+
+GraceNotesGroup& ChordRest::graceNotesBefore(bool filterUnplayable) const
+{
+    m_graceNotesBefore.clear();
+    for (Chord* c : m_graceNotes) {
+        assert(c->noteType() != NoteType::NORMAL && c->noteType() != NoteType::INVALID);
+        if (c->noteType() & (
+                NoteType::ACCIACCATURA
+                | NoteType::APPOGGIATURA
+                | NoteType::GRACE4
+                | NoteType::GRACE16
+                | NoteType::GRACE32)) {
+            if (filterUnplayable && !c->isChordPlayable()) {
+                continue;
+            }
+
+            m_graceNotesBefore.push_back(c);
+        }
+    }
+    return m_graceNotesBefore;
+}
+
+//---------------------------------------------------------
+//   graceNotesAfter
+//---------------------------------------------------------
+
+GraceNotesGroup& ChordRest::graceNotesAfter(bool filterUnplayable) const
+{
+    m_graceNotesAfter.clear();
+    for (int i = static_cast<int>(m_graceNotes.size()) - 1; i >= 0; i--) {
+        Chord* c = m_graceNotes[i];
+        assert(c->noteType() != NoteType::NORMAL && c->noteType() != NoteType::INVALID);
+        if (c->noteType() & (NoteType::GRACE8_AFTER | NoteType::GRACE16_AFTER | NoteType::GRACE32_AFTER)) {
+            if (filterUnplayable && !c->isChordPlayable()) {
+                continue;
+            }
+
+            m_graceNotesAfter.push_back(c);
+        }
+    }
+    return m_graceNotesAfter;
+}
+
+//---------------------------------------------------------
+//   updatePercussionNotes
+//---------------------------------------------------------
+
+static void updatePercussionNotes(ChordRest* cr, const Drumset* drumset)
+{
+    TRACEFUNC;
+    for (Chord* ch : cr->graceNotes()) {
+        updatePercussionNotes(toChordRest(ch), drumset);
+    }
+    if (!cr->isChord()) {
+        return;
+    }
+    Chord* c = toChord(cr);
+    std::vector<Note*> lnotes(c->notes());    // we need a copy!
+    for (Note* note : lnotes) {
+        if (!drumset) {
+            note->setLine(0);
+        } else {
+            int pitch = note->pitch();
+            if (!drumset->isValid(pitch)) {
+                note->setLine(0);
+                //! NOTE May be called too often
+                //LOGW("unmapped drum note %d", pitch);
+            } else if (!note->fixed()) {
+                note->undoChangeProperty(Pid::HEAD_GROUP, int(drumset->noteHead(pitch)));
+                note->setLine(drumset->line(pitch));
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   cmdUpdateNotes
+//---------------------------------------------------------
+
+void ChordRest::cmdUpdateNotes(AccidentalState* as)
+{
+    // TAB_STAFF is different, as each note has to be fretted
+    // in the context of the all of the chords of the whole segment
+
+    const Staff* st = staff();
+    StaffGroup staffGroup = st->staffTypeForElement(this)->group();
+    if (staffGroup == StaffGroup::TAB) {
+        Fraction tick = this->tick();
+        const StringData* stringData = part()->stringData(tick, st->idx());
+        for (Chord* ch : graceNotes()) {
+            stringData->fretChords(ch);
+        }
+        stringData->fretChords(toChord(this));
+        return;
+    } else {
+        // if not tablature, use instrument->useDrumset to set staffGroup (to allow pitched to unpitched in same staff)
+        staffGroup = st->part()->instrument(this->tick())->useDrumset() ? StaffGroup::PERCUSSION : StaffGroup::STANDARD;
+    }
+
+    // PITCHED_ and PERCUSSION_STAFF can go note by note
+
+    if (staffGroup == StaffGroup::STANDARD) {
+        const std::vector<Chord*> gnb(graceNotesBefore());
+        for (Chord* ch : gnb) {
+            std::vector<Note*> notes(ch->notes());        // we need a copy!
+            for (Note* note : notes) {
+                if (note->tieBack() && note->tpc() == note->tieBack()->startNote()->tpc()) {
+                    // same pitch
+                    if (note->accidental() && note->accidental()->role() == AccidentalRole::AUTO) {
+                        // not courtesy
+                        if (note->tieBack()->startNote()->chord()->measure()->system() == note->chord()->measure()->system()) {
+                            // remove accidental only if note is on same system
+                            score()->undoRemoveElement(note->accidental());
+                        }
+                    }
+                }
+                note->updateAccidental(as);
+            }
+            ch->sortNotes();
+        }
+        if (isChord()) {
+            std::vector<Note*> lnotes(toChord(this)->notes());      // we need a copy!
+            for (Note* note : lnotes) {
+                if (note->tieBack() && note->tpc() == note->tieBack()->startNote()->tpc()) {
+                    // same pitch
+                    if (note->accidental() && note->accidental()->role() == AccidentalRole::AUTO) {
+                        // not courtesy
+                        if (note->tieBack()->startNote()->chord()->measure()->system() == note->chord()->measure()->system()) {
+                            // remove accidental only if note is on same system
+                            score()->undoRemoveElement(note->accidental());
+                        }
+                    }
+                }
+                note->updateAccidental(as);
+            }
+            for (Articulation* art : toChord(this)->articulations()) {
+                if (!art->isOrnament()) {
+                    continue;
+                }
+                Ornament* ornament = toOrnament(art);
+                ornament->computeNotesAboveAndBelow(as);
+            }
+            for (Spanner* spanner : toChord(this)->startingSpanners()) {
+                if (spanner->isTrill()) {
+                    Ornament* ornament = toTrill(spanner)->ornament();
+                    if (ornament) {
+                        ornament->setParent(this);
+                        ornament->computeNotesAboveAndBelow(as);
+                    }
+                }
+            }
+        }
+        const std::vector<Chord*> gna(graceNotesAfter());
+        for (Chord* ch : gna) {
+            std::vector<Note*> notes(ch->notes());        // we need a copy!
+            for (Note* note : notes) {
+                if (note->tieBack() && note->tpc() == note->tieBack()->startNote()->tpc()) {
+                    // same pitch
+                    if (note->accidental() && note->accidental()->role() == AccidentalRole::AUTO) {
+                        // not courtesy
+                        if (note->tieBack()->startNote()->chord()->measure()->system() == note->chord()->measure()->system()) {
+                            // remove accidental only if note is on same system
+                            score()->undoRemoveElement(note->accidental());
+                        }
+                    }
+                }
+                note->updateAccidental(as);
+            }
+            ch->sortNotes();
+        }
+    } else if (staffGroup == StaffGroup::PERCUSSION) {
+        const Instrument* instrument = part()->instrument(this->tick());
+        const Drumset* drumset = instrument->drumset();
+        if (!drumset) {
+            LOGW("no drumset");
+        }
+        updatePercussionNotes(this, drumset);
+    }
+    if (isChord()) {
+        toChord(this)->sortNotes();
     }
 }
 }

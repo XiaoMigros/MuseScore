@@ -211,7 +211,7 @@ void ChordArticulationsParser::parseArpeggio(const Chord* chord, const Rendering
 
 void ChordArticulationsParser::parseGraceNotes(const Chord* chord, const RenderingContext& ctx, mpe::ArticulationMap& result)
 {
-    for (const Chord* graceChord : chord->graceNotes()) {
+    for (const Chord* graceChord : chord->graceNotes()) { //accept chordrest here
         GraceNotesMetaParser::parse(graceChord, ctx, result);
     }
 }

@@ -48,7 +48,7 @@ void GraceChordsRenderer::doRender(const EngravingItem* item, const mpe::Articul
                                    const RenderingContext& ctx,
                                    mpe::PlaybackEventList& result)
 {
-    const Chord* chord = toChord(item);
+    const ChordRest* chord = toChordRest(item);
 
     IF_ASSERT_FAILED(chord) {
         return;
@@ -63,12 +63,16 @@ void GraceChordsRenderer::doRender(const EngravingItem* item, const mpe::Articul
         GraceNotesContext graceNoteCtx = buildGraceNotesContext(graceChords, ctx, type);
 
         renderGraceNoteEvents(graceChords, graceNoteAcceped, ctx, graceNoteCtx, result);
-        renderPrincipalChord(chord, ctx, graceNoteCtx, result);
+        if (chord->isChord()) {
+            renderPrincipalChord(toChord(chord), ctx, graceNoteCtx, result);
+        }
     } else {
         const std::vector<Chord*>& graceChords = chord->graceNotesAfter();
         GraceNotesContext graceNoteCtx = buildGraceNotesContext(graceChords, ctx, type);
 
-        renderPrincipalChord(chord, ctx, graceNoteCtx, result);
+        if (chord->isChord()) {
+            renderPrincipalChord(toChord(chord), ctx, graceNoteCtx, result);
+        }
         renderGraceNoteEvents(graceChords, graceNoteAcceped, ctx, graceNoteCtx, result);
     }
 }

@@ -294,7 +294,7 @@ public:
 
     static void layoutRasgueadoSegment(RasgueadoSegment* item, LayoutContext& ctx);
     static void layoutRehearsalMark(const RehearsalMark* item, RehearsalMark::LayoutData* ldata);
-    static void layoutRest(const Rest* item, Rest::LayoutData* ldata, const LayoutContext& ctx);
+    static void layoutRest(const Rest* item, Rest::LayoutData* ldata, LayoutContext& ctx);
 
     static void layoutShadowNote(ShadowNote* item, LayoutContext& ctx);
     static void layoutLine(SLine* item, LayoutContext& ctx); // base class

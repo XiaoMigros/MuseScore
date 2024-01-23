@@ -1805,28 +1805,28 @@ EngravingItem* Note::drop(EditData& data)
     {
         switch (toActionIcon(e)->actionType()) {
         case ActionIconType::ACCIACCATURA:
-            score()->setGraceNote(ch, pitch(), NoteType::ACCIACCATURA, Constants::DIVISION / 2);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::ACCIACCATURA, Constants::DIVISION / 2);
             break;
         case ActionIconType::APPOGGIATURA:
-            score()->setGraceNote(ch, pitch(), NoteType::APPOGGIATURA, Constants::DIVISION / 2);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::APPOGGIATURA, Constants::DIVISION / 2);
             break;
         case ActionIconType::GRACE4:
-            score()->setGraceNote(ch, pitch(), NoteType::GRACE4, Constants::DIVISION);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::GRACE4, Constants::DIVISION);
             break;
         case ActionIconType::GRACE16:
-            score()->setGraceNote(ch, pitch(), NoteType::GRACE16,  Constants::DIVISION / 4);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::GRACE16,  Constants::DIVISION / 4);
             break;
         case ActionIconType::GRACE32:
-            score()->setGraceNote(ch, pitch(), NoteType::GRACE32, Constants::DIVISION / 8);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::GRACE32, Constants::DIVISION / 8);
             break;
         case ActionIconType::GRACE8_AFTER:
-            score()->setGraceNote(ch, pitch(), NoteType::GRACE8_AFTER, Constants::DIVISION / 2);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::GRACE8_AFTER, Constants::DIVISION / 2);
             break;
         case ActionIconType::GRACE16_AFTER:
-            score()->setGraceNote(ch, pitch(), NoteType::GRACE16_AFTER, Constants::DIVISION / 4);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::GRACE16_AFTER, Constants::DIVISION / 4);
             break;
         case ActionIconType::GRACE32_AFTER:
-            score()->setGraceNote(ch, pitch(), NoteType::GRACE32_AFTER, Constants::DIVISION / 8);
+            score()->setGraceNote(toChordRest(ch), { this }, NoteType::GRACE32_AFTER, Constants::DIVISION / 8);
             break;
         case ActionIconType::BEAM_AUTO:
         case ActionIconType::BEAM_NONE:
@@ -1865,8 +1865,9 @@ EngravingItem* Note::drop(EditData& data)
         // add grace notes in reverse order, as setGraceNote adds a grace note
         // before the current note
         for (int i = static_cast<int>(nl.size()) - 1; i >= 0; --i) {
-            int p = BagpipeEmbellishment::BAGPIPE_NOTEINFO_LIST[nl.at(i)].pitch;
-            score()->setGraceNote(ch, p, NoteType::GRACE32, Constants::DIVISION / 8);
+            Note* n = Factory::createNote(ch);
+            n->setPitch(BagpipeEmbellishment::BAGPIPE_NOTEINFO_LIST[nl.at(i)].pitch);
+            score()->setGraceNote(toChordRest(ch), { n }, NoteType::GRACE32, Constants::DIVISION / 8);
         }
     }
         delete e;

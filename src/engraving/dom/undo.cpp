@@ -132,18 +132,22 @@ void updateNoteLines(Segment* segment, track_idx_t track)
         }
         for (track_idx_t t = track; t < track + VOICES; ++t) {
             EngravingItem* e = s->element(t);
-            if (e && e->isChord()) {
+            if (!e || !e->isChordRest()) {
+                continue;
+            }
+            if (e->isChord()) {
                 Chord* chord = toChord(e);
                 for (Note* n : chord->notes()) {
                     n->updateLine();
                 }
                 chord->sortNotes();
-                for (Chord* gc : chord->graceNotes()) {
-                    for (Note* gn : gc->notes()) {
-                        gn->updateLine();
-                    }
-                    gc->sortNotes();
+            }
+            ChordRest* cr = toChordRest(e);
+            for (Chord* gc : cr->graceNotes()) {
+                for (Note* gn : gc->notes()) {
+                    gn->updateLine();
                 }
+                gc->sortNotes();
             }
         }
     }

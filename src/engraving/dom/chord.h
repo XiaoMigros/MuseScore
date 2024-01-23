@@ -40,7 +40,7 @@
 #include "draw/types/color.h"
 
 namespace mu::engraving {
-class AccidentalState;
+//class AccidentalState;
 class Arpeggio;
 class Chord;
 class Hook;
@@ -52,25 +52,6 @@ class StemSlash;
 class StretchedBend;
 class TremoloTwoChord;
 class TremoloSingleChord;
-
-class GraceNotesGroup final : public std::vector<Chord*>, public EngravingItem
-{
-    OBJECT_ALLOCATOR(engraving, GraceNotesGroup)
-public:
-    GraceNotesGroup* clone() const override { return new GraceNotesGroup(*this); }
-    GraceNotesGroup(Chord* c);
-
-    Chord* parent() const { return _parent; }
-
-    void setPos(double x, double y) override;
-    Segment* appendedSegment() const { return _appendedSegment; }
-    void setAppendedSegment(Segment* s) { _appendedSegment = s; }
-    void addToShape();
-
-private:
-    Chord* _parent = nullptr;
-    Segment* _appendedSegment = nullptr; // the graceNoteGroup is appended to this segment
-};
 
 //---------------------------------------------------------
 //   @@ Chord
@@ -184,15 +165,6 @@ public:
     void setSlash(bool flag, bool stemless);
     void removeMarkings(bool keepTremolo = false) override;
 
-    const std::vector<Chord*>& graceNotes() const { return m_graceNotes; }
-    std::vector<Chord*>& graceNotes() { return m_graceNotes; }
-
-    GraceNotesGroup& graceNotesBefore(bool filterUnplayable = false) const;
-    GraceNotesGroup& graceNotesAfter(bool filterUnplayable = false) const;
-
-    size_t graceIndex() const { return m_graceIndex; }
-    void setGraceIndex(size_t val) { m_graceIndex = val; }
-
     int upLine() const override;
     int downLine() const override;
     PointF stemPos() const override;            ///< page coordinates
@@ -212,7 +184,6 @@ public:
     Note* selectedNote() const;
 
     PointF pagePos() const override;        ///< position in page coordinates
-    void cmdUpdateNotes(AccidentalState*);
 
     NoteType noteType() const { return m_noteType; }
     void setNoteType(NoteType t);
@@ -360,10 +331,6 @@ private:
     TremoloSingleChord* m_tremoloSingleChord = nullptr;
 
     bool m_endsGlissando = false;        // true if this chord is the ending point of a glissando (needed for layout)
-    std::vector<Chord*> m_graceNotes;    // storage for all grace notes
-    mutable GraceNotesGroup m_graceNotesBefore = GraceNotesGroup(this); // will store before-chord grace notes
-    mutable GraceNotesGroup m_graceNotesAfter = GraceNotesGroup(this); // will store after-chord grace notes
-    size_t m_graceIndex = 0;             // if this is a grace note, index in parent list
 
     bool m_isTrillCueNote = false;
 

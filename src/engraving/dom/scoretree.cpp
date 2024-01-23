@@ -322,6 +322,10 @@ EngravingObjectList ChordRest::scanChildren() const
         children.push_back(lyrics);
     }
 
+    for (Chord* chord : graceNotes()) {
+        children.push_back(chord);
+    }
+
     const DurationElement* de = this;
     while (de->tuplet() && de->tuplet()->elements().front() == de) {
         children.push_back(de->tuplet());
@@ -381,10 +385,6 @@ EngravingObjectList Chord::scanChildren() const
 
     if (m_tremoloTwoChord && m_tremoloTwoChord->chord1() == this) {
         children.push_back(m_tremoloTwoChord);
-    }
-
-    for (Chord* chord : graceNotes()) {
-        children.push_back(chord);
     }
 
     for (Articulation* art : articulations()) {

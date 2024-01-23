@@ -381,10 +381,10 @@ AccidentalVal Measure::findAccidental(Note* note) const
             track_idx_t endTrack   = startTrack + VOICES;
             for (track_idx_t track = startTrack; track < endTrack; ++track) {
                 EngravingItem* e = segment->element(track);
-                if (!e || !e->isChord()) {
+                if (!e || !e->isChordRest()) {
                     continue;
                 }
-                Chord* crd = toChord(e);
+                ChordRest* crd = toChordRest(e);
                 for (Chord* chord1 : crd->graceNotes()) {
                     for (Note* note1 : chord1->notes()) {
                         if (note1->tieBack() && note1->accidental() == 0) {
@@ -402,7 +402,11 @@ AccidentalVal Measure::findAccidental(Note* note) const
                         tversatz.setAccidentalVal(line, tpc2alter(tpc));
                     }
                 }
-                for (Note* note1 : crd->notes()) {
+                if (!e->isChord()) {
+                    continue;
+                }
+                Chord* c = toChord(e);
+                for (Note* note1 : c->notes()) {
                     if (note1->tieBack() && note1->accidental() == 0) {
                         continue;
                     }
@@ -447,10 +451,10 @@ AccidentalVal Measure::findAccidental(Segment* s, staff_idx_t staffIdx, int line
         }
         for (track_idx_t track = startTrack; track < endTrack; ++track) {
             EngravingItem* e = segment->element(track);
-            if (!e || !e->isChord()) {
+            if (!e || !e->isChordRest()) {
                 continue;
             }
-            Chord* chord = toChord(e);
+            ChordRest* chord = toChordRest(e);
             for (Chord* chord1 : chord->graceNotes()) {
                 for (Note* note : chord1->notes()) {
                     if (note->tieBack() && note->accidental() == 0) {
@@ -461,8 +465,11 @@ AccidentalVal Measure::findAccidental(Segment* s, staff_idx_t staffIdx, int line
                     tversatz.setAccidentalVal(l, tpc2alter(tpc));
                 }
             }
-
-            for (Note* note : chord->notes()) {
+            if (!e->isChord()) {
+                continue;
+            }
+            Chord* c = toChord(e);
+            for (Note* note : c->notes()) {
                 if (note->tieBack() && note->accidental() == 0) {
                     continue;
                 }
@@ -591,7 +598,7 @@ Chord* Measure::findChord(Fraction t, track_idx_t track)
     t -= tick();
     for (Segment* seg = last(); seg; seg = seg->prev()) {
         if (seg->rtick() < t) {
-            return 0;
+            return nullptr;
         }
         if (seg->rtick() == t) {
             EngravingItem* el = seg->element(track);
@@ -600,7 +607,7 @@ Chord* Measure::findChord(Fraction t, track_idx_t track)
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------
@@ -613,7 +620,7 @@ ChordRest* Measure::findChordRest(Fraction t, track_idx_t track)
     t -= tick();
     for (const Segment& seg : m_segments) {
         if (seg.rtick() > t) {
-            return 0;
+            return nullptr;
         }
         if (seg.rtick() == t) {
             EngravingItem* el = seg.element(track);
@@ -622,7 +629,7 @@ ChordRest* Measure::findChordRest(Fraction t, track_idx_t track)
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------

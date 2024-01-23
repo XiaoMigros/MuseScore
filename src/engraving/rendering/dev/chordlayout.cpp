@@ -2546,8 +2546,8 @@ void ChordLayout::updateGraceNotes(Measure* measure, LayoutContext& ctx)
             continue;
         }
         for (auto el : s.elist()) {
-            if (el && el->isChord() && !toChord(el)->graceNotes().empty()) {
-                appendGraceNotes(toChord(el));
+            if (el && el->isChordRest() && !toChordRest(el)->graceNotes().empty()) {
+                appendGraceNotes(toChordRest(el));
             }
         }
     }
@@ -2564,14 +2564,14 @@ void ChordLayout::updateGraceNotes(Measure* measure, LayoutContext& ctx)
     }
 }
 
-void ChordLayout::appendGraceNotes(Chord* chord)
+void ChordLayout::appendGraceNotes(ChordRest* cr)
 {
-    Segment* segment = chord->segment();
-    Measure* measure = chord->measure();
-    track_idx_t track = chord->track();
-    staff_idx_t staffIdx = chord->staffIdx();
-    GraceNotesGroup& gnb = chord->graceNotesBefore();
-    GraceNotesGroup& gna = chord->graceNotesAfter();
+    Segment* segment = cr->segment();
+    Measure* measure = cr->measure();
+    track_idx_t track = cr->track();
+    staff_idx_t staffIdx = cr->staffIdx();
+    GraceNotesGroup& gnb = cr->graceNotesBefore();
+    GraceNotesGroup& gna = cr->graceNotesAfter();
 
     //Attach graceNotesBefore of this chord to *this* segment
     if (!gnb.empty()) {
@@ -2589,7 +2589,7 @@ void ChordLayout::appendGraceNotes(Chord* chord)
 
     //Attach graceNotesAfter of this chord to the *following* segment
     if (!gna.empty()) {
-        Segment* followingSeg = measure->tick2segment(segment->tick() + chord->actualTicks(), SegmentType::All);
+        Segment* followingSeg = measure->tick2segment(segment->tick() + cr->actualTicks(), SegmentType::All);
         while (followingSeg && !followingSeg->hasElements(staff2track(staffIdx), staff2track(staffIdx) + 3)) {
             // If there is nothing on this staff, go to next segment
             followingSeg = followingSeg->next();

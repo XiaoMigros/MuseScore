@@ -2881,7 +2881,7 @@ void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
     }
 
     const Segment* appendedSeg = item->appendedSegment();
-    Chord* parentChord = toChord(item->parent());
+    ChordRest* parentChord = toChordRest(item->parent());
     Shape staffShape = appendedSeg->staffShape(parentChord->staffIdx());
     bool isTabStaff = parentChord->staffType() && parentChord->staffType()->isTabStaff();
     if (isTabStaff) {
@@ -2918,8 +2918,8 @@ void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
 
     item->setPos(xPos, 0.0);
 
-    if (isTabStaff) {
-        ChordLayout::layoutStem(parentChord, ctx);
+    if (isTabStaff && parentChord->isChord()) {
+        ChordLayout::layoutStem(toChord(parentChord), ctx);
     }
 }
 
@@ -4678,11 +4678,22 @@ void TLayout::layoutRehearsalMark(const RehearsalMark* item, RehearsalMark::Layo
     Autoplace::autoplaceSegmentElement(item, ldata);
 }
 
-void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const LayoutContext& ctx)
+void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
     if (item->isGap()) {
         return;
+    }
+
+    int gi = 0;
+    for (Chord* c : item->graceNotes()) {
+        // HACK: graceIndex is not well-maintained on add & remove
+        // so rebuild now
+        c->setGraceIndex(gi++);
+    }
+
+    for (Chord* c : item->graceNotes()) {
+        ChordLayout::layout(c, ctx);
     }
 
     //! NOTE The types are listed here explicitly to show what types there are (see Rest::add method)

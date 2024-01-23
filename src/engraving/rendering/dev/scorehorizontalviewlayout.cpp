@@ -193,20 +193,19 @@ void ScoreHorizontalViewLayout::layoutLinear(LayoutContext& ctx)
                             de = de->tuplet();
                         }
                     }
-
-                    if (cr->isChord()) {
-                        Chord* c = toChord(cr);
-                        for (Chord* cc : c->graceNotes()) {
-                            if (cc->beam() && cc->beam()->elements().front() == cc) {
-                                TLayout::layoutBeam(cc->beam(), ctx);
-                            }
-                            ChordLayout::layoutSpanners(cc, ctx);
-                            for (EngravingItem* element : cc->el()) {
-                                if (element->isSlur()) {
-                                    TLayout::layoutItem(element, ctx);
-                                }
+                    for (Chord* cc : cr->graceNotes()) {
+                        if (cc->beam() && cc->beam()->elements().front() == cc) {
+                            TLayout::layoutBeam(cc->beam(), ctx);
+                        }
+                        ChordLayout::layoutSpanners(cc, ctx);
+                        for (EngravingItem* element : cc->el()) {
+                            if (element->isSlur()) {
+                                TLayout::layoutItem(element, ctx);
                             }
                         }
+                    }
+                    if (cr->isChord()) {
+                        Chord* c = toChord(cr);
                         ArpeggioLayout::layoutArpeggio2(c->arpeggio(), ctx);
                         ChordLayout::layoutSpanners(c, ctx);
                         if (c->tremoloSingleChord()) {
@@ -423,25 +422,24 @@ std::pair<double, double> ScoreHorizontalViewLayout::computeCellWidth(const Segm
         if (cr) {
             width = calculateWidth(cr);
 
-            if (cr->type() == ElementType::REST) {
-                //spacing = 0; //!not necessary. It is to more clearly understanding code
-            } else if (cr->type() == ElementType::CHORD) {
-                Chord* ch = toChord(cr);
+            //! check that gracenote exist. If exist add additional spacing
+            //! to avoid colliding between grace note and previous chord
+            if (!cr->graceNotes().empty()) {
+                Segment* prevSeg = s->prev();
+                if (prevSeg && prevSeg->segmentType() == SegmentType::ChordRest) {
+                    ChordRest* prevCR = chordRestWithMinDuration(prevSeg, visibleParts);
 
-                //! check that gracenote exist. If exist add additional spacing
-                //! to avoid colliding between grace note and previous chord
-                if (!ch->graceNotes().empty()) {
-                    Segment* prevSeg = s->prev();
-                    if (prevSeg && prevSeg->segmentType() == SegmentType::ChordRest) {
-                        ChordRest* prevCR = chordRestWithMinDuration(prevSeg, visibleParts);
-
-                        if (prevCR && prevCR->globalTicks() < quantum) {
-                            spacing = calculateWidth(prevCR);
-                            return { spacing, width };
-                        }
+                    if (prevCR && prevCR->globalTicks() < quantum) {
+                        spacing = calculateWidth(prevCR);
+                        return { spacing, width };
                     }
                 }
+            }
 
+            if (cr->isRest()) {
+                //spacing = 0; //!not necessary. It is to more clearly understanding code
+            } else if (cr->isChord()) {
+                Chord* ch = toChord(cr);
                 //! check that accidental exist in the chord. If exist add additional spacing
                 //! to avoid colliding between grace note and previous chord
                 for (auto note : ch->notes()) {

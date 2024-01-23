@@ -1041,26 +1041,28 @@ void MeasureLayout::computePreSpacingItems(Measure* m, LayoutContext& ctx)
             continue;
         }
         for (EngravingItem* e : seg.elist()) {
-            if (!e || !e->isChord()) {
+            if (!e || !e->isChordRest()) {
                 continue;
             }
-            Chord* chord = toChord(e);
-            Staff* staff = chord->staff();
+            ChordRest* cr = toChordRest(e);
+            Staff* staff = cr->staff();
             if (staff && !staff->show()) {
                 continue;
             }
-
-            ChordLayout::updateLineAttachPoints(chord, isFirstChordInMeasure, ctx);
-            for (Chord* gn : chord->graceNotes()) {
+            for (Chord* gn : cr->graceNotes()) {
                 ChordLayout::updateLineAttachPoints(gn, false, ctx);
             }
-            if (chord->arpeggio()) {
-                ArpeggioLayout::clearAccidentals(chord->arpeggio(), ctx);
+            if (!cr->isChord()) {
+                continue;
             }
-
-            ChordLayout::layoutArticulations(chord, ctx);
-            ChordLayout::checkStartEndSlurs(chord, ctx);
-            chord->computeKerningExceptions();
+            Chord* c = toChord(cr);
+            ChordLayout::updateLineAttachPoints(c, isFirstChordInMeasure, ctx);
+            if (c->arpeggio()) {
+                ArpeggioLayout::clearAccidentals(c->arpeggio(), ctx);
+            }
+            ChordLayout::layoutArticulations(c, ctx);
+            ChordLayout::checkStartEndSlurs(c, ctx);
+            c->computeKerningExceptions();
         }
         seg.createShapes();
         isFirstChordInMeasure = false;
@@ -1277,8 +1279,16 @@ void MeasureLayout::layoutMeasureElements(Measure* m, LayoutContext& ctx)
                         TremoloLayout::layout(tr, ctx);
                     }
                 }
-
-                for (Chord* g : c->graceNotes()) {
+            } else if (e->isBarLine()) {
+                e->mutldata()->setPosY(0.0);
+                // for end barlines, x position was set in createEndBarLines
+                if (s.segmentType() != SegmentType::EndBarLine) {
+                    e->mutldata()->setPosX(0.0);
+                }
+            }
+            if (e->isChordRest()) {
+                ChordRest* cr = toChordRest(e);
+                for (Chord* g : cr->graceNotes()) {
                     if (g->tremoloSingleChord()) {
                         TremoloLayout::layout(g->tremoloSingleChord(), ctx);
                     }
@@ -1291,12 +1301,6 @@ void MeasureLayout::layoutMeasureElements(Measure* m, LayoutContext& ctx)
                             TremoloLayout::layout(tr, ctx);
                         }
                     }
-                }
-            } else if (e->isBarLine()) {
-                e->mutldata()->setPosY(0.0);
-                // for end barlines, x position was set in createEndBarLines
-                if (s.segmentType() != SegmentType::EndBarLine) {
-                    e->mutldata()->setPosX(0.0);
                 }
             }
         }

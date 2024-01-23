@@ -461,6 +461,21 @@ bool Score::transpose(TransposeMode mode, TransposeDirection direction, Key trKe
                 continue;
             }
 
+            if (e->isChordRest()) {
+                ChordRest* cr = toChordRest(e);
+                for (Chord* g : cr->graceNotes()) {
+                    for (Note* n : g->notes()) {
+                        if (mode == TransposeMode::DIATONICALLY) {
+                            n->transposeDiatonic(transposeInterval, trKeys, useDoubleSharpsFlats);
+                        } else {
+                            if (!transpose(n, interval, useDoubleSharpsFlats)) {
+                                result = false;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
             if (e->isChord()) {
                 Chord* chord = toChord(e);
                 std::vector<Note*> nl = chord->notes();
@@ -471,18 +486,6 @@ bool Score::transpose(TransposeMode mode, TransposeDirection direction, Key trKe
                         if (!transpose(n, interval, useDoubleSharpsFlats)) {
                             result = false;
                             continue;
-                        }
-                    }
-                }
-                for (Chord* g : chord->graceNotes()) {
-                    for (Note* n : g->notes()) {
-                        if (mode == TransposeMode::DIATONICALLY) {
-                            n->transposeDiatonic(transposeInterval, trKeys, useDoubleSharpsFlats);
-                        } else {
-                            if (!transpose(n, interval, useDoubleSharpsFlats)) {
-                                result = false;
-                                continue;
-                            }
                         }
                     }
                 }
@@ -822,14 +825,17 @@ void Score::transpositionChanged(Part* part, Interval oldV, Fraction tickStart, 
             track_idx_t t2 = t1 + VOICES;
             for (track_idx_t track = t1; track < t2; ++track) {
                 EngravingItem* e = s->element(track);
-                if (e && e->isChord()) {
-                    Chord* c = toChord(e);
+                if (e && e->isChordRest()) {
+                    ChordRest* c = toChordRest(e);
                     for (Chord* gc : c->graceNotes()) {
                         for (Note* n : gc->notes()) {
                             int tpc = transposeTpc(n->tpc1(), v, true);
                             n->undoChangeProperty(Pid::TPC2, tpc);
                         }
                     }
+                }
+                if (e && e->isChord()) {
+                    Chord* c = toChord(e);
                     for (Note* n : c->notes()) {
                         int tpc = transposeTpc(n->tpc1(), v, true);
                         n->undoChangeProperty(Pid::TPC2, tpc);

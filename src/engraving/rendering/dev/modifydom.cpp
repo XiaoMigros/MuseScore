@@ -84,9 +84,12 @@ void ModifyDom::cmdUpdateNotes(const Measure* measure, const DomAccessor& dom)
                 }
             } else if (segment.isJustType(SegmentType::ChordRest)) {
                 for (track_idx_t t = startTrack; t < endTrack; ++t) {
-                    Chord* chord = item_cast<Chord*>(segment.element(t), CastMode::MAYBE_BAD); // maybe Rest
-                    if (chord && chord->vStaffIdx() == staffIdx) {
-                        chord->cmdUpdateNotes(&as);
+                    ChordRest* cr = toChordRest(segment.element(t));
+                    if (!cr) {
+                        continue;
+                    }
+                    if (cr->vStaffIdx() == staffIdx) { //todo: check staffmove for grace notes
+                        cr->cmdUpdateNotes(&as);
                     }
                 }
             }
@@ -159,12 +162,8 @@ void ModifyDom::setTrackForChordGraceNotes(Measure* measure, const DomAccessor& 
                 if (!cr) {
                     continue;
                 }
-
-                if (cr->isChord()) {
-                    Chord* chord = toChord(cr);
-                    for (Chord* c : chord->graceNotes()) {
-                        c->setTrack(t);
-                    }
+                for (Chord* c : cr->graceNotes()) {
+                    c->setTrack(t);
                 }
             }
         }

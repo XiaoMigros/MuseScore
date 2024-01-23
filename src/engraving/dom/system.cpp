@@ -1207,8 +1207,8 @@ bool System::hasCrossStaffOrModifiedBeams()
                         return true;
                     }
                 }
-                if (e->isChord() && !toChord(e)->graceNotes().empty()) {
-                    for (Chord* grace : toChord(e)->graceNotes()) {
+                if (!toChordRest(e)->graceNotes().empty()) {
+                    for (Chord* grace : toChordRest(e)->graceNotes()) {
                         if (grace->beam() && (grace->beam()->cross() || grace->beam()->userModified())) {
                             return true;
                         }

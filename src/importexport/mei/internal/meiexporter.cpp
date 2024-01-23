@@ -1156,7 +1156,7 @@ bool MeiExporter::writeChord(const Chord* chord, const Staff* staff)
     }
 
     if (chord->graceNotes().size() > 0) {
-        this->writeGraceGrp(chord, staff);
+        this->writeGraceGrp(toChordRest(chord), staff);
     }
 
     bool closingBeam = false;
@@ -1207,7 +1207,7 @@ bool MeiExporter::writeChord(const Chord* chord, const Staff* staff)
     this->writeBeamAndTupletEnd(closingBeam, closingTuplet, closingBeamInTuplet);
 
     if (chord->graceNotes().size() > 0) {
-        this->writeGraceGrp(chord, staff, true);
+        this->writeGraceGrp(toChordRest(chord), staff, true);
     }
 
     return true;
@@ -1218,7 +1218,7 @@ bool MeiExporter::writeChord(const Chord* chord, const Staff* staff)
  * Loop through the notes of the group and write them.
  */
 
-bool MeiExporter::writeGraceGrp(const Chord* chord, const Staff* staff, bool isAfter)
+bool MeiExporter::writeGraceGrp(const ChordRest* chord, const Staff* staff, bool isAfter)
 {
     IF_ASSERT_FAILED(chord) {
         return false;
@@ -1317,6 +1317,10 @@ bool MeiExporter::writeRest(const Rest* rest, const Staff* staff)
         return false;
     }
 
+    if (rest->graceNotes().size() > 0) {
+        this->writeGraceGrp(toChordRest(rest), staff);
+    }
+
     // measure rest
     if (rest->durationType() == DurationType::V_MEASURE) {
         pugi::xml_node mRestNode = m_currentNode.append_child();
@@ -1352,6 +1356,10 @@ bool MeiExporter::writeRest(const Rest* rest, const Staff* staff)
         if (!rest->visible()) {
             restNode.set_name("space");
         }
+    }
+
+    if (rest->graceNotes().size() > 0) {
+        this->writeGraceGrp(toChordRest(rest), staff, true);
     }
 
     return true;

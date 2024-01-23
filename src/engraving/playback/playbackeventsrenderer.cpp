@@ -285,7 +285,7 @@ void PlaybackEventsRenderer::renderNoteEvents(const Chord* chord, const int tick
 
     ChordArticulationsParser::buildChordArticulationMap(chord, ctx, ctx.commonArticulations);
 
-    renderArticulations(chord, ctx, result[ctx.nominalTimestamp]);
+    renderArticulations(chord, ctx, result[ctx.nominalTimestamp]); //add this and maybe buildmap to rest
 }
 
 void PlaybackEventsRenderer::renderFixedNoteEvent(const Note* note, const mpe::timestamp_t actualTimestamp,

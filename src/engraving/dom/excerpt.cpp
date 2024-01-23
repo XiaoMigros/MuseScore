@@ -1286,6 +1286,10 @@ void Excerpt::cloneStaff(Staff* srcStaff, Staff* dstStaff, bool cloneSpanners)
                             score->undoAddElement(ne1);
                         }
                     }
+                    // Check grace note staff move validity
+                    for (Chord* gn : ncr->graceNotes()) {
+                        gn->checkStaffMoveValidity();
+                    }
                     if (oe->isChord()) {
                         Chord* och = toChord(ocr);
                         Chord* nch = toChord(ncr);
@@ -1346,10 +1350,6 @@ void Excerpt::cloneStaff(Staff* srcStaff, Staff* dstStaff, bool cloneSpanners)
                             } else {
                                 LOGD("inconsistent two note tremolo");
                             }
-                        }
-                        // Check grace note staff move validity
-                        for (Chord* gn : nch->graceNotes()) {
-                            gn->checkStaffMoveValidity();
                         }
                         if (Ornament* o = nch->findOrnament()) {
                             Chord* cueChord = o->cueNoteChord();
