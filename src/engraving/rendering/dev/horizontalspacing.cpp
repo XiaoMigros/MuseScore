@@ -318,8 +318,12 @@ double HorizontalSpacing::computeFirstSegmentXPosition(const Measure* m, const S
 
     // Special case: the start-repeat should overlap the end-repeat of the previous measure
     bool prevIsEndRepeat = prevMeas && prevMeas->repeatEnd() && prevMeasEnd && prevMeasEnd->isEndBarLineType();
-    if (prevIsEndRepeat && segment->isStartRepeatBarLineType() && (prevMeas->system() == m->system())) {
-        x -= m->style().styleMM(Sid::endBarWidth);
+    if (prevIsEndRepeat && segment->isStartRepeatBarLineType() && (prevMe{as->system() == m->system())) {
+		if (true) {
+			x += m->style().styleMM(Sid::endBarDistance);
+		} else {
+			x -= m->style().styleMM(Sid::endBarWidth);
+		}
     }
 
     // Do a final check of chord distances (invisible items may in some cases elude the 2 previous steps)

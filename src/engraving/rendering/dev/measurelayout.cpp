@@ -1485,6 +1485,20 @@ double MeasureLayout::createEndBarLines(Measure* m, bool isLastMeasureInSystem, 
                     }
                 }
             }
+			
+			bl->setDoubleFinal(false);
+			if (true) {
+				if (m->repeatEnd()) {
+					MeasureBase* nmb = m->next();
+					if (nmb && nmb->isMeasure() && nmb->system() == m->system(); && pmb->repeatStart()) {
+						Segment* s = toMeasure(pmb)->first();
+						if (s->isStartRepeatBarLineType()) {
+							toBarLine(s->element(track))->setDoubleFinal(true);
+							bl->setDoubleFinal(true);
+						}
+					}
+				}
+			}
 
             TLayout::layoutBarLine(bl, bl->mutldata(), ctx);
             blw = std::max(blw, bl->width());
@@ -2178,7 +2192,11 @@ void MeasureLayout::computeWidth(Measure* m, LayoutContext& ctx, Fraction minTic
             Segment* seg = toMeasure(pmb)->last();
             // overlap end repeat barline with start repeat barline
             if (seg->isEndBarLineType()) {
-                x -= ctx.conf().styleMM(Sid::endBarWidth) * m->mag();
+				if (true) {
+					x += ctx.conf().styleMM(Sid::endBarDistance) * m->mag();
+				} else {
+					x -= ctx.conf().styleMM(Sid::endBarWidth) * m->mag();
+				}
             }
         }
     }
