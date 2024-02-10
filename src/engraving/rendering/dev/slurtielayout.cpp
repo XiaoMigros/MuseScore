@@ -1758,7 +1758,8 @@ void SlurTieLayout::adjustX(TieSegment* tieSegment, SlurTiePos& sPos, Grip start
         ElementType::LYRICS
     };
     chordShape.remove_if([&](ShapeElement& s) {
-        return !s.item() || s.item() == note || mu::contains(IGNORED_TYPES, s.item()->type()) || (s.item()->isNoteDot() && ignoreDot);
+        return !s.item() || s.item() == note || mu::contains(IGNORED_TYPES, s.item()->type())
+               || (s.item()->isNoteDot() && (ignoreDot || !s.item()->visible()));
     });
 
     const double arcSideMargin = 0.3 * spatium;
