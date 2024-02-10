@@ -70,20 +70,17 @@ void ModifyDom::cmdUpdateNotes(const Measure* measure, const DomAccessor& dom)
             }
         }
 
-        track_idx_t track = staffIdx * VOICES;
-        track_idx_t endTrack  = track + VOICES;
-
         for (const Segment& segment : measure->segments()) {
             if (segment.isJustType(SegmentType::KeySig)) {
-                KeySig* ks = item_cast<KeySig*>(segment.element(track));
+                KeySig* ks = item_cast<KeySig*>(segment.element(staffIdx * VOICES));
                 if (ks) {
                     Fraction tick = segment.tick();
                     as.init(staff->keySigEvent(tick));
                 }
             } else if (segment.isJustType(SegmentType::ChordRest)) {
-                for (track_idx_t t = track; t < endTrack; ++t) {
+                for (track_idx_t t = 0; t < dom.nstaves() * VOICES; ++t) {
                     Chord* chord = item_cast<Chord*>(segment.element(t), CastMode::MAYBE_BAD); // maybe Rest
-                    if (chord) {
+                    if (chord && chord->vStaffIdx() == staffIdx) {
                         chord->cmdUpdateNotes(&as);
                     }
                 }
