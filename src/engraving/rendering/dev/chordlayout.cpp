@@ -432,7 +432,7 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
                         overlap += fretWidth * 0.35;
                     }
                 }
-                double d = std::max(minTieLength - overlap, 0.0);
+                double d = tie->visible() ? std::max(minTieLength - overlap, 0.0) : 0.0;
                 lll = std::max(lll, d);
             }
         }
