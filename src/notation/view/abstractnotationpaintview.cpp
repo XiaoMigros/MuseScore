@@ -1328,6 +1328,7 @@ void AbstractNotationPaintView::movePlaybackCursor(midi::tick_t tick)
     const RectF& newCursorRect = m_playbackCursor->rect();
 
     if (!m_playbackCursor->visible() || newCursorRect.isNull()) {
+        scheduleRedraw();
         return;
     }
 
@@ -1353,12 +1354,7 @@ void AbstractNotationPaintView::movePlaybackCursor(midi::tick_t tick)
     double dy = std::abs(dirtyRect2.y() - dirtyRect1.y());
 
     //! NOTE: the difference between the old cursor rect and the new one is not big, so we redraw their united rect
-    if (dx < 1.0 && dy < 1.0) {
-        scheduleRedraw(dirtyRect1.united(dirtyRect2));
-    } else {
-        scheduleRedraw(dirtyRect1);
-        scheduleRedraw(dirtyRect2);
-    }
+    scheduleRedraw();
 }
 
 bool AbstractNotationPaintView::needAdjustCanvasVerticallyWhilePlayback(const RectF& cursorRect)

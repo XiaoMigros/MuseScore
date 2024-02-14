@@ -22,8 +22,13 @@
 #include "playbackcursor.h"
 
 #include "engraving/dom/system.h"
+#include "engraving/dom/chord.h"
+#include "engraving/dom/note.h"
+
+#include <set>
 
 using namespace mu::notation;
+using namespace mu::engraving;
 
 void PlaybackCursor::paint(mu::draw::Painter* painter)
 {
@@ -96,12 +101,49 @@ mu::RectF PlaybackCursor::resolveCursorRectByTick(midi::tick_t _tick) const
             Fraction dt = t2 - t1;
             qreal dx = x2 - x1;
             x = x1 + dx * (tick - t1).ticks() / dt.ticks();
+
+
+            for (mu::engraving::Note* n : markedNotes) {
+                if (!n->mark()) {
+                    markedNotes.erase(n);
+                    continue;
+                }
+                n->setMark(false);
+                n->score()->addRefresh(n->canvasBoundingRect());
+            }
+            if (!visible()) {
+                break;
+            }
+            for (track_idx_t t = 0; t < score->nstaves() * VOICES; ++t) {
+                mu::engraving::Chord* chord = mu::engraving::item_cast<mu::engraving::Chord*>(s->element(t), CastMode::MAYBE_BAD); // maybe Rest
+                if (chord && chord->staff()->visible()) {
+                    for (mu::engraving::Note* note1 : chord->notes()) {
+                        for (mu::engraving::EngravingObject* se : note1->linkList()) {
+                            if (!se->isNote()) {
+                                continue;
+                            }
+                            mu::engraving::Note* currentNote = toNote(se);
+                            if (note1->firstTiedNote()->play()) {
+                                for (Note* tiedNote : currentNote->tiedNotes()) {
+                                    tiedNote->setMark(true);
+                                    tiedNote->score()->addRefresh(currentNote->canvasBoundingRect());
+                                    markedNotes.insert(tiedNote);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             break;
         }
         s = ns;
     }
 
     if (!s) {
+        for (mu::engraving::Note* n : markedNotes) {
+            n->setMark(false);
+            n->score()->addRefresh(n->canvasBoundingRect());
+        }
         return RectF();
     }
 
@@ -138,6 +180,12 @@ bool PlaybackCursor::visible() const
 void PlaybackCursor::setVisible(bool arg)
 {
     m_visible = arg;
+    if (!m_visible) {
+        for (mu::engraving::Note* n : markedNotes) {
+            n->setMark(false);
+            n->score()->addRefresh(n->canvasBoundingRect());
+        }
+    }
 }
 
 const mu::RectF& PlaybackCursor::rect() const

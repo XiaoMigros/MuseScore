@@ -28,6 +28,8 @@
 
 #include "notation/inotation.h"
 
+#include <set>
+
 class QColor;
 
 namespace mu::notation {
@@ -48,6 +50,7 @@ public:
 
     const RectF& rect() const;
 
+    std::set<mu::engraving::Note*>& markedNotes = m_markedNotes;
 private:
     QColor color() const;
     RectF resolveCursorRectByTick(midi::tick_t tick) const;
@@ -56,6 +59,9 @@ private:
     RectF m_rect;
 
     INotationPtr m_notation;
+
+    std::set<mu::engraving::Note*> m_markedNotes;
+
 };
 }
 
