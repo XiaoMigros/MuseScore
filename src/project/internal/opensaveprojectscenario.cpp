@@ -194,6 +194,7 @@ RetVal<CloudAudioInfo> OpenSaveProjectScenario::askShareAudioLocation(INotationP
     query.addParam("name", Val(defaultName));
     query.addParam("visibility", Val(defaultVisibility));
     query.addParam("cloudCode", Val(cloud::AUDIO_COM_CLOUD_CODE));
+    //query.addParam("customAudioPath", Val(QString()));
 
     if (!uploadUrl.isEmpty()) {
         query.addParam("existingScoreOrAudioUrl", Val(uploadUrl.toString()));
@@ -288,6 +289,7 @@ RetVal<CloudProjectInfo> OpenSaveProjectScenario::doAskCloudLocation(INotationPr
     query.addParam("visibility", Val(defaultVisibility));
     query.addParam("existingScoreOrAudioUrl", Val(existingProjectInfo.sourceUrl.toString()));
     query.addParam("cloudCode", Val(cloud::MUSESCORE_COM_CLOUD_CODE));
+    //query.addParam("customAudioPath", Val(existingProjectInfo.customAudioPath));
 
     RetVal<Val> rv = interactive()->open(query);
     if (!rv.ret) {
@@ -314,6 +316,7 @@ RetVal<CloudProjectInfo> OpenSaveProjectScenario::doAskCloudLocation(INotationPr
 
     result.name = vals["name"].toString();
     result.visibility = static_cast<cloud::Visibility>(vals["visibility"].toInt());
+    //result.customAudioPath = vals["customAudioPath"].toString();
 
     if (!warnBeforePublishing(isPublishShare, result.visibility)) {
         return make_ret(Ret::Code::Cancel);
