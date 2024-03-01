@@ -23,6 +23,8 @@
 #ifndef MU_ENGRAVING_SLURTIE_H
 #define MU_ENGRAVING_SLURTIE_H
 
+#include <cmath>
+
 #include "spanner.h"
 
 #include "draw/types/painterpath.h"
@@ -67,17 +69,38 @@ class CubicBezier
     PointF p2;
     PointF p3;
     PointF p4;
+    bool   flat = true;
 
 public:
-    CubicBezier(PointF _p1, PointF _p2, PointF _p3, PointF _p4)
-        : p1(_p1), p2(_p2), p3(_p3), p4(_p4) {}
+    CubicBezier(PointF _p1, PointF _p2, PointF _p3, PointF _p4, bool _flat)
+        : p1(_p1), p2(_p2), p3(_p3), p4(_p4), flat(_flat) {}
+
+    PointF p5(bool flat) const
+    {
+        if (flat) {
+            PointF pp5 = p3 - p2;
+            PointF pp52 = p2 - p1;
+            return p2 + (pp5 / hypot(pp5.x(), pp5.y()) * hypot(pp52.x(), pp52.y()));
+        }
+        return p3;
+    }
+
+    PointF p6(bool flat) const
+    {
+        if (flat) {
+            PointF pp6 = p2 - p3;
+            PointF pp62 = p3 - p4;
+            return p3 + (pp6 / hypot(pp6.x(), pp6.y()) * hypot(pp6.x(), pp62.y()));
+        }
+        return p2;
+    }
 
     PointF pointAtPercent(double t) const
     {
         assert(t >= 0.0 && t <= 1.0);
         const double r = 1.0 - t;
-        const PointF B123 = r * (r * p1 + t * p2) + t * (r * p2 + t * p3);
-        const PointF B234 = r * (r * p2 + t * p3) + t * (r * p3 + t * p4);
+        const PointF B123 = r * (r * p1 + t * p2) + t * (r * p2 + t * p5(flat));
+        const PointF B234 = r * (r * p6(flat) + t * p3) + t * (r * p3 + t * p4);
         return r * B123 + t * B234;
     }
 };
@@ -97,6 +120,7 @@ public:
     virtual void spatiumChanged(double, double) override;
     SlurTie* slurTie() const { return (SlurTie*)spanner(); }
 
+    bool isEditAllowed(EditData& ed) const override;
     void startEditDrag(EditData& ed) override;
     void endEditDrag(EditData& ed) override;
 
