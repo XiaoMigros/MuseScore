@@ -33,6 +33,7 @@
 #include "mscoreview.h"
 #include "note.h"
 #include "notedot.h"
+#include "part.h"
 #include "score.h"
 #include "staff.h"
 #include "stafftype.h"
@@ -64,22 +65,40 @@ bool TieSegment::isEditAllowed(EditData& ed) const
         return true;
     }
 
-    return false;
+    const bool moveStart = ed.curGrip == Grip::START;
+    const bool moveEnd = ed.curGrip == Grip::END || ed.curGrip == Grip::DRAG;
+
+    if (!((ed.modifiers & ShiftModifier) && (isSingleType()
+                                             || (isBeginType() && moveStart) || (isEndType() && moveEnd)))) {
+        return false;
+    }
+
+    static const std::set<int> navigationKeys {
+        Key_Left,
+        Key_Up,
+        Key_Down,
+        Key_Right
+    };
+
+    return mu::contains(navigationKeys, ed.key);
 }
 
 static inline Note* prevTieNote(Note* note, track_idx_t track)
 {
     Note* n = nullptr;
     Chord* chord = note->chord();
-    int index = chord->isGrace() ? chord->graceIndex() : std::numeric_limits<int>::max();
+
+    // first, check grace notes before
     bool after = chord->isGraceAfter();
-    
-    // first, check preceding grace notes
-    chord = toChord(chord->explicitParent());
+    size_t index = std::numeric_limits<size_t>::max();
+    if (chord->isGrace()) {
+        index = chord->graceIndex();
+        chord = toChord(chord->explicitParent());
+    }
     std::vector<Chord*> gnList = after ? chord->graceNotes() : chord->graceNotesBefore();
     for (Chord* gc : gnList) {
         if (gc->graceIndex() < index) {
-            if (n = gc->findNote(note->pitch())) {
+            if ((n = gc->findNote(note->pitch()))) {
                 return n;
             }
         }
@@ -87,28 +106,29 @@ static inline Note* prevTieNote(Note* note, track_idx_t track)
 
     Segment* seg = chord->segment();
 
-    auto checkGraceNotes = [this](std::vector<Chord*> gnList) -> Note*
+    auto checkGraceNotes = [=](std::vector<Chord*> gnList) -> Note*
     {
-        for (int i = gnList.size() - 1; i <= 0; --i) {
-            Chord* gc = gnList[i]
-            if (n = gc->findNote(note->pitch())) {
-                return n;
+        for (size_t i = gnList.size(); i > 0; --i) {
+            Chord* gc = gnList[i - 1];
+            Note* gn = gc->findNote(note->pitch());
+            if (gn) {
+                return gn;
             }
         }
         return nullptr;
     };
 
-    while (seg = seg->prev1(SegmentType::ChordRest)) {
+    while ((seg = seg->prev1(SegmentType::ChordRest))) {
         EngravingItem* e = seg->element(track);
         if (!e || !e->isChord()) {
             continue;
         }
         Chord* c = toChord(e);
-        if (n = checkGraceNotes(c->graceNotesAfter())) {
+        if ((n = checkGraceNotes(c->graceNotesAfter()))) {
             return n;
-        } else if (n = c->findNote(note->pitch())) {
+        } else if ((n = c->findNote(note->pitch()))) {
             return n;
-        } else if (n = checkGraceNotes(c->graceNotesBefore())) {
+        } else if ((n = checkGraceNotes(c->graceNotesBefore()))) {
             return n;
         }
     }
@@ -119,15 +139,18 @@ static inline Note* nextTieNote(Note* note, track_idx_t track)
 {
     Note* n = nullptr;
     Chord* chord = note->chord();
-    int index = chord->isGrace() ? chord->graceIndex() : -1;
+
+    // first, check grace notes after
     bool before = chord->isGraceBefore();
-    
-    // first, check preceding grace notes
-    chord = toChord(chord->explicitParent());
+    size_t index = -1;
+    if (chord->isGrace()) {
+        index = chord->graceIndex();
+        chord = toChord(chord->explicitParent());
+    }
     std::vector<Chord*> gnList = before ? chord->graceNotes() : chord->graceNotesAfter();
     for (Chord* gc : gnList) {
         if (gc->graceIndex() > index) {
-            if (n = gc->findNote(note->pitch())) {
+            if ((n = gc->findNote(note->pitch()))) {
                 return n;
             }
         }
@@ -135,27 +158,28 @@ static inline Note* nextTieNote(Note* note, track_idx_t track)
 
     Segment* seg = chord->segment();
 
-    auto checkGraceNotes = [this](std::vector<Chord*> gnList) -> Note*
+    auto checkGraceNotes = [=](std::vector<Chord*> gnList) -> Note*
     {
         for (Chord* gc : gnList) {
-            if (n = gc->findNote(note->pitch())) {
-                return n;
+            Note* gn = gc->findNote(note->pitch());
+            if (gn) {
+                return gn;
             }
         }
         return nullptr;
     };
 
-    while (seg = seg->next1(SegmentType::ChordRest)) {
+    while ((seg = seg->next1(SegmentType::ChordRest))) {
         EngravingItem* e = seg->element(track);
         if (!e || !e->isChord()) {
             continue;
         }
         Chord* c = toChord(e);
-        if (n = checkGraceNotes(c->graceNotesBefore())) {
+        if ((n = checkGraceNotes(c->graceNotesBefore()))) {
             return n;
-        } else if (n = c->findNote(note->pitch())) {
+        } else if ((n = c->findNote(note->pitch()))) {
             return n;
-        } else if (n = checkGraceNotes(c->graceNotesAfter())) {
+        } else if ((n = checkGraceNotes(c->graceNotesAfter()))) {
             return n;
         }
     }
@@ -170,7 +194,16 @@ static inline Note* upTieNote(Note* note, bool lookLeft)
     track_idx_t startTrack = chord->part()->startTrack();
 
     for (track_idx_t track = chord->track(); track >= startTrack; --track) {
-        if (n = lookLeft ? prevTieNote(note, track) : nextTieNote(note, track)) {
+        if (track != chord->track()) {
+            EngravingItem* e = seg->element(track);
+            if (e && e->isChord()) {
+                Chord* c = toChord(e);
+                if ((n = c->findNote(note->pitch()))) {
+                    return n;
+                }
+            }
+        }
+        if ((n = lookLeft ? prevTieNote(note, track) : nextTieNote(note, track))) {
             return n;
         }
     }
@@ -185,7 +218,16 @@ static inline Note* downTieNote(Note* note, bool lookLeft)
     track_idx_t endTrack = chord->part()->endTrack();
 
     for (track_idx_t track = chord->track(); track < endTrack; ++track) {
-        if (n = lookLeft ? prevTieNote(note, track) : nextTieNote(note, track)) {
+        if (track != chord->track()) {
+            EngravingItem* e = seg->element(track);
+            if (e && e->isChord()) {
+                Chord* c = toChord(e);
+                if ((n = c->findNote(note->pitch()))) {
+                    return n;
+                }
+            }
+        }
+        if ((n = lookLeft ? prevTieNote(note, track) : nextTieNote(note, track))) {
             return n;
         }
     }
@@ -203,21 +245,20 @@ bool TieSegment::edit(EditData& ed)
         return false;
     }
 
-    Tie* tie = tie();
+    Tie* t = tie();
 
     if (ed.key == Key_Home && !ed.modifiers) {
         if (ed.hasCurrentGrip()) {
             ups(ed.curGrip).off = PointF();
-            renderer()->layoutItem(tie);
+            renderer()->layoutItem(t);
             triggerLayout();
         }
         return true;
     }
 
-    Note* n = nullptr;
-    Note* n2 = nullptr;
     bool isStart = ed.curGrip == Grip::START;
-    n = isStart ? tie->startNote() : tie->endNote();
+    Note* n  = isStart ? t->startNote() : t->endNote();
+    Note* n2 = nullptr;
 
     if (ed.key == Key_Left) {
         n2 = prevTieNote(n, n->chord()->track());
@@ -244,21 +285,15 @@ bool TieSegment::edit(EditData& ed)
 void TieSegment::changeAnchor(EditData& ed, EngravingItem* element)
 {
     if (ed.curGrip == Grip::START) {
-        spanner()->setStartElement(element);
         Note* note = toNote(element);
         if (note->chord()->tick() <= tie()->endNote()->chord()->tick()) {
-            tie()->startNote()->setTieFor(0);
-            tie()->setStartNote(note);
-            note->setTieFor(tie());
+            score()->undoChangeSpannerElements(spanner(), note, tie()->endNote());
         }
     } else {
-        spanner()->setEndElement(element);
         Note* note = toNote(element);
         // do not allow backward ties
         if (note->chord()->tick() >= tie()->startNote()->chord()->tick()) {
-            tie()->endNote()->setTieBack(0);
-            tie()->setEndNote(note);
-            note->setTieBack(tie());
+            score()->undoChangeSpannerElements(spanner(), tie()->startNote(), note);
         }
     }
 
@@ -267,8 +302,8 @@ void TieSegment::changeAnchor(EditData& ed, EngravingItem* element)
     renderer()->layoutItem(spanner());
     if (spanner()->spannerSegments().size() != segments) {
         const std::vector<SpannerSegment*>& ss = spanner()->spannerSegments();
-
-        TieSegment* newSegment = toTieSegment(ed.curGrip == Grip::END ? ss.back() : ss.front());
+        const bool moveEnd = ed.curGrip == Grip::END || ed.curGrip == Grip::DRAG;
+        TieSegment* newSegment = toTieSegment(moveEnd ? ss.back() : ss.front());
         score()->endCmd();
         score()->startCmd();
         ed.view()->changeEditElement(newSegment);

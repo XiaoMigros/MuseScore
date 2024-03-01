@@ -805,7 +805,7 @@ Note* searchTieNote(Note* note)
         std::vector<Chord*> gnList = before ? chord->graceNotesBefore() : chord->graceNotesAfter();
         for (Chord* c : gnList) {
             if (c->graceIndex() == index + 1) {
-                if (note2 = c->findNote(note->pitch())) {
+                if ((note2 = c->findNote(note->pitch()))) {
                     return note2;
                 }
             }
@@ -821,7 +821,7 @@ Note* searchTieNote(Note* note)
         std::vector<Chord*> gna = chord->graceNotesAfter();
         if (!gna.empty()) {
             Chord* gc = gna[0];
-            if (note2 = gc->findNote(note->pitch())) {
+            if ((note2 = gc->findNote(note->pitch()))) {
                 return note2;
             }
         }
@@ -855,7 +855,7 @@ Note* searchTieNote(Note* note)
             std::vector<Chord*> gnb = c->graceNotesBefore();
             if (!gnb.empty()) {
                 Chord* gc = gnb[0];
-                if (note2 = gc->findNote(note->pitch())) {
+                if ((note2 = gc->findNote(note->pitch()))) {
                     return note2;
                 }
             }
@@ -875,8 +875,8 @@ Note* searchTieNote(Note* note)
             // if there are grace notes before, try to tie to first one
             std::vector<Chord*> gna = c->graceNotesAfter();
             if (!gna.empty()) {
-                Chord* gc = gnb[0];
-                if (note2 = gc->findNote(note->pitch())) {
+                Chord* gc = gna[0];
+                if ((note2 = gc->findNote(note->pitch()))) {
                     return note2;
                 }
             }
