@@ -97,6 +97,7 @@ public:
     virtual void spatiumChanged(double, double) override;
     SlurTie* slurTie() const { return (SlurTie*)spanner(); }
 
+    bool isEditAllowed(EditData& ed) const override;
     void startEditDrag(EditData& ed) override;
     void endEditDrag(EditData& ed) override;
 

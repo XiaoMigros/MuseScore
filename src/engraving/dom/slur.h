@@ -50,7 +50,6 @@ public:
 
     bool isEdited() const;
     bool isEndPointsEdited() const;
-    bool isEditAllowed(EditData&) const override;
     bool edit(EditData&) override;
 
     void editDrag(EditData& ed) override;
