@@ -56,6 +56,30 @@ SlurTieSegment::SlurTieSegment(const SlurTieSegment& b)
     mutldata()->path.set_value(b.ldata()->path());
 }
 
+bool SlurTieSegment::isEditAllowed(EditData& ed) const
+{
+    if (ed.key == Key_Home && !ed.modifiers) {
+        return true;
+    }
+
+    const bool moveStart = ed.curGrip == Grip::START;
+    const bool moveEnd = ed.curGrip == Grip::END || ed.curGrip == Grip::DRAG;
+
+    if (!((ed.modifiers & ShiftModifier) && (isSingleType()
+                                             || (isBeginType() && moveStart) || (isEndType() && moveEnd)))) {
+        return false;
+    }
+
+    static const std::set<int> navigationKeys {
+        Key_Left,
+        Key_Up,
+        Key_Down,
+        Key_Right
+    };
+
+    return mu::contains(navigationKeys, ed.key);
+}
+
 //---------------------------------------------------------
 //   gripAnchorLines
 //---------------------------------------------------------
