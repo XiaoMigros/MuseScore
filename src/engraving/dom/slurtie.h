@@ -107,11 +107,11 @@ public:
             double eq2 = slope2 * (p6(true).x() - Bref.x()) + Bref.y() - p6(true).y();
             double xC = (eq2 - eq1) / (slope2 - slope1);
             double yC = slope1 * (xC - Bref.x()) + Bref.y();
-            
+
             const PointF Btr = PointF(xC, yC);
-            
+
             if (t <= 0.25) {
-                return r * (r * p1 + t * p2) + t * (r * p2 + t * p5(flat));;
+                return r * (r * p1 + t * p2) + t * (r * p2 + t * p5(flat));
             } else if (t >= 0.75) {
                 return r * (r * p6(flat) + t * p3) + t * (r * p3 + t * p4);
             } else {

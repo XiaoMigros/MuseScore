@@ -23,6 +23,8 @@
 
 #include "iengravingfont.h"
 
+#include <cmath>
+
 #include "compat/dummyelement.h"
 
 #include "dom/slur.h"
@@ -2370,10 +2372,21 @@ void SlurTieLayout::computeBezier(SlurSegment* slurSeg, PointF shoulderOffset)
     // Set path
     PainterPath path = PainterPath();
     path.moveTo(PointF());
-    path.cubicTo(p3 - thick, p4 - thick, p2);
-    if (slurSeg->slur()->styleType() == SlurStyleType::Solid) {
-        path.cubicTo(p4 + thick, p3 + thick, PointF());
-    }
+	if (true) {
+		
+		PointF pp5 = p4 - p3;
+        path.cubicTo(p3 - thick, p3 + (pp5 / hypot(pp5.x(), pp5.y()) * hypot(p3.x(), p3.y())) - thick, p3 + (pp5 / hypot(pp5.x(), pp5.y()) * hypot(p3.x(), p3.y())) - thick);
+		if (slurSeg->slur()->styleType() == SlurStyleType::Solid) {
+			PointF pp6 = p3 - p4;
+			PointF pp62 = p4 - p2;
+			path.cubicTo(p4 - thick, p4 + (pp6 / hypot(pp6.x(), pp6.y()) * hypot(pp6.x(), pp62.y())) - thick, (pp6 / hypot(pp6.x(), pp6.y()) * hypot(pp6.x(), pp62.y())) - thick);
+		}		
+	} else {
+		path.cubicTo(p3 - thick, p4 - thick, p2);
+		if (slurSeg->slur()->styleType() == SlurStyleType::Solid) {
+			path.cubicTo(p4 + thick, p3 + thick, PointF());
+		}
+	}
 
     path = toSystemCoordinates.map(path);
     slurSeg->mutldata()->path.set_value(path);
@@ -2538,7 +2551,7 @@ void SlurTieLayout::fillShape(SlurTieSegment* slurTieSeg, double slurTieLengthIn
         double percent = pow(sin(0.5 * M_PI * (double(i) / double(nbShapes))), 2);
         const PointF point = b.pointAtPercent(percent);
         RectF re = RectF(startPoint, point).normalized();
-        double approxThicknessAtPercent = (1 - 2 * abs(0.5 - percent)) * midThickness;
+        double approxThicknessAtPercent = (1 - std::max(true ? 4 : 2 * abs(0.5 - percent), 1)) * midThickness;
         if (re.height() < approxThicknessAtPercent) {
             double adjust = (approxThicknessAtPercent - re.height()) * .5;
             re.adjust(0.0, -adjust, 0.0, adjust);
