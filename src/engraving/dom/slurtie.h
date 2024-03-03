@@ -99,8 +99,27 @@ public:
     {
         assert(t >= 0.0 && t <= 1.0);
         const double r = 1.0 - t;
-        const PointF B123 = r * (r * p1 + t * p2) + t * (r * p2 + t * p5(flat));
-        const PointF B234 = r * (r * p6(flat) + t * p3) + t * (r * p3 + t * p4);
+        if (flat) {
+            double slope1 = (p6(true).y() - p5(true).y()) / (p6(true).x() - p5(true).x());
+            double slope2 = -1 / slope1;
+            const PointF Bref = p1 + t * (p4 - p1);
+            double eq1 = slope2 * (p5(true).x() - Bref.x()) + Bref.y() - p5(true).y();
+            double eq2 = slope2 * (p6(true).x() - Bref.x()) + Bref.y() - p6(true).y();
+            double xC = (eq2 - eq1) / (slope2 - slope1);
+            double yC = slope1 * (xC - Bref.x()) + Bref.y();
+            
+            const PointF Btr = PointF(xC, yC);
+            
+            if (Btr < p5) {
+                return r * (r * p1 + t * p2) + t * (r * p2 + t * p5(flat));;
+            } else if (Btr > b6) {
+                return r * (r * p6(flat) + t * p3) + t * (r * p3 + t * p4);
+            } else {
+                return Btr;
+            }
+        }
+        const PointF B123 = r * (r * p1 + t * p2) + t * (r * p2 + t * p3);
+        const PointF B234 = r * (r * p2 + t * p3) + t * (r * p3 + t * p4);
         return r * B123 + t * B234;
     }
 };
