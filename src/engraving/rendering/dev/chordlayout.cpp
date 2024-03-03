@@ -2073,9 +2073,8 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
         incIdx = -1;
     }
 
-    int ll        = 1000;           // line of previous notehead
-                                    // hack: start high so first note won't show as conflict
-    bool lvisible = false;          // was last note visible?
+    Note* lnote   = nullptr;        // previous note
+    int ll        = 0;              // line of previous notehead
     bool mirror   = false;          // should current notehead be mirrored?
                                     // value is retained and may be used on next iteration
                                     // to track mirror status of previous note
@@ -2091,7 +2090,8 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
         // there is a conflict
         // if this is same or adjacent line as previous note (and chords are on same staff!)
         // but no need to do anything about it if either note is invisible
-        bool conflict = (std::abs(ll - line) < 2) && (lStaffIdx == staffIdx) && note->visible() && lvisible;
+        bool conflict = lnote && (std::abs(ll - line) < 2)
+                        && (lStaffIdx == staffIdx) && note->visible() && lnote->visible();
 
         // this note is on opposite side of stem as previous note
         // if there is a conflict
@@ -2120,7 +2120,17 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
 
         // let user mirror property override the default we calculated
         if (note->userMirror() == DirectionH::AUTO) {
-            mirror = nmirror;
+            if (ll == line && lnote && ((mirror == lnote->chord()->up()) == !isLeft)
+                && lnote->tieBack() && note->tieBack()
+                && (lnote->tieBack()->up() == note->tieBack()->up())
+                && lnote->tieBack()->visible() && note->tieBack()->visible()) {
+                if (lnote->userMirror() == DirectionH::AUTO) {
+                    lnote->mutldata()->mirror.set_value(mirror); //(lnote->chord()->up() != isLeft)
+                }
+                mirror = !nmirror;
+            } else {
+                mirror = nmirror;
+            }
         } else {
             mirror = note->chord()->up();
             if (note->userMirror() == DirectionH::LEFT) {
@@ -2138,9 +2148,9 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
         }
 
         // prepare for next iteration
-        lvisible = note->visible();
         lStaffIdx = staffIdx;
         ll       = line;
+        lnote    = note;
     }
 
     return maxWidth;
