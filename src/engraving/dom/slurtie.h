@@ -72,7 +72,7 @@ class CubicBezier
     bool   flat = true;
 
 public:
-    CubicBezier(PointF _p1, PointF _p2, PointF _p3, PointF _p4, bool _flat)
+    CubicBezier(PointF _p1, PointF _p2, PointF _p3, PointF _p4, bool _flat = true)
         : p1(_p1), p2(_p2), p3(_p3), p4(_p4), flat(_flat) {}
 
     PointF p5(bool flat) const
