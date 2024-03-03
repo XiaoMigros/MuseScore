@@ -2125,7 +2125,7 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
                 && (lnote->tieBack()->up() == note->tieBack()->up())
                 && lnote->tieBack()->visible() && note->tieBack()->visible()) {
                 if (lnote->userMirror() == DirectionH::AUTO) {
-                    lnote->mutldata()->mirror.set_value(mirror); //(lnote->chord()->up() != isLeft)
+                    lnote->mutldata()->mirror.set_value(mirror != lnote->chord()->up());
                 }
                 mirror = !nmirror;
             } else {
