@@ -77,13 +77,23 @@ Column {
 
     SeparatorLine { anchors.margins: -12 }
 
+    CheckBoxPropertyView {
+        id: bracketAlignRightSection
+        titleText: qsTrc("inspector", "Extend bracket to full duration")
+        propertyItem: root.model ? root.model.bracketAlignRight : null
+
+        navigationName: "Extend bracket to full duration"
+        navigationPanel: root.navigationPanel
+        navigationRowStart: bracketTypeSection.navigationRowEnd + 1
+    }
+
     SpinBoxPropertyView {
         id: lineThicknessSection
         titleText: qsTrc("inspector", "Line thickness")
         propertyItem: root.model ? root.model.lineThickness : null
 
         navigationPanel: root.navigationPanel
-        navigationRowStart: bracketTypeSection.navigationRowEnd + 1
+        navigationRowStart: bracketAlignRightSection.navigationRowEnd + 1
 
         minValue: 0.1
         maxValue: 1
