@@ -25,6 +25,7 @@
 
 #include "notationtypes.h"
 
+#include "engraving/dom/chordrest.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/text.h"
 
@@ -1097,14 +1098,17 @@ Fraction NotationActionController::resolvePastingScale(const INotationInteractio
     case PastingType::Double: return Fraction(2, 1);
     case PastingType::Special:
         Fraction scale = DEFAULT_SCALE;
-        Fraction duration = interaction->noteInput()->state().duration.fraction();
-
-        if (duration.isValid() && !duration.isZero()) {
-            scale = duration * 4;
-            scale.reduce();
+        mu::engraving::ChordRest* cr = interaction->noteInput()->score()->inputState().cr();
+        if (cr) {
+            scale = cr->globalTicks();
+        } else {
+            scale = interaction->noteInput()->state().duration.fraction();
         }
-
-        return scale;
+        if (scale.isValid() && !scale.isZero()) {
+            scale *= 4;
+            scale.reduce();
+            return scale;
+        }
     }
 
     return DEFAULT_SCALE;
