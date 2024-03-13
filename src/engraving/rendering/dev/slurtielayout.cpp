@@ -1756,7 +1756,7 @@ void SlurTieLayout::adjustX(TieSegment* tieSegment, SlurTiePos& sPos, Grip start
         }
     }
 
-    bool avoidStem = chord->stem() && chord->stem()->visible() && chord->up() == tie->up();
+    bool avoidStem = chord->stem() && chord->stem()->addToSkyline() && chord->up() == tie->up();
 
     if (isOuterTieOfChord && !avoidStem) {
         tieSegment->addAdjustmentOffset(PointF(resultingX - tiePoint.x(), 0.0), startOrEnd);
