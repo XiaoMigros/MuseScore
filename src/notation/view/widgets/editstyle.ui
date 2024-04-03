@@ -5336,245 +5336,7 @@ By default, they will be placed such as that their right end are at the same lev
            <bool>false</bool>
           </property>
           <layout class="QGridLayout" name="gridLayout_40">
-           <item row="1" column="2">
-            <spacer name="horizontalSpacer_20">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_101">
-             <property name="text">
-              <string>Dot size:</string>
-             </property>
-             <property name="buddy">
-              <cstring>dotMag</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="0">
-            <widget class="QLabel" name="label_24">
-             <property name="text">
-              <string>Ledger line thickness:</string>
-             </property>
-             <property name="buddy">
-              <cstring>ledgerLineWidth</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="1">
-            <widget class="QDoubleSpinBox" name="stemWidth">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="0">
-            <widget class="QLabel" name="label_34">
-             <property name="text">
-              <string>Ledger line length:</string>
-             </property>
-             <property name="buddy">
-              <cstring>ledgerLineLength</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="accidentalDistance">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.010000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="1">
-            <widget class="QDoubleSpinBox" name="ledgerLineWidth">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.010000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QDoubleSpinBox" name="dotDotDistance">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="1">
-            <widget class="QDoubleSpinBox" name="ledgerLineLength">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QDoubleSpinBox" name="noteDotDistance">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="accidentalNoteDistance">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="singleStep">
-              <double>0.010000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_22">
-             <property name="text">
-              <string>Note to dot distance:</string>
-             </property>
-             <property name="buddy">
-              <cstring>noteDotDistance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0">
-            <widget class="QLabel" name="label_100">
-             <property name="text">
-              <string>Stem thickness:</string>
-             </property>
-             <property name="buddy">
-              <cstring>stemWidth</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_23">
-             <property name="text">
-              <string>Dot to dot distance:</string>
-             </property>
-             <property name="buddy">
-              <cstring>dotDotDistance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_43">
-             <property name="text">
-              <string>Accidental to accidental distance:</string>
-             </property>
-             <property name="buddy">
-              <cstring>accidentalDistance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QSpinBox" name="dotMag">
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string notr="true">%</string>
-             </property>
-             <property name="minimum">
-              <number>50</number>
-             </property>
-             <property name="maximum">
-              <number>200</number>
-             </property>
-             <property name="singleStep">
-              <number>10</number>
-             </property>
-             <property name="value">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="2">
+           <item row="0" column="0" colspan="3">
             <widget class="QGroupBox" name="shortenStem">
              <property name="title">
               <string>Shorten stems</string>
@@ -5606,6 +5368,19 @@ By default, they will be placed such as that their right end are at the same lev
                 </property>
                </widget>
               </item>
+              <item row="1" column="2">
+               <widget class="QToolButton" name="resetShortestStem">
+                <property name="toolTip">
+                 <string>Reset to default</string>
+                </property>
+                <property name="accessibleName">
+                 <string>Reset 'Shortest stem' value</string>
+                </property>
+                <property name="text">
+                 <string notr="true"/>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
@@ -5616,6 +5391,348 @@ By default, they will be placed such as that their right end are at the same lev
              </property>
              <property name="buddy">
               <cstring>accidentalNoteDistance</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="accidentalNoteDistance">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QToolButton" name="resetAccidentalNoteDistance">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Accidental to note distance' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <spacer name="horizontalSpacer_20">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_43">
+             <property name="text">
+              <string>Accidental to accidental distance:</string>
+             </property>
+             <property name="buddy">
+              <cstring>accidentalDistance</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="accidentalDistance">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QToolButton" name="resetAccidentalDistance">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Accidental to accidental distance' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_101">
+             <property name="text">
+              <string>Dot size:</string>
+             </property>
+             <property name="buddy">
+              <cstring>dotMag</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QSpinBox" name="dotMag">
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string notr="true">%</string>
+             </property>
+             <property name="minimum">
+              <number>50</number>
+             </property>
+             <property name="maximum">
+              <number>200</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>100</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QToolButton" name="resetDotMag">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Dot size' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_22">
+             <property name="text">
+              <string>Note to dot distance:</string>
+             </property>
+             <property name="buddy">
+              <cstring>noteDotDistance</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QDoubleSpinBox" name="noteDotDistance">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QToolButton" name="resetNoteDotDistance">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Note to dot distance' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_23">
+             <property name="text">
+              <string>Dot to dot distance:</string>
+             </property>
+             <property name="buddy">
+              <cstring>dotDotDistance</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QDoubleSpinBox" name="dotDotDistance">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="2">
+            <widget class="QToolButton" name="resetDotDotDistance">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Dot to dot distance' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_100">
+             <property name="text">
+              <string>Stem thickness:</string>
+             </property>
+             <property name="buddy">
+              <cstring>stemWidth</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QDoubleSpinBox" name="stemWidth">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="2">
+            <widget class="QToolButton" name="resetStemWidth">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Stem width' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_24">
+             <property name="text">
+              <string>Ledger line thickness:</string>
+             </property>
+             <property name="buddy">
+              <cstring>ledgerLineWidth</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
+            <widget class="QDoubleSpinBox" name="ledgerLineWidth">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="2">
+            <widget class="QToolButton" name="resetLedgerLineWidth">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Ledger line thickness' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="label_34">
+             <property name="text">
+              <string>Ledger line length:</string>
+             </property>
+             <property name="buddy">
+              <cstring>ledgerLineLength</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QDoubleSpinBox" name="ledgerLineLength">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="2">
+            <widget class="QToolButton" name="resetLedgerLineLength">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Ledger line length' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
              </property>
             </widget>
            </item>
@@ -5693,6 +5810,19 @@ By default, they will be placed such as that their right end are at the same lev
              </property>
              <property name="value">
               <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QToolButton" name="resetMinEmptyMeasures">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Minimum number of empty measures' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
              </property>
             </widget>
            </item>
@@ -7068,16 +7198,13 @@ By default, they will be placed such as that their right end are at the same lev
            <bool>false</bool>
           </property>
           <layout class="QGridLayout" name="gridLayout_31">
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_28">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_26">
              <property name="text">
-              <string>Hook length:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              <string>Distance to note:</string>
              </property>
              <property name="buddy">
-              <cstring>arpeggioHookLen</cstring>
+              <cstring>arpeggioNoteDistance</cstring>
              </property>
             </widget>
            </item>
@@ -7097,19 +7224,39 @@ By default, they will be placed such as that their right end are at the same lev
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="arpeggioHookLen">
-             <property name="keyboardTracking">
-              <bool>false</bool>
+           <item row="0" column="2">
+            <widget class="QToolButton" name="resetArpeggioNoteDistance">
+             <property name="toolTip">
+              <string>Reset to default</string>
              </property>
-             <property name="suffix">
-              <string>sp</string>
+             <property name="accessibleName">
+              <string>Reset 'Distance to note' value</string>
              </property>
-             <property name="maximum">
-              <double>99999.000000000000000</double>
+             <property name="text">
+              <string notr="true"/>
              </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <spacer name="horizontalSpacer_35">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_27">
+             <property name="text">
+              <string>Line thickness:</string>
+             </property>
+             <property name="buddy">
+              <cstring>arpeggioLineWidth</cstring>
              </property>
             </widget>
            </item>
@@ -7129,23 +7276,58 @@ By default, they will be placed such as that their right end are at the same lev
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_27">
-             <property name="text">
-              <string>Line thickness:</string>
+           <item row="1" column="2">
+            <widget class="QToolButton" name="resetArpeggioLineWidth">
+             <property name="toolTip">
+              <string>Reset to default</string>
              </property>
-             <property name="buddy">
-              <cstring>arpeggioLineWidth</cstring>
+             <property name="accessibleName">
+              <string>Reset 'Line thickness' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_26">
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_28">
              <property name="text">
-              <string>Distance to note:</string>
+              <string>Hook length:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
              </property>
              <property name="buddy">
-              <cstring>arpeggioNoteDistance</cstring>
+              <cstring>arpeggioHookLen</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="arpeggioHookLen">
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="maximum">
+              <double>99999.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QToolButton" name="resetArpeggioHookLen">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Hook length' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
              </property>
             </widget>
            </item>
@@ -7156,18 +7338,18 @@ By default, they will be placed such as that their right end are at the same lev
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <spacer name="horizontalSpacer_35">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+           <item row="3" column="3">
+            <widget class="QToolButton" name="resetArpeggioHiddenInStdIfTab">
+             <property name="toolTip">
+              <string>Reset to default</string>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
+             <property name="accessibleName">
+              <string>Reset 'Do not show arpeggios in standard notation when displayed in tablature' value</string>
              </property>
-            </spacer>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -7599,13 +7781,13 @@ By default, they will be placed such as that their right end are at the same lev
           </layout>
          </widget>
         </item>
-    	<item>
+        <item>
          <widget class="QGroupBox" name="groupBox_ties">
           <property name="title">
            <string>Ties</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_57">
-		   <item>
+           <item>
             <layout class="QGridLayout" name="gridLayout_66">
              <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -12017,6 +12199,39 @@ By default, they will be placed such as that their right end are at the same lev
           <layout class="QVBoxLayout" name="verticalLayout_32">
            <item>
             <layout class="QGridLayout" name="gridLayout_16">
+             <item row="0" column="0">
+              <widget class="QLabel" name="labelFBFont">
+               <property name="text">
+                <string>Font:</string>
+               </property>
+               <property name="textFormat">
+                <enum>Qt::PlainText</enum>
+               </property>
+               <property name="buddy">
+                <cstring>comboFBFont</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="comboFBFont">
+               <property name="sizeAdjustPolicy">
+                <enum>QComboBox::AdjustToContents</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <spacer name="horizontalSpacer_9">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
              <item row="1" column="0">
               <widget class="QLabel" name="labelFBSize">
                <property name="text">
@@ -12049,30 +12264,29 @@ By default, they will be placed such as that their right end are at the same lev
                </property>
               </widget>
              </item>
-             <item row="2" column="2">
-              <widget class="QLabel" name="label_98">
+             <item row="1" column="3">
+              <widget class="QToolButton" name="resetFiguredBassFontSize">
+               <property name="toolTip">
+                <string>Reset to default</string>
+               </property>
+               <property name="accessibleName">
+                <string>Reset 'Font size' value</string>
+               </property>
                <property name="text">
-                <string>from top of staff</string>
+                <string notr="true"/>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
-              <spacer name="horizontalSpacer_9">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="3" column="2">
-              <widget class="QLabel" name="label_99">
+             <item row="2" column="0">
+              <widget class="QLabel" name="labelFBVertPos">
                <property name="text">
-                <string>of font height</string>
+                <string>Vertical position:</string>
+               </property>
+               <property name="textFormat">
+                <enum>Qt::PlainText</enum>
+               </property>
+               <property name="buddy">
+                <cstring>doubleSpinFBVertPos</cstring>
                </property>
               </widget>
              </item>
@@ -12095,6 +12309,26 @@ By default, they will be placed such as that their right end are at the same lev
                </property>
                <property name="value">
                 <double>6.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="label_98">
+               <property name="text">
+                <string>from top of staff</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QToolButton" name="resetFiguredBassYOffset">
+               <property name="toolTip">
+                <string>Reset to default</string>
+               </property>
+               <property name="accessibleName">
+                <string>Reset 'Vertical Position' value</string>
+               </property>
+               <property name="text">
+                <string notr="true"/>
                </property>
               </widget>
              </item>
@@ -12133,36 +12367,23 @@ By default, they will be placed such as that their right end are at the same lev
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="labelFBFont">
+             <item row="3" column="2">
+              <widget class="QLabel" name="label_99">
                <property name="text">
-                <string>Font:</string>
-               </property>
-               <property name="textFormat">
-                <enum>Qt::PlainText</enum>
-               </property>
-               <property name="buddy">
-                <cstring>comboFBFont</cstring>
+                <string>of font height</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="comboFBFont">
-               <property name="sizeAdjustPolicy">
-                <enum>QComboBox::AdjustToContents</enum>
+             <item row="3" column="3">
+              <widget class="QToolButton" name="resetFiguredBassLineHeight">
+               <property name="toolTip">
+                <string>Reset to default</string>
                </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="labelFBVertPos">
+               <property name="accessibleName">
+                <string>Reset 'Line Height' value</string>
+               </property>
                <property name="text">
-                <string>Vertical position:</string>
-               </property>
-               <property name="textFormat">
-                <enum>Qt::PlainText</enum>
-               </property>
-               <property name="buddy">
-                <cstring>doubleSpinFBVertPos</cstring>
+                <string notr="true"/>
                </property>
               </widget>
              </item>
@@ -12470,6 +12691,19 @@ By default, they will be placed such as that their right end are at the same lev
                       <widget class="QCheckBox" name="allCapsNoteNames">
                        <property name="text">
                         <string>All caps note names</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QToolButton" name="resetChordsCapsSettings">
+                       <property name="toolTip">
+                        <string>Reset to default</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Reset chord capitalization values</string>
+                       </property>
+                       <property name="text">
+                        <string notr="true"/>
                        </property>
                       </widget>
                      </item>
