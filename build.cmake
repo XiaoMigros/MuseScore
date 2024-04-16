@@ -38,7 +38,7 @@ while(i LESS "${CMAKE_ARGC}")
 endwhile()
 
 # load custom CMake functions and macros
-include("${CMAKE_CURRENT_LIST_DIR}/build/cmake/GetUtilsFunctions.cmake") # "fn__" namespace
+include("${CMAKE_CURRENT_LIST_DIR}/buildscripts/cmake/GetUtilsFunctions.cmake") # "fn__" namespace
 
 # Set the name of the build folder (just the folder name, not the full path)
 function(build_folder
@@ -161,7 +161,7 @@ fn__set_default(INSTALL_PATH "install") # relative to BUILD_PATH
 
 # MSCORE_EXECUTABLE (path relative to INSTALL_PATH)
 if(WIN32)
-    fn__set_default(MSCORE_EXECUTABLE "bin/MuseScore4.exe")
+    fn__set_default(MSCORE_EXECUTABLE "bin/MuseScoreStudio4.exe")
 elseif(APPLE)
     fn__set_default(MSCORE_EXECUTABLE "mscore.app/Contents/MacOS/mscore")
 else()
@@ -186,9 +186,9 @@ list(APPEND CONFIGURE_ARGS "-DCMAKE_INSTALL_PREFIX=${INSTALL_PATH}")
 list(APPEND CONFIGURE_ARGS "-DCMAKE_BUILD_TYPE=${BUILD_TYPE}")
 
 if(QT_COMPILER MATCHES "_64$" OR QT_COMPILER MATCHES "mingw64")
-    list(APPEND CONFIGURE_ARGS "-DMUE_COMPILE_BUILD_64=ON")
+    list(APPEND CONFIGURE_ARGS "-DMUSE_COMPILE_BUILD_64=ON")
 else()
-    list(APPEND CONFIGURE_ARGS "-DMUE_COMPILE_BUILD_64=OFF")
+    list(APPEND CONFIGURE_ARGS "-DMUSE_COMPILE_BUILD_64=OFF")
 endif()
 
 #### ACTUAL BUILD STEPS START HERE ####
@@ -215,7 +215,7 @@ if(ARG_CONFIGURE AND NOT EXISTS "${BUILD_PATH}/CMakeCache.txt")
     message("\n~~~~ Actualizing Configure step ~~~~\n")
     file(MAKE_DIRECTORY "${BUILD_PATH}")
     if(QT_COMPILER MATCHES "msvc")
-        set(CMAKE_WRAPPER "${SOURCE_PATH}/build/cmake_wrapper.bat")
+        set(CMAKE_WRAPPER "${SOURCE_PATH}/buildscripts/tools/cmake_wrapper.bat")
     else()
         set(CMAKE_WRAPPER "cmake")
     endif()

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -3908,6 +3908,13 @@ void Score::removeChordRest(ChordRest* cr, bool clearSegment)
 {
     std::set<Segment*> segments;
     for (EngravingObject* e : cr->linkList()) {
+        if (cr->isChord()) {
+            for (Spanner* spanner : toChord(e)->startingSpanners()) {
+                if (spanner->isTrill()) {
+                    doUndoRemoveElement(spanner);
+                }
+            }
+        }
         doUndoRemoveElement(static_cast<EngravingItem*>(e));
         if (clearSegment) {
             Segment* s = cr->segment();
@@ -3928,13 +3935,6 @@ void Score::removeChordRest(ChordRest* cr, bool clearSegment)
             delete beam;
         } else {
             undoRemoveElement(beam);
-        }
-    }
-    if (cr->isChord()) {
-        for (Spanner* spanner : toChord(cr)->startingSpanners()) {
-            if (spanner->isTrill()) {
-                doUndoRemoveElement(spanner);
-            }
         }
     }
 }
@@ -5118,7 +5118,7 @@ void Score::undoChangeClef(Staff* ostaff, EngravingItem* e, ClefType ct, bool fo
 
         StaffType* staffType = staff->staffType(e->tick());
         StaffGroup staffGroup = staffType->group();
-        if (ClefInfo::staffGroup(ct) != staffGroup) {
+        if (ClefInfo::staffGroup(ct) != staffGroup && !forInstrumentChange) {
             continue;
         }
 
@@ -5233,7 +5233,7 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
     Measure* nm = nstaff->score()->tick2measure(s->tick());
     Segment* ns = nm->findSegment(s->segmentType(), s->tick());
     EngravingItem* ne = ns->element(dtrack);
-    if (!ne->isChord()) {
+    if (!ne || !ne->isChord()) {
         return 0;
     }
     Chord* nc = toChord(ne);
@@ -6191,6 +6191,10 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                     if (parent && parent->isNote()) {
                         nsp->setParent(parent->findLinkedInStaff(staff));
                     }
+                    EngravingItem* endEl = sp->endElement();
+                    if (endEl && endEl->isNote()) {
+                        nsp->setEndElement(endEl->findLinkedInStaff(staff));
+                    }
                 }
 
                 doUndoAddElement(nsp);
@@ -6244,6 +6248,11 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                 }
                 Chord* c1 = findLinkedChord(cr1, score->staff(staffIdx));
                 Chord* c2 = findLinkedChord(cr2, score->staff(staffIdx + sm));
+
+                IF_ASSERT_FAILED(c1) {
+                    return;
+                }
+
                 Note* nn1 = c1->findNote(n1->pitch(), n1->unisonIndex());
                 Note* nn2 = c2 ? c2->findNote(n2->pitch(), n2->unisonIndex()) : 0;
 

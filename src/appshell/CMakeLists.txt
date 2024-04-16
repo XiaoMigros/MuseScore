@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-CLA-applies
+# MuseScore-Studio-CLA-applies
 #
-# MuseScore
+# MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore BVBA and others
+# Copyright (C) 2021 MuseScore Limited
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE appshell)
+declare_module(appshell)
 
 set(MODULE_QRC appshell.qrc)
 set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
@@ -59,6 +59,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/firstlaunchsetup/firstlaunchsetupmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/firstlaunchsetup/themespagemodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/firstlaunchsetup/themespagemodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/firstlaunchsetup/tutorialspagemodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/firstlaunchsetup/tutorialspagemodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/preferences/preferencesmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/preferences/preferencesmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/preferences/preferencepageitem.cpp
@@ -108,9 +110,9 @@ set(MODULE_SRC
 
 
 set(MODULE_LINK
-    ui
-    uicomponents
-    dockwindow
+    muse::ui
+    muse::uicomponents
+    muse::dockwindow
     )
 
 if (OS_IS_MAC)
@@ -151,4 +153,4 @@ if (NOT OS_IS_MAC)
     endif()
 endif(NOT OS_IS_MAC)
 
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()

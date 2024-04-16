@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -2272,7 +2272,7 @@ void MeasureLayout::computeWidth(Measure* m, LayoutContext& ctx, Segment* s, dou
             if (isSystemHeader && (ns->isStartRepeatBarLineType() || ns->isChordRestType() || (ns->isClefType() && !ns->header()))) {
                 // this is the system header gap
                 w = HorizontalSpacing::minHorizontalDistance(s, ns, true, ctx.state().segmentShapeSqueezeFactor());
-                isSystemHeader = false;
+                isSystemHeader = !ns->isChordRestType();
             } else {
                 w = HorizontalSpacing::minHorizontalDistance(s, ns, false, ctx.state().segmentShapeSqueezeFactor());
                 if (s->isChordRestType()) {

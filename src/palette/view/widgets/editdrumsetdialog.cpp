@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -662,7 +662,7 @@ void EditDrumsetDialog::load()
             if (e.attribute("version") != Constants::MSC_VERSION_STR) {
                 auto result = interactive()->warning(
                     muse::trc("palette", "Drumset file too old"),
-                    muse::trc("palette", "MuseScore may not be able to load this drumset file."), {
+                    muse::trc("palette", "MuseScore Studio may not be able to load this drumset file."), {
                     muse::IInteractive::Button::Cancel,
                     muse::IInteractive::Button::Ignore
                 }, muse::IInteractive::Button::Cancel);

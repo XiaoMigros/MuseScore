@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,7 +29,7 @@
 #include "modularity/ioc.h"
 #include "global/iapplication.h"
 #include "converter/iconvertercontroller.h"
-#include "diagnostics/idiagnosticdrawprovider.h"
+#include "engraving/devtools/drawdata/idiagnosticdrawprovider.h"
 #include "autobot/iautobot.h"
 #include "audio/iregisteraudiopluginsscenario.h"
 #include "multiinstances/imultiinstancesprovider.h"
@@ -53,7 +53,7 @@ class App
 {
     INJECT(muse::IApplication, muapplication)
     INJECT(converter::IConverterController, converter)
-    INJECT(diagnostics::IDiagnosticDrawProvider, diagnosticDrawProvider)
+    INJECT(engraving::IDiagnosticDrawProvider, diagnosticDrawProvider)
     INJECT(muse::autobot::IAutobot, autobot)
     INJECT(muse::audio::IRegisterAudioPluginsScenario, registerAudioPluginsScenario)
     INJECT(muse::mi::IMultiInstancesProvider, multiInstancesProvider)

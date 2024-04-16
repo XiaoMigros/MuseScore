@@ -45,11 +45,14 @@ jobs:
     - name: "Configure workflow"
       env:
         pull_request_title: ${{ github.event.pull_request.title }}
+        SENTRY_SERVER_MU4_KEY: ${{ secrets.SENTRY_SERVER_MU4_KEY }}
+        SENTRY_SERVER_SANDBOX_KEY: ${{ secrets.SENTRY_SERVER_SANDBOX_KEY }}
+        SENTRY_PROJECT: ${{ github.event.inputs.sentry_project }}
       run: |
-        sudo bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ github.event.inputs.build_mode }}
+        sudo bash ./buildscripts/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ github.event.inputs.build_mode }}
         BUILD_MODE=$(cat ./build.artifacts/env/build_mode.env)
 
-        sudo bash ./build/ci/tools/make_build_number.sh
+        sudo bash ./buildscripts/ci/tools/make_build_number.sh
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
@@ -76,23 +79,22 @@ jobs:
         fi
 
         DO_UPLOAD_SYMBOLS='false'
-        SENTRY_PROJECT=${{ github.event.inputs.sentry_project }}
         SENTRY_URL=""
 
-        if [ ${{ secrets.SENTRY_SERVER_MU4_KEY }} != 0 ]; then 
+        if [ "$SENTRY_SERVER_MU4_KEY" != "" ]; then 
           if [ -z "$SENTRY_PROJECT" ] && [ "$BUILD_MODE" == "stable_build" ]; then 
             SENTRY_PROJECT="mu4"
           fi
 
           if [ "$SENTRY_PROJECT" == "mu4" ]; then 
             DO_UPLOAD_SYMBOLS='true'
-            SENTRY_URL=https://sentry.musescore.org/api/4/minidump/?sentry_key=${{ secrets.SENTRY_SERVER_MU4_KEY }}
+            SENTRY_URL=https://sentry.musescore.org/api/4/minidump/?sentry_key=$SENTRY_SERVER_MU4_KEY
           fi
         fi
 
-        if [ "$SENTRY_PROJECT" == "sandbox" ] && [ ${{ secrets.SENTRY_SERVER_SANDBOX_KEY }} != 0 ]; then 
+        if [ "$SENTRY_PROJECT" == "sandbox" ] && [ "$SENTRY_SERVER_SANDBOX_KEY" != "" ]; then 
           DO_UPLOAD_SYMBOLS='true'
-          SENTRY_URL=https://sentry.musescore.org/api/3/minidump/?sentry_key=${{ secrets.SENTRY_SERVER_SANDBOX_KEY }}
+          SENTRY_URL=https://sentry.musescore.org/api/3/minidump/?sentry_key=$SENTRY_SERVER_SANDBOX_KEY
         fi
 
         if [ $DO_BUILD == 'false' ]; then
@@ -103,7 +105,7 @@ jobs:
         ADD_INFO="_${GITHUB_REF#refs/heads/}"
         if [ "${{ github.event_name }}" == "schedule" ] && [ "${{ github.event.schedule }}" == "0 5 */1 */1 *" ]; then ADD_INFO="_${CURRENT_RELEASE_BRANCH}"; fi
         if [ "${{ github.event_name }}" == "pull_request" ]; then ADD_INFO="_${{ github.event.pull_request.number }}_${pull_request_title}"; fi
-        UPLOAD_ARTIFACT_NAME="$(tr '":<>|*?/\\' '_' <<<"MU4_${BUILD_NUMBER}_Lin_armv7l${ADD_INFO}")"
+        UPLOAD_ARTIFACT_NAME="$(tr '":<>|*?/\\’' '_' <<<"MU4_${BUILD_NUMBER}_Lin_armv7l${ADD_INFO}")"
 
         echo "github.repository: ${{ github.repository }}"
         echo "BUILD_MODE=$BUILD_MODE" >> $GITHUB_ENV
@@ -130,19 +132,19 @@ jobs:
       run: |
         C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static "arm32v7/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
-        bash /MuseScore/build/ci/linux/setup-arm.sh --arch armv7l && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --crash_log_url $C_URL --arch armv7l && \
-        bash ./build/ci/linux/dumpsyms.sh && \
-        bash /MuseScore/build/ci/linux/package.sh --arch armv7l && \
-        bash /MuseScore/build/ci/tools/checksum.sh"
+        bash /MuseScore/buildscripts/ci/linux/setup-arm.sh --arch armv7l && \
+        bash /MuseScore/buildscripts/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --crash_log_url $C_URL --arch armv7l && \
+        bash ./buildscripts/ci/linux/dumpsyms.sh && \
+        bash /MuseScore/buildscripts/ci/linux/package.sh --arch armv7l && \
+        bash /MuseScore/buildscripts/ci/tools/checksum.sh"
     - name: Upload dump symbols
       if: env.DO_UPLOAD_SYMBOLS == 'true'
       run: |
-        sudo bash ./build/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
+        sudo bash ./buildscripts/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
     - name: Publish package
       if: env.DO_PUBLISH == 'true'
       run: |
-        sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch armv7l -v 4
+        sudo bash ./buildscripts/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch armv7l -v 4
     - name: Upload artifacts on GitHub
       if: env.DO_BUILD == 'true'
       uses: actions/upload-artifact@v4
@@ -173,10 +175,10 @@ jobs:
       env:
         pull_request_title: ${{ github.event.pull_request.title }}
       run: |
-        sudo bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ github.event.inputs.build_mode }}
+        sudo bash ./buildscripts/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ github.event.inputs.build_mode }}
         BUILD_MODE=$(cat ./build.artifacts/env/build_mode.env)
 
-        sudo bash ./build/ci/tools/make_build_number.sh
+        sudo bash ./buildscripts/ci/tools/make_build_number.sh
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
@@ -223,7 +225,7 @@ jobs:
         ADD_INFO="_${GITHUB_REF#refs/heads/}"
         if [ "${{ github.event_name }}" == "schedule" ] && [ "${{ github.event.schedule }}" == "0 5 */1 */1 *" ]; then ADD_INFO="_${CURRENT_RELEASE_BRANCH}"; fi
         if [ "${{ github.event_name }}" == "pull_request" ]; then ADD_INFO="_${{ github.event.pull_request.number }}_${pull_request_title}"; fi
-        UPLOAD_ARTIFACT_NAME="$(tr '":<>|*?/\\' '_' <<<"MU4_${BUILD_NUMBER}_Lin_aarch64${ADD_INFO}")"
+        UPLOAD_ARTIFACT_NAME="$(tr '":<>|*?/\\’' '_' <<<"MU4_${BUILD_NUMBER}_Lin_aarch64${ADD_INFO}")"
 
         echo "github.repository: ${{ github.repository }}"
         echo "BUILD_MODE=$BUILD_MODE" >> $GITHUB_ENV
@@ -250,19 +252,19 @@ jobs:
       run: |
         C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" -v /usr/bin/qemu-aarch64-static:/usr/bin/qemu-aarch64-static "arm64v8/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
-        bash /MuseScore/build/ci/linux/setup-arm.sh --arch aarch64 && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --crash_log_url $C_URL --arch aarch64 && \
-        bash ./build/ci/linux/dumpsyms.sh && \
-        bash /MuseScore/build/ci/linux/package.sh --arch aarch64 && \
-        bash /MuseScore/build/ci/tools/checksum.sh"
+        bash /MuseScore/buildscripts/ci/linux/setup-arm.sh --arch aarch64 && \
+        bash /MuseScore/buildscripts/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --crash_log_url $C_URL --arch aarch64 && \
+        bash ./buildscripts/ci/linux/dumpsyms.sh && \
+        bash /MuseScore/buildscripts/ci/linux/package.sh --arch aarch64 && \
+        bash /MuseScore/buildscripts/ci/tools/checksum.sh"
     - name: Upload dump symbols
       if: env.DO_UPLOAD_SYMBOLS == 'true'
       run: |
-        sudo bash ./build/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
+        sudo bash ./buildscripts/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
     - name: Publish package
       if: env.DO_PUBLISH == 'true'
       run: |
-        sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch aarch64 -v 4
+        sudo bash ./buildscripts/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch aarch64 -v 4
     - name: Upload artifacts on GitHub
       if: env.DO_BUILD == 'true'
       uses: actions/upload-artifact@v4

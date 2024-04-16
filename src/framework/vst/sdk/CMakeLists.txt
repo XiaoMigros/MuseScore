@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE vst_sdk_3)
+declare_module(vst_sdk_3)
 
 if (NOT MUSE_MODULE_VST_VST3_SDK_PATH)
     message(FATAL_ERROR "VST3_SDK path is not setted")
@@ -38,7 +38,7 @@ endif()
 
 set(MODULE_USE_UNITY_NONE ON)
 
-set(MODULE_USE_PCH_NONE ON)
+set(MODULE_USE_PCH_DISABLED ON)
 
 if (OS_IS_WIN)
     set(PLATFORM_SRC
@@ -165,7 +165,7 @@ set(MODULE_INCLUDE
     ${VST3_SDK_PATH}
     )
 
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()
 
 target_no_warning(${MODULE} -w)
 

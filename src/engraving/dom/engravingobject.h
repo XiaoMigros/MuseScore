@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,7 +28,7 @@
 
 #include "draw/types/geometry.h"
 #include "modularity/ioc.h"
-#include "diagnostics/iengravingelementsprovider.h"
+#include "../devtools/iengravingelementsprovider.h"
 
 #include "../style/styledef.h"
 
@@ -37,10 +37,6 @@
 
 #include "../infrastructure/rtti.h"
 #include "../infrastructure/eid.h"
-
-namespace mu::diagnostics {
-class EngravingElementsProvider;
-}
 
 namespace mu::engraving {
 class Accidental;
@@ -202,7 +198,7 @@ public:
 
 class EngravingObject
 {
-    INJECT_STATIC(mu::diagnostics::IEngravingElementsProvider, elementsProvider)
+    INJECT_STATIC(IEngravingElementsProvider, elementsProvider)
 
 public:
     EngravingObject(const ElementType& type, EngravingObject* parent);
@@ -228,7 +224,7 @@ public:
     const EngravingObjectList& children() const { return m_children; }
 
     // Score Tree functions for scan function
-    friend class mu::diagnostics::EngravingElementsProvider;
+    friend class EngravingElementsProvider;
     virtual EngravingObject* scanParent() const { return m_parent; }
     virtual EngravingObjectList scanChildren() const { return {}; }
     virtual void scanElements(void* data, void (* func)(void*, EngravingItem*), bool all=true);

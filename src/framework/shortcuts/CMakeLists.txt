@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE shortcuts)
+declare_module(muse_shortcuts)
+set(MODULE_ALIAS muse::shortcuts)
 
 set(MODULE_QRC shortcuts.qrc)
 
@@ -84,5 +85,5 @@ if (OS_IS_MAC)
     endif()
 endif(OS_IS_MAC)
 
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()
 

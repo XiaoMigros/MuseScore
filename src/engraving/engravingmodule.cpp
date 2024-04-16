@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -55,6 +55,16 @@
 #include "api/v1/qmlpluginapi.h"
 #include "api/v1/engravingapiv1.h"
 #endif
+
+#ifdef MUE_BUILD_ENGRAVING_DEVTOOLS
+#include "ui/iinteractiveuriregister.h"
+#include "devtools/engravingelementsprovider.h"
+#include "devtools/engravingelementsmodel.h"
+#include "devtools/corruptscoredevtoolsmodel.h"
+#include "devtools/drawdata/diagnosticdrawprovider.h"
+#endif
+
+#include "muse_framework_config.h"
 
 #include "log.h"
 
@@ -114,10 +124,21 @@ Versions:
     //ioc()->registerExport<rendering::IScoreRenderer>(moduleName(), new rendering::stable::ScoreRenderer());
 
     ioc()->registerExport<rendering::ISingleRenderer>(moduleName(), new rendering::single::SingleRenderer());
+
+#ifdef MUE_BUILD_ENGRAVING_DEVTOOLS
+    ioc()->registerExport<IEngravingElementsProvider>(moduleName(), new EngravingElementsProvider());
+    ioc()->registerExport<IDiagnosticDrawProvider>(moduleName(), new DiagnosticDrawProvider());
+#endif
 }
 
 void EngravingModule::resolveImports()
 {
+#ifdef MUE_BUILD_ENGRAVING_DEVTOOLS
+    auto ir = ioc()->resolve<muse::ui::IInteractiveUriRegister>(moduleName());
+    if (ir) {
+        ir->registerQmlUri(Uri("musescore://diagnostics/engraving/elements"), "MuseScore/Engraving/EngravingElementsDialog.qml");
+    }
+#endif
 }
 
 void EngravingModule::registerApi()
@@ -140,6 +161,11 @@ void EngravingModule::registerResources()
 void EngravingModule::registerUiTypes()
 {
     MScore::registerUiTypes();
+
+#ifdef MUE_BUILD_ENGRAVING_DEVTOOLS
+    qmlRegisterType<EngravingElementsModel>("MuseScore.Engraving", 1, 0, "EngravingElementsModel");
+    qmlRegisterType<CorruptScoreDevToolsModel>("MuseScore.Engraving", 1, 0, "CorruptScoreDevToolsModel");
+#endif
 }
 
 void EngravingModule::onInit(const IApplication::RunMode& mode)
@@ -150,7 +176,7 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
 
 #ifndef ENGRAVING_NO_INTERNAL
     // Init fonts
-#ifdef MUE_COMPILE_USE_QTFONTMETRICS
+#ifdef MUSE_MODULE_DRAW_USE_QTFONTMETRICS
     {
         // Symbols
         Smufl::init();
@@ -216,7 +242,7 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
         fontProvider->insertSubstitution(u"Finale Broadway Text", u"MuseJazz Text");
         fontProvider->insertSubstitution(u"ScoreFont",      u"Leland Text");// alias for current Musical Text Font
     }
-#else // MUE_COMPILE_USE_QTFONTMETRICS
+#else // MUSE_MODULE_DRAW_USE_QTFONTMETRICS
     {
         using namespace muse::draw;
 
@@ -264,7 +290,7 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
         //! accordingly, they are drawn incorrectly
         m_engravingfonts->loadAllFonts();
     }
-#endif // MUE_COMPILE_USE_QTFONTMETRICS
+#endif // MUSE_MODULE_DRAW_USE_QTFONTMETRICS
 
     m_configuration->init();
 

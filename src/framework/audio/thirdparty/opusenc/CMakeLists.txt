@@ -1,4 +1,5 @@
-set(MODULE opusenc)
+
+declare_module(opusenc)
 
 include(GetPlatformInfo)
 include(GetCompilerInfo)
@@ -31,9 +32,9 @@ set(MODULE_SRC
 
 set(MODULE_LINK ${OPUS_LIBRARIES})
 
-set(MODULE_USE_PCH_NONE ON)
+set(MODULE_USE_PCH_DISABLED ON)
 set(MODULE_USE_UNITY_NONE ON)
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()
 
 target_no_warning(${MODULE} -Wno-unused-parameter)
 target_no_warning(${MODULE} -Wno-unused-variable)

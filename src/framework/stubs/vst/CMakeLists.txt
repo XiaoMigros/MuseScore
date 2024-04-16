@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE vst)
+declare_module(muse_vst)
+set(MODULE_ALIAS muse::vst)
 
 set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/vststubmodule.cpp
@@ -28,4 +29,4 @@ set(MODULE_SRC
     )
 
 set(MODULE_IS_STUB ON)
-include(SetupModule)
+setup_module()

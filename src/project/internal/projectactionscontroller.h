@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -43,7 +43,7 @@
 #include "io/ifilesystem.h"
 #include "internal/iexportprojectscenario.h"
 #include "notation/inotationconfiguration.h"
-#include "update/iupdatescenario.h"
+#include "update/imusesoundscheckupdatescenario.h"
 
 #include "async/asyncable.h"
 
@@ -73,7 +73,7 @@ class ProjectActionsController : public IProjectFilesController, public muse::mi
     INJECT(playback::IPlaybackController, playbackController)
     INJECT(print::IPrintProvider, printProvider)
     INJECT(muse::io::IFileSystem, fileSystem)
-    INJECT(muse::update::IUpdateScenario, updateScenario)
+    INJECT(muse::update::IMuseSoundsCheckUpdateScenario, museSoundsCheckUpdateScenario)
 
 public:
     void init();

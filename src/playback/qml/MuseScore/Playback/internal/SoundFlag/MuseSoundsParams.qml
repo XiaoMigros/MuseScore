@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2024 MuseScore BVBA and others
+ * Copyright (C) 2024 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -34,13 +34,9 @@ Item {
     property int navigationPanelOrderStart: 0
     property int navigationPanelOrderEnd: playingTechniquesGridView.navigationPanel.order
 
-    height: !prv.noOptions ? content.childrenRect.height : noOptionsLabel.implicitHeight
+    property bool noOptions: !modifySoundView.hasPresets && !playingTechniquesGridView.hasPlayingTechniques
 
-    QtObject {
-        id: prv
-
-        property bool noOptions: !modifySoundView.hasPresets && !playingTechniquesGridView.hasPlayingTechniques
-    }
+    height: !noOptions ? content.childrenRect.height : noOptionsLabel.implicitHeight
 
     Column {
         id: content
@@ -79,7 +75,7 @@ Item {
 
             width: parent.width
 
-            title: qsTrc("playback", "Extended techniques")
+            title: qsTrc("playback", "Playing techniques")
             model: root.model.availablePlayingTechniques
             selectionModel: [ root.model.selectedPlayingTechniqueCode ]
 
@@ -103,6 +99,6 @@ Item {
         horizontalAlignment: Text.AlignLeft
         wrapMode: Text.Wrap
 
-        visible: prv.noOptions
+        visible: root.noOptions
     }
 }

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -323,6 +323,8 @@ public:
     bool isDifferentInstrument(const Instrument& i) const;
 
     String id() const { return m_id; }
+    const String& soundId() const { return m_soundId; }
+    void setSoundId(const String& id) { m_soundId = id; }
     String family() const;
     void setId(const String& id) { m_id = id; }
     void setMinPitchP(int v) { m_minPitchP = v; }
@@ -412,6 +414,7 @@ private:
     StaffNameList m_shortNames;
     String m_trackName;
     String m_id;
+    String m_soundId;
 
     int m_minPitchA = 0;
     int m_maxPitchA = 0;

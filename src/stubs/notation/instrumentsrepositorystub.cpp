@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,7 +29,7 @@ const InstrumentTemplateList& InstrumentsRepositoryStub::instrumentTemplates() c
     return l;
 }
 
-const InstrumentTemplate& InstrumentsRepositoryStub::instrumentTemplate(const std::string&) const
+const InstrumentTemplate& InstrumentsRepositoryStub::instrumentTemplate(const muse::String&) const
 {
     static InstrumentTemplate t;
     return t;
@@ -41,7 +41,7 @@ const ScoreOrderList& InstrumentsRepositoryStub::orders() const
     return l;
 }
 
-const ScoreOrder& InstrumentsRepositoryStub::order(const std::string&) const
+const ScoreOrder& InstrumentsRepositoryStub::order(const muse::String&) const
 {
     static ScoreOrder o;
     return o;

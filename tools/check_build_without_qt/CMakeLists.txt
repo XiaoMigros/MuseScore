@@ -11,8 +11,8 @@ set(MU_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
 set(MUSE_FRAMEWORK_PATH ${MU_ROOT})
 
 set(CMAKE_MODULE_PATH
-    ${MU_ROOT}/build
-    ${MU_ROOT}/build/cmake
+    ${MU_ROOT}/buildscripts
+    ${MU_ROOT}/buildscripts/cmake
     ${CMAKE_MODULE_PATH}
     )
 
@@ -29,17 +29,11 @@ set(THIRDPARTY_DIR ${MU_ROOT}/thirdparty)
 add_definitions(
     -DNO_QT_SUPPORT
     -DGLOBAL_NO_INTERNAL
-
-    -DMUSESCORE_REVISION="abc123"
-    -DMUSESCORE_BUILD_NUMBER="123456"
-    -DMUSESCORE_VERSION="4.0.0"
-    -DMUSESCORE_VERSION_LABEL="dev"
-    -DMUSESCORE_INSTALL_SUFFIX=""
-    -DMUSESCORE_INSTALL_PREFIX=""
-    -DMUSESCORE_INSTALL_NAME=""
 )
 
-configure_file(${MU_ROOT}/build/cmake/muse_framework/muse_framework_config.h.in muse_framework_config.h )
+configure_file(${MU_ROOT}/src/framework/cmake/muse_framework_config.h.in muse_framework_config.h )
+
+include(DeclareModuleSetup)
 
 set(GLOBAL_NO_INTERNAL ON)
 add_subdirectory(${MU_ROOT}/src/framework/global global)
@@ -64,7 +58,7 @@ add_executable(engraving_app
 )
 
 set_target_properties(engraving PROPERTIES COMPILE_FLAGS "-fPIC")
-set_target_properties(global PROPERTIES COMPILE_FLAGS "-fPIC")
+set_target_properties(muse_global PROPERTIES COMPILE_FLAGS "-fPIC")
 set_target_properties(engraving_app PROPERTIES COMPILE_FLAGS "-fPIC")
 
 target_include_directories(engraving_app PUBLIC
@@ -76,8 +70,8 @@ target_include_directories(engraving_app PUBLIC
 
 target_link_libraries(engraving_app
     ${QT_LIBRARIES}
-    global
-    draw
+    muse::global
+    muse::draw
     engraving
     iex_guitarpro
 )

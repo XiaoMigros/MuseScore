@@ -18,7 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE update)
+declare_module(muse_update)
+set(MODULE_ALIAS muse::update)
+
 set(MODULE_QRC update.qrc)
 
 set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
@@ -31,7 +33,9 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/iupdateconfiguration.h
     ${CMAKE_CURRENT_LIST_DIR}/iupdatescenario.h
     ${CMAKE_CURRENT_LIST_DIR}/iappupdateservice.h
-    ${CMAKE_CURRENT_LIST_DIR}/imusesamplerupdateservice.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/imusesoundscheckupdatescenario.h
+    ${CMAKE_CURRENT_LIST_DIR}/imusesoundscheckupdateservice.h
 
     ${CMAKE_CURRENT_LIST_DIR}/internal/updateconfiguration.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/updateconfiguration.h
@@ -43,14 +47,17 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/updateactioncontroller.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/appupdateservice.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/appupdateservice.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/musesamplerupdateservice.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/musesamplerupdateservice.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/internal/musesoundscheckupdatescenario.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/musesoundscheckupdatescenario.h
+    ${CMAKE_CURRENT_LIST_DIR}/internal/musesoundscheckupdateservice.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/musesoundscheckupdateservice.h
 
     ${CMAKE_CURRENT_LIST_DIR}/view/updatemodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/updatemodel.h
     )
 
-include(SetupModule)
+setup_module()
 
 if (MUE_BUILD_UPDATE_TESTS)
     add_subdirectory(tests)

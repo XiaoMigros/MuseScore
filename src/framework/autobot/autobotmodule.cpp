@@ -40,7 +40,6 @@
 
 #include "internal/api/autobotapi.h"
 #include "internal/api/contextapi.h"
-#include "internal/api/diagnosticsapi.h"
 
 #include "diagnostics/idiagnosticspathsregister.h"
 
@@ -83,7 +82,6 @@ void AutobotModule::resolveImports()
     if (api) {
         api->regApiCreator("autobot", "api.autobot", new ApiCreator<api::AutobotApi>());
         api->regApiCreator("autobot", "api.context", new ApiCreator<ContextApi>());
-        api->regApiCreator("diagnostics", "api.diagnostics", new ApiCreator<DiagnosticsApi>());
     }
 }
 
@@ -103,7 +101,7 @@ void AutobotModule::onInit(const IApplication::RunMode& mode)
     m_actionsController->init();
 
     //! --- Diagnostics ---
-    auto pr = modularity::ioc()->resolve<mu::diagnostics::IDiagnosticsPathsRegister>(moduleName());
+    auto pr = modularity::ioc()->resolve<muse::diagnostics::IDiagnosticsPathsRegister>(moduleName());
     if (pr) {
         for (const io::path_t& p : m_configuration->scriptsDirPaths()) {
             pr->reg("autobotScriptsPath", p);

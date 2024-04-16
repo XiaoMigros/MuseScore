@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -55,7 +55,7 @@ void NotationBraille::init()
     setTablesDir(tablesdir.toStdString().c_str());
     initTables(tablesdir.toStdString());
 
-    std::string welcome = braille_translate(table_for_literature.c_str(), "Welcome to MuseScore 4!");
+    std::string welcome = braille_translate(table_for_literature.c_str(), "Welcome to MuseScore Studio!");
     setBrailleInfo(QString(welcome.c_str()));
 
     brailleConfiguration()->braillePanelEnabledChanged().onNotify(this, [this]() {

@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE languages)
+declare_module(muse_languages)
+set(MODULE_ALIAS muse::languages)
 
 set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/languagesmodule.cpp
@@ -33,5 +34,5 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/languagesservice.h
     )
 
-include(SetupModule)
+setup_module()
 

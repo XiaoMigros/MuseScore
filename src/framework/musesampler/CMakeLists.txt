@@ -18,13 +18,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE musesampler)
+declare_module(muse_musesampler)
+set(MODULE_ALIAS muse::musesampler)
 
 set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/musesamplermodule.cpp
     ${CMAKE_CURRENT_LIST_DIR}/musesamplermodule.h
     ${CMAKE_CURRENT_LIST_DIR}/imusesamplerconfiguration.h
     ${CMAKE_CURRENT_LIST_DIR}/imusesamplerinfo.h
+    ${CMAKE_CURRENT_LIST_DIR}/musesamplertypes.h
 
     ${CMAKE_CURRENT_LIST_DIR}/internal/musesamplerresolver.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/musesamplerresolver.h
@@ -43,4 +45,4 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/musesampleractioncontroller.h
     )
 
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()

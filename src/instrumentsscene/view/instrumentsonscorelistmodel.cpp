@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -194,13 +194,13 @@ void InstrumentsOnScoreListModel::loadOrders()
 
 int InstrumentsOnScoreListModel::resolveInstrumentSequenceNumber(const String& instrumentId) const
 {
-    const InstrumentTemplateList& templates = repository()->instrumentTemplates();
-    for (const InstrumentTemplate* templ : templates) {
-        if (templ->id == instrumentId) {
-            return templ->sequenceOrder;
-        }
+    const InstrumentTemplate& templ = repository()->instrumentTemplate(instrumentId);
+    if (templ.isValid()) {
+        return templ.sequenceOrder;
     }
-    return templates.size();
+
+    const InstrumentTemplateList& allTemplates = repository()->instrumentTemplates();
+    return allTemplates.size();
 }
 
 void InstrumentsOnScoreListModel::addInstruments(const QStringList& instrumentIdList)
@@ -210,7 +210,7 @@ void InstrumentsOnScoreListModel::addInstruments(const QStringList& instrumentId
     ItemList items = this->items();
 
     for (const QString& id : instrumentIdList) {
-        const InstrumentTemplate& templ = repository()->instrumentTemplate(id.toStdString());
+        const InstrumentTemplate& templ = repository()->instrumentTemplate(id);
         if (!templ.isValid()) {
             continue;
         }

@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-CLA-applies
+# MuseScore-Studio-CLA-applies
 #
-# MuseScore
+# MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore BVBA and others
+# Copyright (C) 2021 MuseScore Limited
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -18,11 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# Framework, should be first to work pch
+add_subdirectory(framework)
+
 # App (main)
 add_subdirectory(app)
-
-# Framework
-add_subdirectory(framework)
 
 # Modules
 if (MUE_BUILD_APPSHELL_MODULE)
@@ -38,10 +38,6 @@ add_subdirectory(context)
 
 if (MUE_BUILD_CONVERTER_MODULE)
     add_subdirectory(converter)
-endif()
-
-if (MUE_BUILD_DIAGNOSTICS_MODULE)
-    add_subdirectory(diagnostics)
 endif()
 
 add_subdirectory(engraving)

@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE autobot)
+declare_module(muse_autobot)
+set(MODULE_ALIAS muse::autobot)
 
 set(MODULE_QRC autobot.qrc)
 
@@ -65,8 +66,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/api/autobotapi.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/api/contextapi.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/api/contextapi.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/api/diagnosticsapi.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/api/diagnosticsapi.h
 
     ${CMAKE_CURRENT_LIST_DIR}/view/abfilesmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/abfilesmodel.h
@@ -76,5 +75,5 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/testcaserunmodel.h
     )
 
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()
 

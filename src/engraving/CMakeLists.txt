@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-CLA-applies
+# MuseScore-Studio-CLA-applies
 #
-# MuseScore
+# MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore BVBA and others
+# Copyright (C) 2021 MuseScore Limited
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE engraving)
+declare_module(engraving)
 set(MODULE_QRC
     engraving.qrc
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_Smufl.qrc
@@ -45,6 +45,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/compat/midi/compatmidi.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/rendering/dev/rendering.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/rendering/stable/rendering.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/rendering/single/single.cmake)
+
+if (MUE_BUILD_ENGRAVING_DEVTOOLS)
+    include(${CMAKE_CURRENT_LIST_DIR}/devtools/devtools.cmake)
+endif()
 
 set(MODULE_SRC
 
@@ -275,6 +279,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/playback/utils/pitchutils.h
     ${CMAKE_CURRENT_LIST_DIR}/playback/utils/expressionutils.h
     ${CMAKE_CURRENT_LIST_DIR}/playback/utils/arrangementutils.h
+
+    ${DEVTOOLS_SRC}
     )
 
 if (ENGRAVING_NO_ACCESSIBILITY)
@@ -328,7 +334,7 @@ set(MODULE_INCLUDE
 set(MODULE_DEF ${MODULE_DEF} ${ENGRAVING_INFRASTRUCTURE_DEF})
 set(MODULE_LINK
     ${ENGRAVING_INFRASTRUCTURE_LINK}
-    draw
+    muse::draw
 )
 
 
@@ -344,9 +350,13 @@ if (MUE_ENABLE_ENGRAVING_LD_PASSES)
     set(MODULE_DEF ${MODULE_DEF} -DMUE_ENABLE_ENGRAVING_LD_PASSES)
 endif()
 
+if (MUE_BUILD_ENGRAVING_DEVTOOLS)
+    set(MODULE_DEF ${MODULE_DEF} -DMUE_BUILD_ENGRAVING_DEVTOOLS)
+endif()
+
 set(MODULE_ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(MODULE_USE_UNITY_NONE ON)
-include(SetupModule)
+setup_module()
 
 set_property(TARGET ${MODULE} APPEND PROPERTY AUTOMOC_MACRO_NAMES "BEGIN_QT_REGISTERED_ENUM")
 

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -46,7 +46,7 @@ Ret PrintProvider::printNotation(INotationPtr notation)
     printerDev.setPageSize(ps);
     printerDev.setPageOrientation(pageSizeInch.width() > pageSizeInch.height() ? QPageLayout::Landscape : QPageLayout::Portrait);
 
-    //printerDev.setCreator("MuseScore Version: " VERSION);
+    //printerDev.setCreator("MuseScore Studio Version: " VERSION);
     printerDev.setFullPage(true);
     if (!printerDev.setPageMargins(QMarginsF())) {
         LOGD() << "unable to clear printer margins";

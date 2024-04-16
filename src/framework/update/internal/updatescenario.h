@@ -30,9 +30,7 @@
 #include "actions/iactionsdispatcher.h"
 #include "multiinstances/imultiinstancesprovider.h"
 #include "../iupdateconfiguration.h"
-
 #include "../iappupdateservice.h"
-#include "../imusesamplerupdateservice.h"
 
 #include "../iupdatescenario.h"
 
@@ -44,45 +42,31 @@ class UpdateScenario : public IUpdateScenario, public async::Asyncable
     Inject<mi::IMultiInstancesProvider> multiInstancesProvider;
     Inject<IUpdateConfiguration> configuration;
 
-    Inject<IAppUpdateService> appUpdateService;
-    Inject<IMuseSamplerUpdateService> museSamplerUpdateService;
+    Inject<IAppUpdateService> service;
 
 public:
     void delayedInit();
 
-    void checkForAppUpdate() override;
-    void checkForMuseSamplerUpdate() override;
+    void checkForUpdate() override;
 
 private:
-    bool isAppCheckStarted() const;
-    bool isMuseSamplerCheckStarted() const;
+    bool isCheckStarted() const;
 
-    bool shouldIgnoreMuseSamplerUpdate(const ReleaseInfo& info)const;
-    void setIgnoredMuseSamplerUpdate(const std::string& version);
-
-    void doCheckForAppUpdate(bool manual);
-    void th_checkForAppUpdate();
-
-    void doCheckForMuseSamplerUpdate(bool manual);
-    void th_checkForMuseSamplerUpdate();
+    void doCheckForUpdate(bool manual);
+    void th_checkForUpdate();
 
     void processUpdateResult(int errorCode);
 
-    void showNoAppUpdateMsg();
-    void showAppReleaseInfo(const ReleaseInfo& info);
-
-    void showMuseSamplerReleaseInfo(const ReleaseInfo& info);
+    void showNoUpdateMsg();
+    void showReleaseInfo(const ReleaseInfo& info);
 
     void showServerErrorMsg();
 
     void downloadRelease();
     void closeAppAndStartInstallation(const io::path_t& installerPath);
 
-    bool m_appCheckProgress = false;
-    ProgressPtr m_appCheckProgressChannel = nullptr;
-
-    bool m_museSamplerCheckProgress = false;
-    ProgressPtr m_museSamplerCheckProgressChannel = nullptr;
+    bool m_checkProgress = false;
+    ProgressPtr m_checkProgressChannel = nullptr;
 };
 }
 

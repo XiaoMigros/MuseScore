@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore BVBA and others
+ * Copyright (C) 2023 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,10 +31,10 @@ public:
     InstrumentsRepositoryStub() = default;
 
     const InstrumentTemplateList& instrumentTemplates() const override;
-    const InstrumentTemplate& instrumentTemplate(const std::string& instrumentId) const override;
+    const InstrumentTemplate& instrumentTemplate(const muse::String& instrumentId) const override;
 
     const ScoreOrderList& orders() const override;
-    const ScoreOrder& order(const std::string& orderId) const override;
+    const ScoreOrder& order(const muse::String& orderId) const override;
 
     const InstrumentGenreList& genres() const override;
     const InstrumentGroupList& groups() const override;

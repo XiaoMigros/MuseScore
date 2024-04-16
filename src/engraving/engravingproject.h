@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,7 +31,7 @@
 #include "types/types.h"
 
 #include "modularity/ioc.h"
-#include "diagnostics/iengravingelementsprovider.h"
+#include "devtools/iengravingelementsprovider.h"
 
 //! NOTE In addition to the score itself, the mscz file also stores other data,
 //! such as synthesizer, mixer settings, omr, etc.
@@ -49,7 +49,7 @@ class MStyle;
 
 class EngravingProject : public std::enable_shared_from_this<EngravingProject>
 {
-    INJECT_STATIC(diagnostics::IEngravingElementsProvider, engravingElementsProvider)
+    INJECT_STATIC(IEngravingElementsProvider, engravingElementsProvider)
 
 public:
     ~EngravingProject();

@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -35,10 +35,10 @@ public:
     virtual ~IInstrumentsRepository() = default;
 
     virtual const InstrumentTemplateList& instrumentTemplates() const = 0;
-    virtual const InstrumentTemplate& instrumentTemplate(const std::string& instrumentId) const = 0;
+    virtual const InstrumentTemplate& instrumentTemplate(const muse::String& instrumentId) const = 0;
 
     virtual const ScoreOrderList& orders() const = 0;
-    virtual const ScoreOrder& order(const std::string& orderId) const = 0;
+    virtual const ScoreOrder& order(const muse::String& orderId) const = 0;
 
     virtual const InstrumentGenreList& genres() const = 0;
     virtual const InstrumentGroupList& groups() const = 0;

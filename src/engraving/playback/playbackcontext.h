@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -41,7 +41,7 @@ public:
     muse::mpe::dynamic_level_t appliableDynamicLevel(const int nominalPositionTick) const;
     muse::mpe::ArticulationType persistentArticulationType(const int nominalPositionTick) const;
 
-    muse::mpe::PlaybackParamMap playbackParamMap(const Score* score, const int nominalPositionTick) const;
+    muse::mpe::PlaybackParamMap playbackParamMap(const Score* score, const int nominalPositionTick, const staff_idx_t staffIdx) const;
     muse::mpe::PlaybackParamMap playbackParamMap(const Score* score) const;
     muse::mpe::DynamicLevelMap dynamicLevelMap(const Score* score) const;
 
@@ -58,14 +58,14 @@ private:
     muse::mpe::dynamic_level_t nominalDynamicLevel(const int positionTick) const;
 
     void updateDynamicMap(const Dynamic* dynamic, const Segment* segment, const int segmentPositionTick);
-    void updatePlayTechMap(const PlayTechAnnotation* annotation, const int segmentPositionTick);
-    void updatePlaybackParamMap(const SoundFlag* flag, const int segmentPositionTick);
+    void updatePlayTechMap(const ID partId, const Score* score, const PlayTechAnnotation* annotation, const int segmentPositionTick);
+    void updatePlaybackParamMap(const ID partId, const Score* score, const SoundFlag* flag, const int segmentPositionTick);
     void applyDynamicToNextSegment(const Segment* currentSegment, const int segmentPositionTick,
                                    const muse::mpe::dynamic_level_t dynamicLevel);
 
     void handleSpanners(const ID partId, const Score* score, const int segmentStartTick, const int segmentEndTick,
                         const int tickPositionOffset);
-    void handleAnnotations(const ID partId, const Segment* segment, const int segmentPositionTick);
+    void handleAnnotations(const ID partId, const Score* score, const Segment* segment, const int segmentPositionTick);
 
     void removeDynamicData(const int from, const int to);
     void removePlayTechniqueData(const int from, const int to);

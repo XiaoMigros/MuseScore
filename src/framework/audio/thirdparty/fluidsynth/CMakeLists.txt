@@ -1,5 +1,5 @@
 
-set(MODULE fluidsynth)
+declare_module(fluidsynth)
 
 include(${CMAKE_CURRENT_LIST_DIR}/fluidsynth.cmake)
 
@@ -20,9 +20,9 @@ set(MODULE_LINK
     ${SNDFILE_LIB}
     )
 
-set(MODULE_USE_PCH_NONE ON)
+set(MODULE_USE_PCH_DISABLED ON)
 set(MODULE_USE_UNITY_NONE ON)
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()
 
 #target_no_warning(${MODULE} -Wunused-const-variable=0)
 target_no_warning(${MODULE} -Wno-deprecated)

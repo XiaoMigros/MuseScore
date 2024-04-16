@@ -1,4 +1,5 @@
-set(MODULE flac)
+
+declare_module(flac)
 
 include(GetPlatformInfo)
 include(GetCompilerInfo)
@@ -67,9 +68,9 @@ set (MODULE_SRC
     $<$<BOOL:${OS_IS_WIN}>:${FLAC_SRC}/share/win_utf8_io/win_utf8_io.c>
     )
 
-set(MODULE_USE_PCH_NONE ON)
+set(MODULE_USE_PCH_DISABLED ON)
 set(MODULE_USE_UNITY_NONE ON)
-include(${PROJECT_SOURCE_DIR}/build/module.cmake)
+setup_module()
 
 target_no_warning(${MODULE} -Wno-deprecated)
 target_no_warning(${MODULE} -Wno-conversion)

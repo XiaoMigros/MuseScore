@@ -30,5 +30,5 @@ void UpdateActionController::init()
 
 void UpdateActionController::checkForAppUpdate()
 {
-    updateScenario()->checkForAppUpdate();
+    updateScenario()->checkForUpdate();
 }

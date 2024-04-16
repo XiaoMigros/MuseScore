@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE network)
+declare_module(muse_network)
+set(MODULE_ALIAS muse::network)
 
 set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/networkstubmodule.cpp
@@ -30,4 +31,4 @@ set(MODULE_SRC
     )
 
 set(MODULE_IS_STUB ON)
-include(SetupModule)
+setup_module()

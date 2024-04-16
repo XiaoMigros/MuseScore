@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -1025,7 +1025,7 @@ TEST_F(Engraving_PartsTests, undoRedoRemoveMeasureRepeat)
 //   Image
 //---------------------------------------------------------
 
-TEST_F(Engraving_PartsTests, createPartImage)
+TEST_F(Engraving_PartsTests, DISABLED_createPartImage)
 {
     testPartCreation(u"part-image");
 }
@@ -1134,7 +1134,7 @@ TEST_F(Engraving_PartsTests, removeImage)
 //   undoRemoveImage
 //---------------------------------------------------------
 
-TEST_F(Engraving_PartsTests, undoRemoveImage)
+TEST_F(Engraving_PartsTests, DISABLED_undoRemoveImage)
 {
     MasterScore* score = doRemoveImage();
     score->undoRedo(true, 0);

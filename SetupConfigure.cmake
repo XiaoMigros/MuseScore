@@ -1,21 +1,22 @@
-#=============================================================================
-#  MuseScore
-#  Linux Music Score Editor
+# SPDX-License-Identifier: GPL-3.0-only
+# MuseScore-Studio-CLA-applies
 #
-#  Copyright (C) 2023 MuseScore BVBA and others
+# MuseScore Studio
+# Music Composition & Notation
 #
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License version 2.
+# Copyright (C) 2024 MuseScore Limited
 #
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3 as
+# published by the Free Software Foundation.
 #
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#=============================================================================
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 include(GetBuildType)
 include(GetPlatformInfo)
@@ -70,8 +71,9 @@ endif()
 # Setup paths
 ###########################################
 if (OS_IS_MAC)
-    SET(Mscore_INSTALL_NAME  "Contents/Resources/")
-    SET(Mscore_SHARE_NAME    "mscore.app/")
+    SET(Mscore_INSTALL_NAME    "Contents/Resources/")
+    SET(Mscore_FRAMEWORKS_NAME "Frameworks/")
+    SET(Mscore_SHARE_NAME      "mscore.app/")
 elseif (OS_IS_WIN)
     SET(Mscore_INSTALL_NAME  "")
     SET(Mscore_SHARE_NAME    "./")
@@ -106,16 +108,16 @@ if (WIN_PORTABLE)
 endif()
 if (OS_IS_FBSD)
     message(WARNING "Not building unsupported chrashpad client on FreeBSD")
-    set(MUE_BUILD_CRASHPAD_CLIENT OFF)
+    set(MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT OFF)
 endif()
 
 ###########################################
 # CONFIGURE: VTest
 ###########################################
 if(BUILD_CONFIGURE MATCHES "VTEST")
-    set(MUSE_BUILD_UNIT_TESTS OFF)
+    set(MUSE_ENABLE_UNIT_TESTS OFF)
     set(MUSE_MODULE_GLOBAL_LOGGER_DEBUGLEVEL ON)
-    set(MUE_BUILD_ASAN ON)
+    set(MUSE_COMPILE_ASAN ON)
 
     set(MUE_BUILD_IMAGESEXPORT_MODULE ON)
     set(MUE_BUILD_CONVERTER_MODULE ON)
@@ -151,7 +153,7 @@ if(BUILD_CONFIGURE MATCHES "VTEST")
 
     set(MUE_INSTALL_SOUNDFONT OFF)
 
-    set(MUE_BUILD_CRASHPAD_CLIENT OFF)
+    set(MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT OFF)
 
 endif()
 
@@ -159,10 +161,10 @@ endif()
 # CONFIGURE: UTest
 ###########################################
 if(BUILD_CONFIGURE MATCHES "UTEST")
-    set(MUSE_BUILD_UNIT_TESTS ON)
+    set(MUSE_ENABLE_UNIT_TESTS ON)
     set(MUSE_MODULE_GLOBAL_LOGGER_DEBUGLEVEL ON)
     set(MUSE_MODULE_AUDIO ON)
-    set(MUE_BUILD_ASAN ON)
+    set(MUSE_COMPILE_ASAN ON)
 
     message(STATUS "If you added tests to a module that didn't have them yet, make sure that this module is enabled, see SetupConfigure.cmake")
     set(MUSE_MODULE_MIDI OFF)
@@ -203,12 +205,8 @@ if (NOT MUE_BUILD_IMPORTEXPORT_MODULE)
     set(MUE_BUILD_VIDEOEXPORT_MODULE OFF)
 endif()
 
-if (NOT MUE_BUILD_DIAGNOSTICS_MODULE)
-    set(MUE_BUILD_CRASHPAD_CLIENT OFF)
-endif()
-
-if (MUE_BUILD_ASAN)
-    set(MUE_ENABLE_CUSTOM_ALLOCATOR OFF)
+if (MUSE_COMPILE_ASAN)
+    set(MUSE_ENABLE_CUSTOM_ALLOCATOR OFF)
 endif()
 
 if (NOT MUE_BUILD_NOTATION_MODULE)
@@ -223,16 +221,14 @@ endif()
 ###########################################
 # Unit tests
 ###########################################
-if (NOT MUSE_BUILD_UNIT_TESTS)
+if (NOT MUSE_ENABLE_UNIT_TESTS)
 
     set(MUE_BUILD_BRAILLE_TESTS OFF)
-    set(MUE_BUILD_DIAGNOSTICS_TESTS OFF)
     set(MUE_BUILD_ENGRAVING_TESTS OFF)
     set(MUE_BUILD_IMPORTEXPORT_TESTS OFF)
     set(MUE_BUILD_NOTATION_TESTS OFF)
     set(MUE_BUILD_PLAYBACK_TESTS OFF)
     set(MUE_BUILD_PROJECT_TESTS OFF)
-    set(MUSE_MODULE_UPDATE OFF)
 
 endif()
 
@@ -249,7 +245,7 @@ set(MUSE_APP_INSTALL_SUFFIX "\"${MUSESCORE_INSTALL_SUFFIX}\"")
 set(MUSE_APP_INSTALL_PREFIX "\"${CMAKE_INSTALL_PREFIX}\"")
 set(MUSE_APP_INSTALL_NAME "\"${Mscore_INSTALL_NAME}\"")
 
-include(muse_framework/SetupConfigure)
+include(${MUSE_FRAMEWORK_SRC_PATH}/cmake/MuseSetupConfiguration.cmake)
 
 ###########################################
 # Global definitions
@@ -272,7 +268,6 @@ endfunction()
 def_opt(MUE_BUILD_APPSHELL_MODULE ${MUE_BUILD_APPSHELL_MODULE})
 def_opt(MUE_BUILD_BRAILLE_MODULE ${MUE_BUILD_BRAILLE_MODULE})
 def_opt(MUE_BUILD_CONVERTER_MODULE ${MUE_BUILD_CONVERTER_MODULE})
-def_opt(MUE_BUILD_DIAGNOSTICS_MODULE ${MUE_BUILD_DIAGNOSTICS_MODULE})
 def_opt(MUE_BUILD_INSPECTOR_MODULE ${MUE_BUILD_INSPECTOR_MODULE})
 def_opt(MUE_BUILD_INSTRUMENTSSCENE_MODULE ${MUE_BUILD_INSTRUMENTSSCENE_MODULE})
 def_opt(MUE_BUILD_NOTATION_MODULE ${MUE_BUILD_NOTATION_MODULE})
@@ -282,9 +277,6 @@ def_opt(MUE_BUILD_PROJECT_MODULE ${MUE_BUILD_PROJECT_MODULE})
 def_opt(MUE_BUILD_IMPORTEXPORT_MODULE ${MUE_BUILD_IMPORTEXPORT_MODULE})
 def_opt(MUE_BUILD_VIDEOEXPORT_MODULE ${MUE_BUILD_VIDEOEXPORT_MODULE})
 def_opt(MUE_BUILD_IMAGESEXPORT_MODULE ${MUE_BUILD_IMAGESEXPORT_MODULE})
-def_opt(MUE_BUILD_CRASHPAD_CLIENT ${MUE_BUILD_CRASHPAD_CLIENT})
-
-def_opt(MUE_COMPILE_USE_QTFONTMETRICS ${MUE_COMPILE_USE_QTFONTMETRICS})
 
 if (QT_SUPPORT)
     add_definitions(-DQT_SUPPORT)

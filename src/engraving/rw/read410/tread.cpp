@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -993,7 +993,9 @@ bool TRead::readProperties(Instrument* item, XmlReader& e, ReadContext& ctx, Par
     partAudioSetting.instrumentId = trackId;
 
     const AsciiStringView tag(e.name());
-    if (tag == "longName") {
+    if (tag == "soundId") {
+        item->setSoundId(e.readText());
+    } else if (tag == "longName") {
         StaffName name;
         TRead::read(&name, e);
         item->appendLongName(name);
@@ -2506,6 +2508,8 @@ void TRead::read(SoundFlag* item, XmlReader& xml, ReadContext&)
             item->setSoundPresets(xml.readText().split(u","));
         } else if (tag == "playingTechnique") {
             item->setPlayingTechnique(xml.readText());
+        } else if (tag == "applyToAllStaves") {
+            item->setApplyToAllStaves(xml.readBool());
         } else {
             xml.unknown();
         }

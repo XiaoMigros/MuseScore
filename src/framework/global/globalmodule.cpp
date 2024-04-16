@@ -21,6 +21,8 @@
  */
 #include "globalmodule.h"
 
+#include "muse_framework_config.h"
+
 #include "modularity/ioc.h"
 #include "internal/globalconfiguration.h"
 
@@ -52,7 +54,7 @@
 #include "api/filesystemapi.h"
 #include "api/processapi.h"
 
-#ifdef MUE_BUILD_DIAGNOSTICS_MODULE
+#ifdef MUSE_MODULE_DIAGNOSTICS
 #include "diagnostics/idiagnosticspathsregister.h"
 #endif
 
@@ -197,8 +199,8 @@ void GlobalModule::onPreInit(const IApplication::RunMode& mode)
     });
 
     //! --- Diagnostics ---
-#ifdef MUE_BUILD_DIAGNOSTICS_MODULE
-    auto pr = ioc()->resolve<mu::diagnostics::IDiagnosticsPathsRegister>(moduleName());
+#ifdef MUSE_MODULE_DIAGNOSTICS
+    auto pr = ioc()->resolve<muse::diagnostics::IDiagnosticsPathsRegister>(moduleName());
     if (pr) {
         pr->reg("appBinPath", m_configuration->appBinPath());
         pr->reg("appBinDirPath", m_configuration->appBinDirPath());

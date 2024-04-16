@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -991,6 +991,7 @@ void NotationParts::initStaff(Staff* staff, const InstrumentTemplate& templ, con
         stt->setSmall(false);
     } else {
         stt->setSmall(templ.smallStaff[cleffIndex]);
+        stt->setLines(templ.staffLines[cleffIndex]);
         staff->setBracketType(0, templ.bracket[cleffIndex]);
         staff->setBracketSpan(0, templ.bracketSpan[cleffIndex]);
         staff->setBarLineSpan(templ.barlineSpan[cleffIndex]);

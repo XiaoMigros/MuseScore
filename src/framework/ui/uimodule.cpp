@@ -181,7 +181,7 @@ void UiModule::registerUiTypes()
     qmlRegisterType<InteractiveTestsModel>("Muse.Ui", 1, 0, "InteractiveTestsModel");
     qRegisterMetaType<TestDialog>("TestDialog");
 
-    modularity::ioc()->resolve<ui::IUiEngine>(moduleName())->addSourceImportPath(ui_QML_IMPORT);
+    modularity::ioc()->resolve<ui::IUiEngine>(moduleName())->addSourceImportPath(muse_ui_QML_IMPORT);
 }
 
 void UiModule::onPreInit(const IApplication::RunMode& mode)
@@ -195,14 +195,12 @@ void UiModule::onPreInit(const IApplication::RunMode& mode)
 
 void UiModule::onInit(const IApplication::RunMode& mode)
 {
-    //! NOTE Icons
-    //! At the moment they can also be used in console mode, because it is used in engraving
-    if (QFontDatabase::addApplicationFont(":/ui/data/MusescoreIcon.ttf") == -1) {
-        LOGE() << "Unable load icon font: `:/ui/data/MusescoreIcon.ttf`";
-    }
-
     if (mode != IApplication::RunMode::GuiApp) {
         return;
+    }
+
+    if (QFontDatabase::addApplicationFont(":/ui/data/MusescoreIcon.ttf") == -1) {
+        LOGE() << "Unable load icon font: `:/ui/data/MusescoreIcon.ttf`";
     }
 
     m_keyNavigationController->init();

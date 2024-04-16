@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE_TEST global_tests)
+set(MODULE_TEST muse_global_tests)
 
 set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/mocks/applicationmock.h
@@ -47,4 +47,4 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/number_tests.cpp
 )
 
-include(${PROJECT_SOURCE_DIR}/src/framework/testing/gtest.cmake)
+include(SetupGTest)

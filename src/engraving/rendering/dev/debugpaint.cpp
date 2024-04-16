@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -65,7 +65,7 @@ static Color colorForPointer(const void* ptr)
 void DebugPaint::paintElementDebug(Painter& painter, const EngravingItem* item)
 {
     // Elements tree
-    bool isDiagnosticSelected = elementsProvider()->isSelected(item);
+    bool isDiagnosticSelected = elementsProvider() ? elementsProvider()->isSelected(item) : false;
 
     PointF pos(item->pagePos());
     painter.translate(pos);

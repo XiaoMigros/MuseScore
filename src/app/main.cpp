@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -224,7 +224,7 @@
 #include <shellapi.h>
 #endif
 
-#ifndef MUE_BUILD_CRASHPAD_CLIENT
+#ifndef MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT
 static void crashCallback(int signum)
 {
     const char* signame = "UNKNOWN SIGNAME";
@@ -247,7 +247,7 @@ static void crashCallback(int signum)
 
 int main(int argc, char** argv)
 {
-#ifndef MUE_BUILD_CRASHPAD_CLIENT
+#ifndef MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT
     signal(SIGSEGV, crashCallback);
     signal(SIGILL, crashCallback);
     signal(SIGFPE, crashCallback);
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
 
     //! NOTE `diagnostics` must be first, because it installs the crash handler.
     //! For other modules, the order is (an should be) unimportant.
-    app.addModule(new mu::diagnostics::DiagnosticsModule());
+    app.addModule(new muse::diagnostics::DiagnosticsModule());
 
     // framework
     app.addModule(new muse::accessibility::AccessibilityModule());

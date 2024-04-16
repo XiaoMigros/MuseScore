@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-set(MODULE audio)
+declare_module(muse_audio)
+set(MODULE_ALIAS muse::audio)
 
 include(GetPlatformInfo)
 
@@ -226,6 +227,9 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/synthresolver.h
     )
 
+# fluidsynth dependency
+include(FindSndFile)
+
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/thirdparty/fluidsynth fluidsynth)
 set(FLUIDSYNTH_DIR ${CMAKE_CURRENT_LIST_DIR}/thirdparty/fluidsynth/fluidsynth-2.3.3)
 set (FLUIDSYNTH_INC
@@ -316,7 +320,7 @@ set(MODULE_QRC audio.qrc)
 set(MODULE_ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
 
-include(SetupModule)
+setup_module()
 
 if (MUSE_MODULE_AUDIO_TESTS)
     add_subdirectory(tests)

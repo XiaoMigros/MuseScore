@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -1312,9 +1312,9 @@ void EditStyle::setHeaderFooterToolTip()
           + QString("</i></td></tr><tr><td>$c</td><td>-</td><td><i>")
           + muse::qtrc("notation/editstyle", "Copyright, on all pages")
           + QString("</i></td></tr><tr><td>$v</td><td>-</td><td><i>")
-          + muse::qtrc("notation/editstyle", "MuseScore version this score was last saved with")
+          + muse::qtrc("notation/editstyle", "MuseScore Studio version this score was last saved with")
           + QString("</i></td></tr><tr><td>$r</td><td>-</td><td><i>")
-          + muse::qtrc("notation/editstyle", "MuseScore revision this score was last saved with")
+          + muse::qtrc("notation/editstyle", "MuseScore Studio revision this score was last saved with")
           + QString("</i></td></tr><tr><td>$$</td><td>-</td><td><i>")
           + muse::qtrc("notation/editstyle", "The $ sign itself")
           + QString("</i></td></tr><tr><td>$:tag:</td><td>-</td><td><i>")

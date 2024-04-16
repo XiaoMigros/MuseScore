@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-CLA-applies
+ * MuseScore-Studio-CLA-applies
  *
- * MuseScore
+ * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2021 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -80,7 +80,7 @@ inline muse::Ret make_ret(Err err, const muse::io::path_t& filePath = "")
                .arg(u"https://musescore.org/download#older-versions");
         break;
     case Err::FileTooNew:
-        text = muse::mtrc("engraving", "This file was saved using a newer version of MuseScore. "
+        text = muse::mtrc("engraving", "This file was saved using a newer version of MuseScore Studio. "
                                        "Please visit <a href=\"https://musescore.org\">musescore.org</a> to obtain the latest version.");
         break;
     case Err::FileOld300Format:

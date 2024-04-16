@@ -48,7 +48,9 @@
 
 #include "ui/iuiengine.h"
 
-#ifdef MUE_BUILD_DIAGNOSTICS_MODULE
+#include "muse_framework_config.h"
+
+#ifdef MUSE_MODULE_DIAGNOSTICS
 #include "diagnostics/idiagnosticspathsregister.h"
 #endif
 
@@ -107,7 +109,7 @@ void ShortcutsModule::registerUiTypes()
     qmlRegisterType<MidiDeviceMappingModel>("Muse.Shortcuts", 1, 0, "MidiDeviceMappingModel");
     qmlRegisterType<EditMidiMappingModel>("Muse.Shortcuts", 1, 0, "EditMidiMappingModel");
 
-    ioc()->resolve<IUiEngine>(moduleName())->addSourceImportPath(shortcuts_QML_IMPORT);
+    ioc()->resolve<IUiEngine>(moduleName())->addSourceImportPath(muse_shortcuts_QML_IMPORT);
 }
 
 void ShortcutsModule::onInit(const IApplication::RunMode& mode)
@@ -121,8 +123,8 @@ void ShortcutsModule::onInit(const IApplication::RunMode& mode)
     m_shortcutsRegister->init();
     m_midiRemote->init();
 
-#ifdef MUE_BUILD_DIAGNOSTICS_MODULE
-    auto pr = ioc()->resolve<mu::diagnostics::IDiagnosticsPathsRegister>(moduleName());
+#ifdef MUSE_MODULE_DIAGNOSTICS
+    auto pr = ioc()->resolve<muse::diagnostics::IDiagnosticsPathsRegister>(moduleName());
     if (pr) {
         pr->reg("shortcutsUserAppDataPath", m_configuration->shortcutsUserAppDataPath());
         pr->reg("shortcutsAppDataPath", m_configuration->shortcutsAppDataPath());
