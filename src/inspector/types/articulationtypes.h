@@ -41,6 +41,12 @@ public:
         STYLE_BAROQUE
     };
 
+    enum class ArticulationStemSideAlign {
+        STEM,
+        NOTEHEAD,
+        AVERAGE
+    };
+
     Q_ENUM(Placement)
     Q_ENUM(Style)
 };
