@@ -135,7 +135,7 @@ public:
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid) const override;
 
-    static const std::array<Pid, 27>& textLineBasePropertyIds();
+    static const std::array<Pid, 31>& textLineBasePropertyIds();
 
     void reset() override;
 

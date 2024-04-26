@@ -568,6 +568,7 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
     }
 
     EngravingItem* hitElement = nullptr;
+    EngravingItem* hitSubElement = nullptr;
     staff_idx_t hitStaffIndex = muse::nidx;
 
     if (!m_readonly) {
@@ -575,10 +576,16 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
 
         INotationInteraction::HitElementContext context;
         context.element = viewInteraction()->hitElement(logicPos, hitWidth());
+        if (context.element && context.element->selected() && (context.element->isTextLineBase() || context.element->isTextLineBaseSegment())) {
+            context.subElement = viewInteraction()->hitSubElement(logicPos, hitWidth());
+        } else {
+            context.subElement = context.element;
+        }
         context.staff = viewInteraction()->hitStaff(logicPos);
         viewInteraction()->setHitElementContext(context);
 
         hitElement = context.element;
+        hitSubElement = context.subElement;
         hitStaffIndex = context.staff ? context.staff->idx() : muse::nidx;
     }
 
@@ -623,6 +630,7 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
     ClickContext ctx;
     ctx.logicClickPos = logicPos;
     ctx.hitElement = hitElement;
+    ctx.hitSubElement = hitSubElement;
     ctx.isHitGrip = viewInteraction()->isHitGrip(logicPos);
     ctx.event = event;
 
@@ -687,6 +695,10 @@ void NotationViewInputController::handleLeftClick(const ClickContext& ctx)
     INotationSelectionPtr selection = viewInteraction()->selection();
 
     if (!selection->isRange()) {
+        if (ctx.hitSubElement && ctx.hitSubElement != ctx.hitElement) {
+            viewInteraction()->startEditElement(ctx.hitSubElement);
+            return;
+        }
         if (ctx.hitElement && ctx.hitElement->needStartEditingAfterSelecting()) {
             viewInteraction()->startEditElement(ctx.hitElement, false);
             return;
@@ -884,7 +896,7 @@ void NotationViewInputController::handleLeftClickRelease(const QPointF& releaseP
     }
 
     if (interaction->textEditingAllowed(ctx.element)) {
-        interaction->startEditText(ctx.element, m_logicalBeginPoint);
+        interaction->startEditText(ctx.subElement, m_logicalBeginPoint);
     }
 }
 
@@ -904,8 +916,9 @@ void NotationViewInputController::mouseDoubleClickEvent(QMouseEvent* event)
     if (viewInteraction()->isTextEditingStarted()) {
         viewInteraction()->selectText(mu::engraving::SelectTextType::Word);
         return;
-    } else if (viewInteraction()->textEditingAllowed(ctx.element)) {
-        viewInteraction()->startEditText(ctx.element, m_logicalBeginPoint);
+    } else if (viewInteraction()->textEditingAllowed(ctx.element) && ctx.element != ctx.subElement) {
+        viewInteraction()->startEditText(ctx.subElement, m_logicalBeginPoint);
+        return;
     }
 
     PointF logicPos = m_view->toLogical(event->pos());
