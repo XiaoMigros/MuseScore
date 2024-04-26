@@ -675,6 +675,24 @@ static inline TextLineBase* toTextLineBase(EngravingObject* e)
     return (TextLineBase*)e;
 }
 
+static inline const TextLineBase* toTextLineBase(const EngravingObject* e)
+{
+    assert(e == 0 || e->isTextLineBase());
+    return (const TextLineBase*)e;
+}
+
+static inline TextLineBaseSegment* toTextLineBaseSegment(EngravingObject* e)
+{
+    assert(e == 0 || e->isTextLineBaseSegment());
+    return (TextLineBaseSegment*)e;
+}
+
+static inline const TextLineBaseSegment* toTextLineBaseSegment(const EngravingObject* e)
+{
+    assert(e == 0 || e->isTextLineBaseSegment());
+    return (const TextLineBaseSegment*)e;
+}
+
 static inline TextBase* toTextBase(EngravingObject* e)
 {
     assert(e == 0 || e->isTextBase());

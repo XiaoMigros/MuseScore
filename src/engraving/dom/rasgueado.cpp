@@ -31,15 +31,19 @@ using namespace mu::engraving;
 
 namespace mu::engraving {
 static const ElementStyle rasgueadoStyle {
+    { Sid::letRingFontFace,                      Pid::FONT_FACE },
     { Sid::letRingFontFace,                      Pid::BEGIN_FONT_FACE },
     { Sid::letRingFontFace,                      Pid::CONTINUE_FONT_FACE },
     { Sid::letRingFontFace,                      Pid::END_FONT_FACE },
+    { Sid::letRingFontSize,                      Pid::FONT_SIZE },
     { Sid::letRingFontSize,                      Pid::BEGIN_FONT_SIZE },
     { Sid::letRingFontSize,                      Pid::CONTINUE_FONT_SIZE },
     { Sid::letRingFontSize,                      Pid::END_FONT_SIZE },
+    { Sid::letRingFontStyle,                     Pid::FONT_STYLE },
     { Sid::letRingFontStyle,                     Pid::BEGIN_FONT_STYLE },
     { Sid::letRingFontStyle,                     Pid::CONTINUE_FONT_STYLE },
     { Sid::letRingFontStyle,                     Pid::END_FONT_STYLE },
+    { Sid::letRingTextAlign,                     Pid::ALIGN },
     { Sid::letRingTextAlign,                     Pid::BEGIN_TEXT_ALIGN },
     { Sid::letRingTextAlign,                     Pid::CONTINUE_TEXT_ALIGN },
     { Sid::letRingTextAlign,                     Pid::END_TEXT_ALIGN },

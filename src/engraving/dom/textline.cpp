@@ -54,15 +54,19 @@ static const ElementStyle systemTextLineSegmentStyle {
 
 static const ElementStyle textLineStyle {
 //       { Sid::textLineSystemFlag,                 Pid::SYSTEM_FLAG             },
+    { Sid::textLineFontFace,                   Pid::FONT_FACE },
     { Sid::textLineFontFace,                   Pid::BEGIN_FONT_FACE },
     { Sid::textLineFontFace,                   Pid::CONTINUE_FONT_FACE },
     { Sid::textLineFontFace,                   Pid::END_FONT_FACE },
+    { Sid::textLineFontSize,                   Pid::FONT_SIZE },
     { Sid::textLineFontSize,                   Pid::BEGIN_FONT_SIZE },
     { Sid::textLineFontSize,                   Pid::CONTINUE_FONT_SIZE },
     { Sid::textLineFontSize,                   Pid::END_FONT_SIZE },
+    { Sid::textLineFontStyle,                  Pid::FONT_STYLE },
     { Sid::textLineFontStyle,                  Pid::BEGIN_FONT_STYLE },
     { Sid::textLineFontStyle,                  Pid::CONTINUE_FONT_STYLE },
     { Sid::textLineFontStyle,                  Pid::END_FONT_STYLE },
+    { Sid::textLineTextAlign,                  Pid::ALIGN },
     { Sid::textLineTextAlign,                  Pid::BEGIN_TEXT_ALIGN },
     { Sid::textLineTextAlign,                  Pid::CONTINUE_TEXT_ALIGN },
     { Sid::textLineTextAlign,                  Pid::END_TEXT_ALIGN },
@@ -77,15 +81,19 @@ static const ElementStyle textLineStyle {
 
 static const ElementStyle systemTextLineStyle {
 //       { Sid::systemTextLineSystemFlag,           Pid::SYSTEM_FLAG             },
+    { Sid::systemTextLineFontFace,             Pid::FONT_FACE },
     { Sid::systemTextLineFontFace,             Pid::BEGIN_FONT_FACE },
     { Sid::systemTextLineFontFace,             Pid::CONTINUE_FONT_FACE },
     { Sid::systemTextLineFontFace,             Pid::END_FONT_FACE },
+    { Sid::systemTextLineFontSize,             Pid::FONT_SIZE },
     { Sid::systemTextLineFontSize,             Pid::BEGIN_FONT_SIZE },
     { Sid::systemTextLineFontSize,             Pid::CONTINUE_FONT_SIZE },
     { Sid::systemTextLineFontSize,             Pid::END_FONT_SIZE },
+    { Sid::systemTextLineFontStyle,            Pid::FONT_STYLE },
     { Sid::systemTextLineFontStyle,            Pid::BEGIN_FONT_STYLE },
     { Sid::systemTextLineFontStyle,            Pid::CONTINUE_FONT_STYLE },
     { Sid::systemTextLineFontStyle,            Pid::END_FONT_STYLE },
+    { Sid::systemTextLineTextAlign,            Pid::ALIGN },
     { Sid::systemTextLineTextAlign,            Pid::BEGIN_TEXT_ALIGN },
     { Sid::systemTextLineTextAlign,            Pid::CONTINUE_TEXT_ALIGN },
     { Sid::systemTextLineTextAlign,            Pid::END_TEXT_ALIGN },
@@ -253,6 +261,7 @@ PropertyValue TextLine::propertyDefault(Pid propertyId) const
         } else {
             return style().styleV(Sid::textLinePlacement);
         }
+    case Pid::TEXT:
     case Pid::BEGIN_TEXT:
     case Pid::CONTINUE_TEXT:
     case Pid::END_TEXT:

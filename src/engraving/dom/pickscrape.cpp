@@ -30,15 +30,19 @@ using namespace mu::engraving;
 
 namespace mu::engraving {
 static const ElementStyle pickScrapeStyle {
+    { Sid::palmMuteFontFace,                      Pid::FONT_FACE },
     { Sid::palmMuteFontFace,                      Pid::BEGIN_FONT_FACE },
     { Sid::palmMuteFontFace,                      Pid::CONTINUE_FONT_FACE },
     { Sid::palmMuteFontFace,                      Pid::END_FONT_FACE },
+    { Sid::palmMuteFontSize,                      Pid::FONT_SIZE },
     { Sid::palmMuteFontSize,                      Pid::BEGIN_FONT_SIZE },
     { Sid::palmMuteFontSize,                      Pid::CONTINUE_FONT_SIZE },
     { Sid::palmMuteFontSize,                      Pid::END_FONT_SIZE },
+    { Sid::palmMuteFontStyle,                     Pid::FONT_STYLE },
     { Sid::palmMuteFontStyle,                     Pid::BEGIN_FONT_STYLE },
     { Sid::palmMuteFontStyle,                     Pid::CONTINUE_FONT_STYLE },
     { Sid::palmMuteFontStyle,                     Pid::END_FONT_STYLE },
+    { Sid::palmMuteTextAlign,                     Pid::ALIGN },
     { Sid::palmMuteTextAlign,                     Pid::BEGIN_TEXT_ALIGN },
     { Sid::palmMuteTextAlign,                     Pid::CONTINUE_TEXT_ALIGN },
     { Sid::palmMuteTextAlign,                     Pid::END_TEXT_ALIGN },

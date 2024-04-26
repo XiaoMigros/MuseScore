@@ -287,7 +287,7 @@ TEST_F(NotationViewInputControllerTests, Mouse_Press_Range_Start_Drag_From_Selec
         newContext.element
     };
 
-    EXPECT_CALL(*m_interaction, hitElement(_, _))
+    EXPECT_CALL(*m_interaction, hitElement(_, _, _))
     .WillOnce(Return(newContext.element));
 
     EXPECT_CALL(*m_interaction, hitStaff(_))
@@ -503,7 +503,7 @@ TEST_F(NotationViewInputControllerTests, Mouse_Press_Range_Start_Play_From_First
     //! [GIVEN] User selected new note that is located after the previous selected note
     INotationInteraction::HitElementContext newContext = hitContext(score, { ElementType::NOTE, false /*last note*/ });
 
-    EXPECT_CALL(*m_interaction, hitElement(_, _))
+    EXPECT_CALL(*m_interaction, hitElement(_, _, _))
     .WillOnce(Return(newContext.element));
 
     EXPECT_CALL(*m_interaction, hitStaff(_))
@@ -570,7 +570,7 @@ TEST_F(NotationViewInputControllerTests, Mouse_Press_On_Already_Selected_Element
     //! [GIVEN] User pressed on the previous selected note
     INotationInteraction::HitElementContext newContext = oldContext;
 
-    EXPECT_CALL(*m_interaction, hitElement(_, _))
+    EXPECT_CALL(*m_interaction, hitElement(_, _, _))
     .WillOnce(Return(newContext.element));
 
     EXPECT_CALL(*m_interaction, hitStaff(_))

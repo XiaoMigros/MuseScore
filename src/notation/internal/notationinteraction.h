@@ -74,8 +74,9 @@ public:
     void toggleVisible() override;
 
     // Hit
-    EngravingItem* hitElement(const muse::PointF& pos, float width) const override;
-    std::vector<EngravingItem*> hitElements(const muse::PointF& pos, float width) const override;
+    EngravingItem* hitElement(const muse::PointF& pos, float width, bool selectSubElements = false) const override;
+    EngravingItem* hitSubElement(const muse::PointF& pos, float width) const /*override*/;
+    std::vector<EngravingItem*> hitElements(const muse::PointF& pos, float width, bool selectSubElements = false) const override;
     Staff* hitStaff(const muse::PointF& pos) const override;
     const HitElementContext& hitElementContext() const override;
     void setHitElementContext(const HitElementContext& context) override;
@@ -376,7 +377,9 @@ private:
     void startEditText(mu::engraving::TextBase* text);
     bool needEndTextEdit() const;
 
+
     mu::engraving::Page* point2page(const muse::PointF& p, bool useNearestPage = false) const;
+
     std::vector<EngravingItem*> elementsAt(const muse::PointF& p) const;
     EngravingItem* elementAt(const muse::PointF& p) const;
 

@@ -328,7 +328,7 @@ InspectorSectionView {
 
             title: isExpanded ? qsTrc("inspector", "Show less") : qsTrc("inspector", "Show more")
 
-            visible: root.model ? !root.model.isEmpty : false
+            visible: root.model ? (!root.model.isEmpty && root.model.isAllSettingsVisible) : false
             width: parent.width
 
             navigation.panel: root.navigationPanel

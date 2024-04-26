@@ -101,6 +101,12 @@ class TextLineBase : public SLine
     M_PROPERTY(Spatium,    endHookHeight,         setEndHookHeight)
     M_PROPERTY(Spatium,    gapBetweenTextAndLine,  setGapBetweenTextAndLine)
 
+    M_PROPERTY(String,     text,                  setText)
+    M_PROPERTY(Align,      textAlign,             setTextAlign)
+    M_PROPERTY(String,     fontFamily,            setFontFamily)
+    M_PROPERTY(double,     fontSize,              setFontSize)
+    M_PROPERTY(FontStyle,  fontStyle,             setFontStyle)
+
     M_PROPERTY2(TextPlace, beginTextPlace,        setBeginTextPlace,    TextPlace::AUTO)
     M_PROPERTY(String,     beginText,             setBeginText)
     M_PROPERTY(Align,      beginTextAlign,        setBeginTextAlign)
@@ -135,7 +141,7 @@ public:
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid) const override;
 
-    static const std::array<Pid, 27>& textLineBasePropertyIds();
+    static const std::array<Pid, 31>& textLineBasePropertyIds();
 
     void reset() override;
 

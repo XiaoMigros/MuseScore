@@ -22,6 +22,7 @@
 #include "abstractinspectormodel.h"
 #include "engraving/dom/dynamic.h"
 #include "engraving/dom/property.h"
+#include "engraving/dom/text.h"
 
 #include "shortcuts/shortcutstypes.h"
 
@@ -269,7 +270,7 @@ static bool isPureDynamics(const QList<mu::engraving::EngravingItem*>& selectedE
     }
 
     for (const EngravingItem* item : selectedElementList) {
-        if (!item->isTextBase()) {
+        if (!item->isTextBase() && !item->isTextLineBaseSegment() && !item->isTextLineBase()) {
             continue;
         }
 
@@ -286,6 +287,30 @@ static bool isPureDynamics(const QList<mu::engraving::EngravingItem*>& selectedE
     return true;
 }
 
+static bool textLineBaseHasText(const QList<mu::engraving::EngravingItem*>& selectedElementList)
+{
+    if (selectedElementList.empty()) {
+        return true;
+    }
+
+    for (const EngravingItem* item : selectedElementList) {
+        if (item->isTextLineBaseSegment()) {
+            if (!toTextLineBaseSegment(item)->text()->empty() || !toTextLineBaseSegment(item)->endText()->empty()) {
+                return true;
+            }
+        } else if (item->isTextLineBase()) {
+            for (const mu::engraving::SpannerSegment* sp : toTextLineBase(item)->spannerSegments()) {
+                if (!toTextLineBaseSegment(sp)->text()->empty() || !toTextLineBaseSegment(sp)->endText()->empty()) {
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
 InspectorSectionTypeSet AbstractInspectorModel::sectionTypesByElementKeys(const ElementKeySet& elementKeySet, bool isRange,
                                                                           const QList<mu::engraving::EngravingItem*>& selectedElementList)
 {
@@ -298,7 +323,7 @@ InspectorSectionTypeSet AbstractInspectorModel::sectionTypesByElementKeys(const 
         }
 
         // Don't show the "Text" inspector panel for "pure" dynamics (i.e. without custom text)
-        if (TEXT_ELEMENT_TYPES.contains(key.type) && !isPureDynamics(selectedElementList)) {
+        if (TEXT_ELEMENT_TYPES.contains(key.type) && !isPureDynamics(selectedElementList) && textLineBaseHasText(selectedElementList)) {
             types << InspectorSectionType::SECTION_TEXT;
         }
 
