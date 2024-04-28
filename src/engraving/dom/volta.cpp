@@ -41,15 +41,19 @@ using namespace mu::engraving;
 
 namespace mu::engraving {
 static const ElementStyle voltaStyle {
+    { Sid::voltaFontFace,                      Pid::FONT_FACE },
     { Sid::voltaFontFace,                      Pid::BEGIN_FONT_FACE },
     { Sid::voltaFontFace,                      Pid::CONTINUE_FONT_FACE },
     { Sid::voltaFontFace,                      Pid::END_FONT_FACE },
+    { Sid::voltaFontSize,                      Pid::FONT_SIZE },
     { Sid::voltaFontSize,                      Pid::BEGIN_FONT_SIZE },
     { Sid::voltaFontSize,                      Pid::CONTINUE_FONT_SIZE },
     { Sid::voltaFontSize,                      Pid::END_FONT_SIZE },
+    { Sid::voltaFontStyle,                     Pid::FONT_STYLE },
     { Sid::voltaFontStyle,                     Pid::BEGIN_FONT_STYLE },
     { Sid::voltaFontStyle,                     Pid::CONTINUE_FONT_STYLE },
     { Sid::voltaFontStyle,                     Pid::END_FONT_STYLE },
+    { Sid::voltaAlign,                         Pid::ALIGN },
     { Sid::voltaAlign,                         Pid::BEGIN_TEXT_ALIGN },
     { Sid::voltaAlign,                         Pid::CONTINUE_TEXT_ALIGN },
     { Sid::voltaAlign,                         Pid::END_TEXT_ALIGN },

@@ -1402,6 +1402,7 @@ void NotationActionController::startEditSelectedElement(const ActionData& args)
     }
 
     mu::engraving::EngravingItem* element = selection->element();
+    mu::engraving::EngravingItem* subElement = contextSubItem(interaction);
     if (!element) {
         return;
     }
@@ -1425,9 +1426,9 @@ void NotationActionController::startEditSelectedElement(const ActionData& args)
         }
     }
 
-    if (interaction->textEditingAllowed(element)) {
+    if (interaction->textEditingAllowed(element) && element != subElement) {
         PointF cursorPos = !args.empty() ? args.arg<PointF>(0) : PointF();
-        interaction->startEditText(element, cursorPos);
+        interaction->startEditText(subElement, cursorPos);
     } else if (element->hasGrips()) {
         interaction->startEditGrip(element, element->defaultGrip());
     } else {
@@ -1451,7 +1452,7 @@ void NotationActionController::startEditSelectedText(const ActionData& args)
 
     if (interaction->textEditingAllowed(element)) {
         PointF cursorPos = !args.empty() ? args.arg<PointF>(0) : PointF();
-        interaction->startEditText(element, cursorPos);
+        interaction->startEditText(contextSubItem(interaction), cursorPos);
     }
 }
 

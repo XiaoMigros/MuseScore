@@ -75,6 +75,7 @@
 #include "engraving/dom/stafftypechange.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/textedit.h"
+#include "engraving/dom/textlinebase.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/undo.h"
 #include "engraving/compat/dummyelement.h"
@@ -446,14 +447,19 @@ void NotationInteraction::toggleVisible()
     apply();
 }
 
-EngravingItem* NotationInteraction::hitElement(const PointF& pos, float width) const
+EngravingItem* NotationInteraction::hitElement(const PointF& pos, float width, bool selectSubElements) const
 {
-    std::vector<mu::engraving::EngravingItem*> elements = hitElements(pos, width);
+    std::vector<mu::engraving::EngravingItem*> elements = hitElements(pos, width, selectSubElements);
     if (elements.empty()) {
         return nullptr;
     }
     m_selection->onElementHit(elements.back());
     return elements.back();
+}
+
+EngravingItem* NotationInteraction::hitSubElement(const PointF& pos, float width) const
+{
+    return hitElement(pos, width, true);
 }
 
 Staff* NotationInteraction::hitStaff(const PointF& pos) const
@@ -497,7 +503,7 @@ EngravingItem* NotationInteraction::elementAt(const PointF& p) const
     return el.empty() || el.back()->isPage() ? nullptr : el.back();
 }
 
-std::vector<mu::engraving::EngravingItem*> NotationInteraction::hitElements(const PointF& p_in, float w) const
+std::vector<mu::engraving::EngravingItem*> NotationInteraction::hitElements(const PointF& p_in, float w, bool selectSubElements) const
 {
     mu::engraving::Page* page = point2page(p_in);
     if (!page) {
@@ -557,7 +563,31 @@ std::vector<mu::engraving::EngravingItem*> NotationInteraction::hitElements(cons
         }
 
         if (element->hitShapeContains(p)) {
-            ll.push_back(element);
+            if (!selectSubElements) {
+                ll.push_back(element);
+            } else if (element->isTextLineBase() || element->isTextLineBaseSegment()) {
+                mu::engraving::TextLineBaseSegment* tlb = nullptr;
+                if (element->isTextLineBase()) {
+                    mu::engraving::TextLineBase* tl = toTextLineBase(element);
+                    for (mu::engraving::SpannerSegment* sp : tl->spannerSegments()) {
+                        if (sp->hitShapeContains(p)) {
+                            tlb = toTextLineBaseSegment(sp);
+                            break;
+                        }
+                    }
+                    if (!tlb) {
+                        continue;
+                    }
+                } else {
+                    tlb = toTextLineBaseSegment(element);
+                }
+                if (tlb->text() && tlb->text()->hitShapeContains(p)) {
+                    ll.push_back(tlb->text());
+                }
+                if (tlb->endText() && tlb->endText()->hitShapeContains(p)) {
+                    ll.push_back(tlb->endText());
+                }
+            }
         }
     }
 
@@ -571,7 +601,31 @@ std::vector<mu::engraving::EngravingItem*> NotationInteraction::hitElements(cons
             }
 
             if (element->hitShapeIntersects(r)) {
-                ll.push_back(element);
+                if (!selectSubElements) {
+                    ll.push_back(element);
+                } else if (element->isTextLineBase() || element->isTextLineBaseSegment()) {
+                    mu::engraving::TextLineBaseSegment* tlb = nullptr;
+                    if (element->isTextLineBase()) {
+                        mu::engraving::TextLineBase* tl = toTextLineBase(element);
+                        for (mu::engraving::SpannerSegment* sp : tl->spannerSegments()) {
+                            if (sp->hitShapeIntersects(r)) {
+                                tlb = toTextLineBaseSegment(sp);
+                                break;
+                            }
+                        }
+                        if (!tlb) {
+                            continue;
+                        }
+                    } else {
+                        tlb = toTextLineBaseSegment(element);
+                    }
+                    if (tlb->text() && tlb->text()->hitShapeIntersects(r)) {
+                        ll.push_back(tlb->text());
+                    }
+                    if (tlb->endText() && tlb->endText()->hitShapeIntersects(r)) {
+                        ll.push_back(tlb->endText());
+                    }
+                }
             }
         }
     }
@@ -2926,7 +2980,7 @@ bool NotationInteraction::isTextEditingStarted() const
 
 bool NotationInteraction::textEditingAllowed(const EngravingItem* element) const
 {
-    return element && element->isEditable() && (element->isTextBase() || element->isTBox());
+    return element && element->isEditable() && (element->isTextBase() || element->isTextLineBase() || element->isTextLineBaseSegment() || element->isTBox());
 }
 
 void NotationInteraction::startEditText(EngravingItem* element, const PointF& cursorPos)
@@ -5699,7 +5753,9 @@ mu::engraving::Harmony* NotationInteraction::createHarmony(mu::engraving::Segmen
 void NotationInteraction::startEditText(mu::engraving::TextBase* text)
 {
     doEndEditElement();
-    select({ text }, SelectType::SINGLE);
+    if (!(text->explicitParent()->isTextLineBaseSegment() || text->explicitParent()->isTextLineBase())) {
+        select({ text }, SelectType::SINGLE);
+    }
 
     //! NOTE: Copied from ScoreView::cmdAddText
     Measure* measure = text->findMeasure();
@@ -5968,5 +6024,10 @@ EngravingItem* contextItem(INotationInteractionPtr interaction)
         return interaction->hitElementContext().element;
     }
     return item;
+}
+
+EngravingItem* contextSubItem(INotationInteractionPtr interaction)
+{
+    return interaction->hitElementContext().subElement;
 }
 }
