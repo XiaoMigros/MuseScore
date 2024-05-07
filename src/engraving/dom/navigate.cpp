@@ -794,6 +794,7 @@ EngravingItem* Score::nextElement()
             break;
         }
         case ElementType::GLISSANDO_SEGMENT:
+        case ElementType::NOTE_ANCHORED_LINE_SEGMENT:
         case ElementType::TIE_SEGMENT: {
             EngravingItem* next = nextElementForSpannerSegment(toSpannerSegment(e));
             if (next) {
@@ -983,6 +984,7 @@ EngravingItem* Score::prevElement()
             return bend->startNote();
         }
         case ElementType::GLISSANDO_SEGMENT:
+        case ElementType::NOTE_ANCHORED_LINE_SEGMENT:
         case ElementType::TIE_SEGMENT: {
             EngravingItem* prev = prevElementForSpannerSegment(toSpannerSegment(e));
             if (prev) {

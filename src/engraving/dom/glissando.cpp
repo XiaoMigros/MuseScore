@@ -68,7 +68,7 @@ static const ElementStyle glissandoElementStyle {
 //=========================================================
 
 GlissandoSegment::GlissandoSegment(Glissando* sp, System* parent)
-    : LineSegment(ElementType::GLISSANDO_SEGMENT, sp, parent, ElementFlag::MOVABLE)
+    : NoteLineBaseSegment(ElementType::GLISSANDO_SEGMENT, sp, parent)
 {
 }
 
@@ -92,20 +92,17 @@ EngravingItem* GlissandoSegment::propertyDelegate(Pid pid)
     case Pid::LINE_WIDTH:
         return glissando();
     default:
-        return LineSegment::propertyDelegate(pid);
+        return NoteLineBaseSegment::propertyDelegate(pid);
     }
 }
 
 //=========================================================
-//   Glissando
+//   NoteLineBase
 //=========================================================
 
 Glissando::Glissando(EngravingItem* parent)
-    : SLine(ElementType::GLISSANDO, parent, ElementFlag::MOVABLE)
+    : NoteLineBase(ElementType::GLISSANDO, parent)
 {
-    setAnchor(Spanner::Anchor::NOTE);
-    setDiagonal(true);
-
     initElementStyle(&glissandoElementStyle);
 
     resetProperty(Pid::GLISS_SHOW_TEXT);
@@ -118,7 +115,7 @@ Glissando::Glissando(EngravingItem* parent)
 }
 
 Glissando::Glissando(const Glissando& g)
-    : SLine(g)
+    : NoteLineBase(g)
 {
     _text           = g._text;
     _fontFace       = g._fontFace;
@@ -156,30 +153,7 @@ Sid Glissando::getPropertyStyle(Pid id) const
         return isHarpGliss().value_or(false) ? Sid::glissandoStyleHarp : Sid::glissandoStyle;
     }
 
-    return SLine::getPropertyStyle(id);
-}
-
-void Glissando::addLineAttachPoints()
-{
-    GlissandoSegment* frontSeg = toGlissandoSegment(frontSegment());
-    GlissandoSegment* backSeg = toGlissandoSegment(backSegment());
-    Note* startNote = nullptr;
-    Note* endNote = nullptr;
-    if (startElement() && startElement()->isNote()) {
-        startNote = toNote(startElement());
-    }
-    if (endElement() && endElement()->isNote()) {
-        endNote = toNote(endElement());
-    }
-    if (!frontSeg || !backSeg || !startNote || !endNote) {
-        return;
-    }
-    double startX = frontSeg->ldata()->pos().x();
-    double endX = backSeg->pos2().x() + backSeg->ldata()->pos().x(); // because pos2 is relative to ipos
-    // Here we don't pass y() because its value is unreliable during the first stages of layout.
-    // The y() is irrelevant anyway for horizontal spacing.
-    startNote->addLineAttachPoint(PointF(startX, 0.0), this);
-    endNote->addLineAttachPoint(PointF(endX, 0.0), this);
+    return NoteLineBase::getPropertyStyle(id);
 }
 
 bool Glissando::pitchSteps(const Spanner* spanner, std::vector<int>& pitchOffsets)
@@ -271,178 +245,6 @@ bool Glissando::pitchSteps(const Spanner* spanner, std::vector<int>& pitchOffset
 }
 
 //---------------------------------------------------------
-//   STATIC FUNCTIONS: guessInitialNote
-//
-//    Used while reading old scores (either 1.x or transitional 2.0) to determine (guess!)
-//    the glissando initial note from its final chord. Returns the top note of previous chord
-//    of the same instrument, preferring the chord in the same track as chord, if it exists.
-//
-//    CANNOT be called if the final chord and/or its segment do not exist yet in the score
-//
-//    Parameter:  chord: the chord this glissando ends into
-//    Returns:    the top note in a suitable previous chord or nullptr if none found.
-//---------------------------------------------------------
-
-Note* Glissando::guessInitialNote(Chord* chord)
-{
-    switch (chord->noteType()) {
-//            case NoteType::INVALID:
-//                  return 0;
-    // for grace notes before, previous chord is previous chord of parent chord
-    case NoteType::ACCIACCATURA:
-    case NoteType::APPOGGIATURA:
-    case NoteType::GRACE4:
-    case NoteType::GRACE16:
-    case NoteType::GRACE32:
-        // move unto parent chord and proceed to standard case
-        if (chord->explicitParent() && chord->explicitParent()->isChord()) {
-            chord = toChord(chord->explicitParent());
-        } else {
-            return 0;
-        }
-        break;
-    // for grace notes after, return top note of parent chord
-    case NoteType::GRACE8_AFTER:
-    case NoteType::GRACE16_AFTER:
-    case NoteType::GRACE32_AFTER:
-        if (chord->explicitParent() && chord->explicitParent()->isChord()) {
-            return toChord(chord->explicitParent())->upNote();
-        } else {                                // no parent or parent is not a chord?
-            return nullptr;
-        }
-    case NoteType::NORMAL:
-    {
-        // if chord has grace notes before, the last one is the previous note
-        std::vector<Chord*> graces = chord->graceNotesBefore();
-        if (graces.size() > 0) {
-            return graces.back()->upNote();
-        }
-    }
-    break;                                      // else process to standard case
-    default:
-        break;
-    }
-
-    // standard case (NORMAL or grace before chord)
-
-    // if parent not a segment, can't locate a target note
-    if (!chord->explicitParent()->isSegment()) {
-        return 0;
-    }
-
-    track_idx_t chordTrack = chord->track();
-    Segment* segm = chord->segment();
-    Part* part = chord->part();
-    if (segm != nullptr) {
-        segm = segm->prev1();
-    }
-    while (segm) {
-        // if previous segment is a ChordRest segment
-        if (segm->segmentType() == SegmentType::ChordRest) {
-            Chord* target = nullptr;
-            // look for a Chord in the same track
-            if (segm->element(chordTrack) && segm->element(chordTrack)->isChord()) {
-                target = toChord(segm->element(chordTrack));
-            } else {                 // if no same track, look for other chords in the same instrument
-                for (EngravingItem* currChord : segm->elist()) {
-                    if (currChord && currChord->isChord() && toChord(currChord)->part() == part) {
-                        target = toChord(currChord);
-                        break;
-                    }
-                }
-            }
-            // if we found a target previous chord
-            if (target) {
-                // if chord has grace notes after, the last one is the previous note
-                std::vector<Chord*> graces = target->graceNotesAfter();
-                if (graces.size() > 0) {
-                    return graces.back()->upNote();
-                }
-                return target->upNote();              // if no grace after, return top note
-            }
-        }
-        segm = segm->prev1();
-    }
-    LOGD("no first note for glissando found");
-    return 0;
-}
-
-Note* Glissando::guessFinalNote(Chord* chord, Note* startNote)
-{
-    if (chord->isGraceBefore()) {
-        Chord* parentChord = toChord(chord->parent());
-        GraceNotesGroup& gracesBefore = parentChord->graceNotesBefore();
-        auto positionOfThis = std::find(gracesBefore.begin(), gracesBefore.end(), chord);
-        if (positionOfThis != gracesBefore.end()) {
-            auto nextPosition = ++positionOfThis;
-            if (nextPosition != gracesBefore.end()) {
-                return (*nextPosition)->upNote();
-            }
-        }
-        return parentChord->upNote();
-    } else if (chord->isGraceAfter()) {
-        Chord* parentChord = toChord(chord->parent());
-        GraceNotesGroup& gracesAfter = parentChord->graceNotesAfter();
-        auto positionOfThis = std::find(gracesAfter.begin(), gracesAfter.end(), chord);
-        if (positionOfThis != gracesAfter.end()) {
-            auto nextPosition = ++positionOfThis;
-            if (nextPosition != gracesAfter.end()) {
-                return (*nextPosition)->upNote();
-            }
-        }
-        chord = toChord(chord->parent());
-    } else {
-        std::vector<Chord*> graces = chord->graceNotesAfter();
-        if (graces.size() > 0) {
-            return graces.front()->upNote();
-        }
-    }
-
-    if (!chord->explicitParent()->isSegment()) {
-        return 0;
-    }
-
-    Segment* segm = chord->score()->tick2rightSegment(chord->tick() + chord->actualTicks());
-    while (segm && !segm->isChordRestType()) {
-        segm = segm->next1();
-    }
-
-    if (!segm) {
-        return nullptr;
-    }
-
-    track_idx_t chordTrack = chord->track();
-    Part* part = chord->part();
-
-    Chord* target = nullptr;
-    if (segm->element(chordTrack) && segm->element(chordTrack)->isChord()) {
-        target = toChord(segm->element(chordTrack));
-    } else {
-        for (EngravingItem* currChord : segm->elist()) {
-            if (currChord && currChord->isChord() && toChord(currChord)->part() == part) {
-                target = toChord(currChord);
-                break;
-            }
-        }
-    }
-
-    if (target && target->notes().size() > 0) {
-        const std::vector<Chord*>& graces = target->graceNotesBefore();
-        if (graces.size() > 0) {
-            return graces.front()->upNote();
-        }
-        // normal case: try to return the note in the next chord that is in the
-        // same position as the start note relative to the end chord
-        size_t startNoteIdx = muse::indexOf(chord->notes(), startNote);
-        size_t endNoteIdx = std::min(startNoteIdx, target->notes().size() - 1);
-        return target->notes().at(endNoteIdx);
-    }
-
-    LOGD("no second note for glissando found");
-    return nullptr;
-}
-
-//---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 
@@ -472,7 +274,7 @@ PropertyValue Glissando::getProperty(Pid propertyId) const
     default:
         break;
     }
-    return SLine::getProperty(propertyId);
+    return NoteLineBase::getProperty(propertyId);
 }
 
 //---------------------------------------------------------
@@ -520,7 +322,7 @@ bool Glissando::setProperty(Pid propertyId, const PropertyValue& v)
         setFontStyle(FontStyle(v.toInt()));
         break;
     default:
-        if (!SLine::setProperty(propertyId, v)) {
+        if (!NoteLineBase::setProperty(propertyId, v)) {
             return false;
         }
         break;
@@ -550,6 +352,6 @@ PropertyValue Glissando::propertyDefault(Pid propertyId) const
     default:
         break;
     }
-    return SLine::propertyDefault(propertyId);
+    return NoteLineBase::propertyDefault(propertyId);
 }
 }

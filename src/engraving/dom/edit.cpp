@@ -2822,6 +2822,7 @@ void Score::deleteItem(EngravingItem* el)
     case ElementType::LYRICSLINE_SEGMENT:
     case ElementType::PEDAL_SEGMENT:
     case ElementType::GLISSANDO_SEGMENT:
+    case ElementType::NOTE_ANCHORED_LINE_SEGMENT:
     case ElementType::LET_RING_SEGMENT:
     case ElementType::GRADUAL_TEMPO_CHANGE_SEGMENT:
     case ElementType::PALM_MUTE_SEGMENT:
@@ -5893,6 +5894,7 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
         || et == ElementType::NOTE
         || et == ElementType::TEXT
         || et == ElementType::GLISSANDO
+        || et == ElementType::NOTE_ANCHORED_LINE
         || et == ElementType::GUITAR_BEND
         || et == ElementType::BEND
         || (et == ElementType::CHORD && toChord(element)->isGrace())
@@ -5917,7 +5919,7 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             if (e == parent) {
                 ne = element;
             } else {
-                if (element->isGlissando() || element->isGuitarBend()) {            // and other spanners with Anchor::NOTE
+                if (element->isGlissando() || element->isGuitarBend() || element->isNoteAnchoredLine()) {            // and other spanners with Anchor::NOTE
                     Note* newEnd = Spanner::endElementFromSpanner(toSpanner(element), e);
                     if (newEnd) {
                         ne = element->linkedClone();
@@ -6312,7 +6314,7 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             }
 
             doUndoAddElement(nsp);
-        } else if (et == ElementType::GLISSANDO || et == ElementType::GUITAR_BEND) {
+        } else if (et == ElementType::GLISSANDO || et == ElementType::GUITAR_BEND || et == ElementType::NOTE_ANCHORED_LINE) {
             doUndoAddElement(toSpanner(ne));
         } else if (element->isType(ElementType::TREMOLO_TWOCHORD)) {
             TremoloTwoChord* tremolo = item_cast<TremoloTwoChord*>(element);

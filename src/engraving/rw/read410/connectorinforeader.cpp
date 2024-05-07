@@ -360,6 +360,7 @@ void ConnectorInfoReader::readAddConnector(Note* item, ConnectorInfoReader* info
     case ElementType::TIE:
     case ElementType::TEXTLINE:
     case ElementType::GLISSANDO:
+    case ElementType::NOTE_ANCHORED_LINE:
     case ElementType::GUITAR_BEND:
     {
         Spanner* sp = toSpanner(info->connector());
@@ -388,7 +389,8 @@ void ConnectorInfoReader::readAddConnector(Note* item, ConnectorInfoReader* info
             if (sp->isTie()) {
                 item->setTieBack(toTie(sp));
             } else {
-                if ((sp->isGlissando() || sp->isGuitarBend()) && item->explicitParent() && item->explicitParent()->isChord()) {
+                if ((sp->isGlissando() || sp->isGuitarBend() || sp->isNoteAnchoredLine())
+                    && item->explicitParent() && item->explicitParent()->isChord()) {
                     toChord(item->explicitParent())->setEndsGlissandoOrGuitarBend(true);
                 }
                 item->addSpannerBack(sp);

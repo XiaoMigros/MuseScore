@@ -114,9 +114,13 @@ class MeasureNumber;
 class MeasureRepeat;
 class MStyle;
 class Note;
+class NoteAnchoredLine;
+class NoteAnchoredLineSegment;
 class NoteDot;
 class NoteHead;
 class NoteLine;
+class NoteLineBase;
+class NoteLineBaseSegment;
 class Ornament;
 class Ottava;
 class OttavaSegment;
@@ -442,6 +446,8 @@ public:
     CONVERT(FretCircle, FRET_CIRCLE)
     CONVERT(StringTunings, STRING_TUNINGS)
     CONVERT(TimeTickAnchor, TIME_TICK_ANCHOR)
+    CONVERT(NoteAnchoredLine, NOTE_ANCHORED_LINE)
+    CONVERT(NoteAnchoredLineSegment, NOTE_ANCHORED_LINE_SEGMENT)
 #undef CONVERT
 
     virtual bool isEngravingItem() const { return false; }   // overridden in element.h
@@ -471,9 +477,14 @@ public:
         ;
     }
 
+    bool isNoteLineBaseSegment() const
+    {
+        return isGlissandoSegment() || isNoteAnchoredLineSegment();
+    }
+
     bool isLineSegment() const
     {
-        return isGlissandoSegment()
+        return isNoteLineBaseSegment()
                || isLyricsLineSegment()
                || isTextLineBaseSegment()
                || isTrillSegment()
@@ -507,9 +518,14 @@ public:
         ;
     }
 
+    bool isNoteLineBase() const
+    {
+        return isGlissando() || isNoteAnchoredLine();
+    }
+
     bool isSLine() const
     {
-        return isTextLineBase() || isTrill() || isGlissando() || isVibrato() || isGuitarBend() || isGuitarBendHold();
+        return isTextLineBase() || isTrill() || isNoteLineBase() || isVibrato() || isGuitarBend() || isGuitarBendHold();
     }
 
     bool isSpanner() const
@@ -686,6 +702,18 @@ static inline const Articulation* toArticulation(const EngravingObject* e)
     return (const Articulation*)e;
 }
 
+static inline NoteLineBase* toNoteLineBase(EngravingObject* e)
+{
+    assert(e == 0 || e->isNoteLineBase());
+    return (NoteLineBase*)e;
+}
+
+static inline NoteLineBaseSegment* toNoteLineBaseSegment(EngravingObject* e)
+{
+    assert(e == 0 || e->isNoteLineBaseSegment());
+    return (NoteLineBaseSegment*)e;
+}
+
 #define CONVERT(a)  \
     static inline a* to##a(EngravingObject * e) { assert(e == 0 || e->is##a()); return (a*)e; } \
     static inline const a* to##a(const EngravingObject * e) { assert(e == 0 || e->is##a()); return (const a*)e; }
@@ -815,6 +843,8 @@ CONVERT(DeadSlapped)
 CONVERT(StringTunings)
 CONVERT(SoundFlag)
 CONVERT(TimeTickAnchor)
+CONVERT(NoteAnchoredLine)
+CONVERT(NoteAnchoredLineSegment)
 #undef CONVERT
 }
 

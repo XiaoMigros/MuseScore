@@ -206,6 +206,7 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::GLISS_EASEIN,            false, "easeInSpin",            P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName","ease in") },
     { Pid::GLISS_EASEOUT,           false, "easeOutSpin",           P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "ease out") },
     { Pid::DIAGONAL,                false, 0,                       P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "diagonal") },
+    { Pid::LAYOUT_GLISS_STYLE,      false, 0,                       P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "layout gliss style") },
     { Pid::GROUP_NODES,             false, 0,                       P_TYPE::GROUPS,             PropertyGroup::NONE      ,      DUMMY_QT_TR_NOOP("propertyName", "groups") },
     { Pid::LINE_STYLE,              false, "lineStyle",             P_TYPE::LINE_TYPE,          PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "line style") },
     { Pid::LINE_WIDTH,              false, "lineWidth",             P_TYPE::SPATIUM,            PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "line width") },

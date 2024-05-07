@@ -116,6 +116,7 @@
 #include "../../dom/letring.h"
 #include "../../dom/measurerepeat.h"
 #include "../../dom/mmrest.h"
+#include "../../dom/noteanchoredline.h"
 #include "../../dom/rest.h"
 #include "../../dom/rasgueado.h"
 #include "../../dom/slur.h"
@@ -252,6 +253,8 @@ void TRead::readItem(EngravingItem* item, XmlReader& xml, ReadContext& ctx)
     case ElementType::NOTEDOT: read(item_cast<NoteDot*>(item), xml, ctx);
         break;
     case ElementType::NOTEHEAD: read(item_cast<NoteHead*>(item), xml, ctx);
+        break;
+    case ElementType::NOTE_ANCHORED_LINE: read(item_cast<NoteAnchoredLine*>(item), xml, ctx);
         break;
     case ElementType::NOTELINE: read(item_cast<NoteLine*>(item), xml, ctx);
         break;
@@ -3615,6 +3618,18 @@ void TRead::read(NoteDot* d, XmlReader& e, ReadContext& ctx)
 void TRead::read(NoteHead* h, XmlReader& xml, ReadContext& ctx)
 {
     read(static_cast<Symbol*>(h), xml, ctx);
+}
+
+void TRead::read(NoteAnchoredLine* nal, XmlReader& e, ReadContext& ctx)
+{
+    nal->eraseSpannerSegments();
+
+    while (e.readNextStartElement()) {
+        if (readProperty(nal, e.name(), e, ctx, Pid::LAYOUT_GLISS_STYLE)) {
+        } else if (!TRead::readProperties(static_cast<SLine*>(nal), e, ctx)) {
+            e.unknown();
+        }
+    }
 }
 
 void TRead::read(Ottava* o, XmlReader& e, ReadContext& ctx)

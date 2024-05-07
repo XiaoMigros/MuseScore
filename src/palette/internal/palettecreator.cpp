@@ -63,6 +63,7 @@
 #include "engraving/dom/measurenumber.h"
 #include "engraving/dom/measurerepeat.h"
 #include "engraving/dom/note.h"
+#include "engraving/dom/noteanchoredline.h"
 #include "engraving/dom/ornament.h"
 #include "engraving/dom/ottava.h"
 #include "engraving/dom/palmmute.h"
@@ -1299,6 +1300,9 @@ PalettePtr PaletteCreator::newLinesPalette(bool defaultPalette)
     systemTextLine->setBeginText(u"System");
     systemTextLine->setEndHookType(HookType::HOOK_90);
     sp->appendElement(systemTextLine, QT_TRANSLATE_NOOP("palette", "System text line"));
+
+    auto nal = makeElement<NoteAnchoredLine>(gpaletteScore);
+    sp->appendElement(nal, TConv::userName(nal->type()));
 
     if (!defaultPalette) {
         auto textLine = makeElement<TextLine>(gpaletteScore);

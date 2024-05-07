@@ -98,7 +98,11 @@ class MeasureNumber;
 class MeasureRepeat;
 
 class Note;
+class NoteAnchoredLine;
+class NoteAnchoredLineSegment;
 class NoteHead;
+class NoteLineBase;
+class NoteLineBaseSegment;
 
 class Ornament;
 class Ottava;
@@ -223,6 +227,7 @@ private:
 
     static void draw(const Note* item, muse::draw::Painter* painter);
     static void draw(const NoteHead* item, muse::draw::Painter* painter);
+    static void draw(const NoteAnchoredLineSegment* item, muse::draw::Painter* painter);
 
     static void draw(const Ornament* item, muse::draw::Painter* painter);
     static void draw(const OttavaSegment* item, muse::draw::Painter* painter);
@@ -273,6 +278,7 @@ private:
 
     static void drawTextBase(const TextBase* item, muse::draw::Painter* painter);
     static void drawTextLineBaseSegment(const TextLineBaseSegment* item, muse::draw::Painter* painter);
+    static void drawNoteLineBaseSegment(const NoteLineBaseSegment* item, muse::draw::Painter* painter);
 };
 }
 

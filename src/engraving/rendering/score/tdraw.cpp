@@ -90,7 +90,9 @@
 
 #include "dom/navigate.h"
 #include "dom/note.h"
+#include "dom/noteanchoredline.h"
 #include "dom/notedot.h"
+#include "dom/notelinebase.h"
 
 #include "dom/ornament.h"
 #include "dom/ottava.h"
@@ -285,6 +287,8 @@ void TDraw::drawItem(const EngravingItem* item, Painter* painter)
         break;
 
     case ElementType::NOTE:         draw(item_cast<const Note*>(item), painter);
+        break;
+    case ElementType::NOTE_ANCHORED_LINE_SEGMENT: draw(item_cast<const NoteAnchoredLineSegment*>(item), painter);
         break;
     case ElementType::NOTEDOT:      draw(item_cast<const NoteDot*>(item), painter);
         break;
@@ -1468,67 +1472,7 @@ void TDraw::draw(const FretCircle* item, Painter* painter)
 void TDraw::draw(const GlissandoSegment* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
-
-    if (item->pos2().x() <= 0) {
-        return;
-    }
-
-    painter->save();
-    double _spatium = item->spatium();
-    const Glissando* glissando = item->glissando();
-
-    Pen pen(item->curColor(item->getProperty(Pid::VISIBLE).toBool(), item->getProperty(Pid::COLOR).value<Color>()));
-    pen.setWidthF(item->absoluteFromSpatium(item->lineWidth()));
-    pen.setCapStyle(PenCapStyle::FlatCap);
-    painter->setPen(pen);
-
-    // rotate painter so that the line become horizontal
-    double w     = item->pos2().x();
-    double h     = item->pos2().y();
-    double l     = sqrt(w * w + h * h);
-    double wi    = asin(-h / l) * 180.0 / M_PI;
-    painter->rotate(-wi);
-
-    if (glissando->glissandoType() == GlissandoType::STRAIGHT) {
-        painter->drawLine(LineF(0.0, 0.0, l, 0.0));
-    } else if (glissando->glissandoType() == GlissandoType::WAVY) {
-        RectF b = item->symBbox(SymId::wiggleTrill);
-        double a  = item->symAdvance(SymId::wiggleTrill);
-        int n    = static_cast<int>(l / a);          // always round down (truncate) to avoid overlap
-        double x  = (l - n * a) * 0.5;     // centre line in available space
-        SymIdList ids;
-        for (int i = 0; i < n; ++i) {
-            ids.push_back(SymId::wiggleTrill);
-        }
-
-        item->score()->engravingFont()->draw(ids, painter, item->magS(), PointF(x, -(b.y() + b.height() * 0.5)));
-    }
-
-    if (glissando->showText()) {
-        Font f(glissando->fontFace(), Font::Type::Unknown);
-        f.setPointSizeF(glissando->fontSize() * _spatium / SPATIUM20);
-        f.setBold(glissando->fontStyle() & FontStyle::Bold);
-        f.setItalic(glissando->fontStyle() & FontStyle::Italic);
-        f.setUnderline(glissando->fontStyle() & FontStyle::Underline);
-        f.setStrike(glissando->fontStyle() & FontStyle::Strike);
-        FontMetrics fm(f);
-        RectF r = fm.boundingRect(glissando->text());
-
-        // if text longer than available space, skip it
-        if (r.width() < l) {
-            double yOffset = r.height() + r.y();             // find text descender height
-            // raise text slightly above line and slightly more with WAVY than with STRAIGHT
-            yOffset += _spatium * (glissando->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
-
-            Font scaledFont(f);
-            scaledFont.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-            painter->setFont(scaledFont);
-
-            double x = (l - r.width()) * 0.5;
-            painter->drawText(PointF(x, -yOffset), glissando->text());
-        }
-    }
-    painter->restore();
+    drawNoteLineBaseSegment(item, painter);
 }
 
 void TDraw::draw(const GuitarBendSegment* item, Painter* painter)
@@ -2320,6 +2264,12 @@ void TDraw::draw(const Note* item, Painter* painter)
     }
 }
 
+void TDraw::draw(const NoteAnchoredLineSegment* item, Painter* painter)
+{
+    TRACE_DRAW_ITEM;
+    drawNoteLineBaseSegment(item, painter);
+}
+
 void TDraw::draw(const NoteDot* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
@@ -2343,6 +2293,86 @@ void TDraw::draw(const NoteDot* item, Painter* painter)
 void TDraw::draw(const NoteHead* item, Painter* painter)
 {
     draw(static_cast<const Symbol*>(item), painter);
+}
+
+void TDraw::drawNoteLineBaseSegment(const NoteLineBaseSegment* item, Painter* painter)
+{
+    if (item->pos2().x() <= 0) {
+        return;
+    }
+
+    painter->save();
+    double _spatium = item->spatium();
+    const NoteLineBase* nal = item->noteLineBase();
+    const Glissando* glissando = nal->isGlissando() ? toGlissando(nal) : nullptr;
+
+    Color color = item->curColor(item->getProperty(Pid::VISIBLE).toBool(), item->getProperty(Pid::COLOR).value<Color>());
+    double lineWidth = nal->absoluteFromSpatium(nal->lineWidth());
+    const Pen solidPen(color, lineWidth, PenStyle::SolidLine, PenCapStyle::FlatCap, PenJoinStyle::MiterJoin);
+    Pen pen(solidPen);
+
+    // rotate painter so that the line become horizontal
+    double w     = item->pos2().x();
+    double h     = item->pos2().y();
+    double l     = sqrt(w * w + h * h);
+    double wi    = asin(-h / l) * 180.0 / M_PI;
+    painter->rotate(-wi);
+
+    if (glissando && glissando->glissandoType() == GlissandoType::WAVY) {
+        RectF b = item->symBbox(SymId::wiggleTrill);
+        double a  = item->symAdvance(SymId::wiggleTrill);
+        int n    = static_cast<int>(l / a);          // always round down (truncate) to avoid overlap
+        double x  = (l - n * a) * 0.5;     // centre line in available space
+        SymIdList ids;
+        for (int i = 0; i < n; ++i) {
+            ids.push_back(SymId::wiggleTrill);
+        }
+
+        painter->setPen(pen);
+        item->score()->engravingFont()->draw(ids, painter, item->magS(), PointF(x, -(b.y() + b.height() * 0.5)));
+    } else {
+        if (nal->lineStyle() != LineType::SOLID) {
+            double dash = nal->dashLineLen();
+            double gap = nal->dashGapLen();
+            if (nal->lineStyle() == LineType::DOTTED) {
+                dash = 0.01;
+                gap = 1.99;
+                pen.setCapStyle(PenCapStyle::RoundCap); // round dots
+            }
+            int numPairs = std::max(1.0, (l / nal->absoluteFromSpatium(nal->lineWidth())) / (dash + gap));
+            gap = ((l / nal->absoluteFromSpatium(nal->lineWidth())) - dash * (numPairs + 1)) / numPairs;
+            pen.setDashPattern({ dash, gap });
+        }
+
+        painter->setPen(pen);
+        painter->drawLine(LineF(0.0, 0.0, l, 0.0));
+    }
+
+    if (glissando && glissando->showText()) {
+        Font f(glissando->fontFace(), Font::Type::Unknown);
+        f.setPointSizeF(glissando->fontSize() * _spatium / SPATIUM20);
+        f.setBold(glissando->fontStyle() & FontStyle::Bold);
+        f.setItalic(glissando->fontStyle() & FontStyle::Italic);
+        f.setUnderline(glissando->fontStyle() & FontStyle::Underline);
+        f.setStrike(glissando->fontStyle() & FontStyle::Strike);
+        FontMetrics fm(f);
+        RectF r = fm.boundingRect(glissando->text());
+
+        // if text longer than available space, skip it
+        if (r.width() < l) {
+            double yOffset = r.height() + r.y();             // find text descender height
+            // raise text slightly above line and slightly more with WAVY than with STRAIGHT
+            yOffset += _spatium * (glissando->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
+
+            Font scaledFont(f);
+            scaledFont.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
+            painter->setFont(scaledFont);
+
+            double x = (l - r.width()) * 0.5;
+            painter->drawText(PointF(x, -yOffset), glissando->text());
+        }
+    }
+    painter->restore();
 }
 
 void TDraw::draw(const OttavaSegment* item, Painter* painter)

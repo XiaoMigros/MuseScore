@@ -103,6 +103,7 @@ const char* PaletteCell::translationContext() const
     case ElementType::ARPEGGIO:
     case ElementType::CHORDLINE:
     case ElementType::GLISSANDO:
+    case ElementType::NOTE_ANCHORED_LINE:
     case ElementType::HARMONY:
     case ElementType::JUMP:
     case ElementType::KEYSIG:

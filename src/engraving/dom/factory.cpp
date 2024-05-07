@@ -69,6 +69,7 @@
 #include "mmrest.h"
 #include "mmrestrange.h"
 #include "note.h"
+#include "noteanchoredline.h"
 #include "noteline.h"
 #include "ornament.h"
 #include "ottava.h"
@@ -158,6 +159,7 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::ARPEGGIO:          return new Arpeggio(parent->isChord() ? toChord(parent) : dummy->chord());
     case ElementType::BREATH:            return new Breath(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::GLISSANDO:         return new Glissando(parent);
+    case ElementType::NOTE_ANCHORED_LINE: return new NoteAnchoredLine(parent);
     case ElementType::BRACKET:           return new Bracket(parent);
     case ElementType::ARTICULATION:      return new Articulation(parent->isChordRest() ? toChordRest(parent) : dummy->chord());
     case ElementType::ORNAMENT:          return new Ornament(parent->isChordRest() ? toChordRest(parent) : dummy->chord());
@@ -238,6 +240,7 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::TEXTLINE_BASE:
     case ElementType::TEXTLINE_SEGMENT:
     case ElementType::GLISSANDO_SEGMENT:
+    case ElementType::NOTE_ANCHORED_LINE_SEGMENT:
     case ElementType::GUITAR_BEND_SEGMENT:
     case ElementType::GUITAR_BEND_HOLD:
     case ElementType::GUITAR_BEND_HOLD_SEGMENT:
@@ -639,6 +642,9 @@ MAKE_ITEM_IMPL(Hairpin, Segment)
 
 CREATE_ITEM_IMPL(Glissando, ElementType::GLISSANDO, EngravingItem, isAccessibleEnabled)
 MAKE_ITEM_IMPL(Glissando, EngravingItem)
+
+CREATE_ITEM_IMPL(NoteAnchoredLine, ElementType::NOTE_ANCHORED_LINE, EngravingItem, isAccessibleEnabled)
+MAKE_ITEM_IMPL(NoteAnchoredLine, EngravingItem)
 
 CREATE_ITEM_IMPL(GuitarBend, ElementType::GUITAR_BEND, Note, isAccessibleEnabled)
 MAKE_ITEM_IMPL(GuitarBend, Note)
