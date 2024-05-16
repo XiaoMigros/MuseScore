@@ -72,7 +72,7 @@ static RetVal<IReaderPtr> makeReader(int version, bool ignoreVersionError)
 }
 
 Ret MscLoader::loadMscz(MasterScore* masterScore, const MscReader& mscReader, SettingsCompat& settingsCompat,
-                        bool ignoreVersionError)
+                        bool ignoreVersionError, rw::ReadInOutData* inOut)
 {
     TRACEFUNC;
 
@@ -91,6 +91,9 @@ Ret MscLoader::loadMscz(MasterScore* masterScore, const MscReader& mscReader, Se
             Buffer buf(&styleData);
             buf.open(IODevice::ReadOnly);
             masterScore->style().read(&buf);
+            if (inOut) {
+                inOut->originalSpatium = masterScore->style().spatium();
+            }
         }
     }
 
@@ -115,6 +118,9 @@ Ret MscLoader::loadMscz(MasterScore* masterScore, const MscReader& mscReader, Se
     }
 
     ReadInOutData masterReadOutData;
+    if (!inOut) {
+        inOut = &masterReadOutData;
+    }
 
     Ret ret = muse::make_ok();
 
@@ -128,7 +134,7 @@ Ret MscLoader::loadMscz(MasterScore* masterScore, const MscReader& mscReader, Se
         XmlReader xml(scoreData);
         xml.setDocName(docName);
 
-        ret = readMasterScore(masterScore, xml, ignoreVersionError, &masterReadOutData, &styleHook);
+        ret = readMasterScore(masterScore, xml, ignoreVersionError, inOut, &styleHook);
     }
 
     // Read excerpts
@@ -154,7 +160,7 @@ Ret MscLoader::loadMscz(MasterScore* masterScore, const MscReader& mscReader, Se
             xml.setDocName(excerptFileName);
 
             ReadInOutData partReadInData;
-            partReadInData.links = masterReadOutData.links;
+            partReadInData.links = inOut->links;
 
             RetVal<IReaderPtr> reader = makeReader(masterScore->mscVersion(), ignoreVersionError);
             if (!reader.ret) {
@@ -198,7 +204,7 @@ Ret MscLoader::loadMscz(MasterScore* masterScore, const MscReader& mscReader, Se
         }
     }
 
-    settingsCompat = std::move(masterReadOutData.settingsCompat);
+    settingsCompat = std::move(inOut->settingsCompat);
 
     return ret;
 }

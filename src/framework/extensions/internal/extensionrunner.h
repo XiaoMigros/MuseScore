@@ -22,6 +22,7 @@
 #ifndef MUSE_EXTENSIONS_EXTENSIONRUNNER_H
 #define MUSE_EXTENSIONS_EXTENSIONRUNNER_H
 
+#include "modularity/ioc.h"
 #include "global/types/ret.h"
 #include "../extensionstypes.h"
 
@@ -29,9 +30,12 @@ namespace muse::extensions {
 class ExtensionRunner
 {
 public:
-    ExtensionRunner() = default;
+    ExtensionRunner(const modularity::ContextPtr& iocCtx);
 
     Ret run(const Action& action);
+
+private:
+    const modularity::ContextPtr m_iocContext;
 };
 }
 

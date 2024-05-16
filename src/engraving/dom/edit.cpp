@@ -370,6 +370,7 @@ Chord* Score::addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie
     chord->setTrack(oc->track());
     chord->setDurationType(d);
     chord->setTicks(d.fraction());
+    chord->setStemDirection(oc->stemDirection());
 
     for (Note* n : oc->notes()) {
         Note* nn = Factory::createNote(chord);
@@ -2239,10 +2240,20 @@ void Score::cmdFlip()
         }
 
         if (e->isBeam()) {
-            auto beam = toBeam(e);
+            Beam* beam = toBeam(e);
             flipOnce(beam, [beam]() {
-                DirectionV dir = beam->up() ? DirectionV::DOWN : DirectionV::UP;
-                beam->undoChangeProperty(Pid::STEM_DIRECTION, dir);
+                if (beam->cross()) {
+                    int newCrossStaffMove = beam->crossStaffMove() + 1;
+                    if (beam->acceptCrossStaffMove(newCrossStaffMove)) {
+                        beam->undoChangeProperty(Pid::BEAM_CROSS_STAFF_MOVE, newCrossStaffMove);
+                    } else {
+                        beam->undoChangeProperty(Pid::BEAM_CROSS_STAFF_MOVE,
+                                                 beam->minCRMove() - beam->defaultCrossStaffIdx());
+                    }
+                } else {
+                    DirectionV dir = beam->up() ? DirectionV::DOWN : DirectionV::UP;
+                    beam->undoChangeProperty(Pid::STEM_DIRECTION, dir);
+                }
             });
         } else if (e->isType(ElementType::TREMOLO_TWOCHORD)) {
             TremoloTwoChord* tremolo = item_cast<TremoloTwoChord*>(e);
@@ -2390,9 +2401,21 @@ void Score::deleteItem(EngravingItem* el)
     if (!el) {
         return;
     }
-    // cannot remove generated elements
-    if (el->generated() && !(el->isBracket() || el->isBarLine() || el->isClef() || el->isMeasureNumber() || el->isKeySig())) {
-        return;
+
+    if (el->generated()) {
+        switch (el->type()) {
+        // These types can be removed, even if generated
+        case ElementType::BAR_LINE:
+        case ElementType::BRACKET:
+        case ElementType::CLEF:
+        case ElementType::INSTRUMENT_NAME:
+        case ElementType::KEYSIG:
+        case ElementType::MEASURE_NUMBER:
+            break;
+        // All other types cannot be removed if generated
+        default:
+            return;
+        }
     }
 //      LOGD("%s", el->typeName());
 
@@ -5269,9 +5292,12 @@ void Score::undoChangeChordRestLen(ChordRest* cr, const TDuration& d)
 //   undoTransposeHarmony
 //---------------------------------------------------------
 
-void Score::undoTransposeHarmony(Harmony* h, int rootTpc, int baseTpc)
+void Score::undoTransposeHarmony(Harmony* harmony, int rootTpc, int baseTpc)
 {
-    undo(new TransposeHarmony(h, rootTpc, baseTpc));
+    for (EngravingObject* e : harmony->linkList()) {
+        Harmony* h = toHarmony(e);
+        undoStack()->push(new TransposeHarmony(h, rootTpc, baseTpc), 0);
+    }
 }
 
 //---------------------------------------------------------

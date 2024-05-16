@@ -27,49 +27,13 @@ SOFTWARE.
 #include <memory>
 #include <mutex>
 
+#include "context.h"
 #include "modulesioc.h"
-
-#define INJECT(Interface, getter) \
-private: \
-    mutable std::shared_ptr<Interface> m_##getter = nullptr; \
-public: \
-    std::shared_ptr<Interface> getter() const {  \
-        if (!m_##getter) { \
-            static std::mutex getter##mutex; \
-            const std::lock_guard<std::mutex> getter##lock(getter##mutex); \
-            if (!m_##getter) { \
-                static const std::string_view sig(FUNC_SIG); \
-                m_##getter = kors::modularity::ioc()->resolve<Interface>(kors::funcinfo::moduleNameBySig(sig), sig); \
-            } \
-        } \
-        return m_##getter; \
-    } \
-    void set##getter(std::shared_ptr<Interface> impl) { m_##getter = impl; } \
-
-#define INJECT_STATIC(Interface, getter) \
-public: \
-    static std::shared_ptr<Interface>& getter() {  \
-        static std::shared_ptr<Interface> s_##getter = nullptr; \
-        if (!s_##getter) { \
-            static std::mutex getter##mutex; \
-            const std::lock_guard<std::mutex> getter##lock(getter##mutex); \
-            if (!s_##getter) { \
-                static const std::string_view sig(FUNC_SIG); \
-                s_##getter = kors::modularity::ioc()->resolve<Interface>(kors::funcinfo::moduleNameBySig(sig), sig); \
-            } \
-        } \
-        return s_##getter; \
-    } \
-    static void set##getter(std::shared_ptr<Interface> impl) { \
-        std::shared_ptr<Interface>& s_##getter = getter(); \
-        s_##getter = impl; \
-    } \
+#include "injectable.h"
 
 namespace kors::modularity {
-inline ModulesIoC* ioc()
-{
-    return ModulesIoC::instance();
-}
+ModulesIoC* _ioc(const ContextPtr& ctx = nullptr);
+void removeIoC(const ContextPtr& ctx = nullptr);
 
 struct StaticMutex
 {
@@ -81,15 +45,34 @@ class Inject
 {
 public:
 
-    Inject(const std::string_view& module = std::string_view())
-        : m_module(module) {}
+    Inject(const ContextPtr& ctx = nullptr)
+        : m_ctx(ctx) {}
+
+    Inject(const Injectable* o)
+        : m_inj(o) {}
+
+    const ContextPtr& iocContext() const
+    {
+        if (m_ctx) {
+            return m_ctx;
+        }
+
+        //assert(m_inj);
+        if (m_inj) {
+            return m_inj->iocContext();
+        }
+
+        // null
+        return m_ctx;
+    }
 
     const std::shared_ptr<I>& get() const
     {
         if (!m_i) {
             const std::lock_guard<std::mutex> lock(StaticMutex::mutex);
             if (!m_i) {
-                m_i = ioc()->resolve<I>(m_module);
+                static std::string_view module = "";
+                m_i = _ioc(iocContext())->template resolve<I>(module);
             }
         }
         return m_i;
@@ -100,15 +83,24 @@ public:
         m_i = impl;
     }
 
-    I* operator()() const
+    const std::shared_ptr<I>& operator()() const
     {
-        return get().get();
+        return get();
     }
 
 private:
 
-    std::string_view m_module;
+    const ContextPtr m_ctx;
+    const Injectable* m_inj = nullptr;
     mutable std::shared_ptr<I> m_i = nullptr;
+};
+
+template<class I>
+class GlobalInject : public Inject<I>
+{
+public:
+    GlobalInject()
+        : Inject<I>(ContextPtr()) {}
 };
 }
 

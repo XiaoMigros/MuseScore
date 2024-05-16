@@ -46,7 +46,7 @@
 using namespace muse::uicomponents;
 
 PopupView::PopupView(QQuickItem* parent)
-    : QObject(parent)
+    : QObject(parent), Injectable(muse::iocCtxForQmlObject(this))
 {
     setObjectName("PopupView");
     setErrCode(Ret::Code::Ok);
@@ -132,7 +132,7 @@ void PopupView::init()
         return;
     }
 
-    m_window = new PopupWindow_QQuickView(this);
+    m_window = new PopupWindow_QQuickView();
     m_window->init(engine, isDialog(), frameless());
     m_window->setOnHidden([this]() { onHidden(); });
     m_window->setContent(m_component, m_contentItem);
@@ -204,6 +204,10 @@ void PopupView::open()
     doOpen();
 }
 
+void PopupView::beforeOpen()
+{
+}
+
 void PopupView::doOpen()
 {
     if (isOpened()) {
@@ -214,6 +218,8 @@ void PopupView::doOpen()
     IF_ASSERT_FAILED(m_window) {
         return;
     }
+
+    beforeOpen();
 
     updateGeometry();
 

@@ -2843,6 +2843,10 @@ Err Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
     }
 
     ReadContext ctx(score);
+    if (out && out->overriddenSpatium.has_value()) {
+        ctx.setSpatium(out->overriddenSpatium.value());
+        ctx.setOverrideSpatium(true);
+    }
 
     DEFER {
         if (out) {
@@ -2900,7 +2904,16 @@ Err Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
         } else if (tag == "SyntiSettings") {
             masterScore->m_synthesizerState.read(e);
         } else if (tag == "Spatium") {
-            masterScore->style().setSpatium(e.readDouble() * DPMM);
+            if (ctx.overrideSpatium()) {
+                masterScore->style().setSpatium(ctx.spatium());
+                if (out) {
+                    out->originalSpatium = e.readDouble() * DPMM;
+                } else {
+                    e.skipCurrentElement();
+                }
+            } else {
+                masterScore->style().setSpatium(e.readDouble() * DPMM);
+            }
         } else if (tag == "Division") {
             masterScore->m_fileDivision = e.readInt();
         } else if (tag == "showInvisible") {
@@ -2919,9 +2932,7 @@ Err Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
             if (masterScore->style().styleB(Sid::useGermanNoteNames)) {
                 masterScore->style().set(Sid::useStandardNoteNames, false);
             }
-            if (masterScore->layoutMode() == LayoutMode::FLOAT) {
-                // style should not change spatium in
-                // float mode
+            if (ctx.overrideSpatium()) {
                 masterScore->style().setSpatium(sp);
             }
         } else if (tag == "TextStyle") {

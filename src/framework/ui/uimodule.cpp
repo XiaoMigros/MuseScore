@@ -88,7 +88,7 @@ std::string UiModule::moduleName() const
 
 void UiModule::registerExports()
 {
-    m_uiengine = std::make_shared<UiEngine>();
+    m_uiengine = std::make_shared<UiEngine>(iocContext());
     m_configuration = std::make_shared<UiConfiguration>();
     m_uiactionsRegister = std::make_shared<UiActionsRegister>();
     m_keyNavigationController = std::make_shared<NavigationController>();
@@ -121,7 +121,7 @@ void UiModule::resolveImports()
         ar->reg(m_keyNavigationUiActions);
     }
 
-    auto ir = modularity::ioc()->resolve<IInteractiveUriRegister>(moduleName());
+    auto ir = ioc()->resolve<IInteractiveUriRegister>(moduleName());
     if (ir) {
         ir->registerWidgetUri<TestDialog>(Uri("muse://devtools/interactive/testdialog"));
         ir->registerQmlUri(Uri("muse://devtools/interactive/sample"), "DevTools/Interactive/SampleDialog.qml");
@@ -181,7 +181,7 @@ void UiModule::registerUiTypes()
     qmlRegisterType<InteractiveTestsModel>("Muse.Ui", 1, 0, "InteractiveTestsModel");
     qRegisterMetaType<TestDialog>("TestDialog");
 
-    modularity::ioc()->resolve<ui::IUiEngine>(moduleName())->addSourceImportPath(muse_ui_QML_IMPORT);
+    ioc()->resolve<ui::IUiEngine>(moduleName())->addSourceImportPath(muse_ui_QML_IMPORT);
 }
 
 void UiModule::onPreInit(const IApplication::RunMode& mode)

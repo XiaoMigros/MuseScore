@@ -51,6 +51,19 @@ public:
     virtual void onDestroy() {}
 
     virtual void onStartApp() {}
+
+    void setApplication(std::shared_ptr<IApplication> app)
+    {
+        m_application = app;
+    }
+
+    std::shared_ptr<IApplication> application() const { return m_application; }
+
+    const modularity::ContextPtr iocContext() const { return m_application->iocContext(); }
+    ModulesIoC* ioc() const { return m_application->ioc(); }
+
+protected:
+    std::shared_ptr<IApplication> m_application;
 };
 }
 

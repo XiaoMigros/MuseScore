@@ -1596,7 +1596,7 @@ TextBlock TextBlock::split(int column, TextCursor* cursor)
 
 static String toSymbolXml(Char c)
 {
-    static std::shared_ptr<IEngravingFontsProvider> provider = muse::modularity::ioc()->resolve<IEngravingFontsProvider>("engraving");
+    static std::shared_ptr<IEngravingFontsProvider> provider = muse::modularity::globalIoc()->resolve<IEngravingFontsProvider>("engraving");
 
     SymId symId = provider->fallbackFont()->fromCode(c.unicode());
     return u"<sym>" + String::fromAscii(SymNames::nameForSymId(symId).ascii()) + u"</sym>";
@@ -2304,6 +2304,30 @@ RectF TextBase::pageRectangle() const
         return RectF(x, y, w, h);
     }
     return abbox();
+}
+
+void TextBase::computeHighResShape(const FontMetrics& fontMetrics)
+{
+    Shape& highResShape = mutldata()->highResShape.mut_value();
+    highResShape.clear();
+    highResShape.elements().reserve(m_text.size());
+
+    for (const TextBlock& block : ldata()->blocks) {
+        double x = 0;
+        for (const TextFragment& fragment : block.fragments()) {
+            x += fragment.pos.x();
+            size_t textSize = fragment.text.size();
+            for (int i = 0; i < textSize; ++i) {
+                Char character = fragment.text.at(i);
+                RectF characterBoundingRect = fontMetrics.tightBoundingRect(fragment.text.at(i));
+                characterBoundingRect.translate(x, 0.0);
+                highResShape.add(characterBoundingRect);
+                if (i + 1 < textSize) {
+                    x += fontMetrics.horizontalAdvance(character);
+                }
+            }
+        }
+    }
 }
 
 //---------------------------------------------------------

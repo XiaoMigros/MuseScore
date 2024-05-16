@@ -81,10 +81,11 @@ void Autobot::affectOnServices()
         shortcutsRegister()->reload(true);
 
         //! NOTE Change Interactive implementation
-        auto realInteractive = modularity::ioc()->resolve<IInteractive>("autobot");
+        modularity::ModulesIoC* ioc = application()->ioc();
+        auto realInteractive = ioc->resolve<IInteractive>("autobot");
         m_autobotInteractive->setRealInteractive(realInteractive);
-        modularity::ioc()->unregister<IInteractive>("autobot");
-        modularity::ioc()->registerExport<IInteractive>("autobot", m_autobotInteractive);
+        ioc->unregister<IInteractive>("autobot");
+        ioc->registerExport<IInteractive>("autobot", m_autobotInteractive);
     }
 
     m_affectedServiceState.fontDisabledMerging = muse::draw::Font::g_disableFontMerging;
@@ -98,9 +99,10 @@ void Autobot::restoreAffectOnServices()
         navigation()->setIsResetOnMousePress(true);
         shortcutsRegister()->reload(false);
 
+        modularity::ModulesIoC* ioc = application()->ioc();
         auto realInteractive = m_autobotInteractive->realInteractive();
-        modularity::ioc()->unregister<IInteractive>("autobot");
-        modularity::ioc()->registerExport<IInteractive>("autobot", realInteractive);
+        ioc->unregister<IInteractive>("autobot");
+        ioc->registerExport<IInteractive>("autobot", realInteractive);
     }
 
     muse::draw::Font::g_disableFontMerging = m_affectedServiceState.fontDisabledMerging;
@@ -201,7 +203,7 @@ void Autobot::execScript(const io::path_t& path, const Options& opt)
 
     affectOnServices();
 
-    m_engine = new ScriptEngine();
+    m_engine = new ScriptEngine(iocContext());
     m_engine->setScriptPath(path);
 
     m_context = std::make_shared<TestCaseContext>();

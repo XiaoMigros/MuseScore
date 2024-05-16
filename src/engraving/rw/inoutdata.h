@@ -25,6 +25,7 @@
 
 #include <map>
 #include <vector>
+#include <optional>
 
 #include "linksindexer.h"
 
@@ -45,9 +46,11 @@ struct ReadInOutData {
     // for master - out
     // for except - in
     ReadLinks links;
+    std::optional<double> overriddenSpatium = std::nullopt;
 
     // out
     SettingsCompat settingsCompat;
+    std::optional<double> originalSpatium = std::nullopt;
 };
 
 struct WriteInOutData {

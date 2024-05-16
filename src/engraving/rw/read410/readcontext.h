@@ -70,6 +70,7 @@ struct TextStyleMap {
 
 class ReadContext
 {
+public:
     INJECT(IEngravingFontsProvider, engravingFonts)
 public:
 
@@ -97,6 +98,7 @@ public:
     int fileDivision(int t) const;
 
     double spatium() const;
+    void setSpatium(double v);
 
     compat::DummyElement* dummy() const;
 

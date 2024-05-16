@@ -3289,10 +3289,8 @@ bool Read206::readScore206(Score* score, XmlReader& e, ReadContext& ctx)
             if (score->style().styleSt(Sid::MusicalTextFont) == "MuseJazz") {
                 score->style().set(Sid::MusicalTextFont, "MuseJazz Text");
             }
-            // if (_layoutMode == LayoutMode::FLOAT || _layoutMode == LayoutMode::SYSTEM) {
-            if (score->layoutMode() == LayoutMode::FLOAT) {
-                // style should not change spatium in
-                // float mode
+            if (ctx.overrideSpatium()) {
+                ctx.setOriginalSpatium(score->style().spatium());
                 score->style().set(Sid::spatium, sp);
             }
             score->setEngravingFont(engravingFonts()->fontByName(score->style().styleSt(Sid::MusicalSymbolFont).toStdString()));
@@ -3430,6 +3428,10 @@ bool Read206::readScore206(Score* score, XmlReader& e, ReadContext& ctx)
 Err Read206::readScore(Score* score, XmlReader& e, ReadInOutData* out)
 {
     ReadContext ctx(score);
+    if (out && out->overriddenSpatium.has_value()) {
+        ctx.setSpatium(out->overriddenSpatium.value());
+        ctx.setOverrideSpatium(true);
+    }
     DEFER {
         if (out) {
             out->settingsCompat = std::move(ctx.settingCompat());
@@ -3445,6 +3447,10 @@ Err Read206::readScore(Score* score, XmlReader& e, ReadInOutData* out)
         } else if (tag == "Score") {
             if (!readScore206(score, e, ctx)) {
                 return Err::FileBadFormat;
+            }
+
+            if (ctx.overrideSpatium() && out) {
+                out->originalSpatium = ctx.originalSpatium();
             }
         } else if (tag == "Revision") {
             e.skipCurrentElement();
