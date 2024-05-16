@@ -5292,9 +5292,12 @@ void Score::undoChangeChordRestLen(ChordRest* cr, const TDuration& d)
 //   undoTransposeHarmony
 //---------------------------------------------------------
 
-void Score::undoTransposeHarmony(Harmony* h, int rootTpc, int baseTpc)
+void Score::undoTransposeHarmony(Harmony* harmony, int rootTpc, int baseTpc)
 {
-    undo(new TransposeHarmony(h, rootTpc, baseTpc));
+    for (EngravingObject* e : harmony->linkList()) {
+        Harmony* h = toHarmony(e);
+        undoStack()->push(new TransposeHarmony(h, rootTpc, baseTpc), 0);
+    }
 }
 
 //---------------------------------------------------------
