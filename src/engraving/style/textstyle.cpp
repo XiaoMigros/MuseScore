@@ -1274,6 +1274,10 @@ const std::vector<TextStyleType>& primaryTextStyles()
     return _primaryTextStyles;
 }
 
+//---------------------------------------------------------
+//   editableTextStyles
+//---------------------------------------------------------
+
 static std::vector<TextStyleType> _editableTextStyles;
 
 const std::vector<TextStyleType>& editableTextStyles()
@@ -1283,5 +1287,28 @@ const std::vector<TextStyleType>& editableTextStyles()
         muse::remove(_editableTextStyles, TextStyleType::DYNAMICS);
     }
     return _editableTextStyles;
+}
+
+//---------------------------------------------------------
+//   musicalSymbolsTextStyles
+//---------------------------------------------------------
+
+static const std::vector<TextStyleType> _musicalSymbolsTextStyles = {
+    TextStyleType::OTTAVA,
+    TextStyleType::PEDAL,
+    TextStyleType::TUPLET,
+    TextStyleType::HARP_PEDAL_DIAGRAM,
+    TextStyleType::REPEAT_LEFT,
+    TextStyleType::REPEAT_RIGHT,
+};
+
+const bool isMusicalSymbolsText()
+{
+    for (TextStyleType musicalSymbolsTextStyle : _musicalSymbolsTextStyles()) {
+        if (int(m_textStyle) == int(musicalSymbolsTextStyle)) {
+            return true;
+        }
+    }
+    return false;
 }
 }

@@ -880,9 +880,7 @@ Font TextFragment::font(const TextBase* t) const
     String family;
     Font::Type fontType = Font::Type::Unknown;
     if (format.fontFamily() == "ScoreText") {
-        if (t->isDynamic() || t->textStyleType() == TextStyleType::OTTAVA || t->textStyleType() == TextStyleType::HARP_PEDAL_DIAGRAM
-            || t->textStyleType() == TextStyleType::TUPLET || t->textStyleType() == TextStyleType::PEDAL || t->isStringTunings()
-            || t->textStyleType() == TextStyleType::REPEAT_LEFT || t->textStyleType() == TextStyleType::REPEAT_RIGHT) {
+        if (t->isDynamic() || t->textStyleType().isMusicalSymbolsText() || t->isStringTunings()) {
             std::string fontName = engravingFonts()->fontByName(t->style().styleSt(Sid::MusicalSymbolFont).toStdString())->family();
             family = String::fromStdString(fontName);
             fontType = Font::Type::MusicSymbol;
