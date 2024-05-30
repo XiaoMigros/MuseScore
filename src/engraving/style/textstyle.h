@@ -57,8 +57,11 @@ typedef std::array<TextStyleProperty, TEXT_STYLE_SIZE> TextStyle;
 
 const TextStyle* textStyle(TextStyleType);
 const std::vector<TextStyleType>& allTextStyles();
-const std::vector<TextStyleType>& editableTextStyles();
 const std::vector<TextStyleType>& primaryTextStyles();
+const std::vector<TextStyleType>& editableTextStyles();
+const std::vector<TextStyleType>& musicalSymbolsTextStyles();
+
+const bool isMusicalSymbolsText();
 }
 
 #endif // MU_ENGRAVING_TEXTSTYLE_H
