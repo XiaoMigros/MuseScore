@@ -139,16 +139,16 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
         }
 
         Accidental* accidental = note->accidental();
-        if (accidental && accidental->visible()) {
+        if (accidental && accidental->addToSkyline()) {
             chordAccidentals.push_back(accidental);
-        }
-        if (accidental && accidental->addToSkyline() && !note->fixed()) {
-            // convert x position of accidental to segment coordinate system
-            double x = accidental->pos().x() + note->pos().x() + chordX;
-            // distance from accidental to note already taken into account
-            // but here perhaps we create more padding in *front* of accidental?
-            x -= ctx.conf().styleMM(Sid::accidentalDistance) * mag_;
-            lll = std::max(lll, -x);
+            if (!note->fixed()) {
+                // convert x position of accidental to segment coordinate system
+                double x = accidental->pos().x() + note->pos().x() + chordX;
+                // distance from accidental to note already taken into account
+                // but here perhaps we create more padding in *front* of accidental?
+                x -= ctx.conf().styleMM(Sid::accidentalDistance) * mag_;
+                lll = std::max(lll, -x);
+            }
         }
 
         // clear layout for note-based fingerings
@@ -247,7 +247,7 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
 
                 double offset = -(xDiff + arpldata->maxChordPad);
                 spanArp->mutldata()->setPosX(offset);
-                if (spanArp->visible()) {
+                if (spanArp->addToSkyline()) {
                     lllMax = std::max(lllMax, offset);
                 }
             }
@@ -452,12 +452,8 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
 
     // horiz. spacing: leave half width at each side of the (potential) stem
     double halfHeadWidth = headWidth * 0.5;
-    if (lll < stemX - halfHeadWidth) {
-        lll = stemX - halfHeadWidth;
-    }
-    if (rrr < stemX + halfHeadWidth) {
-        rrr = stemX + halfHeadWidth;
-    }
+    lll = std::max(lll, stemX - halfHeadWidth);
+    rrr = std::max(rrr, stemX + halfHeadWidth);
     // align dots to the widest fret mark (not needed in all TAB styles, but harmless anyway)
     item->setDotPosX(headWidth);
 
@@ -475,10 +471,8 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
             if (item->beam()) {
                 ctx.mutDom().undoRemoveElement(item->hook());
             } else {
-                if (rrr < stemX + item->hook()->width()) {
-                    rrr = stemX + item->hook()->width();
-                }
-
+                double hookWidth = item->hook()->addToSkyline() ? item->hook()->width() : 0.0;
+                rrr = std::max(rrr, stemX + hookWidth);
                 item->hook()->setPos(item->stem()->flagPosition());
             }
         }
@@ -566,6 +560,9 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
         TLayout::layoutArpeggio(item->arpeggio(), item->arpeggio()->mutldata(), ctx.conf());
         lll += item->arpeggio()->width() + _spatium * .5;
         item->arpeggio()->setPos(-lll, y);
+        if (!item->arpeggio()->addToSkyline()) {
+            lll -= item->arpeggio()->width() + _spatium * .5;
+        }
 
         // handle the special case of _arpeggio->span() > 1
         // in layoutArpeggio2() after page layout has done so we
@@ -585,7 +582,7 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
             ctx.mutDom().undoRemoveElement(item->hook());
         } else if (tab == 0) {
             TLayout::layoutHook(item->hook(), item->hook()->mutldata());
-            if (item->up()) {
+            if (item->up() && item->hook()->addToSkyline()) {
                 // hook position is not set yet
                 double x = item->hook()->ldata()->bbox().right() + item->stem()->flagPosition().x();
                 rrr = std::max(rrr, x);
@@ -598,7 +595,7 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
         // if stems are beside staff, dots are placed near to stem
         if (!tab->stemThrough()) {
             // if there is an unbeamed hook, dots should start after the hook
-            if (item->hook() && !item->beam()) {
+            if (item->hook() && item->hook()->addToSkyline() && !item->beam()) {
                 x = item->hook()->width() + dotNoteDistance;
             }
             // if not, dots should start at a fixed distance right after the stem
@@ -748,7 +745,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
     if (keepArticsTogether) {
         // find out how many close-to-note artics there are, and whether there is a staff-anchored artic to align to
         for (Articulation* a : item->articulations()) {
-            if (!a->visible()) {
+            if (!a->addToSkyline()) {
                 continue;
             }
             if (a->layoutCloseToNote()) {
@@ -773,9 +770,11 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
 
     Articulation* prevVisibleArticulation = nullptr;
     for (Articulation* a : item->articulations()) {
-        if (item->measure()->hasVoices(a->staffIdx(), item->tick(), item->actualTicks()) && a->anchor() == ArticulationAnchor::AUTO) {
+        if (a->anchor() != ArticulationAnchor::AUTO) {
+            a->setUp(a->anchor() == ArticulationAnchor::TOP);
+        } else if (item->measure()->hasVoices(a->staffIdx(), item->tick(), item->actualTicks())) {
             a->setUp(item->up());         // if there are voices place articulation at stem
-        } else if (a->anchor() == ArticulationAnchor::AUTO) {
+        } else {
             if (a->isOrnament()) {
                 bool oddVoice = item->track() % 2;
                 a->setUp(!oddVoice);
@@ -784,8 +783,6 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
             } else {
                 a->setUp(!item->up());         // place articulation at note head
             }
-        } else {
-            a->setUp(a->anchor() == ArticulationAnchor::TOP);
         }
 
         if (!a->layoutCloseToNote()) {
@@ -821,7 +818,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
         }
 
         if (bottom) {
-            if (!headSide && item->stem()) {
+            if (!headSide && item->stem() && item->stem()->addToSkyline()) {
                 double stemBottom = item->stem()->ldata()->bbox().translated(item->stem()->pos()).bottom();
                 // Check if there's a hook, because the tip of the hook always extends slightly past the end of the stem
                 if (item->hook()) {
@@ -883,7 +880,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
             }
             // center symbol
         } else { // topside
-            if (!headSide && item->stem()) {
+            if (!headSide && item->stem() && item->stem()->addToSkyline()) {
                 double stemTop = item->stem()->ldata()->bbox().translated(item->stem()->pos()).top();
                 // Check if there's a hook, because the tip of the hook always extends slightly past the end of the stem
                 if (item->hook()) {
@@ -943,7 +940,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
             }
         }
         a->setPos(x, y);
-        if (a->visible()) {
+        if (a->addToSkyline()) {
             prevVisibleArticulation = a;
         }
 //            measure()->system()->staff(a->staffIdx())->skyline().add(a->shape().translated(a->pos() + segment()->pos() + measure()->pos()));
@@ -1007,17 +1004,17 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
     if (item->stem()) {
         // Check if there's a hook, because the tip of the hook always extends slightly past the end of the stem
         if (item->up()) {
-            double tip = item->hook()
-                         ? item->hook()->ldata()->bbox().translated(item->hook()->pos()).top()
-                         : item->stem()->ldata()->bbox().translated(item->stem()->pos()).top();
-
-            chordTopY = tip;
+            if (item->hook() && item->hook()->addToSkyline()) {
+                chordTopY = item->hook()->ldata()->bbox().translated(item->hook()->pos()).top();
+            } else if (item->stem()->addToSkyline()) {
+                chordTopY = item->stem()->ldata()->bbox().translated(item->stem()->pos()).top();
+            }
         } else {
-            double tip = item->hook()
-                         ? item->hook()->ldata()->bbox().translated(item->hook()->pos()).bottom()
-                         : item->stem()->ldata()->bbox().translated(item->stem()->pos()).bottom();
-
-            chordBotY = tip;
+            if (item->hook() && item->hook()->addToSkyline()) {
+                chordBotY = item->hook()->ldata()->bbox().translated(item->hook()->pos()).bottom();
+            } else if (item->stem()->addToSkyline()) {
+                chordBotY = item->stem()->ldata()->bbox().translated(item->stem()->pos()).bottom();
+            }
         }
     }
 
@@ -1028,8 +1025,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
     chordBotY += item->up() ? noteDist : stemDist;
     // add space for staccato and tenuto marks which may have been previously laid out
     for (Articulation* a : item->articulations()) {
-        ArticulationAnchor aa = a->anchor();
-        if (a->layoutCloseToNote() && a->visible() && aa == ArticulationAnchor::AUTO) {
+        if (a->layoutCloseToNote() && a->addToSkyline() && a->anchor() == ArticulationAnchor::AUTO) {
             if (a->up()) {
                 chordTopY = a->y() - a->height() - minDist;
             } else {
@@ -1046,11 +1042,11 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
             continue;
         }
         if (a->up()) {
-            if (a->visible()) {
+            if (a->addToSkyline()) {
                 chordTopY = a->y() - a->height() - minDist;
             }
         } else {
-            if (a->visible()) {
+            if (a->addToSkyline()) {
                 chordBotY = a->y() + a->height() + minDist;
             }
         }
@@ -1062,7 +1058,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
     staffBotY = std::max(staffBotY, chordBotY);
     Articulation* stacc = nullptr;
     for (Articulation* a : item->articulations()) {
-        double kearnHeight = 0.0;
+        double kernHeight = 0.0;
         if (layoutOnCrossBeamSide && !a->isOnCrossBeamSide()) {
             continue;
         }
@@ -1075,7 +1071,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
             // and accent closer to each other to simulate some kind of kerning. Looks great using all musescore fonts,
             // though there is a possibility that a different font which has vertically-asymmetrical accents
             // could make this look bad.
-            kearnHeight = stacAccentKern;
+            kernHeight = stacAccentKern;
             stacc = nullptr;
         } else {
             stacc = nullptr;
@@ -1083,13 +1079,13 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
         if (!a->layoutCloseToNote()) {
             TLayout::layoutItem(a, ctx);
             if (a->up()) {
-                a->setPos(!item->up() || !a->isBasicArticulation() ? headSideX : stemSideX, staffTopY + kearnHeight);
-                if (a->visible()) {
+                a->setPos(!item->up() || !a->isBasicArticulation() ? headSideX : stemSideX, staffTopY + kernHeight);
+                if (a->addToSkyline()) {
                     staffTopY = a->y() - a->height() - minDist;
                 }
             } else {
-                a->setPos(item->up() || !a->isBasicArticulation() ? headSideX : stemSideX, staffBotY - kearnHeight);
-                if (a->visible()) {
+                a->setPos(item->up() || !a->isBasicArticulation() ? headSideX : stemSideX, staffBotY - kernHeight);
+                if (a->addToSkyline()) {
                     staffBotY = a->y() + a->height() + minDist;
                 }
             }
@@ -1142,7 +1138,7 @@ void ChordLayout::layoutArticulations3(Chord* item, Slur* slur, LayoutContext& c
     SysStaff* sstaff = m->system() ? m->system()->staff(item->vStaffIdx()) : nullptr;
     for (auto iter = item->articulations().begin(); iter != item->articulations().end(); ++iter) {
         Articulation* a = *iter;
-        if (a->layoutCloseToNote() || !a->autoplace() || !slur->addToSkyline()) {
+        if (a->layoutCloseToNote() || !a->addToSkyline() || !slur->addToSkyline()) {
             continue;
         }
         Shape aShape = a->shape().translate(a->pos() + item->pos() + s->pos() + m->pos());
@@ -1511,7 +1507,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 upDots   = std::max(upDots, chord->dots());
                 maxUpMag = std::max(maxUpMag, chord->mag());
                 if (!upHooks && !chord->beam()) {
-                    upHooks = chord->hook();
+                    upHooks = chord->hook() && chord->hook()->addToSkyline();
                 }
                 if (hasGraceBefore) {
                     upGrace = true;
@@ -1522,7 +1518,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 downDots = std::max(downDots, chord->dots());
                 maxDownMag = std::max(maxDownMag, chord->mag());
                 if (!downHooks && !chord->beam()) {
-                    downHooks = chord->hook();
+                    downHooks = chord->hook() && chord->hook()->addToSkyline();
                 }
                 if (hasGraceBefore) {
                     downGrace = true;
@@ -1725,7 +1721,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                                  || n->isSmall() || p->isSmall())
                                 && ((n->headType() == NoteHeadType::HEAD_AUTO && p->headType() == NoteHeadType::HEAD_AUTO)
                                     || nHeadType != pHeadType)
-                                && (n->visible() == p->visible())) {
+                                && (n->addToSkyline() == p->addToSkyline())) {
                                 shareHeads = false;
                             }
                         }
@@ -1764,7 +1760,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 double ledgerLen = ctx.conf().styleS(Sid::ledgerLineLength).val() * sp;
                 int firstLedgerBelow = staff->lines(bottomUpNote->tick()) * 2;
                 int topDownStemLen = 0;
-                if (!conflictUnison && topDownNote->chord()->stem()) {
+                if (!conflictUnison && topDownNote->chord()->stem() && topDownNote->chord()->stem()->addToSkyline()) {
                     topDownStemLen = std::round(topDownNote->chord()->stem()->ldata()->bbox().height() / sp * 2);
                     if (bottomUpNote->line() > firstLedgerBelow - 1 && topDownNote->line() < bottomUpNote->line()
                         && topDownNote->line() + topDownStemLen >= firstLedgerBelow) {
@@ -1774,7 +1770,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
 
                 int firstLedgerAbove = -2;
                 int bottomUpStemLen = 0;
-                if (!conflictUnison && bottomUpNote->chord()->stem()) {
+                if (!conflictUnison && bottomUpNote->chord()->stem() && bottomUpNote->chord()->stem()->addToSkyline()) {
                     bottomUpStemLen = std::round(bottomUpNote->chord()->stem()->ldata()->bbox().height() / sp * 2);
                     if (topDownNote->line() < -1 && topDownNote->line() < bottomUpNote->line()
                         && bottomUpNote->line() - bottomUpStemLen <= firstLedgerAbove) {
@@ -1854,7 +1850,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                         if (downHooks) {
                             bool needsHookSpace = (ledgerOverlapBelow || ledgerOverlapAbove);
                             Hook* hook = topDownNote->chord()->hook();
-                            double hookSpace = hook ? hook->width() : 0.0;
+                            double hookSpace = hook && hook->addToSkyline() ? hook->width() : 0.0;
                             upOffset = needsHookSpace ? hookSpace + ledgerLen + ledgerGap : upOffset + 0.3 * sp;
                         }
                     }
@@ -1862,7 +1858,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                     // no direct conflict, so parts can overlap (downstem on left)
                     // just be sure that stems clear opposing noteheads and ledger lines
                     double clearLeft = 0.0, clearRight = 0.0;
-                    if (topDownNote->chord()->stem()) {
+                    if (topDownNote->chord()->stem() && topDownNote->chord()->stem()->addToSkyline()) {
                         if (ledgerOverlapBelow) {
                             // Create space between stem and ledger line below staff
                             clearLeft = ledgerLen + ledgerGap + topDownNote->chord()->stem()->lineWidth();
@@ -1870,7 +1866,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                             clearLeft = topDownNote->chord()->stem()->lineWidth() + 0.3 * sp;
                         }
                     }
-                    if (bottomUpNote->chord()->stem()) {
+                    if (bottomUpNote->chord()->stem() && bottomUpNote->chord()->stem()->addToSkyline()) {
                         if (ledgerOverlapAbove) {
                             // Create space between stem and ledger line above staff
                             clearRight = maxDownWidth + ledgerLen + ledgerGap - maxUpWidth + bottomUpNote->chord()->stem()->lineWidth();
@@ -1885,13 +1881,13 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                     Note* topUpNote = upStemNotes.back();
                     // Move notes out of the way of straight flags
                     int pad = ctx.conf().styleB(Sid::useStraightNoteFlags) ? 2 : 1;
-                    bool overlapsFlag = topDownNote->line() + topDownStemLen + pad > topUpNote->line();
+                    bool overlapsFlag = topDownNote->line() + topDownStemLen + pad > bottomUpNote->line();
                     if (downHooks && (ledgerOverlapBelow || overlapsFlag)) {
                         // we will need more space to avoid collision with hook
                         // but we won't need as much dot adjustment
                         if (ledgerOverlapBelow) {
                             Hook* hook = topDownNote->chord()->hook();
-                            double hookWidth = hook ? hook->width() : 0.0;
+                            double hookWidth = hook && hook->addToSkyline() ? hook->width() : 0.0;
                             upOffset = hookWidth + ledgerLen + ledgerGap;
                         }
                         upOffset = std::max(upOffset, maxDownWidth + 0.1 * sp);
@@ -2084,7 +2080,7 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
         }
 
         // accumulate return value
-        if (!mirror) {
+        if (!mirror && note->addToSkyline()) {
             maxWidth = std::max(maxWidth, note->bboxRightPos());
         }
 
@@ -2680,12 +2676,12 @@ void ChordLayout::resolveRestVSChord(std::vector<Rest*>& rests, std::vector<Chor
     double minRestToChordClearance = 0.35 * spatium;
 
     for (Rest* rest : rests) {
-        if (!rest->visible() || !rest->autoplace()) {
+        if (!rest->addToSkyline()) {
             continue;
         }
         RestVerticalClearance& restVerticalClearance = rest->verticalClearance();
         for (Chord* chord : chords) {
-            if (!chord->visible() || !chord->autoplace()) {
+            if (!chord->addToSkyline()) {
                 continue;
             }
 
