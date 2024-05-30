@@ -73,6 +73,10 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
+static const ElementStyle chordStyle {
+    { Sid::articulationStemHAlign, Pid::ARTIC_STEM_H_ALIGN },
+};
+
 //---------------------------------------------------------
 //   LedgerLineData
 //---------------------------------------------------------
@@ -260,6 +264,7 @@ std::vector<int> Chord::noteDistances() const
 Chord::Chord(Segment* parent)
     : ChordRest(ElementType::CHORD, parent)
 {
+    initElementStyle(&chordStyle);
     m_ledgerLines      = 0;
     m_stem             = 0;
     m_hook             = 0;
@@ -267,6 +272,7 @@ Chord::Chord(Segment* parent)
     m_arpeggio         = 0;
     m_spanArpeggio     = 0;
     m_endsGlissando    = false;
+    m_articStemHAlign  = ArticulationStemSideAlign::AVERAGE;
     m_noteType         = NoteType::NORMAL;
     m_stemSlash        = 0;
     m_noStem           = false;
@@ -285,6 +291,8 @@ Chord::Chord(const Chord& c, bool link)
         score()->undo(new Link(this, const_cast<Chord*>(&c)));
     }
     m_ledgerLines = 0;
+
+    initElementStyle(&chordStyle);
 
     for (Note* onote : c.m_notes) {
         Note* nnote = Factory::copyNote(*onote, link);
@@ -309,14 +317,15 @@ Chord::Chord(const Chord& c, bool link)
     m_arpeggio      = 0;
     m_stemSlash     = 0;
 
-    m_spanArpeggio   = c.m_spanArpeggio;
-    m_graceIndex     = c.m_graceIndex;
-    m_noStem         = c.m_noStem;
-    m_showStemSlash  = c.m_showStemSlash;
-    m_playEventType  = c.m_playEventType;
-    m_stemDirection  = c.m_stemDirection;
-    m_noteType       = c.m_noteType;
-    m_crossMeasure  = CrossMeasure::UNKNOWN;
+    m_spanArpeggio    = c.m_spanArpeggio;
+    m_articStemHAlign = c.m_articStemHAlign;
+    m_graceIndex      = c.m_graceIndex;
+    m_noStem          = c.m_noStem;
+    m_showStemSlash   = c.m_showStemSlash;
+    m_playEventType   = c.m_playEventType;
+    m_stemDirection   = c.m_stemDirection;
+    m_noteType        = c.m_noteType;
+    m_crossMeasure    = CrossMeasure::UNKNOWN;
 
     if (c.m_stem) {
         add(Factory::copyStem(*(c.m_stem)));
@@ -2096,10 +2105,11 @@ void Chord::localSpatiumChanged(double oldValue, double newValue)
 PropertyValue Chord::getProperty(Pid propertyId) const
 {
     switch (propertyId) {
-    case Pid::NO_STEM:         return noStem();
-    case Pid::SHOW_STEM_SLASH: return showStemSlash();
-    case Pid::SMALL:           return isSmall();
-    case Pid::STEM_DIRECTION:  return PropertyValue::fromValue<DirectionV>(stemDirection());
+    case Pid::NO_STEM:            return noStem();
+    case Pid::SHOW_STEM_SLASH:    return showStemSlash();
+    case Pid::SMALL:              return isSmall();
+    case Pid::STEM_DIRECTION:     return PropertyValue::fromValue<DirectionV>(stemDirection());
+    //case Pid::ARTIC_STEM_H_ALIGN: return PropertyValue::fromValue<ArticulationStemSideAlign>(articStemHAlign());
     case Pid::PLAY: return isChordPlayable();
     default:
         return ChordRest::getProperty(propertyId);

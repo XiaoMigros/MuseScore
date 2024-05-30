@@ -249,6 +249,7 @@ public:
     std::vector<Articulation*>& articulations() { return m_articulations; }
     const std::vector<Articulation*>& articulations() const { return m_articulations; }
     std::set<SymId> articulationSymbolIds() const;
+    ArticulationStemSideAlign articStemHAlign() { return m_articStemHAlign; }
     Articulation* hasArticulation(const Articulation*);
     bool hasSingleArticulation() const { return m_articulations.size() == 1; }
 
@@ -391,6 +392,7 @@ private:
     bool m_allowKerningBelow = true;
 
     std::vector<Articulation*> m_articulations;
+    ArticulationStemSideAlign m_articStemHAlign;
 };
 } // namespace mu::engraving
 #endif

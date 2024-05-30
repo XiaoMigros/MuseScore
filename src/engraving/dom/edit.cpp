@@ -3555,6 +3555,12 @@ void Score::cmdDeleteSelection()
                         }
                     }
                 }
+                if (e->isArticulation() && toArticulation(e)->chordRest()->isChord()) {
+                    Chord* c = toChord(toArticulation(e)->chordRest());
+                    if (c->hasSingleArticulation()) {
+                        c->resetProperty(Pid::ARTIC_STEM_H_ALIGN);
+                    }
+                }
                 deleteItem(e);
             }
             crsSelectedAfterDeletion.push_back(findCR(tick, track));
