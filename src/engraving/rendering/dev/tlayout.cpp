@@ -2433,7 +2433,7 @@ void TLayout::layoutFingering(const Fingering* item, Fingering::LayoutData* ldat
                 } else {
                     RectF r = ldata->bbox().translated(measure->pos() + segment->pos() + chord->pos() + note->pos() + item->pos());
                     SkylineLine sk(false);
-                    sk.add(r.x(), r.bottom(), r.width());
+                    sk.add(r, const_cast<Fingering*>(item));
                     double d = sk.minDistance(ss->skyline().north());
                     double yd = 0.0;
                     if (d > 0.0 && item->isStyled(Pid::MIN_DISTANCE)) {
@@ -2469,7 +2469,7 @@ void TLayout::layoutFingering(const Fingering* item, Fingering::LayoutData* ldat
                 } else {
                     RectF r = ldata->bbox().translated(measure->pos() + segment->pos() + chord->pos() + note->pos() + item->pos());
                     SkylineLine sk(true);
-                    sk.add(r.x(), r.top(), r.width());
+                    sk.add(r, const_cast<Fingering*>(item));
                     double d = ss->skyline().south().minDistance(sk);
                     double yd = 0.0;
                     if (d > 0.0 && item->isStyled(Pid::MIN_DISTANCE)) {
@@ -2615,7 +2615,7 @@ void TLayout::layoutFretDiagram(const FretDiagram* item, FretDiagram::LayoutData
 
         double minDistance = harmony->minDistance().val() * item->spatium();
         SkylineLine sk(false);
-        sk.add(r.x(), r.bottom(), r.width());
+        sk.add(r, harmony);
         double d = sk.minDistance(ss->skyline().north());
         if (d > -minDistance) {
             double yd = d + minDistance;
@@ -2624,7 +2624,7 @@ void TLayout::layoutFretDiagram(const FretDiagram* item, FretDiagram::LayoutData
             r.translate(PointF(0.0, yd));
         }
         if (harmony->addToSkyline()) {
-            ss->skyline().add(r);
+            ss->skyline().add(r, harmony);
         }
     }
 }
@@ -3267,7 +3267,7 @@ void TLayout::layoutHairpinSegment(HairpinSegment* item, LayoutContext& ctx)
                         RectF r = sd->ldata()->bbox().translated(sd->pos());
                         s->staffShape(sd->staffIdx()).add(r);
                         r = sd->ldata()->bbox().translated(sd->pos() + s->pos() + m->pos());
-                        m->system()->staff(sd->staffIdx())->skyline().add(r);
+                        m->system()->staff(sd->staffIdx())->skyline().add(r, sd);
                     }
                 }
             }
@@ -3292,7 +3292,7 @@ void TLayout::layoutHairpinSegment(HairpinSegment* item, LayoutContext& ctx)
                         RectF r = ed->ldata()->bbox().translated(ed->pos());
                         s->staffShape(ed->staffIdx()).add(r);
                         r = ed->ldata()->bbox().translated(ed->pos() + s->pos() + m->pos());
-                        m->system()->staff(ed->staffIdx())->skyline().add(r);
+                        m->system()->staff(ed->staffIdx())->skyline().add(r, ed);
                     }
                 }
             }
@@ -3315,7 +3315,7 @@ void TLayout::fillHairpinSegmentShape(const HairpinSegment* item, HairpinSegment
     switch (item->hairpin()->hairpinType()) {
     case HairpinType::CRESC_HAIRPIN:
     case HairpinType::DECRESC_HAIRPIN:
-        sh = Shape(item->ldata()->bbox());
+        sh = Shape(item->ldata()->bbox(), item);
         break;
     case HairpinType::DECRESC_LINE:
     case HairpinType::CRESC_LINE:
@@ -4369,6 +4369,9 @@ void TLayout::fillNoteShape(const Note* item, Note::LayoutData* ldata)
     shape.add(noteBBox, item);
 
     for (const NoteDot* dot : item->dots()) {
+        if (!dot->addToSkyline()) {
+            continue;
+        }
         shape.add(item->symBbox(SymId::augmentationDot).translated(dot->pos()), dot);
     }
 
@@ -4389,7 +4392,7 @@ void TLayout::fillNoteShape(const Note* item, Note::LayoutData* ldata)
     Part* part = item->part();
     if (part && part->instrument()->hasStrings() && !item->staffType()->isTabStaff()) {
         GuitarBend* bend = item->bendFor();
-        if (bend && bend->type() == GuitarBendType::SLIGHT_BEND && !bend->segmentsEmpty()) {
+        if (bend && bend->addToSkyline() && bend->type() == GuitarBendType::SLIGHT_BEND && !bend->segmentsEmpty()) {
             GuitarBendSegment* bendSeg = toGuitarBendSegment(bend->frontSegment());
             // Semi-hack: the relative position of note and bend
             // isn't fully known yet, so we use an approximation
@@ -4774,14 +4777,21 @@ void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const Layout
     auto layoutRestDots = [](const Rest* item, const LayoutConfiguration& conf, Rest::LayoutData* ldata)
     {
         const_cast<Rest*>(item)->checkDots();
-        double x = item->symWidthNoLedgerLines(ldata) + conf.styleMM(Sid::dotNoteDistance) * item->mag();
-        double dx = conf.styleMM(Sid::dotDotDistance) * item->mag();
+        double visibleX = item->symWidthNoLedgerLines(ldata) + conf.styleMM(Sid::dotNoteDistance) * item->mag();
+        double visibleDX = conf.styleMM(Sid::dotDotDistance) * item->mag();
+        double invisibleX = item->symWidthNoLedgerLines(ldata);
         double y = item->dotLine() * item->spatium() * .5;
         for (NoteDot* dot : item->dotList()) {
             NoteDot::LayoutData* dotldata = dot->mutldata();
             TLayout::layoutNoteDot(dot, dotldata);
-            dotldata->setPos(x, y);
-            x += dx;
+            if (dot->visible()) {
+                dotldata->setPos(visibleX, y);
+                visibleX += visibleDX;
+            } else {
+                invisibleX +=  0.1 * item->spatium();
+                dotldata->setPos(invisibleX, y);
+                invisibleX += item->symWidth(SymId::augmentationDot) * dot->mag();
+            }
         }
     };
 
@@ -5653,22 +5663,20 @@ void TLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* ld
         item->createBlocks(ldata);
     }
 
-    RectF bb;
+    Shape shape;
     double y = 0.0;
 
     // adjust the bounding box for the text item
     for (size_t i = 0; i < ldata->blocks.size(); ++i) {
         TextBlock& t = ldata->blocks[i];
         t.layout(item);
-        const RectF* r = &t.boundingRect();
-
-        if (r->height() == 0) {
-            r = &ldata->blocks.at(0).boundingRect();
-        }
         y += t.lineSpacing();
         t.setY(y);
-        bb |= r->translated(0.0, y);
+        shape.add(t.shape().translated(PointF(0.0, y)));
     }
+
+    RectF bb = shape.bbox();
+
     double yoff = 0;
     double h    = 0;
     if (item->explicitParent()) {
@@ -5713,9 +5721,9 @@ void TLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* ld
         t.setY(t.y() + yoff);
     }
 
-    bb.translate(0.0, yoff);
+    shape.translateY(yoff);
+    ldata->setShape(shape);
 
-    ldata->setBbox(bb);
     if (item->hasFrame()) {
         item->layoutFrame(ldata);
     }
