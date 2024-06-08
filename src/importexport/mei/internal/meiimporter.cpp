@@ -349,58 +349,53 @@ bool MeiImporter::addGraceNotesToChord(ChordRest* chordRest, bool isAfter)
         return false;
     }
 
-    if (!chordRest->isChord()) {
-        this->clearGraceNotes();
-        return false;
+    if (isAfter) {
+        NoteType noteType = NoteType::GRACE8_AFTER;
+        // For after grace notes, the order of insertion is flipped
+        m_graceNotes.reverse();
+        for (auto graceChord : m_graceNotes) {
+            switch (graceChord->durationType().type()) {
+            case (DurationType::V_EIGHTH): noteType = NoteType::GRACE8_AFTER;
+                break;
+            case (DurationType::V_16TH): noteType = NoteType::GRACE16_AFTER;
+                break;
+            case (DurationType::V_32ND): noteType = NoteType::GRACE32_AFTER;
+                break;
+            default:
+                LOGD() << "MeiImporter::addGraceNotesToChord unsupported grace duration type " <<
+                    int(graceChord->durationType().type());
+                break;
+            }
+            graceChord->setNoteType(noteType);
+            chordRest->add(graceChord);
+        }
     } else {
-        if (isAfter) {
-            NoteType noteType = NoteType::GRACE8_AFTER;
-            // For after grace notes, the order of insertion is flipped
-            m_graceNotes.reverse();
-            for (auto graceChord : m_graceNotes) {
+        for (auto graceChord : m_graceNotes) {
+            NoteType noteType = NoteType::APPOGGIATURA;
+            if (m_graceNoteType == NoteType::ACCIACCATURA) {
+                noteType = NoteType::ACCIACCATURA;
+            } else {
                 switch (graceChord->durationType().type()) {
-                case (DurationType::V_EIGHTH): noteType = NoteType::GRACE8_AFTER;
+                case (DurationType::V_QUARTER): noteType = NoteType::GRACE4;
                     break;
-                case (DurationType::V_16TH): noteType = NoteType::GRACE16_AFTER;
+                case (DurationType::V_EIGHTH): noteType = NoteType::APPOGGIATURA;
                     break;
-                case (DurationType::V_32ND): noteType = NoteType::GRACE32_AFTER;
+                case (DurationType::V_16TH): noteType = NoteType::GRACE16;
+                    break;
+                case (DurationType::V_32ND): noteType = NoteType::GRACE32;
                     break;
                 default:
-                    LOGD() << "MeiImporter::addGraceNotesToChord unsupported grace duration type " <<
-                        int(graceChord->durationType().type());
+                    LOGD("MeiImporter::addGraceNotesToChord unsupported grace duration type %d",
+                         int(graceChord->durationType().type()));
                     break;
                 }
-                graceChord->setNoteType(noteType);
-                chordRest->add(graceChord);
             }
-        } else {
-            for (auto graceChord : m_graceNotes) {
-                NoteType noteType = NoteType::APPOGGIATURA;
-                if (m_graceNoteType == NoteType::ACCIACCATURA) {
-                    noteType = NoteType::ACCIACCATURA;
-                } else {
-                    switch (graceChord->durationType().type()) {
-                    case (DurationType::V_QUARTER): noteType = NoteType::GRACE4;
-                        break;
-                    case (DurationType::V_EIGHTH): noteType = NoteType::APPOGGIATURA;
-                        break;
-                    case (DurationType::V_16TH): noteType = NoteType::GRACE16;
-                        break;
-                    case (DurationType::V_32ND): noteType = NoteType::GRACE32;
-                        break;
-                    default:
-                        LOGD("MeiImporter::addGraceNotesToChord unsupported grace duration type %d",
-                             int(graceChord->durationType().type()));
-                        break;
-                    }
-                }
-                graceChord->setNoteType(noteType);
-                chordRest->add(graceChord);
-            }
+            graceChord->setNoteType(noteType);
+            chordRest->add(graceChord);
         }
-        m_graceNotes.clear();
-        return true;
     }
+    m_graceNotes.clear();
+    return true;
 }
 
 /**

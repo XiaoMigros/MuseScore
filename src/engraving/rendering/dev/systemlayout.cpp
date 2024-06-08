@@ -850,9 +850,9 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
                         if (e->addToSkyline()) {
                             skyline.add(e->shape().translate(e->pos() + p));
                             // add grace notes to skyline
-                            if (e->isChord()) {
-                                GraceNotesGroup& graceBefore = toChord(e)->graceNotesBefore();
-                                GraceNotesGroup& graceAfter = toChord(e)->graceNotesAfter();
+                            if (e->isChordRest()) {
+                                GraceNotesGroup& graceBefore = toChordRest(e)->graceNotesBefore();
+                                GraceNotesGroup& graceAfter = toChordRest(e)->graceNotesAfter();
                                 TLayout::layoutGraceNotesGroup2(&graceBefore, graceBefore.mutldata());
                                 TLayout::layoutGraceNotesGroup2(&graceAfter, graceAfter.mutldata());
                                 if (!graceBefore.empty()) {
@@ -1356,14 +1356,18 @@ void SystemLayout::doLayoutTies(System* system, std::vector<Segment*> sl, const 
 
     for (Segment* s : sl) {
         for (EngravingItem* e : s->elist()) {
-            if (!e || !e->isChord()) {
+            if (!e || !e->isChordRest()) {
                 continue;
             }
-            Chord* c = toChord(e);
+            ChordRest* c = toChordRest(e);
             for (Chord* ch : c->graceNotes()) {
                 layoutTies(ch, system, stick, ctx);
             }
-            layoutTies(c, system, stick, ctx);
+            if (!e->isChord()) {
+                continue;
+            }
+            Chord* ch = toChord(e);
+            layoutTies(ch, system, stick, ctx);
         }
     }
 }
@@ -1377,14 +1381,18 @@ void SystemLayout::doLayoutTiesLinear(System* system, LayoutContext& ctx)
                 continue;
             }
             for (EngravingItem* e : segment->elist()) {
-                if (!e || !e->isChord()) {
+                if (!e || !e->isChordRest()) {
                     continue;
                 }
-                Chord* c = toChord(e);
+                ChordRest* c = toChordRest(e);
                 for (Chord* ch : c->graceNotes()) {
                     layoutTies(ch, system, start, ctx);
                 }
-                layoutTies(c, system, start, ctx);
+                if (!e->isChord()) {
+                    continue;
+                }
+                Chord* ch = toChord(e);
+                layoutTies(ch, system, start, ctx);
             }
         }
     }
@@ -1416,14 +1424,16 @@ void SystemLayout::layoutGuitarBends(const std::vector<Segment*>& sl, LayoutCont
 
     for (Segment* seg : sl) {
         for (EngravingItem* el : seg->elist()) {
-            if (!el || !el->isChord()) {
+            if (!el || !el->isChordRest()) {
                 continue;
             }
-            Chord* chord = toChord(el);
+            ChordRest* chord = toChordRest(el);
             for (Chord* grace : chord->graceNotesBefore()) {
                 doLayoutGuitarBends(grace);
             }
-            doLayoutGuitarBends(chord);
+            if (el->isChord()) {
+                doLayoutGuitarBends(toChord(chord));
+            }
             for (Chord* grace : chord->graceNotesAfter()) {
                 doLayoutGuitarBends(grace);
             }
@@ -1632,10 +1642,10 @@ void SystemLayout::updateCrossBeams(System* system, LayoutContext& ctx)
                 continue;
             }
             for (EngravingItem* e : seg.elist()) {
-                if (!e || !e->isChord()) {
+                if (!e || !e->isChordRest()) {
                     continue;
                 }
-                for (Chord* grace : toChord(e)->graceNotes()) {
+                for (Chord* grace : toChordRest(e)->graceNotes()) {
                     if (grace->beam() && (grace->beam()->cross() || grace->beam()->userModified())) {
                         ChordLayout::computeUp(grace, ctx);
                     }

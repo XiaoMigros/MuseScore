@@ -69,7 +69,7 @@ public:
     static void getNoteListForDots(Chord* c, std::vector<Note*>&, std::vector<Note*>&, std::vector<int>&);
     static void updateGraceNotes(Measure* measure, LayoutContext& ctx);
     static void repositionGraceNotesAfter(Segment* segment, size_t tracks);
-    static void appendGraceNotes(Chord* chord);
+    static void appendGraceNotes(ChordRest* chord);
     static void clearLineAttachPoints(Measure* measure);
     static void updateLineAttachPoints(Chord* chord, bool isFirstInMeasure, LayoutContext& ctx);
     static void resolveVerticalRestConflicts(LayoutContext& ctx, Segment* segment, staff_idx_t staffIdx);

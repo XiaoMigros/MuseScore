@@ -1641,20 +1641,21 @@ EngravingItem* Segment::firstInNextSegments(staff_idx_t activeStaff)
 
 EngravingItem* Segment::firstElementOfSegment(Segment* s, staff_idx_t activeStaff)
 {
-    for (auto i: s->elist()) {
-        if (i && i->staffIdx() == activeStaff) {
-            if (i->type() == ElementType::CHORD) {
-                Chord* chord = toChord(i);
-                GraceNotesGroup& graceNotesBefore = chord->graceNotesBefore();
+    for (EngravingItem* e: s->elist()) {
+        if (e && e->staffIdx() == activeStaff) {
+            if (e->isChordRest()) {
+                ChordRest* cr = toChordRest(e);
+                GraceNotesGroup& graceNotesBefore = cr->graceNotesBefore();
                 if (!graceNotesBefore.empty()) {
                     if (Chord* graceNotesBeforeFirstChord = graceNotesBefore.front()) {
                         return graceNotesBeforeFirstChord->notes().front();
                     }
                 }
-
-                return toChord(i)->notes().back();
+            }
+            if (e->isChord()) {
+                return toChord(e)->notes().back();
             } else {
-                return i;
+                return e;
             }
         }
     }
@@ -1745,11 +1746,11 @@ EngravingItem* Segment::prevElementOfSegment(Segment* s, EngravingItem* e, staff
             }
             return nullptr;
         }
-        if (el->isChord()) {
-            Chord* chord = toChord(el);
-            GraceNotesGroup& graceNotesBefore = chord->graceNotesBefore();
+        if (el->isChordRest()) {
+            ChordRest* cr = toChordRest(el);
+            GraceNotesGroup& graceNotesBefore = cr->graceNotesBefore();
             if (!graceNotesBefore.empty()) {
-                ChordRest* next = prevChordRest(chord);
+                ChordRest* next = prevChordRest(cr);
                 if (next) {
                     if (next->isChord()) {
                         return toChord(next)->notes().back();
@@ -1757,7 +1758,9 @@ EngravingItem* Segment::prevElementOfSegment(Segment* s, EngravingItem* e, staff
                     return toRest(next);
                 }
             }
-
+        }
+        if (el->isChord()) {
+            Chord* chord = toChord(el);
             std::vector<Note*> notes = chord->notes();
             auto i = std::find(notes.begin(), notes.end(), e);
             if (i == notes.end()) {
@@ -1798,12 +1801,14 @@ EngravingItem* Segment::lastElementOfSegment(Segment* s, staff_idx_t activeStaff
     for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
         EngravingItem* item = *it;
         if (item && item->staffIdx() == activeStaff) {
+            if (item->isChordRest()) {
+                ChordRest* cr = toChordRest(item);
+                if (!cr->graceNotesAfter().empty()) {
+                    return cr->graceNotesAfter().back()->notes().back();
+                }
+            }
             if (item->isChord()) {
                 Chord* chord = toChord(item);
-                if (!chord->graceNotesAfter().empty()) {
-                    return chord->graceNotesAfter().back()->notes().back();
-                }
-
                 const std::vector<Articulation*>& articulations = chord->articulations();
                 if (!articulations.empty()) {
                     return articulations.back();

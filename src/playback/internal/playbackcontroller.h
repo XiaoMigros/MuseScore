@@ -131,7 +131,7 @@ private:
     void updateCurrentTempo();
 
     void seek(const muse::midi::tick_t tick);
-    void seek(const muse::audio::msecs_t msecs);
+    void seek(const muse::audio::secs_t secs);
 
     bool isPaused() const;
     bool isLoaded() const;
@@ -162,8 +162,6 @@ private:
     muse::audio::msecs_t playbackEndMsecs() const;
 
     notation::InstrumentTrackIdSet instrumentTrackIdSetForRangePlayback() const;
-
-    void setCurrentPlaybackStatus(muse::audio::PlaybackStatus status);
 
     void togglePlayRepeats();
     void togglePlayChordSymbols();
@@ -210,6 +208,7 @@ private:
     void removeTrack(const engraving::InstrumentTrackId& instrumentTrackId);
 
     muse::audio::msecs_t tickToMsecs(int tick) const;
+    muse::audio::secs_t tickToSecs(int tick) const;
 
     notation::INotationPtr m_notation;
     notation::IMasterNotationPtr m_masterNotation;
@@ -224,7 +223,6 @@ private:
     muse::audio::TrackSequenceId m_currentSequenceId = -1;
 
     muse::async::Notification m_currentSequenceIdChanged;
-    muse::audio::PlaybackStatus m_currentPlaybackStatus = muse::audio::PlaybackStatus::Stopped;
     muse::midi::tick_t m_currentTick = 0;
     notation::Tempo m_currentTempo;
 

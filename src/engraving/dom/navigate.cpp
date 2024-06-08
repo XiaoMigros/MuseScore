@@ -177,10 +177,9 @@ ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
             cr = pc;
         }
     } else { // cr is not a grace note
-        if (cr->isChord() && !skipGrace) {
-            const Chord* c = toChord(cr);
-            if (!c->graceNotes().empty()) {
-                const GraceNotesGroup& group = c->graceNotesAfter();
+        if (!skipGrace) {
+            if (!cr->graceNotes().empty()) {
+                const GraceNotesGroup& group = cr->graceNotesAfter();
                 if (!group.empty()) {
                     return group.front();
                 }
@@ -197,10 +196,9 @@ ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
             if (skipMeasureRepeatRests && e->isRest() && e->measure()->isMeasureRepeatGroup(track2staff(track))) {
                 continue; // these rests are not shown, skip them
             }
-            if (e->isChord() && !skipGrace) {
-                Chord* c = toChord(e);
-                if (!c->graceNotes().empty()) {
-                    const GraceNotesGroup& group = c->graceNotesBefore();
+            if (!skipGrace) {
+                if (!e->graceNotes().empty()) {
+                    const GraceNotesGroup& group = e->graceNotesBefore();
                     if (!group.empty()) {
                         return group.front();
                     }
@@ -257,9 +255,8 @@ ChordRest* prevChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
     } else {
         //
         // cr is not a grace note
-        if (cr->isChord() && !skipGrace) {
-            const Chord* c = toChord(cr);
-            const GraceNotesGroup& group = c->graceNotesBefore();
+        if (!skipGrace) {
+            const GraceNotesGroup& group = cr->graceNotesBefore();
             if (!group.empty()) {
                 return group.back();
             }
@@ -274,8 +271,8 @@ ChordRest* prevChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
             if (skipMeasureRepeatRests && e->isRest() && e->measure()->isMeasureRepeatGroup(track2staff(track))) {
                 continue; // these rests are not shown, skip them
             }
-            if (e->isChord() && !skipGrace) {
-                const GraceNotesGroup& group = toChord(e)->graceNotesAfter();
+            if (!skipGrace) {
+                const GraceNotesGroup& group = e->graceNotesAfter();
                 if (!group.empty()) {
                     return group.back();
                 }

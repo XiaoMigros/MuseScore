@@ -39,17 +39,19 @@ public:
     virtual TrackSequenceId sequenceId() const = 0;
 
     virtual void play() = 0;
-    virtual void seek(const msecs_t newPositionMsecs) = 0;
+    virtual void seek(const secs_t newPosition) = 0;
     virtual void stop() = 0;
     virtual void pause() = 0;
     virtual void resume() = 0;
+
+    virtual PlaybackStatus playbackStatus() const = 0;
     virtual async::Channel<PlaybackStatus> playbackStatusChanged() const = 0;
 
     virtual void setDuration(const msecs_t durationMsec) = 0;
     virtual async::Promise<bool> setLoop(const msecs_t fromMsec, const msecs_t toMsec) = 0;
     virtual void resetLoop() = 0;
 
-    virtual async::Promise<secs_t> playbackPosition() const = 0;
+    virtual secs_t playbackPosition() const = 0;
     virtual async::Channel<secs_t> playbackPositionChanged() const = 0;
 };
 

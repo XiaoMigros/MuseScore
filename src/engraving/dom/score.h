@@ -437,7 +437,7 @@ public:
 
     void updateInstrumentChangeTranspositions(KeySigEvent& key, Staff* staff, const Fraction& tick);
 
-    Note* setGraceNote(Chord*,  int pitch, NoteType type, int len);
+    Chord* setGraceNote(ChordRest* ch, std::vector<Note*> notes, NoteType type, int len);
 
     GuitarBend* addGuitarBend(GuitarBendType type, Note* note, Note* endNote = nullptr);
 

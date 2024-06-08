@@ -38,6 +38,7 @@ enum class CrossMeasure : signed char {
     SECOND
 };
 
+class AccidentalState;
 class Articulation;
 class BeamBase;
 class Lyrics;
@@ -48,6 +49,25 @@ class Slur;
 class TabDurationSymbol;
 enum class SegmentType;
 class BeamSegment;
+
+class GraceNotesGroup final : public std::vector<Chord*>, public EngravingItem
+{
+    OBJECT_ALLOCATOR(engraving, GraceNotesGroup)
+public:
+    GraceNotesGroup* clone() const override { return new GraceNotesGroup(*this); }
+    GraceNotesGroup(ChordRest* c);
+
+    ChordRest* parent() const { return _parent; }
+
+    void setPos(double x, double y) override;
+    Segment* appendedSegment() const { return _appendedSegment; }
+    void setAppendedSegment(Segment* s) { _appendedSegment = s; }
+    void addToShape();
+
+private:
+    ChordRest* _parent = nullptr;
+    Segment* _appendedSegment = nullptr; // the graceNoteGroup is appended to this segment
+};
 
 //-------------------------------------------------------------------
 //   ChordRest
@@ -95,6 +115,17 @@ public:
     virtual double stemPosX() const = 0;
     virtual PointF stemPosBeam() const = 0;
     virtual double rightEdge() const = 0;
+
+    const std::vector<Chord*>& graceNotes() const { return m_graceNotes; }
+    std::vector<Chord*>& graceNotes() { return m_graceNotes; }
+
+    GraceNotesGroup& graceNotesBefore(bool filterUnplayable = false) const;
+    GraceNotesGroup& graceNotesAfter(bool filterUnplayable = false) const;
+
+    size_t graceIndex() const { return m_graceIndex; }
+    void setGraceIndex(size_t val) { m_graceIndex = val; }
+
+    void cmdUpdateNotes(AccidentalState*);
 
     bool isSmall() const { return m_isSmall; }
     void setSmall(bool val) { m_isSmall = val; }
@@ -237,6 +268,11 @@ private:
     TDuration m_durationType;
     int m_staffMove = 0; // -1, 0, +1, used for crossbeaming
     int m_storedStaffMove = 0; // used to remember and re-apply staff move if needed
+
+    std::vector<Chord*> m_graceNotes;    // storage for all grace notes
+    mutable GraceNotesGroup m_graceNotesBefore = GraceNotesGroup(this); // will store before-chord grace notes
+    mutable GraceNotesGroup m_graceNotesAfter = GraceNotesGroup(this); // will store after-chord grace notes
+    size_t m_graceIndex = 0;             // if this is a grace note, index in parent list
 };
 } // namespace mu::engraving
 #endif

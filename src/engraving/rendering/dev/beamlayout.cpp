@@ -543,10 +543,10 @@ static bool beamNoContinue(BeamMode mode)
 //   beamGraceNotes
 //---------------------------------------------------------
 
-void BeamLayout::beamGraceNotes(LayoutContext& ctx, Chord* mainNote, bool after)
+void BeamLayout::beamGraceNotes(LayoutContext& ctx, ChordRest* mainNote, bool after)
 {
-    ChordRest* a1    = 0;        // start of (potential) beam
-    Beam* beam       = 0;        // current beam
+    ChordRest* a1    = nullptr;        // start of (potential) beam
+    Beam* beam       = nullptr;        // current beam
     BeamMode bm = BeamMode::AUTO;
     std::vector<Chord*> graceNotes = after ? mainNote->graceNotesAfter() : mainNote->graceNotesBefore();
 
@@ -664,8 +664,8 @@ void BeamLayout::createBeams(LayoutContext& ctx, Measure* measure)
                 continue;
             }
 
-            if (cr->isChord()) {
-                Chord* chord = toChord(cr);
+            if (cr->isChordRest()) {
+                ChordRest* chord = toChordRest(cr);
                 for (Chord* c : chord->graceNotes()) {
                     c->setBeamlet(nullptr); // Will be defined during beam layout
                 }
@@ -708,14 +708,15 @@ void BeamLayout::createBeams(LayoutContext& ctx, Measure* measure)
                 cr->removeDeleteBeam(false);
             }
 
-            // handle grace notes and cross-measure beaming
-            // (tied chords?)
+            // handle grace notes
+            beamGraceNotes(ctx, cr, false);         // grace before
+            beamGraceNotes(ctx, cr, true);          // grace after
+
+            // handle cross-measure beaming (tied chords?)
             if (cr->isChord()) {
-                Chord* chord = toChord(cr);
-                beamGraceNotes(ctx, chord, false);         // grace before
-                beamGraceNotes(ctx, chord, true);          // grace after
                 // set up for cross-measure values as soon as possible
                 // to have all computations (stems, hooks, ...) consistent with it
+                Chord* chord = toChord(cr);
                 if (!chord->isGrace()) {
                     ChordLayout::crossMeasureSetup(chord, crossMeasure, ctx);
                 }
@@ -866,10 +867,7 @@ void BeamLayout::layoutNonCrossBeams(Segment* s, LayoutContext& ctx)
                 }
             }
         }
-        if (!cr->isChord()) {
-            continue;
-        }
-        for (Chord* grace : toChord(cr)->graceNotes()) {
+        for (Chord* grace : cr->graceNotes()) {
             if (BeamLayout::isTopBeam(grace)) {
                 TLayout::layoutBeam(grace->beam(), ctx);
             }

@@ -161,12 +161,18 @@ Notification PlaybackController::isPlayAllowedChanged() const
 
 bool PlaybackController::isPlaying() const
 {
-    return m_currentPlaybackStatus == PlaybackStatus::Running;
+    if (!currentPlayer()) {
+        return false;
+    }
+    return currentPlayer()->playbackStatus() == PlaybackStatus::Running;
 }
 
 bool PlaybackController::isPaused() const
 {
-    return m_currentPlaybackStatus == PlaybackStatus::Paused;
+    if (!currentPlayer()) {
+        return false;
+    }
+    return currentPlayer()->playbackStatus() == PlaybackStatus::Paused;
 }
 
 bool PlaybackController::isLoaded() const
@@ -203,16 +209,16 @@ void PlaybackController::seek(const midi::tick_t tick)
         return;
     }
 
-    seek(tickToMsecs(tick));
+    seek(tickToSecs(tick));
 }
 
-void PlaybackController::seek(const audio::msecs_t msecs)
+void PlaybackController::seek(const audio::secs_t secs)
 {
     IF_ASSERT_FAILED(currentPlayer()) {
         return;
     }
 
-    currentPlayer()->seek(msecs);
+    currentPlayer()->seek(secs);
 }
 
 Channel<uint32_t> PlaybackController::midiTickPlayed() const
@@ -543,15 +549,14 @@ void PlaybackController::togglePlay()
         pause();
     } else if (isPaused()) {
         if (currentPlayer()) {
-            currentPlayer()->playbackPosition().onResolve(this, [this](secs_t pos) {
-                secs_t endSecs = milisecsToSecs(playbackEndMsecs());
-                if (pos == endSecs) {
-                    msecs_t startMsecs = playbackStartMsecs();
-                    seek(startMsecs);
-                }
+            secs_t pos = currentPlayer()->playbackPosition();
+            secs_t endSecs = milisecsToSecs(playbackEndMsecs());
+            if (pos == endSecs) {
+                secs_t startSecs = milisecsToSecs(playbackStartMsecs());
+                seek(startSecs);
+            }
 
-                resume();
-            });
+            resume();
         }
     } else {
         play();
@@ -565,12 +570,11 @@ void PlaybackController::play()
     }
 
     if (isLoopEnabled()) {
-        msecs_t startMsecs = playbackStartMsecs();
-        seek(startMsecs);
+        secs_t startSecs = milisecsToSecs(playbackStartMsecs());
+        seek(startSecs);
     }
 
     currentPlayer()->play();
-    setCurrentPlaybackStatus(PlaybackStatus::Running);
 }
 
 void PlaybackController::rewind(const ActionData& args)
@@ -590,7 +594,6 @@ void PlaybackController::pause()
     }
 
     currentPlayer()->pause();
-    setCurrentPlaybackStatus(PlaybackStatus::Paused);
 }
 
 void PlaybackController::stop()
@@ -600,7 +603,6 @@ void PlaybackController::stop()
     }
 
     currentPlayer()->stop();
-    setCurrentPlaybackStatus(PlaybackStatus::Stopped);
 }
 
 void PlaybackController::resume()
@@ -610,7 +612,6 @@ void PlaybackController::resume()
     }
 
     currentPlayer()->resume();
-    setCurrentPlaybackStatus(PlaybackStatus::Running);
 }
 
 msecs_t PlaybackController::playbackStartMsecs() const
@@ -662,16 +663,6 @@ InstrumentTrackIdSet PlaybackController::instrumentTrackIdSetForRangePlayback() 
     }
 
     return result;
-}
-
-void PlaybackController::setCurrentPlaybackStatus(PlaybackStatus status)
-{
-    if (m_currentPlaybackStatus == status) {
-        return;
-    }
-
-    m_currentPlaybackStatus = status;
-    m_isPlayingChanged.notify();
 }
 
 void PlaybackController::togglePlayRepeats()
@@ -856,7 +847,6 @@ void PlaybackController::resetCurrentSequence()
     playback()->audioOutput()->clearMasterOutputParams();
 
     m_currentTick = 0;
-    setCurrentPlaybackStatus(PlaybackStatus::Stopped);
 
     playback()->removeSequence(m_currentSequenceId);
 
@@ -1273,15 +1263,15 @@ void PlaybackController::setupSequencePlayer()
         }
     });
 
+    currentPlayer()->playbackStatusChanged().onReceive(this, [this](PlaybackStatus) {
+        m_isPlayingChanged.notify();
+    });
+
     currentPlayer()->setDuration(notationPlayback()->totalPlayTime());
 
     notationPlayback()->totalPlayTimeChanged().onReceive(this, [this](const audio::msecs_t totalPlaybackTime) {
         currentPlayer()->setDuration(totalPlaybackTime);
         m_totalPlayTimeChanged.notify();
-    });
-
-    currentPlayer()->playbackStatusChanged().onReceive(this, [this](const PlaybackStatus status) {
-        setCurrentPlaybackStatus(status);
     });
 }
 
@@ -1581,4 +1571,9 @@ msecs_t PlaybackController::tickToMsecs(int tick) const
 {
     float sec = notationPlayback()->playedTickToSec(tick);
     return secondsToMilliseconds(sec);
+}
+
+muse::audio::secs_t PlaybackController::tickToSecs(int tick) const
+{
+    return secs_t(notationPlayback()->playedTickToSec(tick));
 }

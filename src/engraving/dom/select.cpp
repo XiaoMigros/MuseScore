@@ -668,6 +668,11 @@ void Selection::updateSelectedElements()
                         appendFiltered(el);
                     }
                 }
+                for (Chord* graceNote : cr->graceNotes()) {
+                    if (canSelect(graceNote)) {
+                        appendChord(graceNote);
+                    }
+                }
                 Tuplet* tuplet = cr->tuplet();
                 if (tuplet) {
                     appendTupletHierarchy(tuplet);
@@ -675,11 +680,6 @@ void Selection::updateSelectedElements()
             }
             if (e->isChord()) {
                 Chord* chord = toChord(e);
-                for (Chord* graceNote : chord->graceNotes()) {
-                    if (canSelect(graceNote)) {
-                        appendChord(graceNote);
-                    }
-                }
                 appendChord(chord);
                 for (Articulation* art : chord->articulations()) {
                     appendFiltered(art);
@@ -1241,15 +1241,17 @@ std::vector<Note*> Selection::noteList(track_idx_t selTrack) const
                         continue;
                     }
                     EngravingItem* e = seg->element(track);
-                    if (e == 0 || e->type() != ElementType::CHORD
-                        || (selTrack != muse::nidx && selTrack != track)) {
+                    if (!e || !e->isChordRest() || (selTrack != muse::nidx && selTrack != track)) {
                         continue;
                     }
-                    Chord* c = toChord(e);
-                    nl.insert(nl.end(), c->notes().begin(), c->notes().end());
-                    for (Chord* g : c->graceNotes()) {
+                    ChordRest* cr = toChordRest(e);
+                    for (Chord* g : cr->graceNotes()) {
                         nl.insert(nl.end(), g->notes().begin(), g->notes().end());
                     }
+                    if (!e->isChord()) {
+                        continue;
+                    }
+                    nl.insert(nl.end(), toChord(cr)->notes().begin(), toChord(cr)->notes().end());
                 }
             }
         }

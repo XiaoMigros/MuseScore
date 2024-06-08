@@ -2881,7 +2881,7 @@ void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
     }
 
     const Segment* appendedSeg = item->appendedSegment();
-    Chord* parentChord = toChord(item->parent());
+    ChordRest* parentChord = toChordRest(item->parent());
     Shape staffShape = appendedSeg->staffShape(parentChord->staffIdx());
     bool isTabStaff = parentChord->staffType() && parentChord->staffType()->isTabStaff();
     if (isTabStaff) {
@@ -2918,8 +2918,8 @@ void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
 
     item->setPos(xPos, 0.0);
 
-    if (isTabStaff) {
-        ChordLayout::layoutStem(parentChord, ctx);
+    if (isTabStaff && parentChord->isChord()) {
+        ChordLayout::layoutStem(toChord(parentChord), ctx);
     }
 }
 
@@ -4369,6 +4369,9 @@ void TLayout::fillNoteShape(const Note* item, Note::LayoutData* ldata)
     shape.add(noteBBox, item);
 
     for (const NoteDot* dot : item->dots()) {
+        if (!dot->addToSkyline()) {
+            continue;
+        }
         shape.add(item->symBbox(SymId::augmentationDot).translated(dot->pos()), dot);
     }
 
@@ -4389,7 +4392,7 @@ void TLayout::fillNoteShape(const Note* item, Note::LayoutData* ldata)
     Part* part = item->part();
     if (part && part->instrument()->hasStrings() && !item->staffType()->isTabStaff()) {
         GuitarBend* bend = item->bendFor();
-        if (bend && bend->type() == GuitarBendType::SLIGHT_BEND && !bend->segmentsEmpty()) {
+        if (bend && bend->addToSkyline() && bend->type() == GuitarBendType::SLIGHT_BEND && !bend->segmentsEmpty()) {
             GuitarBendSegment* bendSeg = toGuitarBendSegment(bend->frontSegment());
             // Semi-hack: the relative position of note and bend
             // isn't fully known yet, so we use an approximation
@@ -4675,11 +4678,22 @@ void TLayout::layoutRehearsalMark(const RehearsalMark* item, RehearsalMark::Layo
     Autoplace::autoplaceSegmentElement(item, ldata);
 }
 
-void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const LayoutContext& ctx)
+void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
     if (item->isGap()) {
         return;
+    }
+
+    int gi = 0;
+    for (Chord* c : item->graceNotes()) {
+        // HACK: graceIndex is not well-maintained on add & remove
+        // so rebuild now
+        c->setGraceIndex(gi++);
+    }
+
+    for (Chord* c : item->graceNotes()) {
+        ChordLayout::layout(c, ctx);
     }
 
     //! NOTE The types are listed here explicitly to show what types there are (see Rest::add method)
@@ -4774,14 +4788,21 @@ void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const Layout
     auto layoutRestDots = [](const Rest* item, const LayoutConfiguration& conf, Rest::LayoutData* ldata)
     {
         const_cast<Rest*>(item)->checkDots();
-        double x = item->symWidthNoLedgerLines(ldata) + conf.styleMM(Sid::dotNoteDistance) * item->mag();
-        double dx = conf.styleMM(Sid::dotDotDistance) * item->mag();
+        double visibleX = item->symWidthNoLedgerLines(ldata) + conf.styleMM(Sid::dotNoteDistance) * item->mag();
+        double visibleDX = conf.styleMM(Sid::dotDotDistance) * item->mag();
+        double invisibleX = item->symWidthNoLedgerLines(ldata);
         double y = item->dotLine() * item->spatium() * .5;
         for (NoteDot* dot : item->dotList()) {
             NoteDot::LayoutData* dotldata = dot->mutldata();
             TLayout::layoutNoteDot(dot, dotldata);
-            dotldata->setPos(x, y);
-            x += dx;
+            if (dot->visible()) {
+                dotldata->setPos(visibleX, y);
+                visibleX += visibleDX;
+            } else {
+                invisibleX +=  0.1 * item->spatium();
+                dotldata->setPos(invisibleX, y);
+                invisibleX += item->symWidth(SymId::augmentationDot) * dot->mag();
+            }
         }
     };
 

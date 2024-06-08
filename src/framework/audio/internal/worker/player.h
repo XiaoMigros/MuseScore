@@ -34,20 +34,24 @@ class Player : public IPlayer, public async::Asyncable
 public:
     Player(const IGetTrackSequence* getSeq, const TrackSequenceId sequenceId);
 
+    void init();
+
     TrackSequenceId sequenceId() const override;
 
     void play() override;
-    void seek(const msecs_t newPositionMsecs) override;
+    void seek(const secs_t newPosition) override;
     void stop() override;
     void pause() override;
     void resume() override;
+
+    PlaybackStatus playbackStatus() const override;
     async::Channel<PlaybackStatus> playbackStatusChanged() const override;
 
     void setDuration(const msecs_t durationMsec) override;
     async::Promise<bool> setLoop(const msecs_t fromMsec, const msecs_t toMsec) override;
     void resetLoop() override;
 
-    async::Promise<secs_t> playbackPosition() const override;
+    secs_t playbackPosition() const override;
     async::Channel<secs_t> playbackPositionChanged() const override;
 
 private:
@@ -57,8 +61,12 @@ private:
     const IGetTrackSequence* m_getSequence = nullptr;
     TrackSequenceId m_sequenceId = -1;
     mutable ITrackSequencePtr m_seq;
-    mutable async::Channel<secs_t> m_playbackPositionChanged;
-    mutable async::Channel<PlaybackStatus> m_playbackStatusChanged;
+
+    PlaybackStatus m_playbackStatus = PlaybackStatus::Stopped;
+    async::Channel<PlaybackStatus> m_playbackStatusChanged;
+
+    secs_t m_playbackPosition = 0.0;
+    async::Channel<secs_t> m_playbackPositionChanged;
 };
 }
 

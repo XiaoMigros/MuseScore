@@ -746,15 +746,15 @@ bool ScoreRange::write(Score* score, const Fraction& tick) const
         if (s->isSlur()) {
             Slur* slur = toSlur(s);
             if (slur->startCR() && slur->startCR()->isGrace()) {
-                Chord* sc = slur->startChord();
+                ChordRest* sc = toChordRest(slur->startCR());
                 size_t idx = sc->graceIndex();
-                Chord* dc = toChord(score->findCR(s->tick(), s->track()));
+                ChordRest* dc = toChordRest(score->findCR(s->tick(), s->track()));
                 s->setStartElement(dc->graceNotes()[idx]);
             }
             if (slur->endCR() && slur->endCR()->isGrace()) {
-                Chord* sc = slur->endChord();
+                ChordRest* sc = toChordRest(slur->endCR());
                 size_t idx = sc->graceIndex();
-                Chord* dc = toChord(score->findCR(s->tick2(), s->track2()));
+                ChordRest* dc = toChordRest(score->findCR(s->tick2(), s->track2()));
                 s->setEndElement(dc->graceNotes()[idx]);
             }
         }

@@ -909,35 +909,43 @@ void Score::addInterval(int val, const std::vector<Note*>& nl)
 ///   \len is the visual duration of the grace note (1/16 or 1/32)
 //---------------------------------------------------------
 
-Note* Score::setGraceNote(Chord* ch, int pitch, NoteType type, int len)
+Chord* Score::setGraceNote(ChordRest* ch, std::vector<Note*> notes, NoteType type, int len)
 {
     Chord* chord = Factory::createChord(this->dummy()->segment());
-    Note* note = Factory::createNote(chord);
 
     // allow grace notes to be added to other grace notes
     // by really adding to parent chord
-    if (ch->noteType() != NoteType::NORMAL) {
-        ch = toChord(ch->explicitParent());
+    if (ch->isChord() && toChord(ch)->noteType() != NoteType::NORMAL) {
+        ch = toChordRest(ch->explicitParent());
     }
 
     chord->setTrack(ch->track());
     chord->setParent(ch);
-    chord->add(note);
 
-    note->setPitch(pitch);
-    // find corresponding note within chord and use its tpc information
-    for (Note* n : ch->notes()) {
-        if (n->pitch() == pitch) {
-            note->setTpc1(n->tpc1());
-            note->setTpc2(n->tpc2());
-            note->setString(n->string());
-            note->setFret(n->fret());
-            break;
+    if (notes.empty()) {
+        if (ch->isRest()) {
+            Note* note = Factory::createNote(chord);
+            note->setPitch(y2pitch(ch->canvasPos().y(),
+                                   ch->staff()->clef(ch->segment()->tick()),
+                                   ch->staff()->spatium(ch->segment()->tick())));
+            note->setTpcFromPitch();
+            chord->add(note);
+        }
+        if (ch->isChord()) {
+            notes = { toChord(ch)->downNote() };
         }
     }
-    // note with same pitch not found, derive tpc from pitch / key
-    if (!tpcIsValid(note->tpc1()) || !tpcIsValid(note->tpc2())) {
-        note->setTpcFromPitch();
+    for (Note* n : notes) {
+        Note* note = Factory::createNote(chord);
+        note->setPitch(n->pitch());
+        note->setTpc1(n->tpc1());
+        note->setTpc2(n->tpc2());
+        note->setString(n->string());
+        note->setFret(n->fret());
+        chord->add(note);
+        if (!tpcIsValid(note->tpc1()) || !tpcIsValid(note->tpc2())) {
+            note->setTpcFromPitch();
+        }
     }
 
     TDuration d;
@@ -946,11 +954,14 @@ Note* Score::setGraceNote(Chord* ch, int pitch, NoteType type, int len)
     chord->setTicks(d.fraction());
     chord->setNoteType(type);
     chord->setShowStemSlashInAdvance();
+    chord->setStaffMove(chord->isGraceBefore() ? ch->staffMove() : 0);
     chord->mutldata()->setMag(ch->staff()->staffMag(chord->tick()) * style().styleD(Sid::graceNoteMag));
 
     undoAddElement(chord);
-    select(note, SelectType::SINGLE, 0);
-    return note;
+    for (Note* n : chord->notes()) {
+        select(n, SelectType::ADD, 0);
+    }
+    return chord;
 }
 
 GuitarBend* Score::addGuitarBend(GuitarBendType type, Note* note, Note* endNote)
@@ -1033,7 +1044,7 @@ GuitarBend* Score::addGuitarBend(GuitarBendType type, Note* note, Note* endNote)
 
             // Create grace note
             Note* graceNote = gracesBefore.empty()
-                              ? setGraceNote(chord, note->pitch(), NoteType::APPOGGIATURA, Constants::DIVISION / 2)
+                              ? setGraceNote(chord, { note }, NoteType::APPOGGIATURA, Constants::DIVISION / 2)->notes().front()
                               : addNote(gracesBefore.back(), note->noteVal());
             graceNote->transposeDiatonic(-1, true, false);
             GuitarBend::fixNotesFrettingForGraceBend(graceNote, note);
@@ -2858,8 +2869,8 @@ void Score::resetCrossBeams()
 
 EngravingItem* Score::move(const String& cmd)
 {
-    ChordRest* cr { nullptr };
-    Box* box { nullptr };
+    ChordRest* cr { };
+    Box* box { };
     if (noteEntryMode()) {
         // if selection exists and is grace note, use it
         // otherwise use chord/rest at input position
@@ -3461,12 +3472,28 @@ void Score::cmdInsertClef(Clef* clef, ChordRest* cr)
 
 void Score::cmdAddGrace(NoteType graceType, int duration)
 {
-    const std::vector<EngravingItem*> copyOfElements = selection().elements();
-    for (EngravingItem* e : copyOfElements) {
-        if (e->type() == ElementType::NOTE) {
-            Note* n = toNote(e);
-            setGraceNote(n->chord(), n->pitch(), graceType, duration);
+    std::vector<Note*> nl = selection().noteList();
+    std::set<ChordRest*> crs;
+    if (nl.empty()) {
+        for (EngravingItem* e : selection().elements()) {
+            if (e->isRest()) {
+                crs.insert(toChordRest(e));
+            }
         }
+    } else {
+        for (Note* n : nl) {
+            crs.insert(toChordRest(n->chord()));
+        }
+    }
+
+    for (ChordRest* cr : crs) {
+        std::vector<Note*> selectedNotes;
+        if (cr->isChord()) {
+            for (Note* n : toChord(cr)->notes()) {
+                selectedNotes.push_back(n);
+            }
+        }
+        setGraceNote(cr, selectedNotes, graceType, duration);
     }
 }
 

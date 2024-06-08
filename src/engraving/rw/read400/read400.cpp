@@ -468,6 +468,13 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                                 l->setTicks(l->ticks() * scale);
                             }
                         }
+                        for (size_t i = 0; i < graceNotes.size(); ++i) {
+                            Chord* gc = graceNotes.at(i);
+                            gc->setGraceIndex(i);
+                            Score::transposeChord(gc, tick);
+                            cr->add(gc);
+                        }
+                        graceNotes.clear();
                         if (cr->isChord()) {
                             Chord* chord = toChord(cr);
                             // disallow tie across barline within two-note tremolo
@@ -487,13 +494,6 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                                     return false;
                                 }
                             }
-                            for (size_t i = 0; i < graceNotes.size(); ++i) {
-                                Chord* gc = graceNotes.at(i);
-                                gc->setGraceIndex(i);
-                                Score::transposeChord(gc, tick);
-                                chord->add(gc);
-                            }
-                            graceNotes.clear();
                         }
                         // delete pending ties, they are not selected when copy
                         if ((tick - dstTick) + cr->actualTicks() >= tickLen) {

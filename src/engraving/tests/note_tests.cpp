@@ -297,12 +297,16 @@ TEST_F(Engraving_NoteTests, grace)
     Note* note = chord->upNote();
 
     // create
-    score->setGraceNote(chord, note->pitch(), NoteType::APPOGGIATURA, Constants::DIVISION / 2);
+    score->setGraceNote(chord, { note }, NoteType::APPOGGIATURA, Constants::DIVISION / 2);
     Chord* gc = chord->graceNotes().front();
     Note* gn = gc->notes().front();
 //      Note* n = toNote(ScoreRW::writeReadElement(gn));
 //      QCOMPARE(n->noteType(), NoteType::APPOGGIATURA);
 //      delete n;
+
+    // create on rest
+    ChordRest* rest = score->firstMeasure()->findChordRest(Fraction(0, 1), VOICES);
+    score->setGraceNote(rest, { }, NoteType::APPOGGIATURA, Constants::DIVISION / 2);
 
     // tie
     score->select(gn);

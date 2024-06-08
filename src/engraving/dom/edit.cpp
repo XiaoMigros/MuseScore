@@ -3162,11 +3162,11 @@ void Score::reconnectSlurs(MeasureBase* mbStart, MeasureBase* mbEnd)
             Fraction spEndCrTick = spEndCr->tick();
             while (seg) {
                 firstAvailableCr = seg->cr(spTrack);
-                if (!firstAvailableCr || !firstAvailableCr->isChord()) {
+                if (!firstAvailableCr || !firstAvailableCr->isChordRest()) {
                     seg = seg->next(SegmentType::ChordRest);
                     continue;
                 }
-                auto gracesBefore = toChord(firstAvailableCr)->graceNotesBefore();
+                auto gracesBefore = toChordRest(firstAvailableCr)->graceNotesBefore();
                 if (firstAvailableCr->tick() > spEndCrTick) {
                     // we would create a negative-length slur. remove it entirely.
                     undoRemoveElement(sp);
@@ -3204,11 +3204,11 @@ void Score::reconnectSlurs(MeasureBase* mbStart, MeasureBase* mbEnd)
             Fraction spStartCrTick = spStartCr->tick();
             while (seg) {
                 firstAvailableCr = seg->cr(sp->track2());
-                if (!firstAvailableCr || !firstAvailableCr->isChord()) {
+                if (!firstAvailableCr || !firstAvailableCr->isChordRest()) {
                     seg = seg->prev(SegmentType::ChordRest);
                     continue;
                 }
-                auto gracesAfter = toChord(firstAvailableCr)->graceNotesAfter();
+                auto gracesAfter = toChordRest(firstAvailableCr)->graceNotesAfter();
                 if (firstAvailableCr->tick() < spStartCrTick) {
                     // we would create a negative-length slur. remove it entirely.
                     undoRemoveElement(sp);
@@ -5258,12 +5258,12 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
     Measure* nm = nstaff->score()->tick2measure(s->tick());
     Segment* ns = nm->findSegment(s->segmentType(), s->tick());
     EngravingItem* ne = ns->element(dtrack);
-    if (!ne || !ne->isChord()) {
-        return 0;
+    if (!ne || !ne->isChordRest()) {
+        return nullptr;
     }
-    Chord* nc = toChord(ne);
+    ChordRest* nc = toChordRest(ne);
     if (c->isGrace()) {
-        Chord* pc = toChord(c->explicitParent());
+        ChordRest* pc = toChordRest(c->explicitParent());
         size_t index = 0;
         for (Chord* gc : pc->graceNotes()) {
             if (c == gc) {
@@ -5275,7 +5275,10 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
             nc = nc->graceNotes().at(index);
         }
     }
-    return nc;
+    if (nc->isChord()) {
+        return toChord(nc);
+    }
+    return nullptr;
 }
 
 //---------------------------------------------------------

@@ -36,10 +36,12 @@ public:
     explicit SequencePlayer(IGetTracks* getTracks, IClockPtr clock);
 
     void play() override;
-    void seek(const msecs_t newPositionMsecs) override;
+    void seek(const secs_t newPosition) override;
     void stop() override;
     void pause() override;
     void resume() override;
+
+    PlaybackStatus playbackStatus() const override;
     async::Channel<PlaybackStatus> playbackStatusChanged() const override;
 
     msecs_t duration() const override;

@@ -415,7 +415,7 @@ void OveToMScore::convertGroups()
     for (i = 0; i < m_ove->getPartCount(); ++i) {
         int partStaffCount = m_ove->getStaffCount(i);
         //if(parts == 0)
-        //	continue;
+        //  continue;
         Part* part = parts.at(i);
         if (part == 0) {
             continue;
@@ -1553,6 +1553,15 @@ void OveToMScore::convertNotes(Measure* measure, int part, int staff, int track)
                     cr->setAutoplace(false);
                 }
             }
+            // append grace notes before
+            int ii = -1;
+            for (ii = graceNotes.size() - 1; ii >= 0; ii--) {
+                mu::engraving::Chord* gc = graceNotes[ii];
+                if (gc->voice() == cr->voice()) {
+                    cr->add(gc);
+                }
+            }
+            graceNotes.clear();
         } else {
             QList<ovebase::Note*> notes = container->getNotesRests();
 
