@@ -2083,23 +2083,17 @@ void Score::toggleArticulation(SymId attr)
     std::set<Chord*> set;
     for (EngravingItem* el : selection().elements()) {
         if (el->isNote() || el->isChord()) {
-            Chord* cr = 0;
+            Chord* cr = el->isChord() ? toChord(el) : toNote(el)->chord();
             // apply articulation on a given chord only once
-            if (el->isNote()) {
-                cr = toNote(el)->chord();
-                if (muse::contains(set, cr)) {
-                    continue;
-                }
+            if (muse::contains(set, cr)) {
+                continue;
             }
             Articulation* na = Factory::createArticulation(this->dummy()->chord());
             na->setSymId(attr);
             if (!toggleArticulation(el, na)) {
                 delete na;
             }
-
-            if (cr) {
-                set.insert(cr);
-            }
+            set.insert(cr);
         }
     }
 }
@@ -2319,20 +2313,18 @@ void Score::changeAccidental(Note* note, AccidentalType accidental)
 //   toggleArticulation
 //---------------------------------------------------------
 
-bool Score::toggleArticulation(EngravingItem* el, Articulation* a)
+bool Score::toggleArticulation(EngravingItem* el, Articulation* a, bool forceKeep)
 {
-    Chord* c;
-    if (el->isNote()) {
-        c = toNote(el)->chord();
-    } else if (el->isChord()) {
-        c = toChord(el);
-    } else {
+    if (!el->isChord() && !el->isNote()) {
         return false;
     }
-    Articulation* oa = c->hasArticulation(a);
-    if (oa) {
-        undoRemoveElement(oa);
-        return false;
+    Chord* c = el->isChord() ? toChord(el) : toNote(el)->chord();
+    if (!forceKeep) {
+        Articulation* oa = c->hasArticulation(a);
+        if (oa) {
+            undoRemoveElement(oa);
+            return false;
+        }
     }
 
     if (!a->isDouble()) {
@@ -2348,7 +2340,7 @@ bool Score::toggleArticulation(EngravingItem* el, Articulation* a)
         Articulation* articCopy = a->clone();
         articCopy->setSymId(id);
 
-        if (!c->hasArticulation(articCopy)) {
+        if (forceKeep || !c->hasArticulation(articCopy)) {
             articCopy->setParent(c);
             articCopy->setTrack(c->track());
             undoAddElement(articCopy);

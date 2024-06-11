@@ -1913,6 +1913,27 @@ ChordLine* Chord::chordLine() const
 }
 
 //---------------------------------------------------------
+//   wouldRemove
+//---------------------------------------------------------
+
+bool Chord::wouldRemove(EditData& data) const
+{
+    EngravingItem* e = data.dropElement;
+    switch (e->type()) {
+    case ElementType::ARTICULATION:
+    case ElementType::ORNAMENT:
+    {
+        Articulation* atr = toArticulation(e);
+        Articulation* oa = hasArticulation(atr);
+        return !!oa;
+    }
+    default:
+        return ChordRest::wouldRemove(data);
+    }
+    return false;
+}
+
+//---------------------------------------------------------
 //   drop
 //---------------------------------------------------------
 
@@ -1925,12 +1946,17 @@ EngravingItem* Chord::drop(EditData& data)
     {
         Articulation* atr = toArticulation(e);
         Articulation* oa = hasArticulation(atr);
-        if (oa) {
+        // if no control, no existing articulation, add
+        // if no control, existing articulation, removeelements ? delete oa : do nothing
+        // if yes control, always add (removeelements doesnt matter)
+        if (oa && !data.control()) {
             delete atr;
             atr = 0;
-            // if attribute is already there, remove
-            // score()->cmdRemove(oa); // unexpected behaviour?
-            score()->select(oa, SelectType::SINGLE, 0);
+            if (data.removeElements) {
+                remove(oa);
+            } else {
+                score()->select(oa, SelectType::SINGLE, 0);
+            }
         } else {
             // intuit anchor for this accidental based on other accidentals in the chord
             int aboveBelow = 0;
@@ -1969,7 +1995,7 @@ EngravingItem* Chord::drop(EditData& data)
             if (m_articulations.empty()) {
                 score()->undoAddElement(atr);
             } else {
-                score()->toggleArticulation(this, atr);
+                score()->toggleArticulation(this, atr, data.control());
             }
         }
         return atr;
@@ -2184,6 +2210,11 @@ Articulation* Chord::hasArticulation(const Articulation* aa)
         }
     }
     return 0;
+}
+
+Articulation* Chord::hasArticulation(const Articulation* aa) const
+{
+    return const_cast<Articulation*>(hasArticulation(aa));
 }
 
 void Chord::updateArticulations(const std::set<SymId>& newArticulationIds, ArticulationsUpdateMode updateMode)
