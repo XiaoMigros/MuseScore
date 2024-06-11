@@ -475,8 +475,7 @@ Shape GlissandoSegment::shape() const
     double _glissWidth = (glissando()->glissandoType() == GlissandoType::STRAIGHT)
                          ? glissando()->absoluteFromSpatium(glissando()->lineWidth())
                          : symBbox(SymId::wiggleTrill).height();
-    shape.add(LineSegment::createDiagonalLineShape(PointF(), pos2(), _glissWidth,
-                                                   glissando(), symBbox(SymId::wiggleTrill).width()));
+    shape.add(createDiagonalLineShape(PointF(), pos2(), _glissWidth, glissando(), symBbox(SymId::wiggleTrill).width()));
 
     if (glissando()->showText()) {
         muse::draw::Font f(glissando()->fontFace(), muse::draw::Font::Type::Unknown);
@@ -500,7 +499,7 @@ Shape GlissandoSegment::shape() const
                 return PointF(point.x() * cos - point.y() * sin, point.x() * sin + point.y() * cos);
             };
             double wi    = asin(-h / l) /* * 180.0 / M_PI*/;
-            double yOffset = r.height() + r.y();             // find text descender height
+            double yOffset = r.height() / 2 + r.y();             // find text descender height
             // raise text slightly above line and slightly more with WAVY than with STRAIGHT
             yOffset += glissando()->spatium() * (glissando()->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
             PointF textStart = rotatePoint(PointF((l - r.width()) / 2, -yOffset), -wi);
