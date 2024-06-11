@@ -73,8 +73,6 @@ public:
     double lineLength() const { return m_lineLength; }
     void setLineLength(double l) { m_lineLength = l; }
 
-    static RectF boundingBoxOfLine(const PointF& p1, const PointF& p2, double lw2, bool isDottedLine);
-
 protected:
 
     Text* m_text = nullptr;
