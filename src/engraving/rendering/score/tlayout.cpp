@@ -2865,9 +2865,7 @@ void TLayout::layoutGlissandoSegment(GlissandoSegment* item, LayoutContext&)
     if (item->staff()) {
         ldata->setMag(item->staff()->staffMag(item->tick()));
     }
-    RectF r = RectF(0.0, 0.0, item->pos2().x(), item->pos2().y()).normalized();
-    double lw = item->absoluteFromSpatium(item->lineWidth()) * .5;
-    item->setbbox(r.adjusted(-lw, -lw, lw, lw));
+    ldata->setShape(item->shape());
 }
 
 void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
@@ -3354,19 +3352,7 @@ void TLayout::layoutHammerOnPullOffText(HammerOnPullOffText* item, LayoutContext
 void TLayout::fillHairpinSegmentShape(const HairpinSegment* item, HairpinSegment::LayoutData* ldata)
 {
     LAYOUT_CALL_ITEM(item);
-    Shape sh;
-    switch (item->hairpin()->hairpinType()) {
-    case HairpinType::CRESC_HAIRPIN:
-    case HairpinType::DECRESC_HAIRPIN:
-        sh = Shape(item->ldata()->bbox(), item);
-        break;
-    case HairpinType::DECRESC_LINE:
-    case HairpinType::CRESC_LINE:
-    default:
-        sh = textLineBaseSegmentShape(item);
-    }
-
-    ldata->setShape(sh);
+    ldata->setShape(textLineBaseSegmentShape(item));
 }
 
 void TLayout::layoutHarpPedalDiagram(const HarpPedalDiagram* item, HarpPedalDiagram::LayoutData* ldata)
@@ -6214,15 +6200,13 @@ Shape TLayout::textLineBaseSegmentShape(const TextLineBaseSegment* item)
     if (!item->endText()->empty()) {
         shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()), item->endText());
     }
-    double lw2 = 0.5 * item->absoluteFromSpatium(item->lineWidth());
-    bool isDottedLine = item->textLineBase()->lineStyle() == LineType::DOTTED;
+    double lw2 = item->absoluteFromSpatium(item->lineWidth());
     if (item->twoLines()) {     // hairpins
-        shape.add(item->boundingBoxOfLine(item->points()[0], item->points()[1], lw2, isDottedLine), item);
-        shape.add(item->boundingBoxOfLine(item->points()[2], item->points()[3], lw2, isDottedLine), item);
+        shape.add(item->createDiagonalLineShape(item->points()[0], item->points()[1], lw2, item->textLineBase()));
+        shape.add(item->createDiagonalLineShape(item->points()[2], item->points()[3], lw2, item->textLineBase()));
     } else {
         for (int i = 0; i < item->npoints() - 1; ++i) {
-            shape.add(item->boundingBoxOfLine(item->points()[i], item->points()[i + 1], lw2, isDottedLine), item,
-                      !item->textLineBase()->lineVisible());
+            shape.add(item->createDiagonalLineShape(item->points()[i], item->points()[i + 1], lw2, item->textLineBase()));
         }
     }
     return shape;
@@ -6377,9 +6361,7 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
         item->pointsRef()[0] = pp1;
         item->pointsRef()[1] = pp2;
         item->setLineLength(sqrt(PointF::dotProduct(pp2 - pp1, pp2 - pp1)));
-
-        item->setbbox(TextLineBaseSegment::boundingBoxOfLine(pp1, pp2, tl->absoluteFromSpatium(tl->lineWidth()) / 2,
-                                                             tl->lineStyle() == LineType::DOTTED));
+        ldata->setShape(item->createDiagonalLineShape(pp1, pp2, tl->absoluteFromSpatium(tl->lineWidth()), tl));
         return;
     }
 
@@ -6445,9 +6427,10 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
             y1 = h;
         }
     }
-    ldata->setBbox(x1, y1, x2 - x1, y2 - y1);
+    Shape shape = item->createDiagonalLineShape(PointF(x1, y1), PointF(x2, y2),
+                                                tl->absoluteFromSpatium(tl->lineWidth()), tl);
     if (!item->text()->empty()) {
-        ldata->addBbox(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
+        shape.add(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
     }
     // set end text position and extend bbox
     if (!item->endText()->empty()) {
@@ -6464,8 +6447,8 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
                 break;
             }
         }
-        item->endText()->mutldata()->moveX(ldata->bbox().right());
-        ldata->addBbox(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
+        item->endText()->mutldata()->moveX(shape.right());
+        shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
     }
 
     if (tl->lineVisible() || !ctx.conf().isPrintingMode()) {
@@ -6548,6 +6531,7 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
 
         item->setLineLength(sqrt(PointF::dotProduct(pp22 - pp1, pp22 - pp1)));
     }
+    ldata->setShape(shape);
 }
 
 void TLayout::layoutTie(Tie* item, LayoutContext&)

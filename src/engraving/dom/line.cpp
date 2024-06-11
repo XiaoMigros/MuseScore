@@ -937,6 +937,73 @@ void LineSegment::undoMoveStartEndAndSnappedItems(bool moveStart, bool moveEnd, 
     }
 }
 
+Shape LineSegment::shape() const
+{
+    return createDiagonalLineShape(PointF(), pos2(), line()->absoluteFromSpatium(line()->lineWidth()), line());
+}
+
+Shape LineSegment::createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth,
+                                           const EngravingItem* item, double nShapeFactor) const
+{
+    Shape shape;
+    /*if (startPoint.x() > endPoint.x()) {
+        std::swap(startPoint, endPoint);
+    }*/
+    double horizontalLength = endPoint.x() - startPoint.x();
+    // If horizontal, one rectangle is enough
+    if (muse::RealIsEqual(startPoint.y(), endPoint.y())) {
+        RectF rect(startPoint.x(), startPoint.y(), horizontalLength, lineWidth / 2).normalized();
+        rect.adjust(0.0, -lineWidth / 2, 0.0, 0.0);
+        shape.add(rect, item);
+        return shape;
+    }
+    double heightDiff = endPoint.y() - startPoint.y();
+    // Same with vertical
+    if (muse::RealIsEqual(startPoint.x(), endPoint.x())) {
+        RectF rect(startPoint.x(), startPoint.y(), lineWidth / 2, heightDiff).normalized();
+        rect.adjust(-lineWidth / 2, 0.0, 0.0, 0.0);
+        shape.add(rect, item);
+        return shape;
+    }
+    // If not, break the shape into multiple rectangles
+    if (muse::RealIsEqual(nShapeFactor, 0.0)) {
+        nShapeFactor = item->spatium() / 2;
+    }
+    int subBoxesCount = floor(sqrt(horizontalLength * horizontalLength + heightDiff * heightDiff) / nShapeFactor);
+    subBoxesCount = std::max(subBoxesCount, 1); // at least one rectangle, of course (avoid division by zero)
+    double horizontalStep = horizontalLength / subBoxesCount;
+    double verticalStep = heightDiff / subBoxesCount;
+    std::vector<PointF> pointsOnLine;
+    /*pointsOnLine.push_back(startPoint + PointF(0.0, verticalStep / 2));
+    for (int i = 0; i < subBoxesCount - 1; ++i) {
+        PointF nextPoint = pointsOnLine.back() + PointF(horizontalStep, verticalStep);
+        pointsOnLine.push_back(nextPoint);
+    }
+    for (PointF point : pointsOnLine) {
+        RectF rect(point.x(), point.y(), horizontalStep, lineWidth / 2);
+        rect.adjust(0.0, -lineWidth / 2, 0.0, 0.0);
+        shape.add(rect, item);
+    }*/
+    PointF curPoint = startPoint;
+    PointF dPoint = PointF(horizontalStep, verticalStep);
+    double dx = dPoint.normalized().y() * lineWidth / 2;
+    double dy = dPoint.normalized().x() * lineWidth / 2;
+    for (int i = 0; i < subBoxesCount; ++i) {
+        RectF rect(curPoint.x(), curPoint.y(), horizontalStep, verticalStep).normalized();
+        rect.adjust(-dx, -dy, dx, dy);
+        shape.add(rect, item);
+        curPoint += dPoint;
+    }
+    return shape;
+}
+
+Shape LineSegment::createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth,
+                                           EngravingItem* item, double nShapeFactor) const
+{
+    return createDiagonalLineShape(startPoint, endPoint, lineWidth, static_cast<const EngravingItem*>(item),
+                                   nShapeFactor);
+}
+
 //---------------------------------------------------------
 //   SLine
 //---------------------------------------------------------

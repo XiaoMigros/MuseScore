@@ -79,6 +79,12 @@ public:
 
     double absoluteFromSpatium(const Spatium& sp) const override;
 
+    Shape shape() const;
+    Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, const EngravingItem* item,
+                                  double nShapeFactor = 0.0) const;
+    Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, EngravingItem* item,
+                                  double nShapeFactor = 0.0) const;
+
 protected:
     virtual void rebaseOffsetsOnAnchorChanged(Grip grip, const PointF& oldPos, System* sys);
 
