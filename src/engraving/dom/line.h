@@ -74,6 +74,12 @@ public:
 
     std::vector<LineF> dragAnchorLines() const override;
     RectF drag(EditData& ed) override;
+
+    Shape shape() const;
+    Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, const EngravingItem* item,
+                                  double nShapeFactor = 0.0) const;
+    Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, EngravingItem* item,
+                                  double nShapeFactor = 0.0) const;
 private:
     PointF leftAnchorPosition(const double& systemPositionY) const;
     PointF rightAnchorPosition(const double& systemPositionY) const;

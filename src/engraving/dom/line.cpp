@@ -811,6 +811,55 @@ RectF LineSegment::drag(EditData& ed)
     return canvasBoundingRect();
 }
 
+Shape LineSegment::shape() const
+{
+    return createDiagonalLineShape(PointF(), pos2(), line()->lineWidth(), line());
+}
+
+Shape LineSegment::createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth,
+                                           const EngravingItem* item, double nShapeFactor)
+{
+    Shape shape;
+    if (startPoint.x() > endPoint.x()) {
+        std::swap(startPoint, endPoint);
+    }
+    double horizontalLength = endPoint.x() - startPoint.x();
+    // If horizontal, one rectangle is enough
+    if (muse::RealIsEqual(startPoint.y(), endPoint.y())) {
+        RectF rect(startPoint.x(), startPoint.y(), horizontalLength, lineWidth / 2);
+        rect.adjust(0.0, -lineWidth / 2, 0.0, 0.0);
+        shape.add(rect, item);
+        return shape;
+    }
+    // If not, break the shape into multiple rectangles
+    double heightDiff = endPoint.y() - startPoint.y();
+    if (muse::RealIsEqual(nShapeFactor, 0.0)) {
+        nShapeFactor = item->spatium() / 2;
+    }
+    int subBoxesCount = floor(sqrt(horizontalLength * horizontalLength + heightDiff * heightDiff) / nShapeFactor);
+    subBoxesCount = std::max(subBoxesCount, 1); // at least one rectangle, of course (avoid division by zero)
+    double horizontalStep = horizontalLength / subBoxesCount;
+    double verticalStep = heightDiff / subBoxesCount;
+    std::vector<PointF> pointsOnLine;
+    pointsOnLine.push_back(startPoint + PointF(0.0, verticalStep / 2));
+    for (int i = 0; i < subBoxesCount - 1; ++i) {
+        PointF nextPoint = pointsOnLine.back() + PointF(horizontalStep, verticalStep);
+        pointsOnLine.push_back(nextPoint);
+    }
+    for (PointF point : pointsOnLine) {
+        RectF rect(point.x(), point.y(), horizontalStep, lineWidth / 2);
+        rect.adjust(0.0, -lineWidth / 2, 0.0, 0.0);
+        shape.add(rect, item);
+    }
+    return shape;
+}
+
+Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, EngravingItem* item,
+                              double nShapeFactor) const
+{
+    return createDiagonalLineShape(startPoint, endPoint, lineWidth, const_cast<EngravingItem*>(item), nShapeFactor);
+}
+
 //---------------------------------------------------------
 //   SLine
 //---------------------------------------------------------
