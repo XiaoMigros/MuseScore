@@ -98,7 +98,8 @@ PointF LineSegment::leftAnchorPosition(const double& systemPositionY) const
     }
 
     System* s = startSeg->measure()->system();
-    result = startSeg->pos() + startSeg->measure()->pos();
+    result = spanner()->anchor() == Spanner::Anchor::NOTE ? line()->linePos(Grip::START, &s)
+             : startSeg->pos() + startSeg->measure()->pos();
     result.ry() += systemPositionY - system()->pos().y();
 
     if (s) {
@@ -131,7 +132,8 @@ PointF LineSegment::rightAnchorPosition(const double& systemPositionY) const
     }
 
     System* s = endSeg->measure()->system();
-    result = endSeg->pos() + endSeg->measure()->pos();
+    result = spanner()->anchor() == Spanner::Anchor::NOTE ? line()->linePos(Grip::END, &s)
+             : endSeg->pos() + endSeg->measure()->pos();
     result.ry() += systemPositionY - system()->pos().y();
 
     if (s) {
@@ -851,7 +853,7 @@ PointF SLine::linePos(Grip grip, System** system) const
         if (!(*system)) {
             return PointF();
         }
-        return note->pagePos() - (*system)->pagePos();
+        return note->pagePos() - (*system)->pagePos() + PointF(note->headWidth() * 0.5, 0.0);
     }
     case Spanner::Anchor::CHORD:
     case Spanner::Anchor::SEGMENT:
