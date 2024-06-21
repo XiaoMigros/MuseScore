@@ -2670,10 +2670,14 @@ static void _layoutGlissando(Glissando* item, LayoutContext& ctx, Glissando::Lay
 
     // LINE ENDING POINTS TO NOTEHEAD CENTRES
 
-    // assume gliss. line goes from centre of initial note centre to centre of ending note
+    // assume gliss. line goes from centre of initial note centre to centre of ending note:
+    // move first segment origin and last segment ending point from notehead origin to notehead centre
     // For TAB: begin at the right-edge of initial note rather than centre
-    PointF offs1 = cr1->staff()->isTabStaff(cr1->tick()) ? PointF(anchor1->headWidth() * 0.5, 0.0) : PointF();
-    PointF offs2 = PointF();
+    PointF offs1 = (cr1->staff()->isTabStaff(cr1->tick()))
+                   ? PointF(anchor1->ldata()->bbox().right(), 0.0)
+                   : PointF(anchor1->headWidth() * 0.5, 0.0);
+
+    PointF offs2 = PointF(anchor2->headWidth() * 0.5, 0.0);
 
     // AVOID HORIZONTAL LINES
 
