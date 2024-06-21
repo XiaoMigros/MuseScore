@@ -2763,19 +2763,18 @@ static void _layoutGlissando(Glissando* item, LayoutContext& ctx, Glissando::Lay
         }
     });
 
-    double yAbove = anchor1->ldata()->pos().y() + anchor1->ldata()->bbox().topRight().y();
+    double yAbove = anchor1->ldata()->pos().y() + anchor1->ldata()->bbox().topRight().y() / 2;
     double yBelow = yAbove + anchor1->ldata()->bbox().height();
     offs1.rx() += cr1shape.rightMostEdgeAtHeight(yAbove, yBelow) - anchor1->pos().x();
     if (!cr2->staff()->isTabStaff(cr2->tick())) {
-        double yAbove2 = anchor2->ldata()->pos().y() + anchor2->ldata()->bbox().topLeft().y();
+        double yAbove2 = anchor2->ldata()->pos().y() + anchor2->ldata()->bbox().topLeft().y() / 2;
         double yBelow2 = yAbove2 + anchor2->ldata()->bbox().height();
-        double noteMiddle = yAbove2 + anchor2->ldata()->bbox().height() / 2;
         if (upDown != 0) {
             int llWidth = ctx.conf().styleS(Sid::ledgerLineWidth).val() * _spatium;
             // Only check top/bottom half of note depending on gliss approach direction
             // to avoid clearing acidentals the line won't collide with
-            yAbove2 = upDown == 1 ? noteMiddle - llWidth : yAbove2;
-            yBelow2 = upDown == 1 ? yBelow2 : noteMiddle + llWidth;
+            yAbove2 = upDown == 1 ? -llWidth : yAbove2;
+            yBelow2 = upDown == 1 ? yBelow2 : llWidth;
         }
 
         offs2.rx() -= anchor2->pos().x() - cr2->shape().leftMostEdgeAtHeight(yAbove2, yBelow2);
