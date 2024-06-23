@@ -469,6 +469,7 @@ enum class Sid {
     chordModifierAdjust,
     concertPitch,
     multiVoiceRestTwoSpaceOffset,
+    restQuarterSymbol,
     createMultiMeasureRests,
     minEmptyMeasures,
     minMMRestWidth,
