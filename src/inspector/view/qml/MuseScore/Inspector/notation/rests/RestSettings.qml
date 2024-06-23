@@ -58,4 +58,25 @@ Column {
         navigationPanel: root.navigationPanel
         navigationRowStart: root.navigationRowStart + 1000
     }
+
+    RestDurationSelector {
+        id: visualDurationSection
+
+        propertyItem: root.beamModel ? root.beamModel.restVisualDuration : null
+
+        navigationPanel: root.navigationPanel
+        navigationRowStart: restBeamSettings.navigationRowEnd + 1
+    }
+
+	QuarterSymbolSelector {
+		id: noteHeadTypeSection
+		titleText: qsTrc("inspector", "Quarter Symbol")
+		propertyItem: root.beamModel ? root.beamModel.quarterSymbol : null
+		visible: root.beamModel ? root.beamModel.quarterSymbolVisible : false
+
+		navigationName: "NoteHeadTypeSection"
+		navigationPanel: root.navigationPanel
+		navigationRowStart: noteHeadSystemSection.navigationRowEnd + 1
+	}
+
 }

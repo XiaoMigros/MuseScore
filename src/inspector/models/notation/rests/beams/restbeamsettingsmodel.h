@@ -32,20 +32,43 @@ class RestBeamSettingsModel : public AbstractInspectorModel
 
     Q_PROPERTY(QObject * beamModesModel READ beamModesModel CONSTANT)
 
+    Q_PROPERTY(PropertyItem * quarterSymbol READ quarterSymbol CONSTANT)
+    Q_PROPERTY(PropertyItem * restVisualDuration READ restVisualDuration CONSTANT)
+
+    Q_PROPERTY(bool quarterSymbolVisible READ quarterSymbolVisible NOTIFY quarterSymbolVisibleChanged)
+
 public:
     explicit RestBeamSettingsModel(QObject* parent, IElementRepositoryService* repository);
 
     QObject* beamModesModel() const;
 
+    PropertyItem* quarterSymbol() const;
+    PropertyItem* restVisualDuration() const;
+
+    bool quarterSymbolVisible() const;
+
+public slots:
+    void setQuarterSymbolVisible(bool quarterSymbolVisible);
+
+signals:
+    void quarterSymbolVisibleChanged(bool quarterSymbolVisible);
+
 private:
-    void createProperties() override {}
+    void createProperties() override;
     void requestElements() override;
-    void loadProperties() override {}
-    void resetProperties() override {}
+    void loadProperties() override;
+    void resetProperties() override;
 
     void onCurrentNotationChanged() override;
 
     BeamModesModel* m_beamModesModel = nullptr;
+
+    void updateQuarterSymbolVisible();
+
+    PropertyItem* m_quarterSymbol = nullptr;
+    PropertyItem* m_restVisualDuration = nullptr;
+
+    bool m_quarterSymbolVisible = false;
 };
 }
 

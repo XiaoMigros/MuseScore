@@ -43,13 +43,77 @@ QObject* RestBeamSettingsModel::beamModesModel() const
     return m_beamModesModel;
 }
 
+void RestBeamSettingsModel::createProperties()
+{
+    m_quarterSymbol = buildPropertyItem(mu::engraving::Pid::REST_QUARTER_SYMBOL);
+    m_restVisualDuration = buildPropertyItem(mu::engraving::Pid::REST_VISUAL_DURATION,
+                                             [this](const mu::engraving::Pid pid, const QVariant& newValue) {
+        onPropertyValueChanged(pid, newValue);
+        updateQuarterSymbolVisible();
+    });
+}
+
 void RestBeamSettingsModel::requestElements()
 {
     m_elementList = m_repository->findElementsByType(mu::engraving::ElementType::REST);
 }
 
+void RestBeamSettingsModel::loadProperties()
+{
+    loadPropertyItem(m_quarterSymbol);
+    loadPropertyItem(m_restVisualDuration);
+}
+
+void RestBeamSettingsModel::resetProperties()
+{
+    m_quarterSymbol->resetToDefault();
+    m_restVisualDuration->resetToDefault();
+}
+
+PropertyItem* RestBeamSettingsModel::quarterSymbol() const
+{
+    return m_quarterSymbol;
+}
+
+PropertyItem* RestBeamSettingsModel::restVisualDuration() const
+{
+    return m_restVisualDuration;
+}
+
+bool RestBeamSettingsModel::quarterSymbolVisible() const
+{
+    return m_quarterSymbolVisible;
+}
+
+void RestBeamSettingsModel::updateQuarterSymbolVisible()
+{
+    bool visible = false;
+    for (EngravingItem* element : m_elementList) {
+        engraving::EngravingItem* elementBase = element->elementBase();
+        if (elementBase->isRest()) {
+            engraving::Rest* rest = engraving::toRest(elementBase);
+            if (rest->getSymbol(rest->durationType().type(), 0, 0) == rest->quarterSymbol()) {
+                visible = true;
+                break;
+            }
+        }
+    }
+    setQuarterSymbolVisible(visible);
+}
+
+void RestBeamSettingsModel::setQuarterSymbolVisible(bool visible)
+{
+    if (visible == m_quarterSymbolVisible) {
+        return;
+    }
+
+    m_quarterSymbolVisible = visible;
+    emit quarterSymbolVisibleChanged(m_quarterSymbolVisible);
+}
+
 void RestBeamSettingsModel::onCurrentNotationChanged()
 {
+    updateQuarterSymbolVisible();
     AbstractInspectorModel::onCurrentNotationChanged();
 
     m_beamModesModel->onCurrentNotationChanged();
