@@ -152,6 +152,7 @@ QVariant PropertyValue::toQVariant() const
     case P_TYPE::NOTEHEAD_TYPE:    return static_cast<int>(value<NoteHeadType>());
     case P_TYPE::NOTEHEAD_SCHEME:  return static_cast<int>(value<NoteHeadScheme>());
     case P_TYPE::NOTEHEAD_GROUP:   return static_cast<int>(value<NoteHeadGroup>());
+    case P_TYPE::REST_DURATION_TYPE: return static_cast<int>(value<RestVisualDurationType>());
     case P_TYPE::CLEF_TYPE:        return static_cast<int>(value<ClefType>());
     case P_TYPE::CLEF_TO_BARLINE_POS: return static_cast<int>(value<ClefToBarlinePosition>());
     case P_TYPE::DYNAMIC_TYPE:     return static_cast<int>(value<DynamicType>());
@@ -256,6 +257,7 @@ PropertyValue PropertyValue::fromQVariant(const QVariant& v, P_TYPE type)
     case P_TYPE::NOTEHEAD_TYPE:    return PropertyValue(NoteHeadType(v.toInt()));
     case P_TYPE::NOTEHEAD_SCHEME:  return PropertyValue(NoteHeadScheme(v.toInt()));
     case P_TYPE::NOTEHEAD_GROUP:   return PropertyValue(NoteHeadGroup(v.toInt()));
+    case P_TYPE::REST_DURATION_TYPE: return PropertyValue(RestVisualDurationType(v.toInt()));
     case P_TYPE::CLEF_TYPE:        return PropertyValue(ClefType(v.toInt()));
     case P_TYPE::CLEF_TO_BARLINE_POS: return PropertyValue(ClefToBarlinePosition(v.toInt()));
     case P_TYPE::DYNAMIC_TYPE:     return PropertyValue(DynamicType(v.toInt()));
