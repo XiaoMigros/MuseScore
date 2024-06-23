@@ -2832,9 +2832,7 @@ void TLayout::layoutGlissandoSegment(GlissandoSegment* item, LayoutContext&)
     if (item->staff()) {
         ldata->setMag(item->staff()->staffMag(item->tick()));
     }
-    RectF r = RectF(0.0, 0.0, item->pos2().x(), item->pos2().y()).normalized();
-    double lw = item->glissando()->lineWidth() * .5;
-    item->setbbox(r.adjusted(-lw, -lw, lw, lw));
+    ldata->setShape(item->shape());
 }
 
 void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
@@ -5827,7 +5825,7 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
         item->pointsRef()[1] = pp2;
         item->setLineLength(sqrt(PointF::dotProduct(pp2 - pp1, pp2 - pp1)));
 
-        item->setbbox(TextLineBaseSegment::boundingBoxOfLine(pp1, pp2, tl->lineWidth() / 2, tl->lineStyle() == LineType::DOTTED));
+        ldata->setShape(item->shape());
         return;
     }
 
@@ -5893,9 +5891,10 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
             y1 = h;
         }
     }
-    ldata->setBbox(x1, y1, x2 - x1, y2 - y1);
+    Shape shape = LineSegment::createDiagonalLineShape(PointF(x1, y1), PointF(x2, y2), tl->lineWidth(),
+                                                       const_cast<EngravingItem*>(tl));
     if (!item->text()->empty()) {
-        ldata->addBbox(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
+        shape.add(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
     }
     // set end text position and extend bbox
     if (!item->endText()->empty()) {
@@ -5912,8 +5911,8 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
                 break;
             }
         }
-        item->endText()->mutldata()->moveX(ldata->bbox().right());
-        ldata->addBbox(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
+        item->endText()->mutldata()->moveX(shape.right());
+        shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
     }
 
     if (tl->lineVisible() || !ctx.conf().isPrintingMode()) {
@@ -5996,6 +5995,7 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
 
         item->setLineLength(sqrt(PointF::dotProduct(pp22 - pp1, pp22 - pp1)));
     }
+    ldata->setShape(shape);
 }
 
 void TLayout::layoutTie(Tie* item, LayoutContext&)
