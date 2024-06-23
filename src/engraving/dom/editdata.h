@@ -260,6 +260,7 @@ public:
     PointF dragOffset;
     EngravingItem* element = nullptr;
     EngravingItem* dropElement = nullptr;
+    bool removeElements = false;
 
     EditData(MuseScoreView* v = nullptr)
         : m_view(v) {}

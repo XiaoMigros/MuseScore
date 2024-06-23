@@ -115,6 +115,7 @@ public:
     double mag() const override;
     double noteHeadWidth() const;
 
+    bool wouldRemove(EditData&) const override;
     EngravingItem* drop(EditData&) override;
 
     void setColor(const Color& c) override;
@@ -254,6 +255,7 @@ public:
     const std::vector<Articulation*>& articulations() const { return m_articulations; }
     std::set<SymId> articulationSymbolIds() const;
     Articulation* hasArticulation(const Articulation*);
+    Articulation* hasArticulation(const Articulation*) const;
     bool hasSingleArticulation() const { return m_articulations.size() == 1; }
 
     void updateArticulations(const std::set<SymId>& newArticulationIds,

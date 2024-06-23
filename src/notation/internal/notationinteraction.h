@@ -369,8 +369,9 @@ private:
 
     bool selectInstrument(mu::engraving::InstrumentChange* instrumentChange);
 
-    void applyDropPaletteElement(mu::engraving::Score* score, mu::engraving::EngravingItem* target, mu::engraving::EngravingItem* e,
-                                 Qt::KeyboardModifiers modifiers, muse::PointF pt = muse::PointF(), bool pasteMode = false);
+    void applyDropPaletteElement(mu::engraving::Score* score, std::vector<mu::engraving::EngravingItem*> targets,
+                                 mu::engraving::EngravingItem* e, Qt::KeyboardModifiers modifiers,
+                                 muse::PointF pt = muse::PointF(), bool pasteMode = false);
 
     void applyLineNoteToNote(engraving::Score* score, Note* note1, Note* note2, EngravingItem* line);
 
