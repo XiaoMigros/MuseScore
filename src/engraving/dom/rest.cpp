@@ -48,6 +48,10 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
+static const ElementStyle restStyle {
+    { Sid::restQuarterSymbol, Pid::REST_QUARTER_SYMBOL },
+};
+
 //---------------------------------------------------------
 //    Rest
 //--------------------------------------------------------
@@ -61,6 +65,8 @@ Rest::Rest(const ElementType& type, Segment* parent)
     : ChordRest(type, parent)
 {
     m_beamMode  = BeamMode::NONE;
+    m_visualDurationType = RestVisualDurationType::AUTO;
+    initElementStyle(&restStyle);
 }
 
 Rest::Rest(Segment* parent, const TDuration& d)
@@ -72,6 +78,8 @@ Rest::Rest(const ElementType& type, Segment* parent, const TDuration& d)
     : ChordRest(type, parent)
 {
     m_beamMode  = BeamMode::NONE;
+    m_visualDurationType = RestVisualDurationType::AUTO;
+    initElementStyle(&restStyle);
     setDurationType(d);
     if (d.fraction().isValid()) {
         setTicks(d.fraction());
@@ -239,7 +247,7 @@ EngravingItem* Rest::drop(EditData& data)
         Articulation* a = toArticulation(e);
         if (!a->isFermata() || !score()->toggleArticulation(this, a)) {
             delete e;
-            e = 0;
+            e = nullptr;
         }
     }
         return e;
@@ -287,42 +295,121 @@ EngravingItem* Rest::drop(EditData& data)
 
 SymId Rest::getSymbol(DurationType type, int line, int lines) const
 {
-    switch (type) {
-    case DurationType::V_LONG:
-        return SymId::restLonga;
-    case DurationType::V_BREVE:
-        return SymId::restDoubleWhole;
-    case DurationType::V_MEASURE:
-        if (ticks() >= Fraction(2, 1)) {
-            return SymId::restDoubleWhole;
+    SymId sym = SymId::restQuarter;
+    switch (visualDurationType()) {
+    case RestVisualDurationType::AUTO: {
+        switch (type) {
+        case DurationType::V_LONG:
+            sym = SymId::restLonga;
+            break;
+        case DurationType::V_BREVE:
+            sym = SymId::restDoubleWhole;
+            break;
+        case DurationType::V_MEASURE:
+            if (ticks() >= Fraction(2, 1)) {
+                sym = SymId::restDoubleWhole;
+            }
+        // fall through
+        case DurationType::V_WHOLE:
+            sym = SymId::restWhole;
+            break;
+        case DurationType::V_HALF:
+            sym = (line < 0 || line >= lines) ? SymId::restHalfLegerLine : SymId::restHalf;
+            break;
+        case DurationType::V_QUARTER:
+            sym = m_quarterSymbol;
+            break;
+        case DurationType::V_EIGHTH:
+            sym = SymId::rest8th;
+            break;
+        case DurationType::V_16TH:
+            sym = SymId::rest16th;
+            break;
+        case DurationType::V_32ND:
+            sym = SymId::rest32nd;
+            break;
+        case DurationType::V_64TH:
+            sym = SymId::rest64th;
+            break;
+        case DurationType::V_128TH:
+            sym = SymId::rest128th;
+            break;
+        case DurationType::V_256TH:
+            sym = SymId::rest256th;
+            break;
+        case DurationType::V_512TH:
+            sym = SymId::rest512th;
+            break;
+        case DurationType::V_1024TH:
+            sym = SymId::rest1024th;
+            break;
+        default:
+            LOGD("unknown rest type %d", int(type));
+            break;
         }
-    // fall through
-    case DurationType::V_WHOLE:
-        return (line < 0 || line >= lines) ? SymId::restWholeLegerLine : SymId::restWhole;
-    case DurationType::V_HALF:
-        return (line < 0 || line >= lines) ? SymId::restHalfLegerLine : SymId::restHalf;
-    case DurationType::V_QUARTER:
-        return SymId::restQuarter;
-    case DurationType::V_EIGHTH:
-        return SymId::rest8th;
-    case DurationType::V_16TH:
-        return SymId::rest16th;
-    case DurationType::V_32ND:
-        return SymId::rest32nd;
-    case DurationType::V_64TH:
-        return SymId::rest64th;
-    case DurationType::V_128TH:
-        return SymId::rest128th;
-    case DurationType::V_256TH:
-        return SymId::rest256th;
-    case DurationType::V_512TH:
-        return SymId::rest512th;
-    case DurationType::V_1024TH:
-        return SymId::rest1024th;
-    default:
-        LOGD("unknown rest type %d", int(type));
-        return SymId::restQuarter;
+        break;
     }
+    case RestVisualDurationType::REST_MAXIMA:
+        sym = SymId::restMaxima;
+        break;
+    case RestVisualDurationType::REST_LONGA:
+        sym = SymId::restLonga;
+        break;
+    case RestVisualDurationType::REST_DOUBLE_WHOLE:
+        sym = SymId::restDoubleWhole;
+        break;
+    case RestVisualDurationType::REST_WHOLE:
+        sym = SymId::restWhole;
+        break;
+    case RestVisualDurationType::REST_HALF:
+        sym = SymId::restHalf;
+        break;
+    case RestVisualDurationType::REST_QUARTER:
+        sym = m_quarterSymbol;
+        break;
+    case RestVisualDurationType::REST_8TH:
+        sym = SymId::rest8th;
+        break;
+    case RestVisualDurationType::REST_16TH:
+        sym = SymId::rest16th;
+        break;
+    case RestVisualDurationType::REST_32ND:
+        sym = SymId::rest32nd;
+        break;
+    case RestVisualDurationType::REST_64TH:
+        sym = SymId::rest64th;
+        break;
+    case RestVisualDurationType::REST_128TH:
+        sym = SymId::rest128th;
+        break;
+    case RestVisualDurationType::REST_256TH:
+        sym = SymId::rest256th;
+        break;
+    case RestVisualDurationType::REST_512TH:
+        sym = SymId::rest512th;
+        break;
+    case RestVisualDurationType::REST_1024TH:
+        sym = SymId::rest1024th;
+        break;
+    default:
+        break;
+    }
+    if (line < 0 || line >= lines) {
+        switch (sym) {
+        case SymId::restWhole:
+            sym = SymId::restWholeLegerLine;
+            break;
+        case SymId::restHalf:
+            sym = SymId::restHalfLegerLine;
+            break;
+        case SymId::restDoubleWhole:
+            sym = SymId::restDoubleWholeLegerLine;
+            break;
+        default:
+            break;
+        }
+    }
+    return sym;
 }
 
 void Rest::updateSymbol(int line, int lines, LayoutData* ldata) const
@@ -844,6 +931,8 @@ PropertyValue Rest::propertyDefault(Pid propertyId) const
     switch (propertyId) {
     case Pid::GAP:
         return false;
+    case Pid::REST_VISUAL_DURATION:
+        return RestVisualDurationType::AUTO;
     default:
         return ChordRest::propertyDefault(propertyId);
     }
@@ -868,6 +957,10 @@ PropertyValue Rest::getProperty(Pid propertyId) const
     switch (propertyId) {
     case Pid::GAP:
         return m_gap;
+    case Pid::REST_QUARTER_SYMBOL:
+        return m_quarterSymbol;
+    case Pid::REST_VISUAL_DURATION:
+        return m_visualDurationType;
     default:
         return ChordRest::getProperty(propertyId);
     }
@@ -886,6 +979,14 @@ bool Rest::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::VISIBLE:
         setVisible(v.toBool());
+        triggerLayout();
+        break;
+    case Pid::REST_QUARTER_SYMBOL:
+        m_quarterSymbol = v.value<SymId>();
+        triggerLayout();
+        break;
+    case Pid::REST_VISUAL_DURATION:
+        m_visualDurationType = v.value<RestVisualDurationType>();
         triggerLayout();
         break;
     case Pid::OFFSET:
