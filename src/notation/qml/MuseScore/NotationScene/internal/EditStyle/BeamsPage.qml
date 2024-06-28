@@ -127,14 +127,36 @@ StyleDialogPage {
 
     StyledGroupBox {
         width: parent.width
-        height: 120
-
         title: qsTrc("notation", "Beam style")
-        label.x: 0
+        label.x: -leftPadding
 
         RowLayout {
             anchors.fill: parent
-            spacing: 12
+            spacing: 15
+
+            Rectangle {
+                id: frenchStyleBeamFrame
+                width: image.width + 35
+                height: image.height + 30
+
+                color: "#ffffff"
+                border.color: ui.theme.strokeColor
+                radius: ui.theme.borderWidth
+
+                Image {
+                    id: image
+
+                    width: 90
+                    height: 70
+                    anchors.centerIn: parent
+                    mipmap: true
+                    sourceSize.width: 240
+                    sourceSize.height: 240
+
+                    fillMode: Image.PreserveAspectFit
+                    source: beamsPageModel.frenchStyleBeams.value ? "beam_style_french.svg" : "beam_style_regular.svg"
+                }
+            }
 
             RadioButtonGroup {
                 Layout.fillWidth: true
@@ -158,27 +180,6 @@ StyleDialogPage {
                     onToggled: {
                         beamsPageModel.frenchStyleBeams.value = modelData.value
                     }
-                }
-            }
-
-            Rectangle {
-                id: frenchStyleBeamFrame
-                width: 200
-                Layout.fillHeight: true
-                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-
-                color: "#ffffff"
-                border.color: ui.theme.strokeColor
-                radius: ui.theme.borderWidth
-
-                Image {
-                    width: Math.min(62, parent.width)
-                    mipmap: true
-                    sourceSize.width: 240
-                    sourceSize.height: 240
-                    anchors.centerIn: parent
-                    fillMode: Image.PreserveAspectFit
-                    source: beamsPageModel.frenchStyleBeams.value ? "beam_style_french.svg" : "beam_style_regular.svg"
                 }
             }
         }
