@@ -74,8 +74,6 @@ public:
     void startEditDrag(EditData&) override;
     void editDrag(EditData&) override;
 
-    void setSelected(bool f) override;
-
     Measure* measure() const override { return toMeasure(explicitParent()); }
 
     TupletNumberType numberType() const { return m_numberType; }
@@ -136,6 +134,7 @@ public:
     const PointF& userP1() const { return m_userP1; }
     const PointF& userP2() const { return m_userP2; }
 
+    void setSelected(bool f) override;
     void setVisible(bool f) override;
     void setColor(const Color& col) override;
 

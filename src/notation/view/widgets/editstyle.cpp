@@ -534,7 +534,6 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::tupletBracketType,       false, tupletBracketType,       resetTupletBracketType },
         { StyleId::tupletMaxSlope,          false, tupletMaxSlope,          resetTupletMaxSlope },
         { StyleId::tupletOufOfStaff,        false, tupletOutOfStaff,        0 },
-        { StyleId::tupletUseSymbols,        false, tupletUseSymbols,        resetTupletUseSymbols },
 
         { StyleId::repeatBarTips,            false, showRepeatBarTips,            resetShowRepeatBarTips },
         { StyleId::startBarlineSingle,       false, showStartBarlineSingle,       resetShowStartBarlineSingle },
@@ -1063,6 +1062,15 @@ EditStyle::EditStyle(QWidget* parent)
     });
     connect(textStyleFontSize, &QDoubleSpinBox::valueChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::FontSize, QVariant(textStyleFontSize->value()));
+    });
+
+    // use musical symbols
+    WidgetUtils::setWidgetIcon(resetTextStyleUseMusicalSymbols, IconCode::Code::UNDO);
+    connect(resetTextStyleUseMusicalSymbols, &QToolButton::clicked, [=]() {
+        resetTextStyle(TextStylePropertyType::UseMusicalSymbols);
+    });
+    connect(textStyleUseMusicalSymbols, &QCheckBox::toggled, [=]() {
+        textStyleValueChanged(TextStylePropertyType::UseMusicalSymbols, QVariant(textStyleUseMusicalSymbols->isChecked()));
     });
 
     // musical symbols scale
@@ -1648,6 +1656,9 @@ QString EditStyle::subPageCodeForElement(const EngravingItem* element)
 
         case TextStyleType::MEASURE_NUMBER:
             return "measure-number";
+
+        case TextStyleType::MEASURE_REPEAT:
+            return "measure-repeat";
 
         case TextStyleType::MMREST_RANGE:
             return "multimeasure-rest-range";
@@ -2668,6 +2679,11 @@ void EditStyle::textStyleChanged(int row)
             resetTextStyleLineSpacing->setEnabled(styleValue(a.sid) != defaultStyleValue(a.sid));
             break;
 
+        case TextStylePropertyType::UseMusicalSymbols:
+            textStyleUseMusicalSymbols->setChecked(styleValue(a.sid).toBool());
+            resetTextStyleUseMusicalSymbols->setEnabled(styleValue(a.sid) != defaultStyleValue(a.sid));
+            break;
+
         case TextStylePropertyType::MusicalSymbolsScale:
             textStyleMusicalSymbolsScale->setValue(styleValue(a.sid).toDouble() * 100);
             resetTextStyleMusicalSymbolsScale->setEnabled(styleValue(a.sid) != defaultStyleValue(a.sid));
@@ -2742,9 +2758,6 @@ void EditStyle::textStyleChanged(int row)
     styleName->setText(score->getTextStyleUserName(tid).qTranslated());
     styleName->setEnabled(int(tid) >= int(TextStyleType::USER1));
     resetTextStyleName->setEnabled(styleName->text() != TConv::translatedUserName(tid));
-
-    tupletUseSymbols->setVisible(tid == TextStyleType::TUPLET);
-    resetTupletUseSymbols->setVisible(tid == TextStyleType::TUPLET);
 
     configuration()->setStyleDialogLastSubPageIndex(row);
 }

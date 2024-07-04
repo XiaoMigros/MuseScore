@@ -67,7 +67,7 @@ Tuplet::Tuplet(Measure* parent)
     m_numberType   = TupletNumberType::SHOW_NUMBER;
     m_bracketType  = TupletBracketType::AUTO_BRACKET;
     m_ratio        = Fraction(1, 1);
-    m_number       = 0;
+    m_number       = nullptr;
     m_hasBracket   = false;
     m_isUp         = true;
     m_id           = 0;
@@ -95,7 +95,7 @@ Tuplet::Tuplet(const Tuplet& t)
 
     m_id            = t.m_id;
     // recreated on layout
-    m_number = 0;
+    m_number = nullptr;
 }
 
 //---------------------------------------------------------

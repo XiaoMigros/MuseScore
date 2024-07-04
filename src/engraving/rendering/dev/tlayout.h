@@ -271,7 +271,7 @@ public:
     static void layoutBaseMeasureBase(const MeasureBase* item, MeasureBase::LayoutData* ldata, const LayoutContext& ctx); // base class
     static void layoutMeasureNumber(const MeasureNumber* item, MeasureNumber::LayoutData* ldata);
     static void layoutMeasureNumberBase(const MeasureNumberBase* item, MeasureNumberBase::LayoutData* ldata); // base class
-    static void layoutMeasureRepeat(const MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutContext& ctx);
+    static void layoutMeasureRepeat(MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutContext& ctx);
     static void layoutMMRest(const MMRest* item, MMRest::LayoutData* ldata, const LayoutContext& ctx);
     static void layoutMMRestRange(const MMRestRange* item, MMRestRange::LayoutData* ldata);
 

@@ -888,6 +888,7 @@ Font TextFragment::font(const TextBase* t) const
             || t->textStyleType() == TextStyleType::PEDAL
             || t->textStyleType() == TextStyleType::REPEAT_LEFT
             || t->textStyleType() == TextStyleType::REPEAT_RIGHT
+            || t->textStyleType() == TextStyleType::MEASURE_REPEAT
             ) {
             std::string fontName = engravingFonts()->fontByName(t->style().styleSt(Sid::MusicalSymbolFont).toStdString())->family();
             family = String::fromStdString(fontName);

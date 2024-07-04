@@ -1146,6 +1146,7 @@ static const std::vector<Item<TextStyleType> > TEXTSTYLE_TYPES = {
     { TextStyleType::FOOTER,            "footer",               muse::TranslatableString("engraving", "Footer") },
 
     { TextStyleType::MEASURE_NUMBER,    "measure_number",       muse::TranslatableString("engraving", "Measure number") },
+    { TextStyleType::MEASURE_REPEAT,    "measure_repeat",       muse::TranslatableString("engraving", "Measure repeat") },
     { TextStyleType::MMREST_RANGE,      "mmrest_range",         muse::TranslatableString("engraving", "Multimeasure rest range") },
 
     { TextStyleType::TEMPO,             "tempo",                muse::TranslatableString("engraving", "Tempo") },

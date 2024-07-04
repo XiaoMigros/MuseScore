@@ -193,12 +193,9 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     { Sid::barAccidentalDistance,   "barAccidentalDistance",   Spatium(0.65) },
     { Sid::noteBarDistance,         "noteBarDistance",         Spatium(1.5) },
     { Sid::measureSpacing,          "measureSpacing",          1.5 },
-    { Sid::measureRepeatNumberPos,  "measureRepeatNumberPos",  Spatium(-0.5) },
     { Sid::mrNumberSeries,          "mrNumberSeries",          false },
     { Sid::mrNumberEveryXMeasures,  "mrNumberEveryXMeasures",  4 },
     { Sid::mrNumberSeriesWithParentheses, "mrNumberSeriesWithParentheses", true },
-    { Sid::oneMeasureRepeatShow1,   "oneMeasureRepeatShow1",   false },
-    { Sid::fourMeasureRepeatShowExtenders, "fourMeasureRepeatShowExtenders", false },
     { Sid::staffLineWidth,          "staffLineWidth",          Spatium(0.11) },
     { Sid::ledgerLineWidth,         "ledgerLineWidth",         Spatium(0.16) },     // 0.1875
     { Sid::ledgerLineLength,        "ledgerLineLength",        Spatium(0.33) },     // notehead width + this value
@@ -1058,6 +1055,26 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     { Sid::measureNumberFrameFgColor,     "measureNumberFrameFgColor",    PropertyValue::fromValue(Color::BLACK) },
     { Sid::measureNumberFrameBgColor,     "measureNumberFrameBgColor",    PropertyValue::fromValue(Color::transparent) },
 
+    { Sid::oneMeasureRepeatShow1,         "oneMeasureRepeatShow1",   false },
+    { Sid::fourMeasureRepeatShowExtenders, "fourMeasureRepeatShowExtenders", false },
+
+    { Sid::measureRepeatFontFace,          "measureRepeatFontFace",          "Edwin" },
+    { Sid::measureRepeatFontSize,          "measureRepeatFontSize",          9.0 },
+    { Sid::measureRepeatLineSpacing,       "measureRepeatLineSpacing",       1.0 },
+    { Sid::measureRepeatFontSpatiumDependent, "measureRepeatFontSpatiumDependent", true },
+    { Sid::measureRepeatMusicalSymbolsScale, "measureRepeatMusicalSymbolsScale", 1.0 }, // percentage of the standard size
+    { Sid::measureRepeatFontStyle,         "measureRepeatFontStyle",         int(FontStyle::Italic) },
+    { Sid::measureRepeatColor,             "measureRepeatColor",             PropertyValue::fromValue(Color::BLACK) },
+    { Sid::measureRepeatAlign,             "measureRepeatAlign",             Align(AlignH::HCENTER, AlignV::BASELINE) },
+    { Sid::measureRepeatUseSymbols,        "measureRepeatUseSymbols",        true },
+    { Sid::measureRepeatNumberPos,         "measureRepeatNumberPos",         Spatium(-0.5) },
+    { Sid::measureRepeatFrameType,         "measureRepeatFrameType",         int(FrameType::NO_FRAME) },
+    { Sid::measureRepeatFramePadding,      "measureRepeatFramePadding",      0.2 },
+    { Sid::measureRepeatFrameWidth,        "measureRepeatFrameWidth",        0.1 },
+    { Sid::measureRepeatFrameRound,        "measureRepeatFrameRound",        0 },
+    { Sid::measureRepeatFrameFgColor,      "measureRepeatFrameFgColor",      PropertyValue::fromValue(Color::BLACK) },
+    { Sid::measureRepeatFrameBgColor,      "measureRepeatFrameBgColor",      PropertyValue::fromValue(Color::transparent) },
+
     { Sid::mmRestShowMeasureNumberRange,  "mmRestShowMeasureNumberRange", false },
     { Sid::mmRestRangeBracketType,        "mmRestRangeBracketType",       int(MMRestRangeBracketType::BRACKETS) },
 
@@ -1676,6 +1693,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
 
     { Sid::chordlineThickness, "chordlineThickness", Spatium(0.16) },
 
+    { Sid::dummyUseMusicalSymbols, "dummyUseMusicalSymbols", false },
     { Sid::dummyMusicalSymbolsScale, "dummyMusicalSymbolsScale", 1.0 },
 
     { Sid::autoplaceEnabled,              "autoplaceEnabled",              true },

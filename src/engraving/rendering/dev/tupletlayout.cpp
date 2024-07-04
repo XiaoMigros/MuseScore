@@ -21,16 +21,17 @@
  */
 #include "tupletlayout.h"
 
-#include "dom/chordrest.h"
-#include "dom/tuplet.h"
-#include "dom/text.h"
-#include "dom/factory.h"
-#include "dom/stafftype.h"
 #include "dom/chord.h"
+#include "dom/chordrest.h"
+#include "dom/factory.h"
+#include "dom/measure.h"
 #include "dom/note.h"
+#include "dom/stafftype.h"
 #include "dom/stem.h"
 #include "dom/system.h"
-#include "dom/measure.h"
+#include "dom/text.h"
+#include "dom/tuplet.h"
+#include "dom/utils.h"
 
 #include "tlayout.h"
 #include "autoplace.h"
@@ -69,26 +70,18 @@ void TupletLayout::layout(Tuplet* item, LayoutContext& ctx)
         }
         // tuplet properties are propagated to number automatically by setProperty()
         // but we need to make sure flags are as well
-        item->number()->setPropertyFlags(Pid::FONT_FACE, item->propertyFlags(Pid::FONT_FACE));
-        item->number()->setPropertyFlags(Pid::FONT_SIZE, item->propertyFlags(Pid::FONT_SIZE));
+        item->number()->setPropertyFlags(Pid::FONT_FACE,  item->propertyFlags(Pid::FONT_FACE));
+        item->number()->setPropertyFlags(Pid::FONT_SIZE,  item->propertyFlags(Pid::FONT_SIZE));
         item->number()->setPropertyFlags(Pid::FONT_STYLE, item->propertyFlags(Pid::FONT_STYLE));
-        item->number()->setPropertyFlags(Pid::ALIGN, item->propertyFlags(Pid::ALIGN));
+        item->number()->setPropertyFlags(Pid::ALIGN,      item->propertyFlags(Pid::ALIGN));
 
         String numberString = (item->numberType() == TupletNumberType::SHOW_NUMBER)
                               ? String(u"%1").arg(item->ratio().numerator())
                               : String(u"%1:%2").arg(item->ratio().numerator(), item->ratio().denominator());
         if (style.styleB(Sid::tupletUseSymbols)) {
-            String smuflNum;
-            for (size_t i = 0; i < numberString.size(); ++i) {
-                smuflNum.append(u"<sym>tuplet");
-                smuflNum.append(numberString.at(i).unicode());
-                smuflNum.append(u"</sym>");
-            }
-            smuflNum.replace(String(u":"), String(u"Colon"));
-            item->number()->setXmlText(smuflNum);
-        } else {
-            item->number()->setXmlText(numberString);
+            numberString = tupletStringToSymIds(numberString);
         }
+        item->number()->setXmlText(numberString);
 
         item->setIsSmall(true);
         for (const DurationElement* e : item->elements()) {

@@ -2095,9 +2095,11 @@ void TDraw::draw(const MeasureRepeat* item, Painter* painter)
     painter->setPen(item->curColor());
     item->drawSymbol(ldata->symId, painter);
 
-    if (!ldata->numberSym.empty()) {
-        PointF numberPos = item->numberPosition(item->symBbox(ldata->numberSym));
-        item->drawSymbols(ldata->numberSym, painter, numberPos);
+    if (item->number()) {
+        PointF pos(item->number()->pos());
+        painter->translate(pos);
+        draw(item->number(), painter);
+        painter->translate(-pos);
     }
 
     if (item->style().styleB(Sid::fourMeasureRepeatShowExtenders) && item->numMeasures() == 4) {

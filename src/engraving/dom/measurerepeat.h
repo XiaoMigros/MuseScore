@@ -37,7 +37,8 @@ class MeasureRepeat final : public Rest
 
 public:
     MeasureRepeat(Segment* parent);
-    MeasureRepeat(const MeasureRepeat&) = default;
+    MeasureRepeat(const MeasureRepeat&);
+    ~MeasureRepeat();
     MeasureRepeat& operator=(const MeasureRepeat&) = delete;
 
     MeasureRepeat* clone() const override { return new MeasureRepeat(*this); }
@@ -68,19 +69,20 @@ public:
 
     bool placeMultiple() const override { return numMeasures() == 1; }     // prevent overlapping additions with range selection
 
-    RectF numberRect() const override;
+    void setSelected(bool f) override;
+    void setVisible(bool f) override;
+    void setColor(const Color& col) override;
 
-    PointF numberPosition(const RectF& numberBbox) const;
+    Text* number() const { return m_number; }
+    void setNumber(Text* t) { m_number = t; }
+    void resetNumberProperty();
+    static void resetNumberProperty(Text* number);
 
     struct LayoutData : public Rest::LayoutData {
         SymId symId = SymId::noSym;
         SymIdList numberSym;
 
         void setSymId(SymId id) { symId = id; }
-
-        void setNumberSym(int n) { numberSym = timeSigSymIdsFromString(String::number(n)); }
-        void setNumberSym(const String& s) { numberSym = timeSigSymIdsFromString(s); }
-        void clearNumberSym() { numberSym.clear(); }
     };
     DECLARE_LAYOUTDATA_METHODS(MeasureRepeat)
 
@@ -90,6 +92,8 @@ private:
 
     int m_numMeasures = 0;
     double m_numberPos = 0.0;
+
+    Text* m_number = nullptr;
 };
 } // namespace mu::engraving
 #endif

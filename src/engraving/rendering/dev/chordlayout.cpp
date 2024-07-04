@@ -3452,7 +3452,9 @@ void ChordLayout::fillShape(const MeasureRepeat* item, MeasureRepeat::LayoutData
 {
     Shape shape(Shape::Type::Composite);
 
-    shape.add(item->numberRect());
+    if (item->number()) {
+        shape.add(item->number()->shape().translate(item->number()->pos()));
+    }
     shape.add(item->symBbox(ldata->symId));
 
     ldata->setShape(shape);
