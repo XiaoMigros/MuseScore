@@ -33,6 +33,7 @@ class TupletSettingsModel : public AbstractInspectorModel
     Q_PROPERTY(PropertyItem * numberType READ numberType CONSTANT)
     Q_PROPERTY(PropertyItem * bracketType READ bracketType CONSTANT)
     Q_PROPERTY(PropertyItem * lineThickness READ lineThickness CONSTANT)
+    Q_PROPERTY(PropertyItem * numberPos READ numberPos CONSTANT)
 
 public:
     explicit TupletSettingsModel(QObject* parent, IElementRepositoryService* repository);
@@ -41,6 +42,7 @@ public:
     PropertyItem* numberType() const;
     PropertyItem* bracketType() const;
     PropertyItem* lineThickness() const;
+    PropertyItem* numberPos() const;
 
     Q_INVOKABLE QVariantList possibleNumberTypes() const;
     Q_INVOKABLE QVariantList possibleBracketTypes() const;
@@ -54,6 +56,7 @@ private:
     PropertyItem* m_numberType = nullptr;
     PropertyItem* m_bracketType = nullptr;
     PropertyItem* m_lineThickness = nullptr;
+    PropertyItem* m_numberPos = nullptr;
 };
 }
 

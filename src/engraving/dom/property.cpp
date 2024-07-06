@@ -114,6 +114,7 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::ACTUAL_NOTES,            false, "actualNotes",           P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "actual notes") },
     { Pid::P1,                      false, "p1",                    P_TYPE::POINT,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "p1") },
     { Pid::P2,                      false, "p2",                    P_TYPE::POINT,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "p2") },
+    { Pid::TUPLET_NUMBER_POS,       false, "tupletNumberPos",       P_TYPE::POINT,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "tuplet number position") },
     { Pid::GROW_LEFT,               false, "growLeft",              P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "grow left") },
     { Pid::GROW_RIGHT,              false, "growRight",             P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "grow right") },
 

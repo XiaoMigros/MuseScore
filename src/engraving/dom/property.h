@@ -125,6 +125,7 @@ enum class Pid {
     ACTUAL_NOTES,
     P1,
     P2,
+    TUPLET_NUMBER_POS,
     GROW_LEFT,
     GROW_RIGHT,
     BOX_HEIGHT,
