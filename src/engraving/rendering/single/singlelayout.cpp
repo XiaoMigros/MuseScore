@@ -1351,8 +1351,8 @@ void SingleLayout::layout(MeasureRepeat* item, const Context& ctx)
         if (item->staffType() && item->staffType()->lines() == 1) {
             staffTop -= 2.0 * item->spatium();
         }
-        double y = std::min(staffTop, -bbox.height() / 2) + item->numberPos() * item->spatium();
-        numLdata->setPos(PointF(x, y));
+        double y = std::min(staffTop, -bbox.height() / 2);
+        item->number()->mutldata()->setPos(PointF(x, y) + item->numberPos());
     } else {
         if (item->number()) {
             if (item->number()->selected()) {

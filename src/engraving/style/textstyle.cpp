@@ -511,7 +511,7 @@ const TextStyle measureRepeatTextStyle { {
     { TextStylePropertyType::FontStyle,            Sid::measureRepeatFontStyle,                 Pid::FONT_STYLE },
     { TextStylePropertyType::Color,                Sid::measureRepeatColor,                     Pid::COLOR },
     { TextStylePropertyType::TextAlign,            Sid::measureRepeatAlign,                     Pid::ALIGN },
-    { TextStylePropertyType::Offset,               Sid::measureRepeatNumberPos,                 Pid::MEASURE_REPEAT_NUMBER_POS },
+    { TextStylePropertyType::Offset,               Sid::measureRepeatOffset,                    Pid::MEASURE_REPEAT_NUMBER_POS },
     { TextStylePropertyType::FrameType,            Sid::measureRepeatFrameType,                 Pid::FRAME_TYPE },
     { TextStylePropertyType::FramePadding,         Sid::measureRepeatFramePadding,              Pid::FRAME_PADDING },
     { TextStylePropertyType::FrameWidth,           Sid::measureRepeatFrameWidth,                Pid::FRAME_WIDTH },

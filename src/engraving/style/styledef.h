@@ -1063,7 +1063,6 @@ enum class Sid {
     measureNumberFrameFgColor,
     measureNumberFrameBgColor,
 
-    measureRepeatNumberPos,
     oneMeasureRepeatShow1,
     fourMeasureRepeatShowExtenders,
     measureRepeatFontFace,
@@ -1075,7 +1074,7 @@ enum class Sid {
     measureRepeatColor,
     measureRepeatAlign,
     measureRepeatUseSymbols,
-    //measureRepeatOffset,
+    measureRepeatOffset,
     measureRepeatFrameType,
     measureRepeatFramePadding,
     measureRepeatFrameWidth,

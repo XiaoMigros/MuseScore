@@ -36,7 +36,7 @@ MeasureRepeatSettingsModel::MeasureRepeatSettingsModel(QObject* parent, IElement
 
 void MeasureRepeatSettingsModel::createProperties()
 {
-    m_numberPosition = buildPropertyItem(mu::engraving::Pid::MEASURE_REPEAT_NUMBER_POS);
+    m_numberPosition = buildPointFPropertyItem(mu::engraving::Pid::MEASURE_REPEAT_NUMBER_POS);
 }
 
 void MeasureRepeatSettingsModel::requestElements()

@@ -230,7 +230,7 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::MMREST_NUMBER_POS,       false, "mmRestNumberPos",       P_TYPE::SPATIUM,            PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "vertical position of multimeasure rest number") },
     { Pid::MMREST_NUMBER_VISIBLE,   false, "mmRestNumberVisible",   P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "visibility of multimeasure rest number") },
 
-    { Pid::MEASURE_REPEAT_NUMBER_POS, false, "measureRepeatNumberPos", P_TYPE::SPATIUM,         PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "vertical position of measure repeat number") },
+    { Pid::MEASURE_REPEAT_NUMBER_POS, false, "measureRepeatNumberPos", P_TYPE::POINT,           PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "vertical position of measure repeat number") },
     { Pid::REPEAT_COUNT,            true,  "endRepeat",             P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "end repeat") },
 
     { Pid::USER_STRETCH,            false, "stretch",               P_TYPE::REAL,               PropertyGroup::NONE      ,      DUMMY_QT_TR_NOOP("propertyName", "stretch") },

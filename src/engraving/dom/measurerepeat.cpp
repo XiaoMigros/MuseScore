@@ -37,7 +37,7 @@ using namespace mu::engraving;
 
 namespace mu::engraving {
 static const ElementStyle measureRepeatStyle {
-    { Sid::measureRepeatNumberPos,            Pid::MEASURE_REPEAT_NUMBER_POS },
+    { Sid::measureRepeatOffset,               Pid::MEASURE_REPEAT_NUMBER_POS },
     { Sid::measureRepeatFontFace,             Pid::FONT_FACE },
     { Sid::measureRepeatFontSize,             Pid::FONT_SIZE },
     { Sid::measureRepeatFontStyle,            Pid::FONT_STYLE },
@@ -181,7 +181,7 @@ PropertyValue MeasureRepeat::propertyDefault(Pid propertyId) const
 {
     switch (propertyId) {
     case Pid::MEASURE_REPEAT_NUMBER_POS:
-        return style().styleV(Sid::measureRepeatNumberPos);
+        return style().styleV(Sid::measureRepeatOffset);
     case Pid::ALIGN:
         return style().styleV(Sid::measureRepeatAlign);
     case Pid::FONT_FACE:
@@ -230,7 +230,7 @@ bool MeasureRepeat::setProperty(Pid propertyId, const PropertyValue& v)
         setNumMeasures(v.toInt());
         break;
     case Pid::MEASURE_REPEAT_NUMBER_POS:
-        setNumberPos(v.toDouble());
+        setNumberPos(v.value<PointF>());
         triggerLayout();
         break;
     case Pid::FONT_SIZE:
@@ -285,7 +285,7 @@ muse::TranslatableString MeasureRepeat::subtypeUserName() const
 Sid MeasureRepeat::getPropertyStyle(Pid propertyId) const
 {
     if (propertyId == Pid::MEASURE_REPEAT_NUMBER_POS) {
-        return Sid::measureRepeatNumberPos;
+        return Sid::measureRepeatOffset;
     }
     return Rest::getPropertyStyle(propertyId);
 }

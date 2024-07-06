@@ -1067,7 +1067,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     { Sid::measureRepeatColor,             "measureRepeatColor",             PropertyValue::fromValue(Color::BLACK) },
     { Sid::measureRepeatAlign,             "measureRepeatAlign",             Align(AlignH::HCENTER, AlignV::BASELINE) },
     { Sid::measureRepeatUseSymbols,        "measureRepeatUseSymbols",        true },
-    { Sid::measureRepeatNumberPos,         "measureRepeatNumberPos",         Spatium(-0.5) },
+    { Sid::measureRepeatOffset,            "measureRepeatOffset",            PointF(0.0, -0.5) },
     { Sid::measureRepeatFrameType,         "measureRepeatFrameType",         int(FrameType::NO_FRAME) },
     { Sid::measureRepeatFramePadding,      "measureRepeatFramePadding",      0.2 },
     { Sid::measureRepeatFrameWidth,        "measureRepeatFrameWidth",        0.1 },

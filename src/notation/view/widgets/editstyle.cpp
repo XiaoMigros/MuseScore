@@ -374,7 +374,6 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::frameSystemDistance,     false, frameSystemDistance,     resetFrameSystemDistance },
         { StyleId::minMeasureWidth,         false, minMeasureWidth_2,       resetMinMeasureWidth },
         { StyleId::measureSpacing,          false, measureSpacing,          resetMeasureSpacing },
-        { StyleId::measureRepeatNumberPos,  false, measureRepeatNumberPos,  resetMeasureRepeatNumberPos },
         { StyleId::mrNumberSeries,          false, mrNumberSeries,          0 },
         { StyleId::mrNumberEveryXMeasures,  false, mrNumberEveryXMeasures,  resetMRNumberEveryXMeasures },
         { StyleId::mrNumberSeriesWithParentheses, false, mrNumberSeriesWithParentheses, resetMRNumberSeriesWithParentheses },

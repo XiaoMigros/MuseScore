@@ -375,8 +375,8 @@ void MStyle::read(XmlReader& e, compat::ReadChordListHook* readChordListHook)
                     || tag == "slurMidWidth"
                     || tag == "slurDottedWidth"
                     || tag == "slurMinDistance")
-                   && m_version < 430) {
-            // Pre-4.3 scores used identical style values for slurs and ties.
+                   && m_version < 440) {
+            // Pre-4.4 scores used identical style values for slurs and ties.
             // When opening older scores, use the same values for both.
             double _val = e.readDouble();
             if (tag == "slurEndWidth") {
@@ -392,6 +392,8 @@ void MStyle::read(XmlReader& e, compat::ReadChordListHook* readChordListHook)
                 set(Sid::TieMinDistance,  Spatium(_val));
                 set(Sid::SlurMinDistance, Spatium(_val));
             }
+        } else if (tag == "measureRepeatNumberPos" && m_version < 440) {
+            set(Sid::measureRepeatOffset, PointF(0.0, e.readDouble()));
         } else if (tag == "defaultFontSpatiumDependent") {
             e.skipCurrentElement(); // obsolete
         } else if (!readProperties(e)) {

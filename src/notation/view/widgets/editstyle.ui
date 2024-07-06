@@ -6232,7 +6232,7 @@
            <string>Measure repeats</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_52">
-           <item row="3" column="0" colspan="2">
+           <item row="2" column="0" colspan="2">
             <widget class="QCheckBox" name="fourMeasureRepeatShowExtenders">
              <property name="text">
               <string>Show extenders on 4-measure repeats</string>
@@ -6252,7 +6252,7 @@
              </property>
             </spacer>
            </item>
-           <item row="4" column="0" colspan="3">
+           <item row="3" column="0" colspan="3">
             <widget class="QGroupBox" name="mrNumberSeries">
              <property name="title">
               <string>Number consecutive measure repeats</string>
@@ -6325,7 +6325,7 @@
              </layout>
             </widget>
            </item>
-           <item row="3" column="2">
+           <item row="2" column="2">
             <widget class="QToolButton" name="resetFourMeasureRepeatShowExtenders">
              <property name="toolTip">
               <string>Reset to default</string>
@@ -6338,47 +6338,14 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_148">
-             <property name="text">
-              <string>Number position:</string>
-             </property>
-             <property name="buddy">
-              <cstring>measureRepeatNumberPos</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0" colspan="2">
+           <item row="1" column="0" colspan="2">
             <widget class="QCheckBox" name="oneMeasureRepeatShow1">
              <property name="text">
               <string notr="true">Show ‘\1’ on 1-measure repeats [set in edidstyle.cpp]</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="measureRepeatNumberPos">
-             <property name="keyboardTracking">
-              <bool>false</bool>
-             </property>
-             <property name="suffix">
-              <string>sp</string>
-             </property>
-             <property name="minimum">
-              <double>-99.989999999999995</double>
-             </property>
-             <property name="singleStep">
-              <double>0.500000000000000</double>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="2">
-            <widget class="QToolButton" name="resetMeasureRepeatNumberPos">
-             <property name="text">
-              <string notr="true">…</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
             <widget class="QToolButton" name="resetOneMeasureRepeatShow1">
              <property name="text">
               <string notr="true">…</string>
