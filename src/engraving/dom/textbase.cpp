@@ -391,10 +391,10 @@ const CharFormat TextCursor::selectedFragmentsFormat() const
             // proper bitwise 'and' to ensure Bold/Italic/Underline/Strike only true if true for all fragments
             resultFormat.setStyle(static_cast<FontStyle>(static_cast<int>(resultFormat.style()) & static_cast<int>(format.style())));
 
-            if (resultFormat.fontFamily() == "ScoreText") {
+            if (fragment->isEngravingFont(resultFormat.fontFamily())) {
                 resultFormat.setFontFamily(format.fontFamily());
             }
-            if (format.fontFamily() != "ScoreText" && resultFormat.fontFamily() != format.fontFamily()) {
+            if (fragment->isEngravingFont(format.fontFamily()) && resultFormat.fontFamily() != format.fontFamily()) {
                 resultFormat.setFontFamily(TextBase::UNDEFINED_FONT_FAMILY);
             }
 
@@ -879,7 +879,8 @@ Font TextFragment::font(const TextBase* t) const
 
     String family;
     Font::Type fontType = Font::Type::Unknown;
-    if (format.fontFamily() == "ScoreText") {
+
+    if (isEngravingFont(format.fontFamily())) {
         if (t->isDynamic()
             || t->isStringTunings()
             || t->textStyleType() == TextStyleType::OTTAVA
@@ -1494,7 +1495,7 @@ void TextBlock::changeFormat(FormatId id, const FormatValue& data, int start, in
             f.changeFormat(id, data);
             i = m_fragments.insert(std::next(i), f);
         } else {
-            if (id == FormatId::FontFamily && i->format.fontFamily() == "ScoreText") {
+            if (id == FormatId::FontFamily && i->isEngravingFont(i->format.fontFamily())) {
                 void(0);// do nothing, we need to leave that as is
             } else {
                 // complete fragment
@@ -1643,7 +1644,7 @@ String TextBlock::text(int col1, int len, bool withFormat) const
         for (size_t i = 0; i < f.text.size(); ++i) {
             Char c = f.text.at(i);
             if (col >= col1 && (len < 0 || ((col - col1) < len))) {
-                if (f.format.fontFamily() == "ScoreText" && withFormat) {
+                if (f.isEngravingFont(f.format.fontFamily()) && withFormat) {
                     s += toSymbolXml(c);
                 } else {
                     s += XmlWriter::escapeSymbol(c.unicode());
@@ -2223,7 +2224,7 @@ String TextBase::genText(const LayoutData* ldata) const
             if (format.fontSize() != fmt.fontSize()) {
                 text += String(u"<font size=\"%1\"/>").arg(format.fontSize());
             }
-            if (format.fontFamily() != "ScoreText" && format.fontFamily() != fmt.fontFamily()) {
+            if (!f.isEngravingFont(format.fontFamily()) && format.fontFamily() != fmt.fontFamily()) {
                 text += String(u"<font face=\"%1\"/>").arg(TextBase::escape(format.fontFamily()));
             }
 
@@ -2244,7 +2245,7 @@ String TextBase::genText(const LayoutData* ldata) const
                     break;
                 }
             }
-            if (format.fontFamily() == u"ScoreText") {
+            if (f.isEngravingFont(format.fontFamily())) {
                 for (size_t i = 0; i < f.text.size(); ++i) {
                     text += toSymbolXml(f.text.at(i));
                 }
@@ -3000,7 +3001,7 @@ String TextBase::getHtmlStartTag(double newSize, double& curSize, const String& 
         curSize = newSize;
         s += String(u"<font size=\"%1\"/>").arg(newSize);
     }
-    if (newFamily != curFamily && newFamily != "ScoreText") {
+    if (newFamily != curFamily) {
         curFamily = newFamily;
         s += String(u"<font face=\"%1\"/>").arg(newFamily);
     }
@@ -3544,5 +3545,19 @@ void TextBase::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags 
             break;
         }
     }
+}
+
+bool TextFragment::isEngravingFont(String font) const
+{
+    if (font == "ScoreText") {
+        return true;
+    } else {
+        for (const IEngravingFontPtr& f : engravingFonts()->fonts()) {
+            if (font == String::fromStdString(f->name())) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 }

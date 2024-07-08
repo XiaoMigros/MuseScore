@@ -235,6 +235,8 @@ public:
     muse::draw::Font font(const TextBase*) const;
     int columns() const;
     void changeFormat(FormatId id, const FormatValue& data);
+
+    bool isEngravingFont(String font) const;
 };
 
 //---------------------------------------------------------

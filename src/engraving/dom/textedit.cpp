@@ -84,7 +84,7 @@ void TextBase::editInsertText(TextCursor* cursor, const String& s)
 
     const TextBlock& block = ldata->blocks.at(cursor->row());
     const CharFormat* previousFormat = block.formatAt(std::max(int(cursor->column()) - 1, 0));
-    if (previousFormat && previousFormat->fontFamily() == "ScoreText" && s == " ") {
+    if (previousFormat && fragmentList().front().isEngravingFont(previousFormat->fontFamily()) && s == " ") {
         // This space would be ignored by the xml parser (see #15629)
         // We must use the nonBreaking space character instead
         String nonBreakingSpace = String(Char(0xa0));
@@ -595,7 +595,7 @@ bool TextBase::edit(EditData& ed)
             break;
 
         case Key_Space:
-            if ((ed.modifiers & TextEditingControlModifier) || currentFormat->fontFamily() == u"ScoreText") {
+            if ((ed.modifiers & TextEditingControlModifier) || fragmentList().front().isEngravingFont(currentFormat->fontFamily())) {
                 s = String(Char(0xa0)); // non-breaking space
             } else {
                 if (isFingering() && ed.view()) {
@@ -702,7 +702,7 @@ bool TextBase::edit(EditData& ed)
         }
     }
     if (!s.isEmpty()) {
-        if (currentFormat->fontFamily() == u"ScoreText") {
+        if (fragmentList().front().isEngravingFont(currentFormat->fontFamily())) {
             currentFormat->setFontFamily(propertyDefault(Pid::FONT_FACE).value<String>());
         }
         deleteSelectedText(ed);
@@ -853,10 +853,20 @@ EngravingItem* TextBase::drop(EditData& ed)
     switch (e->type()) {
     case ElementType::SYMBOL:
     {
-        SymId id = toSymbol(e)->sym();
+        TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
+        TextCursor* cursor = ted->cursor();
+        deleteSelectedText(ed);
+        String s;
+        String fontFamily = toSymbol(e)->getProperty(Pid::SCORE_FONT).value<String>();
+        if (fontFamily.empty() || fontFamily == String::fromStdString(score()->engravingFont()->name())) {
+            s = score()->engravingFont()->toString(toSymbol(e)->sym());
+            cursor->format()->setFontFamily(u"ScoreText");
+        } else {
+            s = score()->engravingFonts()->fontByName(fontFamily.toStdString())->toString(toSymbol(e)->sym());
+            cursor->format()->setFontFamily(fontFamily);
+        }
+        score()->undo(new InsertText(m_cursor, s), &ed);
         delete e;
-
-        insertSym(ed, id);
     }
     break;
 

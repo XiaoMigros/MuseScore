@@ -39,6 +39,10 @@ using namespace muse::draw;
 using namespace mu::engraving;
 
 namespace mu::engraving {
+static const ElementStyle symbolStyle {
+    { Sid::MusicalSymbolFont, Pid::SCORE_FONT },
+};
+
 //---------------------------------------------------------
 //   Symbol
 //---------------------------------------------------------
@@ -47,6 +51,7 @@ Symbol::Symbol(const ElementType& type, EngravingItem* parent, ElementFlags f)
     : BSymbol(type, parent, f)
 {
     m_sym = SymId::accidentalSharp;          // arbitrary valid default
+    initElementStyle(&symbolStyle);
 }
 
 Symbol::Symbol(EngravingItem* parent, ElementFlags f)
@@ -163,6 +168,15 @@ PropertyValue Symbol::propertyDefault(Pid propertyId) const
         break;
     }
     return EngravingItem::propertyDefault(propertyId);
+}
+
+//---------------------------------------------------------
+//   getPropertyStyle
+//---------------------------------------------------------
+
+Sid Symbol::getPropertyStyle(Pid id) const
+{
+    return Sid::NOSTYLE;
 }
 
 //---------------------------------------------------------
