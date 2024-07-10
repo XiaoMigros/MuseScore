@@ -464,6 +464,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     { Sid::concertPitch,            "concertPitch",            false },
 
     { Sid::multiVoiceRestTwoSpaceOffset,    "multiVoiceRestTwoSpaceOffset", false },
+    { Sid::restQuarterSymbol,       "restQuarterSymbol",       PropertyValue::fromValue(SymId::restQuarter) },
     { Sid::createMultiMeasureRests, "createMultiMeasureRests", false },
     { Sid::minEmptyMeasures,        "minEmptyMeasures",        PropertyValue(2) },
     { Sid::minMMRestWidth,          "minMMRestWidth",          Spatium(6) },
