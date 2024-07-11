@@ -28,6 +28,7 @@
 
 #include "measure.h"
 #include "staff.h"
+#include "text.h"
 
 #include "log.h"
 
@@ -36,7 +37,12 @@ using namespace mu::engraving;
 
 namespace mu::engraving {
 static const ElementStyle measureRepeatStyle {
-    { Sid::measureRepeatNumberPos, Pid::MEASURE_REPEAT_NUMBER_POS },
+    { Sid::measureRepeatOffset,               Pid::MEASURE_REPEAT_NUMBER_POS },
+    { Sid::measureRepeatFontFace,             Pid::FONT_FACE },
+    { Sid::measureRepeatFontSize,             Pid::FONT_SIZE },
+    { Sid::measureRepeatFontStyle,            Pid::FONT_STYLE },
+    { Sid::measureRepeatAlign,                Pid::ALIGN },
+    { Sid::measureRepeatFontSpatiumDependent, Pid::SIZE_SPATIUM_DEPENDENT },
 };
 
 //---------------------------------------------------------
@@ -46,10 +52,83 @@ static const ElementStyle measureRepeatStyle {
 MeasureRepeat::MeasureRepeat(Segment* parent)
     : Rest(ElementType::MEASURE_REPEAT, parent), m_numMeasures(0)
 {
+    m_number = nullptr;
     // however many measures the group, the element itself is always exactly the duration of its containing measure
     setDurationType(DurationType::V_MEASURE);
     if (parent) {
         initElementStyle(&measureRepeatStyle);
+    }
+}
+
+MeasureRepeat::MeasureRepeat(const MeasureRepeat& r)
+    : Rest(r)
+{
+    m_numMeasures = r.m_numMeasures;
+    m_numberPos   = r.m_numberPos;
+    // recreated on layout
+    m_number = nullptr;
+}
+
+//---------------------------------------------------------
+//   ~MeasureRepeat
+//---------------------------------------------------------
+
+MeasureRepeat::~MeasureRepeat()
+{
+    delete m_number;
+}
+
+//---------------------------------------------------------
+//   setSelected
+//---------------------------------------------------------
+
+void MeasureRepeat::setSelected(bool f)
+{
+    EngravingItem::setSelected(f);
+    if (m_number) {
+        m_number->setSelected(f);
+    }
+}
+
+//---------------------------------------------------------
+//   setVisible
+//---------------------------------------------------------
+
+void MeasureRepeat::setVisible(bool f)
+{
+    EngravingItem::setVisible(f);
+    if (m_number) {
+        m_number->setVisible(f);
+    }
+}
+
+//---------------------------------------------------------
+//   setColor
+//---------------------------------------------------------
+
+void MeasureRepeat::setColor(const Color& col)
+{
+    EngravingItem::setColor(col);
+    if (m_number) {
+        m_number->setColor(col);
+    }
+}
+
+//---------------------------------------------------------
+//   resetNumberProperty
+//   reset number properties to default values
+//   Set FONT_ITALIC to true, because for MeasureRepeats number should be italic
+//---------------------------------------------------------
+
+void MeasureRepeat::resetNumberProperty()
+{
+    resetNumberProperty(m_number);
+}
+
+void MeasureRepeat::resetNumberProperty(Text* number)
+{
+    for (auto p : { Pid::FONT_FACE, Pid::FONT_STYLE, Pid::FONT_SIZE, Pid::ALIGN, Pid::SIZE_SPATIUM_DEPENDENT }) {
+        number->resetProperty(p);
     }
 }
 
@@ -95,34 +174,6 @@ const Measure* MeasureRepeat::referringMeasure(const Measure* measure) const
 }
 
 //---------------------------------------------------------
-//   numberRect
-///   returns the measure repeat number's bounding rectangle
-//---------------------------------------------------------
-
-PointF MeasureRepeat::numberPosition(const RectF& numberBbox) const
-{
-    double x = (symBbox(ldata()->symId).width() - numberBbox.width()) * .5;
-    // -pos().y(): relative to topmost staff line
-    // - 0.5 * r.height(): relative to the baseline of the number symbol
-    // (rather than the center)
-    double staffTop = -pos().y();
-    // Single line staff barlines extend above top of staff
-    if (staffType() && staffType()->lines() == 1) {
-        staffTop -= 2.0 * spatium();
-    }
-    double y = std::min(staffTop, -symBbox(ldata()->symId).height() / 2) + m_numberPos * spatium() - 0.5 * numberBbox.height();
-
-    return PointF(x, y);
-}
-
-RectF MeasureRepeat::numberRect() const
-{
-    RectF r = symBbox(ldata()->numberSym);
-    r.translate(numberPosition(r));
-    return r;
-}
-
-//---------------------------------------------------------
 //   propertyDefault
 //---------------------------------------------------------
 
@@ -130,7 +181,17 @@ PropertyValue MeasureRepeat::propertyDefault(Pid propertyId) const
 {
     switch (propertyId) {
     case Pid::MEASURE_REPEAT_NUMBER_POS:
-        return style().styleV(Sid::measureRepeatNumberPos);
+        return style().styleV(Sid::measureRepeatOffset);
+    case Pid::ALIGN:
+        return style().styleV(Sid::measureRepeatAlign);
+    case Pid::FONT_FACE:
+        return style().styleV(Sid::measureRepeatFontFace);
+    case Pid::FONT_SIZE:
+        return style().styleV(Sid::measureRepeatFontSize);
+    case Pid::FONT_STYLE:
+        return style().styleV(Sid::measureRepeatFontStyle);
+    case Pid::SIZE_SPATIUM_DEPENDENT:
+        return style().styleV(Sid::measureRepeatFontSpatiumDependent);
     default:
         return Rest::propertyDefault(propertyId);
     }
@@ -147,6 +208,12 @@ PropertyValue MeasureRepeat::getProperty(Pid propertyId) const
         return numMeasures();
     case Pid::MEASURE_REPEAT_NUMBER_POS:
         return numberPos();
+    case Pid::FONT_SIZE:
+    case Pid::FONT_FACE:
+    case Pid::FONT_STYLE:
+    case Pid::ALIGN:
+    case Pid::SIZE_SPATIUM_DEPENDENT:
+        return m_number ? m_number->getProperty(propertyId) : PropertyValue();
     default:
         return Rest::getProperty(propertyId);
     }
@@ -163,8 +230,17 @@ bool MeasureRepeat::setProperty(Pid propertyId, const PropertyValue& v)
         setNumMeasures(v.toInt());
         break;
     case Pid::MEASURE_REPEAT_NUMBER_POS:
-        setNumberPos(v.toDouble());
+        setNumberPos(v.value<PointF>());
         triggerLayout();
+        break;
+    case Pid::FONT_SIZE:
+    case Pid::FONT_FACE:
+    case Pid::FONT_STYLE:
+    case Pid::ALIGN:
+    case Pid::SIZE_SPATIUM_DEPENDENT:
+        if (m_number) {
+            m_number->setProperty(propertyId, v);
+        }
         break;
     default:
         return Rest::setProperty(propertyId, v);
@@ -209,7 +285,7 @@ muse::TranslatableString MeasureRepeat::subtypeUserName() const
 Sid MeasureRepeat::getPropertyStyle(Pid propertyId) const
 {
     if (propertyId == Pid::MEASURE_REPEAT_NUMBER_POS) {
-        return Sid::measureRepeatNumberPos;
+        return Sid::measureRepeatOffset;
     }
     return Rest::getPropertyStyle(propertyId);
 }

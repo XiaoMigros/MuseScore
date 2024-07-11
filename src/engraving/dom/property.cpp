@@ -114,6 +114,7 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::ACTUAL_NOTES,            false, "actualNotes",           P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "actual notes") },
     { Pid::P1,                      false, "p1",                    P_TYPE::POINT,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "p1") },
     { Pid::P2,                      false, "p2",                    P_TYPE::POINT,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "p2") },
+    { Pid::TUPLET_NUMBER_POS,       false, "tupletNumberPos",       P_TYPE::POINT,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "tuplet number position") },
     { Pid::GROW_LEFT,               false, "growLeft",              P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "grow left") },
     { Pid::GROW_RIGHT,              false, "growRight",             P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "grow right") },
 
@@ -230,7 +231,7 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::MMREST_NUMBER_POS,       false, "mmRestNumberPos",       P_TYPE::SPATIUM,            PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "vertical position of multimeasure rest number") },
     { Pid::MMREST_NUMBER_VISIBLE,   false, "mmRestNumberVisible",   P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "visibility of multimeasure rest number") },
 
-    { Pid::MEASURE_REPEAT_NUMBER_POS, false, "measureRepeatNumberPos", P_TYPE::SPATIUM,         PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "vertical position of measure repeat number") },
+    { Pid::MEASURE_REPEAT_NUMBER_POS, false, "measureRepeatNumberPos", P_TYPE::POINT,           PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "vertical position of measure repeat number") },
     { Pid::REPEAT_COUNT,            true,  "endRepeat",             P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "end repeat") },
 
     { Pid::USER_STRETCH,            false, "stretch",               P_TYPE::REAL,               PropertyGroup::NONE      ,      DUMMY_QT_TR_NOOP("propertyName", "stretch") },
@@ -318,6 +319,7 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::FRAME_BG_COLOR,          false, "frameBgColor",          P_TYPE::COLOR,              PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "frame background color") },
     { Pid::SIZE_SPATIUM_DEPENDENT,  false, "sizeIsSpatiumDependent",P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "spatium dependent size") },
     { Pid::TEXT_SIZE_SPATIUM_DEPENDENT, false, "textSizeIsSpatiumDependent", P_TYPE::BOOL,      PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "spatium dependent text size") },
+    { Pid::USE_MUSICAL_SYMBOLS,     false, "useMusicalSymbols",     P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "use musical symbols") },
     { Pid::MUSICAL_SYMBOLS_SCALE,   false, "musicalSymbolsScale",   P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "musical symbols scale") },
     { Pid::ALIGN,                   false, "align",                 P_TYPE::ALIGN,              PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "align") },
     { Pid::TEXT_SCRIPT_ALIGN,       false, "align",                 P_TYPE::INT,                PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "text script align") },

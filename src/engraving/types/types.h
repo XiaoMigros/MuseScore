@@ -751,6 +751,7 @@ enum class TextStyleType {
 
     // Measure-oriented styles
     MEASURE_NUMBER,
+    MEASURE_REPEAT,
     MMREST_RANGE,
 
     // System-level styles

@@ -43,19 +43,11 @@ Column {
         numberPositionSection.focusOnFirst()
     }
 
-    SpinBoxPropertyView {
+    OffsetSection {
         id: numberPositionSection
         titleText: qsTrc("inspector", "Number position")
         propertyItem: root.model ? root.model.numberPosition : null
-
-        icon: IconCode.VERTICAL
-
-        minValue: -99.0
-        maxValue: 99.0
-        step: 0.5
-        decimals: 2
-        measureUnitsSymbol: qsTrc("global", "sp")
-
+    
         navigationPanel: root.navigationPanel
         navigationRowStart: root.navigationRowStart + 1
     }

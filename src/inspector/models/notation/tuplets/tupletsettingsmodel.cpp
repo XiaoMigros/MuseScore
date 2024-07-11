@@ -59,6 +59,11 @@ PropertyItem* TupletSettingsModel::lineThickness() const
     return m_lineThickness;
 }
 
+PropertyItem* TupletSettingsModel::numberPos() const
+{
+    return m_numberPos;
+}
+
 QVariantList TupletSettingsModel::possibleNumberTypes() const
 {
     using Type = mu::engraving::TupletNumberType;
@@ -91,6 +96,7 @@ void TupletSettingsModel::createProperties()
     m_numberType = buildPropertyItem(mu::engraving::Pid::NUMBER_TYPE);
     m_bracketType = buildPropertyItem(mu::engraving::Pid::BRACKET_TYPE);
     m_lineThickness = buildPropertyItem(mu::engraving::Pid::LINE_WIDTH);
+    m_numberPos = buildPointFPropertyItem(mu::engraving::Pid::TUPLET_NUMBER_POS);
 }
 
 void TupletSettingsModel::loadProperties()
@@ -99,6 +105,7 @@ void TupletSettingsModel::loadProperties()
     loadPropertyItem(m_numberType);
     loadPropertyItem(m_bracketType);
     loadPropertyItem(m_lineThickness, formatDoubleFunc);
+    loadPropertyItem(m_numberPos);
 }
 
 void TupletSettingsModel::resetProperties()
@@ -107,4 +114,5 @@ void TupletSettingsModel::resetProperties()
     m_numberType->resetToDefault();
     m_bracketType->resetToDefault();
     m_lineThickness->resetToDefault();
+    m_numberPos->resetToDefault();
 }

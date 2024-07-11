@@ -210,12 +210,9 @@ enum class Sid {
     noteBarDistance,
 
     measureSpacing,
-    measureRepeatNumberPos,
     mrNumberSeries,
     mrNumberEveryXMeasures,
     mrNumberSeriesWithParentheses,
-    oneMeasureRepeatShow1,
-    fourMeasureRepeatShowExtenders,
     staffLineWidth,
     ledgerLineWidth,
     ledgerLineLength,
@@ -1066,6 +1063,25 @@ enum class Sid {
     measureNumberFrameFgColor,
     measureNumberFrameBgColor,
 
+    oneMeasureRepeatShow1,
+    fourMeasureRepeatShowExtenders,
+    measureRepeatFontFace,
+    measureRepeatFontSize,
+    measureRepeatLineSpacing,
+    measureRepeatFontSpatiumDependent,
+    measureRepeatMusicalSymbolsScale,
+    measureRepeatFontStyle,
+    measureRepeatColor,
+    measureRepeatAlign,
+    measureRepeatUseSymbols,
+    measureRepeatOffset,
+    measureRepeatFrameType,
+    measureRepeatFramePadding,
+    measureRepeatFrameWidth,
+    measureRepeatFrameRound,
+    measureRepeatFrameFgColor,
+    measureRepeatFrameBgColor,
+
     mmRestShowMeasureNumberRange,
     mmRestRangeBracketType,
 
@@ -1683,6 +1699,7 @@ enum class Sid {
 
     chordlineThickness,
 
+    dummyUseMusicalSymbols,
     dummyMusicalSymbolsScale,
 
     autoplaceEnabled,

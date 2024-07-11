@@ -89,4 +89,13 @@ Column {
         maxValue: 1
         step: 0.1
     }
+
+    OffsetSection {
+        id: numberPosSection
+        titleText: qsTrc("inspector", "Number position")
+        propertyItem: root.model ? root.model.numberPos : null
+    
+        navigationPanel: root.navigationPanel
+        navigationRowStart: lineThicknessSection.navigationRowEnd + 1
+    }
 }

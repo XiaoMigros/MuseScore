@@ -125,6 +125,7 @@ enum class Pid {
     ACTUAL_NOTES,
     P1,
     P2,
+    TUPLET_NUMBER_POS,
     GROW_LEFT,
     GROW_RIGHT,
     BOX_HEIGHT,
@@ -328,6 +329,7 @@ enum class Pid {
     FRAME_BG_COLOR,
     SIZE_SPATIUM_DEPENDENT,
     TEXT_SIZE_SPATIUM_DEPENDENT, // for text component of textLine items
+    USE_MUSICAL_SYMBOLS,
     MUSICAL_SYMBOLS_SCALE,
     ALIGN,
     TEXT_SCRIPT_ALIGN,

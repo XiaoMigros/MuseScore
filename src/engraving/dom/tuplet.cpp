@@ -67,7 +67,7 @@ Tuplet::Tuplet(Measure* parent)
     m_numberType   = TupletNumberType::SHOW_NUMBER;
     m_bracketType  = TupletBracketType::AUTO_BRACKET;
     m_ratio        = Fraction(1, 1);
-    m_number       = 0;
+    m_number       = nullptr;
     m_hasBracket   = false;
     m_isUp         = true;
     m_id           = 0;
@@ -90,12 +90,13 @@ Tuplet::Tuplet(const Tuplet& t)
 
     m_p1             = t.m_p1;
     m_p2             = t.m_p2;
+    m_numberPos      = t.m_numberPos;
     m_userP1            = t.m_userP1;
     m_userP2            = t.m_userP2;
 
     m_id            = t.m_id;
     // recreated on layout
-    m_number = 0;
+    m_number = nullptr;
 }
 
 //---------------------------------------------------------
@@ -560,6 +561,8 @@ PropertyValue Tuplet::getProperty(Pid propertyId) const
         return m_userP1;
     case Pid::P2:
         return m_userP2;
+    case Pid::TUPLET_NUMBER_POS:
+        return m_numberPos;
     case Pid::FONT_SIZE:
     case Pid::FONT_FACE:
     case Pid::FONT_STYLE:
@@ -603,6 +606,9 @@ bool Tuplet::setProperty(Pid propertyId, const PropertyValue& v)
     case Pid::P2:
         m_userP2 = v.value<PointF>();
         break;
+    case Pid::TUPLET_NUMBER_POS:
+        setNumberPos(v.value<PointF>());
+        break;
     case Pid::FONT_SIZE:
     case Pid::FONT_FACE:
     case Pid::FONT_STYLE:
@@ -640,6 +646,7 @@ PropertyValue Tuplet::propertyDefault(Pid id) const
         return 0;
     case Pid::P1:
     case Pid::P2:
+    case Pid::TUPLET_NUMBER_POS:
         return PointF();
     case Pid::ALIGN:
         return style().styleV(Sid::tupletAlign);

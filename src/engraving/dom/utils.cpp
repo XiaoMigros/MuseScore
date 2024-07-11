@@ -44,6 +44,8 @@
 #include "system.h"
 #include "tuplet.h"
 
+#include "types/symnames.h"
+
 #include "log.h"
 
 using namespace mu;
@@ -1126,6 +1128,37 @@ Segment* skipTuplet(Tuplet* tuplet)
     return toChordRest(nde)->segment();
 }
 
+static const std::map<Char, SymId> timeSigMap = {
+    { 43,    SymId::timeSigPlusSmall },             // '+'
+    { 48,    SymId::timeSig0 },                     // '0'
+    { 49,    SymId::timeSig1 },                     // '1'
+    { 50,    SymId::timeSig2 },                     // '2'
+    { 51,    SymId::timeSig3 },                     // '3'
+    { 52,    SymId::timeSig4 },                     // '4'
+    { 53,    SymId::timeSig5 },                     // '5'
+    { 54,    SymId::timeSig6 },                     // '6'
+    { 55,    SymId::timeSig7 },                     // '7'
+    { 56,    SymId::timeSig8 },                     // '8'
+    { 57,    SymId::timeSig9 },                     // '9'
+    { 67,    SymId::timeSigCommon },                // 'C'
+    { 40,    SymId::timeSigParensLeftSmall },       // '('
+    { 41,    SymId::timeSigParensRightSmall },      // ')'
+    { 162,   SymId::timeSigCutCommon },             // '¢'
+    { 189,   SymId::timeSigFractionHalf },
+    { 188,   SymId::timeSigFractionQuarter },
+    { 59664, SymId::mensuralProlation1 },
+    { 79,    SymId::mensuralProlation2 },           // 'O'
+    { 59665, SymId::mensuralProlation2 },
+    { 216,   SymId::mensuralProlation3 },           // 'Ø'
+    { 59666, SymId::mensuralProlation3 },
+    { 59667, SymId::mensuralProlation4 },
+    { 59668, SymId::mensuralProlation5 },
+    { 59670, SymId::mensuralProlation7 },
+    { 59671, SymId::mensuralProlation8 },
+    { 59673, SymId::mensuralProlation10 },
+    { 59674, SymId::mensuralProlation11 },
+};
+
 //---------------------------------------------------------
 //   timeSigSymIdsFromString
 //    replace ascii with bravura symbols
@@ -1133,42 +1166,62 @@ Segment* skipTuplet(Tuplet* tuplet)
 
 SymIdList timeSigSymIdsFromString(const String& string)
 {
+    SymIdList list;
+    for (size_t i = 0; i < string.size(); ++i) {
+        SymId sym = muse::value(timeSigMap, string.at(i), SymId::noSym);
+        if (sym != SymId::noSym) {
+            list.push_back(sym);
+        }
+    }
+    return list;
+}
+
+//---------------------------------------------------------
+//   timesigStringToSymIds
+//    replace ascii with bravura symbols
+//---------------------------------------------------------
+
+String timesigStringToSymIds(const String& string)
+{
+    String list;
+    for (size_t i = 0; i < string.size(); ++i) {
+        SymId sym = muse::value(timeSigMap, string.at(i), SymId::noSym);
+        if (sym != SymId::noSym) {
+            list.append(u"<sym>" + String::fromAscii(SymNames::nameForSymId(sym).ascii()) + u"</sym>");
+        } else {
+            list.append(string.at(i));
+        }
+    }
+    return list;
+}
+
+//---------------------------------------------------------
+//   tupletStringToSymIds
+//---------------------------------------------------------
+
+String tupletStringToSymIds(const String& string)
+{
     static const std::map<Char, SymId> dict = {
-        { 43,    SymId::timeSigPlusSmall },             // '+'
-        { 48,    SymId::timeSig0 },                     // '0'
-        { 49,    SymId::timeSig1 },                     // '1'
-        { 50,    SymId::timeSig2 },                     // '2'
-        { 51,    SymId::timeSig3 },                     // '3'
-        { 52,    SymId::timeSig4 },                     // '4'
-        { 53,    SymId::timeSig5 },                     // '5'
-        { 54,    SymId::timeSig6 },                     // '6'
-        { 55,    SymId::timeSig7 },                     // '7'
-        { 56,    SymId::timeSig8 },                     // '8'
-        { 57,    SymId::timeSig9 },                     // '9'
-        { 67,    SymId::timeSigCommon },                // 'C'
-        { 40,    SymId::timeSigParensLeftSmall },       // '('
-        { 41,    SymId::timeSigParensRightSmall },      // ')'
-        { 162,   SymId::timeSigCutCommon },             // '¢'
-        { 189,   SymId::timeSigFractionHalf },
-        { 188,   SymId::timeSigFractionQuarter },
-        { 59664, SymId::mensuralProlation1 },
-        { 79,    SymId::mensuralProlation2 },           // 'O'
-        { 59665, SymId::mensuralProlation2 },
-        { 216,   SymId::mensuralProlation3 },           // 'Ø'
-        { 59666, SymId::mensuralProlation3 },
-        { 59667, SymId::mensuralProlation4 },
-        { 59668, SymId::mensuralProlation5 },
-        { 59670, SymId::mensuralProlation7 },
-        { 59671, SymId::mensuralProlation8 },
-        { 59673, SymId::mensuralProlation10 },
-        { 59674, SymId::mensuralProlation11 },
+        { 48,    SymId::tuplet0 },                     // '0'
+        { 49,    SymId::tuplet1 },                     // '1'
+        { 50,    SymId::tuplet2 },                     // '2'
+        { 51,    SymId::tuplet3 },                     // '3'
+        { 52,    SymId::tuplet4 },                     // '4'
+        { 53,    SymId::tuplet5 },                     // '5'
+        { 54,    SymId::tuplet6 },                     // '6'
+        { 55,    SymId::tuplet7 },                     // '7'
+        { 56,    SymId::tuplet8 },                     // '8'
+        { 57,    SymId::tuplet9 },                     // '9'
+        { 58,    SymId::tupletColon },                 // ':'
     };
 
-    SymIdList list;
+    String list;
     for (size_t i = 0; i < string.size(); ++i) {
         SymId sym = muse::value(dict, string.at(i), SymId::noSym);
         if (sym != SymId::noSym) {
-            list.push_back(sym);
+            list.append(u"<sym>" + String::fromAscii(SymNames::nameForSymId(sym).ascii()) + u"</sym>");
+        } else {
+            list.append(string.at(i));
         }
     }
     return list;

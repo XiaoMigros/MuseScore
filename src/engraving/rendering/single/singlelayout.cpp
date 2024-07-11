@@ -46,6 +46,7 @@
 #include "dom/clef.h"
 #include "dom/dynamic.h"
 #include "dom/expression.h"
+#include "dom/factory.h"
 #include "dom/fermata.h"
 #include "dom/fingering.h"
 #include "dom/fret.h"
@@ -1287,33 +1288,80 @@ void SingleLayout::layout(MeasureNumber* item, const Context& ctx)
 void SingleLayout::layout(MeasureRepeat* item, const Context& ctx)
 {
     MeasureRepeat::LayoutData* ldata = item->mutldata();
+
+    String numberString = String(u"%1").arg(item->numMeasures());
+
     switch (item->numMeasures()) {
     case 1:
     {
         ldata->setSymId(SymId::repeat1Bar);
-        if (ctx.style().styleB(Sid::oneMeasureRepeatShow1)) {
-            ldata->setNumberSym(1);
-        } else {
-            ldata->clearNumberSym();
+        if (!ctx.style().styleB(Sid::oneMeasureRepeatShow1)) {
+            numberString = String();
         }
         break;
     }
     case 2:
         ldata->setSymId(SymId::repeat2Bars);
-        ldata->setNumberSym(item->numMeasures());
         break;
     case 4:
         ldata->setSymId(SymId::repeat4Bars);
-        ldata->setNumberSym(item->numMeasures());
         break;
     default:
         ldata->setSymId(SymId::noSym); // should never happen
-        ldata->clearNumberSym();
+        numberString = String();
         break;
     }
 
     RectF bbox = item->symBbox(ldata->symId);
     ldata->setBbox(bbox);
+
+    if (!numberString.empty()) {
+        if (item->number() == nullptr) {
+            Text* number = Factory::createText(item, TextStyleType::MEASURE_REPEAT);
+            number->setComposition(true);
+            number->setTrack(item->track());
+            number->setParent(item);
+            number->setVisible(item->visible());
+            number->setColor(item->color());
+            number->setSelected(item->selected());
+            item->setNumber(number);
+            item->resetNumberProperty();
+        }
+        // properties are propagated to number automatically by setProperty()
+        // but we need to make sure flags are as well
+        item->number()->setPropertyFlags(Pid::FONT_FACE,  item->propertyFlags(Pid::FONT_FACE));
+        item->number()->setPropertyFlags(Pid::FONT_SIZE,  item->propertyFlags(Pid::FONT_SIZE));
+        item->number()->setPropertyFlags(Pid::FONT_STYLE, item->propertyFlags(Pid::FONT_STYLE));
+        item->number()->setPropertyFlags(Pid::ALIGN,      item->propertyFlags(Pid::ALIGN));
+
+        if (ctx.style().styleB(Sid::measureRepeatUseSymbols)) {
+            numberString = timesigStringToSymIds(numberString);
+        }
+        item->number()->setXmlText(numberString);
+
+        Text::LayoutData* numLdata = item->number()->mutldata();
+        TLayout::layoutText(item->number(), numLdata);
+
+        double x = bbox.width() / 2;
+        // -pos().y(): relative to topmost staff line
+        // - 0.5 * r.height(): relative to the baseline of the number symbol
+        // (rather than the center)
+        double staffTop = -item->pos().y();
+        // Single line staff barlines extend above top of staff
+        if (item->staffType() && item->staffType()->lines() == 1) {
+            staffTop -= 2.0 * item->spatium();
+        }
+        double y = std::min(staffTop, -bbox.height() / 2);
+        item->number()->mutldata()->setPos(PointF(x, y) + item->numberPos());
+    } else {
+        if (item->number()) {
+            if (item->number()->selected()) {
+                //ctx.deselect(item->number());
+            }
+            delete item->number();
+            item->setNumber(nullptr);
+        }
+    }
 }
 
 void SingleLayout::layout(Ornament* item, const Context& ctx)

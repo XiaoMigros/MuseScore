@@ -59,6 +59,7 @@
 
 #include "dom/expression.h"
 
+#include "dom/factory.h"
 #include "dom/fermata.h"
 #include "dom/figuredbass.h"
 #include "dom/fingering.h"
@@ -317,7 +318,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
         layoutMeasureNumber(item_cast<const MeasureNumber*>(item), static_cast<MeasureNumber::LayoutData*>(ldata));
         break;
     case ElementType::MEASURE_REPEAT:
-        layoutMeasureRepeat(item_cast<const MeasureRepeat*>(item), static_cast<MeasureRepeat::LayoutData*>(ldata), ctx);
+        layoutMeasureRepeat(item_cast<MeasureRepeat*>(item), static_cast<MeasureRepeat::LayoutData*>(ldata), ctx);
         break;
     case ElementType::MMREST:
         layoutMMRest(item_cast<const MMRest*>(item), static_cast<MMRest::LayoutData*>(ldata), ctx);
@@ -4110,7 +4111,7 @@ void TLayout::layoutMeasureNumberBase(const MeasureNumberBase* item, MeasureNumb
     }
 }
 
-void TLayout::layoutMeasureRepeat(const MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutContext& ctx)
+void TLayout::layoutMeasureRepeat(MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
 
@@ -4138,6 +4139,8 @@ void TLayout::layoutMeasureRepeat(const MeasureRepeat* item, MeasureRepeat::Layo
         }
     }
 
+    String numberString = String(u"%1").arg(item->numMeasures());
+
     switch (item->numMeasures()) {
     case 1:
     {
@@ -4152,35 +4155,75 @@ void TLayout::layoutMeasureRepeat(const MeasureRepeat* item, MeasureRepeat::Layo
             }
             if (placeInSeries % ctx.conf().styleI(Sid::mrNumberEveryXMeasures) == 0) {
                 if (ctx.conf().styleB(Sid::mrNumberSeriesWithParentheses)) {
-                    ldata->setNumberSym(String(u"(%1)").arg(placeInSeries));
+                    numberString = String(u"(%1)").arg(placeInSeries);
                 } else {
-                    ldata->setNumberSym(placeInSeries);
+                    numberString = String(u"%1").arg(placeInSeries);
                 }
             } else {
-                ldata->clearNumberSym();
+                numberString = String();
             }
-        } else if (ctx.conf().styleB(Sid::oneMeasureRepeatShow1)) {
-            ldata->setNumberSym(1);
-        } else {
-            ldata->clearNumberSym();
+        } else if (!ctx.conf().styleB(Sid::oneMeasureRepeatShow1)) {
+            numberString = String();
         }
         break;
     }
     case 2:
         ldata->setSymId(SymId::repeat2Bars);
-        ldata->setNumberSym(item->numMeasures());
         break;
     case 4:
         ldata->setSymId(SymId::repeat4Bars);
-        ldata->setNumberSym(item->numMeasures());
         break;
     default:
         ldata->setSymId(SymId::noSym); // should never happen
-        ldata->clearNumberSym();
+        numberString = String();
         break;
     }
 
     RectF bbox = item->symBbox(ldata->symId);
+
+    if (!numberString.empty()) {
+        if (item->number() == nullptr) {
+            Text* number = Factory::createText(item, TextStyleType::MEASURE_REPEAT);
+            number->setComposition(true);
+            number->setTrack(item->track());
+            number->setParent(item);
+            number->setVisible(item->visible());
+            number->setColor(item->color());
+            number->setSelected(item->selected());
+            item->setNumber(number);
+            item->resetNumberProperty();
+        }
+        // properties are propagated to number automatically by setProperty()
+        // but we need to make sure flags are as well
+        item->number()->setPropertyFlags(Pid::FONT_FACE,  item->propertyFlags(Pid::FONT_FACE));
+        item->number()->setPropertyFlags(Pid::FONT_SIZE,  item->propertyFlags(Pid::FONT_SIZE));
+        item->number()->setPropertyFlags(Pid::FONT_STYLE, item->propertyFlags(Pid::FONT_STYLE));
+        item->number()->setPropertyFlags(Pid::ALIGN,      item->propertyFlags(Pid::ALIGN));
+
+        if (ctx.conf().styleB(Sid::measureRepeatUseSymbols)) {
+            numberString = timesigStringToSymIds(numberString);
+        }
+
+        item->number()->setXmlText(numberString);
+        TLayout::layoutText(item->number(), item->number()->mutldata());
+
+        double x = bbox.width() / 2;
+        // -pos().y(): relative to topmost staff line
+        // - 0.5 * r.height(): relative to the baseline of the number symbol
+        // (rather than the center)
+        double staffTop = -item->pos().y();
+        // Single line staff barlines extend above top of staff
+        if (item->staffType() && item->staffType()->lines() == 1) {
+            staffTop -= 2.0 * item->spatium();
+        }
+        double y = std::min(staffTop, -bbox.height() / 2);
+        item->number()->mutldata()->setPos(PointF(x, y) + item->numberPos());
+    } else {
+        if (item->number()) {
+            delete item->number();
+            item->setNumber(nullptr);
+        }
+    }
 
     if (item->track() != muse::nidx) { // if this is in score rather than a palette cell
         // For unknown reasons, the symbol has some offset in almost all SMuFL fonts
