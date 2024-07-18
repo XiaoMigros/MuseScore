@@ -720,7 +720,7 @@ void TLayout::layoutArpeggio(const Arpeggio* item, Arpeggio::LayoutData* ldata, 
 //        return;
 //    }
 
-    if (conf.styleB(Sid::ArpeggioHiddenInStdIfTab)) {
+    if (conf.styleB(Sid::arpeggioHiddenInStdIfTab)) {
         if (item->staff() && item->staff()->isPitchedStaff(item->tick())) {
             for (Staff* s : item->staff()->staffList()) {
                 if (s->onSameScore(item) && s->isTabStaff(item->tick()) && s->visible()) {
@@ -762,7 +762,7 @@ void TLayout::layoutArpeggio(const Arpeggio* item, Arpeggio::LayoutData* ldata, 
         double top = -item->userLen1();
         switch (item->arpeggioType()) {
         case ArpeggioType::BRACKET: {
-            double lineWidth = conf.styleMM(Sid::ArpeggioLineWidth);
+            double lineWidth = conf.styleMM(Sid::arpeggioLineWidth);
             return top - lineWidth / 2.0;
         }
         case ArpeggioType::NORMAL:
@@ -796,7 +796,7 @@ void TLayout::layoutArpeggio(const Arpeggio* item, Arpeggio::LayoutData* ldata, 
 
         switch (item->arpeggioType()) {
         case ArpeggioType::BRACKET: {
-            double lineWidth = conf.styleMM(Sid::ArpeggioLineWidth);
+            double lineWidth = conf.styleMM(Sid::arpeggioLineWidth);
             return bottom - top + lineWidth;
         }
         case ArpeggioType::NORMAL:
@@ -869,7 +869,7 @@ void TLayout::layoutArpeggio(const Arpeggio* item, Arpeggio::LayoutData* ldata, 
     } break;
 
     case ArpeggioType::BRACKET: {
-        double w  = conf.styleS(Sid::ArpeggioHookLen).val() * item->spatium();
+        double w  = conf.styleS(Sid::arpeggioHookLen).val() * item->spatium();
         ldata->setBbox(RectF(0.0, ldata->top, w, ldata->bottom));
     } break;
     }
@@ -1478,7 +1478,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
 
     switch (item->bracketType()) {
     case BracketType::BRACE: {
-        String musicalSymbolFont = conf.styleSt(Sid::MusicalSymbolFont);
+        String musicalSymbolFont = conf.styleSt(Sid::musicalSymbolFont);
         if (musicalSymbolFont == "Emmentaler" || musicalSymbolFont == "Gonville") {
             ldata->braceSymbol = SymId::noSym;
             double w = conf.styleMM(Sid::akkoladeWidth);
@@ -1527,7 +1527,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
     break;
     case BracketType::NORMAL: {
         double w = conf.styleMM(Sid::bracketWidth) * .5;
-        double bd = item->spatium() * (conf.styleSt(Sid::MusicalSymbolFont) == "Leland" ? .5 : .25);
+        double bd = item->spatium() * (conf.styleSt(Sid::musicalSymbolFont) == "Leland" ? .5 : .25);
 
         Shape shape = RectF(-w, -bd, w * 2, 2 * (ldata->bracketHeight * 0.5 + bd));
         shape.add(item->symBbox(SymId::bracketTop).translated(PointF(-w, -bd)));
@@ -1579,7 +1579,7 @@ void TLayout::layoutBreath(const Breath* item, Breath::LayoutData* ldata, const 
     int voiceOffset = item->placeBelow() * (item->staff()->lines(item->tick()) - 1) * item->spatium();
     if (item->isCaesura()) {
         ldata->setPosY(item->spatium() + voiceOffset);
-    } else if ((conf.styleSt(Sid::MusicalSymbolFont) == "Emmentaler") && (item->symId() == SymId::breathMarkComma)) {
+    } else if ((conf.styleSt(Sid::musicalSymbolFont) == "Emmentaler") && (item->symId() == SymId::breathMarkComma)) {
         ldata->setPosY(0.5 * item->spatium() + voiceOffset);
     } else {
         ldata->setPosY(-0.5 * item->spatium() + voiceOffset);
@@ -1887,7 +1887,7 @@ void TLayout::layoutDynamic(Dynamic* item, Dynamic::LayoutData* ldata, const Lay
     }
     ldata->setIsSkipDraw(false);
 
-    item->setPlacementBasedOnVoiceApplication(conf.styleV(Sid::dynamicsHairpinVoiceBasedPlacement).value<DirectionV>());
+    item->setPlacementBasedOnVoiceAssignment(conf.styleV(Sid::dynamicsHairpinVoiceBasedPlacement).value<DirectionV>());
 
     TLayout::layoutBaseTextBase(item, ldata);
 
@@ -1949,8 +1949,8 @@ void TLayout::layoutExpression(const Expression* item, Expression::LayoutData* l
         return;
     }
 
-    const_cast<Expression*>(item)->setPlacementBasedOnVoiceApplication(item->style().styleV(
-                                                                           Sid::dynamicsHairpinVoiceBasedPlacement).value<DirectionV>());
+    const_cast<Expression*>(item)->setPlacementBasedOnVoiceAssignment(item->style().styleV(
+                                                                          Sid::dynamicsHairpinVoiceBasedPlacement).value<DirectionV>());
 
     TLayout::layoutBaseTextBase(item, ldata);
 
@@ -1995,7 +1995,8 @@ void TLayout::layoutExpression(const Expression* item, Expression::LayoutData* l
         Segment* timeTickSeg = m->findSegmentR(SegmentType::TimeTick, s->rtick());
         dynamic = timeTickSeg ? toDynamic(timeTickSeg->findAnnotation(ElementType::DYNAMIC, item->track(), item->track())) : nullptr;
     }
-    if (!dynamic || dynamic->placeAbove() != item->placeAbove() || dynamic->applyToVoice() != item->applyToVoice() || !dynamic->visible()) {
+    if (!dynamic || dynamic->placeAbove() != item->placeAbove() || dynamic->voiceAssignment() != item->voiceAssignment()
+        || !dynamic->visible()) {
         Autoplace::autoplaceSegmentElement(item, ldata);
         return;
     }
@@ -2610,7 +2611,7 @@ void TLayout::layoutFretDiagram(const FretDiagram* item, FretDiagram::LayoutData
     double noteheadWidth = 0;
     if (pSeg->isChordRestType()) {
         staff_idx_t idx = item->staff()->idx();
-        for (EngravingItem* e = pSeg->firstElementOfSegment(pSeg, idx); e; e = pSeg->nextElementOfSegment(pSeg, e, idx)) {
+        for (EngravingItem* e = pSeg->firstElementOfSegment(idx); e; e = pSeg->nextElementOfSegment(e, idx)) {
             if (e->isRest()) {
                 const Rest* r = toRest(e);
                 LD_CONDITION(r->ldata()->sym.has_value());
@@ -4916,6 +4917,7 @@ void TLayout::layoutShadowNote(ShadowNote* item, LayoutContext& ctx)
 
     for (const SymId& artic: item->articulationIds()) {
         bool isMarcato = Articulation::symId2ArticulationName(artic).contains(u"marcato");
+        bool isLv = artic == SymId::articLaissezVibrerAbove || artic == SymId::articLaissezVibrerBelow;
         double symH = item->symHeight(artic);
 
         if (!up || isMarcato) {
@@ -4927,6 +4929,10 @@ void TLayout::layoutShadowNote(ShadowNote* item, LayoutContext& ctx)
             rectWithArticulations.setTop(topY - symH - _spatium);
         } else {
             rectWithArticulations.setHeight(rectWithArticulations.height() + symH + _spatium);
+        }
+        if (isLv) {
+            const double width = item->symWidth(artic) - item->symWidth(item->noteheadSymbol()) / 2;
+            rectWithArticulations.setWidth(rectWithArticulations.width() + width);
         }
     }
 
@@ -5293,7 +5299,7 @@ void TLayout::layoutStemSlash(const StemSlash* item, StemSlash::LayoutData* ldat
     double endY = 0;
 
     if (hook) {
-        auto musicFont = conf.styleSt(Sid::MusicalSymbolFont);
+        auto musicFont = conf.styleSt(Sid::musicalSymbolFont);
         // HACK: adjust slash angle for fonts with "fat" hooks. In future, we must use smufl cutOut
         if (c->beams() >= 2 && !straight
             && (musicFont == "Bravura" || musicFont == "Finale Maestro" || musicFont == "Gonville")) {
@@ -6623,8 +6629,8 @@ SpannerSegment* TLayout::layoutSystemSLine(SLine* line, System* system, LayoutCo
         } else {
             sst = SpannerSegmentType::BEGIN;
         }
-        if (line->hasVoiceApplicationProperties()) {
-            line->setPlacementBasedOnVoiceApplication(ctx.conf().styleV(Sid::dynamicsHairpinVoiceBasedPlacement).value<DirectionV>());
+        if (line->hasVoiceAssignmentProperties()) {
+            line->setPlacementBasedOnVoiceAssignment(ctx.conf().styleV(Sid::dynamicsHairpinVoiceBasedPlacement).value<DirectionV>());
         }
     } else if (line->tick() < stick && line->tick2() > etick) {
         sst = SpannerSegmentType::MIDDLE;

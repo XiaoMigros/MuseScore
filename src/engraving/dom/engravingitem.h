@@ -489,7 +489,13 @@ public:
     bool colorsInversionEnabled() const;
     void setColorsInverionEnabled(bool enabled);
 
-    std::pair<int, float> barbeat() const;
+    struct BarBeat
+    {
+        int bar;
+        int displayedBar;
+        double beat;
+    };
+    BarBeat barbeat() const;
 
     virtual EngravingItem* findLinkedInScore(const Score* score) const;
     EngravingItem* findLinkedInStaff(const Staff* staff) const;
@@ -674,11 +680,11 @@ public:
 
     virtual bool allowTimeAnchor() const { return false; }
 
-    virtual bool hasVoiceApplicationProperties() const { return false; }
+    virtual bool hasVoiceAssignmentProperties() const { return false; }
     bool appliesToAllVoicesInInstrument() const;
-    void setInitialTrackAndVoiceApplication(track_idx_t track);
-    void checkVoiceApplicationCompatibleWithTrack();
-    void setPlacementBasedOnVoiceApplication(DirectionV styledDirection);
+    void setInitialTrackAndVoiceAssignment(track_idx_t track, bool curVoiceOnlyOverride);
+    void checkVoiceAssignmentCompatibleWithTrack();
+    void setPlacementBasedOnVoiceAssignment(DirectionV styledDirection);
 
     void setOffsetChanged(bool val, bool absolute = true, const PointF& diff = PointF());
     //! ---------------------

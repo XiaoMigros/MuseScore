@@ -4488,12 +4488,10 @@ ChordRest* Score::findCR(Fraction tick, track_idx_t track) const
     }
     EngravingItem* el = s->element(track);
     if (el && el->isRest() && toRest(el)->isGap()) {
-        s = nullptr;
+        return nullptr;
     }
-    if (s) {
-        return toChordRest(s->element(track));
-    }
-    return nullptr;
+
+    return toChordRest(el);
 }
 
 //---------------------------------------------------------
@@ -5698,7 +5696,7 @@ void Score::doLayoutRange(const Fraction& st, const Fraction& et)
         end = std::max(et, spanner->tick2());
     }
 
-    m_engravingFont = engravingFonts()->fontByName(style().value(Sid::MusicalSymbolFont).value<String>().toStdString());
+    m_engravingFont = engravingFonts()->fontByName(style().value(Sid::musicalSymbolFont).value<String>().toStdString());
     m_layoutOptions.noteHeadWidth = m_engravingFont->width(SymId::noteheadBlack, style().spatium() / SPATIUM20);
 
     if (this->cmdState().layoutFlags & LayoutFlag::REBUILD_MIDI_MAPPING) {

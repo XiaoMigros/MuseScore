@@ -400,7 +400,7 @@ void TWrite::writeProperty(const EngravingItem* item, XmlWriter& xml, Pid pid, b
         if (d.isValid() && std::abs(f1 - d.toReal()) < 0.0001) {            // fuzzy compare
             return;
         }
-        p = PropertyValue(Spatium::fromMM(f1, item->style().spatium()));
+        p = PropertyValue(Spatium::fromMM(f1, item->spatium()));
         d = PropertyValue();
     } else if (P_TYPE::POINT == type) {
         PointF p1 = p.value<PointF>();
@@ -503,7 +503,7 @@ void TWrite::writeItemProperties(const EngravingItem* item, XmlWriter& xml, Writ
         }
     }
 
-    if (!item->hasVoiceApplicationProperties() && item->propertyFlags(Pid::PLACEMENT) == PropertyFlags::NOSTYLE) {
+    if (!item->hasVoiceAssignmentProperties() && item->propertyFlags(Pid::PLACEMENT) == PropertyFlags::NOSTYLE) {
         writeProperty(item, xml, Pid::PLACEMENT);
     }
 
@@ -1147,8 +1147,8 @@ void TWrite::write(const Expression* item, XmlWriter& xml, WriteContext& ctx)
 
 void TWrite::writeProperties(const TextBase* item, XmlWriter& xml, WriteContext& ctx, bool writeText)
 {
-    if (item->hasVoiceApplicationProperties()) {
-        writeProperty(item, xml, Pid::APPLY_TO_VOICE);
+    if (item->hasVoiceAssignmentProperties()) {
+        writeProperty(item, xml, Pid::VOICE_ASSIGNMENT);
         writeProperty(item, xml, Pid::DIRECTION);
         writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
     }
@@ -1608,7 +1608,7 @@ void TWrite::write(const Hairpin* item, XmlWriter& xml, WriteContext& ctx)
     writeProperty(item, xml, Pid::CONTINUE_TEXT_OFFSET);
     writeProperty(item, xml, Pid::END_TEXT_OFFSET);
 
-    writeProperty(item, xml, Pid::APPLY_TO_VOICE);
+    writeProperty(item, xml, Pid::VOICE_ASSIGNMENT);
     writeProperty(item, xml, Pid::DIRECTION);
     writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
 
