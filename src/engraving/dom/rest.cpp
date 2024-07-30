@@ -237,7 +237,7 @@ EngravingItem* Rest::drop(EditData& data)
     case ElementType::ARTICULATION:
     {
         Articulation* a = toArticulation(e);
-        if (!a->isFermata() || !score()->toggleArticulation(this, a)) {
+        if (!a->isFermata() || !score()->toggleArticulation(this, a, data.control())) {
             delete e;
             e = 0;
         }

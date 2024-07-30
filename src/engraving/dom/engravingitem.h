@@ -386,6 +386,11 @@ public:
  Reimplemented by elements that accept drops.
 */
     virtual EngravingItem* drop(EditData&) { return 0; }
+/**
+ Return true if this element should be removed based on the element being toggled
+ and other DropData information
+*/
+    virtual bool wouldRemove(EditData&) const { return false; }
 
 /**
  delivers mouseEvent to element in edit mode

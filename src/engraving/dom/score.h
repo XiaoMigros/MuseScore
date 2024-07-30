@@ -482,7 +482,7 @@ public:
 
     // undo/redo ops
     void toggleArticulation(SymId);
-    bool toggleArticulation(EngravingItem*, Articulation* atr);
+    bool toggleArticulation(EngravingItem*, Articulation* atr, bool forceKeep = false);
     void toggleAccidental(AccidentalType, const EditData& ed);
     void changeAccidental(AccidentalType);
     void changeAccidental(Note* oNote, AccidentalType);
