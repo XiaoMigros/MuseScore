@@ -420,7 +420,7 @@ ChordRest* Score::addClone(ChordRest* cr, const Fraction& tick, const TDuration&
     }
     newcr->mutldata()->setPosX(0.0);
     newcr->setDurationType(d);
-    newcr->setTicks(d.fraction());
+    newcr->setTicks(d.isMeasure() ? cr->measure()->ticks() : d.fraction());
     newcr->setTuplet(cr->tuplet());
     newcr->setSelected(false);
 
@@ -2179,7 +2179,7 @@ void Score::cmdFlip()
     };
 
     for (EngravingItem* e : el) {
-        if (e->hasVoiceApplicationProperties()) {
+        if (e->hasVoiceAssignmentProperties()) {
             flipOnce(e, [e]() {
                 PlacementV curPlacement = e->getProperty(Pid::PLACEMENT).value<PlacementV>();
                 e->undoChangeProperty(Pid::DIRECTION, curPlacement == PlacementV::ABOVE ? DirectionV::DOWN : DirectionV::UP);
@@ -3465,6 +3465,13 @@ void Score::cmdDeleteSelection()
         // so we don't try to delete them twice if they are also in selection
         std::set<Spanner*> deletedSpanners;
 
+        auto selectCRAtTickAndTrack = [this, &crsSelectedAfterDeletion](Fraction tick, track_idx_t track) {
+            ChordRest* cr = findCR(tick, track);
+            if (cr) {
+                crsSelectedAfterDeletion.push_back(cr);
+            }
+        };
+
         for (EngravingItem* e : el) {
             // these are the linked elements we are about to delete
             std::list<EngravingObject*> links;
@@ -3518,14 +3525,14 @@ void Score::cmdDeleteSelection()
             if (e->isKeySig()) {
                 if (e->tick() == Fraction(0, 1) || toKeySig(e)->forInstrumentChange()) {
                     MScore::setError(MsError::CANNOT_REMOVE_KEY_SIG);
-                    crsSelectedAfterDeletion.push_back(findCR(tick, track));
+                    selectCRAtTickAndTrack(tick, track);
                     continue;
                 }
             }
 
             // Don't allow deleting the trill cue note
             if (e->isNote() && toNote(e)->isTrillCueNote()) {
-                crsSelectedAfterDeletion.push_back(findCR(tick, track));
+                selectCRAtTickAndTrack(tick, track);
                 continue;
             }
 
@@ -3550,7 +3557,7 @@ void Score::cmdDeleteSelection()
                 }
                 deleteItem(e);
             }
-            crsSelectedAfterDeletion.push_back(findCR(tick, track));
+            selectCRAtTickAndTrack(tick, track);
 
             // add these linked elements to list of already-deleted elements
             for (EngravingObject* se : links) {
@@ -3563,7 +3570,7 @@ void Score::cmdDeleteSelection()
     // make new selection if appropriate
     if (noteEntryMode()) {
         if (!crsSelectedAfterDeletion.empty()) {
-            m_is.setSegment(crsSelectedAfterDeletion[0]->segment());
+            m_is.setSegment(crsSelectedAfterDeletion.front()->segment());
         } else {
             crsSelectedAfterDeletion.push_back(m_is.cr());
         }
@@ -3854,7 +3861,7 @@ void Score::addHairpinToDynamic(Hairpin* hairpin, Dynamic* dynamic)
 
     hairpin->setTick2(endTick);
 
-    hairpin->setApplyToVoice(dynamic->applyToVoice());
+    hairpin->setVoiceAssignment(dynamic->voiceAssignment());
 
     undoAddElement(hairpin);
 }

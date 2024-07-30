@@ -146,7 +146,9 @@ static const std::unordered_set<ElementType> BREAK_TYPES {
     ElementType::CAPO,
     ElementType::INSTRUMENT_CHANGE,
     ElementType::STRING_TUNINGS,
-    ElementType::SYMBOL
+    ElementType::SYMBOL,
+    ElementType::FRET_DIAGRAM,
+    ElementType::HARP_DIAGRAM,
 };
 
 static const std::unordered_set<ElementType> ALWAYS_BREAK_TYPES {
@@ -164,7 +166,9 @@ static const std::unordered_set<ElementType> CONDITIONAL_BREAK_TYPES {
     ElementType::CAPO,
     ElementType::INSTRUMENT_CHANGE,
     ElementType::STRING_TUNINGS,
-    ElementType::SYMBOL
+    ElementType::SYMBOL,
+    ElementType::FRET_DIAGRAM,
+    ElementType::HARP_DIAGRAM,
 };
 
 //---------------------------------------------------------
@@ -796,9 +800,6 @@ void MeasureLayout::createMultiMeasureRestsIfNeed(MeasureBase* currentMB, Layout
             }
             firstMeasure->setMMRestCount(0);
             ctx.mutState().setMeasureNo(mno);
-            if (lastMeasure->endTick() > ctx.state().endTick()) {
-                ctx.mutState().setEndTick(lastMeasure->endTick());
-            }
         }
     } else if (firstMeasure->isMMRest()) {
         LOGD("mmrest: no %d += %d", ctx.state().measureNo(), firstMeasure->mmRestCount());
@@ -1233,16 +1234,16 @@ void MeasureLayout::layoutMeasureElements(Measure* m, LayoutContext& ctx)
                     MMRest* mmrest = toMMRest(e);
                     // center multimeasure rest
                     double d = ctx.conf().styleMM(Sid::multiMeasureRestMargin);
-                    double w = x2 - x1 - 2 * d;
                     bool headerException = m->header() && s.prev() && !s.prev()->isStartRepeatBarLineType();
                     if (headerException) { //needs this exception on header bar
-                        x1 = s1 ? s1->x() + s1->width() : 0;
-                        w = x2 - x1 - d;
+                        // Set x1 to the imaginary barline located the minimum barline->note distance to the left of the rest's segment
+                        x1 = s.x() - ctx.conf().styleMM(Sid::barNoteDistance);
                     }
+                    double w = x2 - x1 - 2 * d;
                     MMRest::LayoutData* mmrestLD = mmrest->mutldata();
                     mmrestLD->restWidth = w;
                     TLayout::layoutMMRest(mmrest, mmrest->mutldata(), ctx);
-                    mmrestLD->setPosX(headerException ? (x1 - s.x()) : (x1 - s.x() + d));
+                    mmrestLD->setPosX(x1 - s.x() + d);
                 } else if (e->isMeasureRepeat() && !(toMeasureRepeat(e)->numMeasures() % 2)) {
                     // two- or four-measure repeat, center on following barline
                     double measureWidth = x2 - s.x() + .5 * (m->styleP(Sid::barWidth));

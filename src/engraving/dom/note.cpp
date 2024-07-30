@@ -1005,6 +1005,10 @@ double Note::bboxRightPos() const
 //---------------------------------------------------------
 double Note::headBodyWidth() const
 {
+    const StaffType* st = staffType();
+    if (st && st->isTabStaff()) {
+        return tabHeadWidth(st);
+    }
     return headWidth() + 2 * bboxXShift();
 }
 
@@ -2664,8 +2668,10 @@ void Note::verticalDrag(EditData& ed)
             accOffs = Accidental::subtype2value(AccidentalType::NONE);
         }
         int nStep = absStep(ned->line + lineOffset, score()->staff(idx)->clef(_tick));
+        nStep = std::max(0, nStep);
         int octave = nStep / 7;
         int newPitch = step2pitch(nStep) + octave * 12 + int(accOffs);
+        newPitch = std::clamp(newPitch, 0, 127);
 
         if (!concertPitch()) {
             newPitch += interval.chromatic;
@@ -3815,5 +3821,11 @@ void Note::addLineAttachPoint(PointF point, EngravingItem* line)
 bool Note::negativeFretUsed() const
 {
     return configuration()->negativeFretsAllowed() && m_fret < 0;
+}
+
+int Note::stringOrLine() const
+{
+    // The number string() returns doesn't count spaces.  This should be used where it is expected even numbers are spaces and odd are lines
+    return staff()->staffType(tick())->isTabStaff() ? string() * 2 : line();
 }
 }

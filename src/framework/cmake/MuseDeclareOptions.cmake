@@ -25,7 +25,7 @@ set(MUSE_MODULE_DIAGNOSTICS_CRASHREPORT_URL "" CACHE STRING "URL where to send c
 
 declare_muse_module_opt(DRAW ON)
 option(MUSE_MODULE_DRAW_TRACE "Trace draw objects" OFF)
-option(MUSE_MODULE_DRAW_USE_QTFONTMETRICS "Use Qt font metrics" OFF)
+option(MUSE_MODULE_DRAW_USE_QTFONTMETRICS "Use Qt font metrics (for some metrics)" ON)
 
 declare_muse_module_opt(EXTENSIONS ON)
 
@@ -56,7 +56,6 @@ declare_muse_module_opt(WORKSPACE ON)
 # === Enviropment ===
 option(MUSE_COMPILE_BUILD_64 "Build 64 bit version" ON)
 option(MUSE_COMPILE_ASAN "Enable Address Sanitizer" OFF)
-option(MUSE_COMPILE_MACOS_APPLE_SILICON "Build for Apple Silicon architecture. Only applicable on Macs with Apple Silicon, and requires suitable Qt version." OFF)
 option(MUSE_COMPILE_USE_PCH "Use precompiled headers." ON)
 option(MUSE_COMPILE_STRING_DEBUG_HACK "Enable string debug hack (only clang)" ON)
 
@@ -65,6 +64,3 @@ option(MUSE_ENABLE_UNIT_TESTS "Build framework unit tests" ON)
 
 # === Tools ===
 option(MUSE_ENABLE_CUSTOM_ALLOCATOR "Enable custom allocator" OFF)
-
-
-

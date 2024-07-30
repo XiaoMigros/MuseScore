@@ -280,8 +280,8 @@ RectF TextCursor::cursorRect() const
     const TextFragment* fragment = tline.fragment(static_cast<int>(column()));
 
     Font _font  = fragment ? fragment->font(m_text) : m_text->font();
-    if (_font.family() == m_text->style().styleSt(Sid::MusicalSymbolFont)) {
-        _font.setFamily(m_text->style().styleSt(Sid::MusicalTextFont), Font::Type::MusicSymbolText);
+    if (_font.family() == m_text->style().styleSt(Sid::musicalSymbolFont)) {
+        _font.setFamily(m_text->style().styleSt(Sid::musicalTextFont), Font::Type::MusicSymbolText);
         if (fragment) {
             _font.setPointSizeF(fragment->format.fontSize());
         }
@@ -889,7 +889,7 @@ Font TextFragment::font(const TextBase* t) const
             || t->textStyleType() == TextStyleType::REPEAT_LEFT
             || t->textStyleType() == TextStyleType::REPEAT_RIGHT
             ) {
-            std::string fontName = engravingFonts()->fontByName(t->style().styleSt(Sid::MusicalSymbolFont).toStdString())->family();
+            std::string fontName = engravingFonts()->fontByName(t->style().styleSt(Sid::musicalSymbolFont).toStdString())->family();
             family = String::fromStdString(fontName);
             fontType = Font::Type::MusicSymbol;
             if (!t->isStringTunings()) {
@@ -916,12 +916,12 @@ Font TextFragment::font(const TextBase* t) const
             // but Smufl standard is 20pt so multiply x2 here.
             m *= 2;
         } else if (t->isTempoText()) {
-            family = t->style().styleSt(Sid::MusicalTextFont);
+            family = t->style().styleSt(Sid::musicalTextFont);
             fontType = Font::Type::MusicSymbolText;
             // to keep desired size ratio (based on 20pt symbol size to 12pt text size)
             m *= 5.0 / 3.0;
         } else {
-            family = t->style().styleSt(Sid::MusicalTextFont);
+            family = t->style().styleSt(Sid::musicalTextFont);
             fontType = Font::Type::MusicSymbolText;
         }
         // check if all symbols are available
@@ -1706,7 +1706,7 @@ TextBase::TextBase(const TextBase& st)
     m_paddingWidth                = st.m_paddingWidth;
     m_frameRound                  = st.m_frameRound;
 
-    m_applyToVoice = st.m_applyToVoice;
+    m_voiceAssignment = st.m_voiceAssignment;
     m_direction = st.m_direction;
     m_centerBetweenStaves = st.m_centerBetweenStaves;
 
@@ -2791,8 +2791,8 @@ PropertyValue TextBase::getProperty(Pid propertyId) const
         return direction();
     case Pid::CENTER_BETWEEN_STAVES:
         return centerBetweenStaves();
-    case Pid::APPLY_TO_VOICE:
-        return applyToVoice();
+    case Pid::VOICE_ASSIGNMENT:
+        return voiceAssignment();
     default:
         return EngravingItem::getProperty(propertyId);
     }
@@ -2867,8 +2867,8 @@ bool TextBase::setProperty(Pid pid, const PropertyValue& v)
     case Pid::CENTER_BETWEEN_STAVES:
         setCenterBetweenStaves(v.value<AutoOnOff>());
         break;
-    case Pid::APPLY_TO_VOICE:
-        setApplyToVoice(v.value<VoiceApplication>());
+    case Pid::VOICE_ASSIGNMENT:
+        setVoiceAssignment(v.value<VoiceAssignment>());
         break;
     default:
         rv = EngravingItem::setProperty(pid, v);
@@ -2915,8 +2915,8 @@ PropertyValue TextBase::propertyDefault(Pid id) const
         return DirectionV::AUTO;
     case Pid::CENTER_BETWEEN_STAVES:
         return AutoOnOff::AUTO;
-    case Pid::APPLY_TO_VOICE:
-        return VoiceApplication::ALL_VOICE_IN_INSTRUMENT;
+    case Pid::VOICE_ASSIGNMENT:
+        return VoiceAssignment::ALL_VOICE_IN_INSTRUMENT;
     default:
         for (const auto& p : *textStyle(TextStyleType::DEFAULT)) {
             if (p.pid == id) {
