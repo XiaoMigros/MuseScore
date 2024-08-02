@@ -42,6 +42,7 @@ typedef const char*(* ms_get_version_string)();
 typedef int (* ms_get_version_major)();
 typedef int (* ms_get_version_minor)();
 typedef int (* ms_get_version_revision)();
+typedef int (* ms_get_version_build_number)();
 
 /*\\\ TYPES \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
 
@@ -177,6 +178,22 @@ typedef struct ms_AuditionStartNoteEvent_3
     const char* _active_text_articulation; // text articulation that is active for this note. Can be empty
 } ms_AuditionStartNoteEvent_3;
 
+// Added in v0.100 -> changed from ms_AuditionStartNoteEvent3 by adding "_active_syllable"
+typedef struct ms_AuditionStartNoteEvent_4
+{
+    int _pitch;      // MIDI pitch
+    int _offset_cents; // pitch offsets in cents ()
+    ms_NoteArticulation _articulation;
+    ms_NoteHead _notehead;
+    double _dynamics;
+    const char* _active_presets; // presets that are selected for this note. list is separated by "|". If "" then the
+                                 // first available preset is used.
+    const char* _active_text_articulation; // text articulation that is active for this note. Can be empty
+    const char* _active_syllable;        // currently active lyrics syllable. Can be empty
+    bool _articulation_text_starts_at_note;
+    bool _syllable_starts_at_note;
+} ms_AuditionStartNoteEvent_4;
+
 typedef struct ms_AuditionStopNoteEvent
 {
     int _pitch; // MIDI pitch
@@ -226,6 +243,13 @@ typedef struct ms_TextArticulationEvent
     const char* _articulation; // articulation name
 } ms_TextArticulationEvent;
 
+// Added in v0.100
+typedef struct ms_SyllableEvent
+{
+    const char* _text;
+    long long _position_us;
+} ms_SyllableEvent;
+
 typedef ms_Result (* ms_init)();
 typedef ms_Result (* ms_disable_reverb)();
 typedef int (* ms_contains_instrument)(const char* mpe_id, const char* musicxml_id);
@@ -248,6 +272,9 @@ typedef const char*(* ms_PresetList_get_next)(ms_PresetList);
 typedef ms_MuseSampler (* ms_MuseSampler_create)();
 typedef void (* ms_MuseSampler_destroy)(ms_MuseSampler);
 typedef ms_Result (* ms_MuseSampler_init)(ms_MuseSampler ms, double sample_rate, int block_size, int channel_count);
+
+// Added in 0.100
+typedef ms_Result (* ms_MuseSampler_init_2)(ms_MuseSampler ms, double sample_rate, int block_size, int channel_count);
 
 typedef ms_Result (* ms_MuseSampler_set_demo_score)(ms_MuseSampler ms);
 typedef ms_Result (* ms_MuseSampler_clear_score)(ms_MuseSampler ms);
@@ -308,8 +335,10 @@ typedef ms_Result (* ms_MuseSampler_add_track_text_articulation_event)(ms_MuseSa
 typedef const char*(* ms_get_drum_mapping)(int instrument_id);
 // ------------------------------------------------------------
 
-// Added in 0.7
+// Added in 0.100
 typedef ms_Result (* ms_reload_all_instruments)(); // Useful for sound developers
+typedef ms_Result (* ms_MuseSampler_start_audition_note_4)(ms_MuseSampler ms, ms_Track track, ms_AuditionStartNoteEvent_4 evt);
+typedef ms_Result (* ms_MuseSampler_add_track_syllable_event)(ms_MuseSampler ms, ms_Track track, ms_SyllableEvent evt);
 
 namespace muse::musesampler {
 using track_idx_t = size_t;
@@ -326,7 +355,7 @@ struct InstrumentInfo {
 };
 
 struct AuditionStartNoteEvent {
-    ms_AuditionStartNoteEvent_3 msEvent;
+    ms_AuditionStartNoteEvent_4 msEvent;
     ms_Track msTrack = nullptr;
 };
 

@@ -420,7 +420,7 @@ ChordRest* Score::addClone(ChordRest* cr, const Fraction& tick, const TDuration&
     }
     newcr->mutldata()->setPosX(0.0);
     newcr->setDurationType(d);
-    newcr->setTicks(d.fraction());
+    newcr->setTicks(d.isMeasure() ? cr->measure()->ticks() : d.fraction());
     newcr->setTuplet(cr->tuplet());
     newcr->setSelected(false);
 
@@ -2179,7 +2179,7 @@ void Score::cmdFlip()
     };
 
     for (EngravingItem* e : el) {
-        if (e->hasVoiceApplicationProperties()) {
+        if (e->hasVoiceAssignmentProperties()) {
             flipOnce(e, [e]() {
                 PlacementV curPlacement = e->getProperty(Pid::PLACEMENT).value<PlacementV>();
                 e->undoChangeProperty(Pid::DIRECTION, curPlacement == PlacementV::ABOVE ? DirectionV::DOWN : DirectionV::UP);
@@ -3465,6 +3465,13 @@ void Score::cmdDeleteSelection()
         // so we don't try to delete them twice if they are also in selection
         std::set<Spanner*> deletedSpanners;
 
+        auto selectCRAtTickAndTrack = [this, &crsSelectedAfterDeletion](Fraction tick, track_idx_t track) {
+            ChordRest* cr = findCR(tick, track);
+            if (cr) {
+                crsSelectedAfterDeletion.push_back(cr);
+            }
+        };
+
         for (EngravingItem* e : el) {
             // these are the linked elements we are about to delete
             std::list<EngravingObject*> links;
@@ -3518,14 +3525,14 @@ void Score::cmdDeleteSelection()
             if (e->isKeySig()) {
                 if (e->tick() == Fraction(0, 1) || toKeySig(e)->forInstrumentChange()) {
                     MScore::setError(MsError::CANNOT_REMOVE_KEY_SIG);
-                    crsSelectedAfterDeletion.push_back(findCR(tick, track));
+                    selectCRAtTickAndTrack(tick, track);
                     continue;
                 }
             }
 
             // Don't allow deleting the trill cue note
             if (e->isNote() && toNote(e)->isTrillCueNote()) {
-                crsSelectedAfterDeletion.push_back(findCR(tick, track));
+                selectCRAtTickAndTrack(tick, track);
                 continue;
             }
 
@@ -3550,7 +3557,7 @@ void Score::cmdDeleteSelection()
                 }
                 deleteItem(e);
             }
-            crsSelectedAfterDeletion.push_back(findCR(tick, track));
+            selectCRAtTickAndTrack(tick, track);
 
             // add these linked elements to list of already-deleted elements
             for (EngravingObject* se : links) {
@@ -3563,7 +3570,7 @@ void Score::cmdDeleteSelection()
     // make new selection if appropriate
     if (noteEntryMode()) {
         if (!crsSelectedAfterDeletion.empty()) {
-            m_is.setSegment(crsSelectedAfterDeletion[0]->segment());
+            m_is.setSegment(crsSelectedAfterDeletion.front()->segment());
         } else {
             crsSelectedAfterDeletion.push_back(m_is.cr());
         }
@@ -3854,7 +3861,7 @@ void Score::addHairpinToDynamic(Hairpin* hairpin, Dynamic* dynamic)
 
     hairpin->setTick2(endTick);
 
-    hairpin->setApplyToVoice(dynamic->applyToVoice());
+    hairpin->setVoiceAssignment(dynamic->voiceAssignment());
 
     undoAddElement(hairpin);
 }
@@ -4586,8 +4593,8 @@ void Score::cloneVoice(track_idx_t strack, track_idx_t dtrack, Segment* sf, cons
 
         if (oe && !oe->generated() && oe->isChordRest()) {
             EngravingItem* ne;
-            //does a linked clone to create just this element
-            //otherwise element will be add in every linked stave
+            // If we want to maintain the link (exchange voice) create a linked clone
+            // If we want new, unlinked elements (implode/explode) create a clone
             if (link) {
                 ne = oe->linkedClone();
             } else {
@@ -4752,13 +4759,15 @@ void Score::cloneVoice(track_idx_t strack, track_idx_t dtrack, Segment* sf, cons
                     }
                 }
 
-                // Add element (link -> just in this measure)
+                // Add element
                 if (link) {
+                    // To segment to avoid adding to all linked staves (exchange voice)
                     if (!ns) {
                         ns = dm->getSegment(oseg->segmentType(), oseg->tick());
                     }
                     ns->add(ne);
                 } else {
+                    // To score, to add to all linked staves (implode/explode)
                     undoAddCR(toChordRest(ne), dm, oseg->tick());
                 }
             }
@@ -4776,59 +4785,88 @@ void Score::cloneVoice(track_idx_t strack, track_idx_t dtrack, Segment* sf, cons
                 undoAddCR(toChordRest(rest), dm, dm->tick());
             }
         }
+
+        const std::vector<EngravingItem*> annotations = oseg->annotations();
+        for (EngravingItem* annotation : annotations) {
+            if (!annotation->elementAppliesToTrack(strack)) {
+                continue;
+            }
+
+            EngravingItem* newAnnotation;
+            // If we want to maintain the link (exchange voice) create a linked clone
+            // If we want new, unlinked elements (implode/explode) create a clone
+            if (link) {
+                newAnnotation = annotation->linkedClone();
+            } else {
+                newAnnotation = annotation->clone();
+            }
+            newAnnotation->setTrack(dtrack);
+
+            // Add element
+            if (link) {
+                // To segment to avoid adding to all linked staves (exchange voice)
+                if (!ns) {
+                    ns = dm->getSegment(oseg->segmentType(), oseg->tick());
+                }
+                ns->add(newAnnotation);
+            } else {
+                // To score, to add to all linked staves (implode/explode)
+                doUndoAddElement(newAnnotation);
+            }
+        }
     }
 
     if (spanner) {
-        // Find and add corresponding slurs
+        // Find and add corresponding slurs and hairpins
+        static const std::set<ElementType> SPANNERS_TO_COPY { ElementType::SLUR, ElementType::HAIRPIN };
         auto spanners = score->spannerMap().findOverlapping(start.ticks(), lTick.ticks());
         for (auto i = spanners.begin(); i < spanners.end(); i++) {
             Spanner* sp      = i->value;
             Fraction spStart = sp->tick();
-            track_idx_t track = sp->track();
-            track_idx_t track2 = sp->track2();
             Fraction spEnd = spStart + sp->ticks();
 
-            if (sp->isSlur() && (spStart >= start && spEnd < lTick)) {
-                if (track == strack && track2 == strack) {
-                    Spanner* ns = toSpanner(link ? sp->linkedClone() : sp->clone());
-
-                    ns->setScore(this);
-                    ns->setParent(0);
-                    ns->setTrack(dtrack);
-                    ns->setTrack2(dtrack);
-
-                    // set start/end element for slur
-                    ChordRest* cr1 = sp->startCR();
-                    ChordRest* cr2 = sp->endCR();
-
-                    ns->setStartElement(0);
-                    ns->setEndElement(0);
-                    if (cr1 && cr1->links()) {
-                        for (EngravingObject* e : *cr1->links()) {
-                            ChordRest* cr = toChordRest(e);
-                            if (cr == cr1) {
-                                continue;
-                            }
-                            if ((cr->score() == this) && (cr->tick() == ns->tick()) && cr->track() == dtrack) {
-                                ns->setStartElement(cr);
-                                break;
-                            }
-                        }
-                    }
-                    if (cr2 && cr2->links()) {
-                        for (EngravingObject* e : *cr2->links()) {
-                            ChordRest* cr = toChordRest(e);
-                            if (cr == cr2) {
-                                continue;
-                            }
-                            if ((cr->score() == this) && (cr->tick() == ns->tick2()) && cr->track() == dtrack) {
-                                ns->setEndElement(cr);
-                                break;
-                            }
-                        }
-                    }
-                    doUndoAddElement(ns);
+            if (muse::contains(SPANNERS_TO_COPY, sp->type()) && (spStart >= start && spEnd < lTick)) {
+                if (!sp->elementAppliesToTrack(strack)) {
+                    continue;
                 }
+                Spanner* ns = toSpanner(link ? sp->linkedClone() : sp->clone());
+
+                ns->setScore(this);
+                ns->setParent(0);
+                ns->setTrack(dtrack);
+                ns->setTrack2(dtrack);
+
+                // set start/end element for slur
+                ChordRest* cr1 = sp->startCR();
+                ChordRest* cr2 = sp->endCR();
+
+                ns->setStartElement(0);
+                ns->setEndElement(0);
+                if (cr1 && cr1->links()) {
+                    for (EngravingObject* e : *cr1->links()) {
+                        ChordRest* cr = toChordRest(e);
+                        if (cr == cr1) {
+                            continue;
+                        }
+                        if ((cr->score() == this) && (cr->tick() == ns->tick()) && cr->track() == dtrack) {
+                            ns->setStartElement(cr);
+                            break;
+                        }
+                    }
+                }
+                if (cr2 && cr2->links()) {
+                    for (EngravingObject* e : *cr2->links()) {
+                        ChordRest* cr = toChordRest(e);
+                        if (cr == cr2) {
+                            continue;
+                        }
+                        if ((cr->score() == this) && (cr->tick() == ns->tick2()) && cr->track() == dtrack) {
+                            ns->setEndElement(cr);
+                            break;
+                        }
+                    }
+                }
+                doUndoAddElement(ns);
             }
         }
     }
@@ -5961,9 +5999,6 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
         return;
     }
 
-    // For linked staves the length of staffList is always > 1 since the list contains the staff itself too!
-    const bool linked = ostaff->staffList().size() > 1;
-
     std::list<Staff*> staves;
     if (addToLinkedStaves) {
         staves = ostaff->staffList();
@@ -5979,61 +6014,7 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
         Score* score = staff->score();
         staff_idx_t staffIdx = staff->idx();
 
-        std::vector<track_idx_t> tr;
-        if (!staff->score()->excerpt()) {
-            // On masterScore.
-            track_idx_t track = staff->idx() * VOICES + (strack % VOICES);
-            tr.push_back(track);
-        } else {
-            const TracksMap& mapping = staff->score()->excerpt()->tracksMapping();
-            if (mapping.empty()) {
-                // This can happen during reading the score and there is
-                // no Tracklist tag specified.
-                // TODO solve this in read302.cpp.
-                tr.push_back(strack);
-            } else {
-                std::vector<track_idx_t> mappedTracks = muse::values(mapping, strack);
-                if (mappedTracks.empty()) {
-                    // This is a linked staff in a part and the element has been added to a linked staff in the main score
-                    track_idx_t track = staffIdx * VOICES + (strack % VOICES);
-                    track_idx_t mappedTrack = muse::value(mapping, track, muse::nidx);
-                    mappedTrack = (mappedTrack != muse::nidx) ? mappedTrack : track;
-                    if (staff->isVoiceVisible(strack % VOICES)) {
-                        mappedTracks.push_back(mappedTrack);
-                    }
-                }
-                for (track_idx_t track : mappedTracks) {
-                    // linkedPart : linked staves within same part/instrument.
-                    // linkedScore: linked staves over different scores via excerpts.
-                    const bool linkedPart  = linked && (staff != ostaff) && (staff->score() == ostaff->score());
-                    const bool linkedScore = linked && (staff != ostaff) && (staff->score() != ostaff->score());
-                    if (linkedPart && !linkedScore) {
-                        track_idx_t mappedTrack = muse::value(mapping, track, muse::nidx);
-                        if (mappedTrack == muse::nidx) {
-                            continue;
-                        }
-                        track_idx_t linkedTrack = staff->idx() * VOICES + mappedTrack % VOICES;
-                        if (!staff->isVoiceVisible(strack % VOICES)) {
-                            continue;
-                        }
-                        tr.push_back(linkedTrack);
-                    } else if (!linkedPart && linkedScore) {
-                        // Staff in linked score
-                        if ((track >> 2) != staffIdx) {
-                            // Element on linked staff in linked part
-                            track += (staffIdx - (track >> 2)) * VOICES;
-                            if (!staff->isVoiceVisible(strack % VOICES)) {
-                                continue;
-                            }
-                        }
-                        tr.push_back(track);
-                    } else {
-                        // Staff in part edit was performed on
-                        tr.push_back(track);
-                    }
-                }
-            }
-        }
+        std::vector<track_idx_t> linkedTracks = ostaff->getLinkedTracksInStaff(staff, strack);
 
         // Some elements in voice 1 of a staff should be copied to every track which has a linked voice in this staff
         static const std::set<ElementType> VOICE1_COPY_TYPES = {
@@ -6059,11 +6040,11 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             ElementType::LYRICS
         };
         voice_idx_t voice = track2voice(strack);
-        if (staff->isVoiceVisible(voice) && tr.empty() && muse::contains(VOICE1_COPY_TYPES, et)) {
-            tr.push_back(staffIdx * VOICES);
+        if (staff->isVoiceVisible(voice) && linkedTracks.empty() && muse::contains(VOICE1_COPY_TYPES, et)) {
+            linkedTracks.push_back(staffIdx * VOICES);
         }
 
-        for (track_idx_t ntrack : tr) {
+        for (track_idx_t ntrack : linkedTracks) {
             EngravingItem* ne;
             if (staff == ostaff) {
                 ne = element;
@@ -6437,53 +6418,22 @@ void Score::undoAddCR(ChordRest* cr, Measure* measure, const Fraction& tick)
 
     Staff* ostaff = cr->staff();
     track_idx_t strack = ostaff->idx() * VOICES + cr->voice();
-
+    // If this is on an excerpt, get actual track
     if (mu::engraving::Excerpt* excerpt = ostaff->score()->excerpt()) {
-        const TracksMap& tracks = excerpt->tracksMapping();
-        if (!tracks.empty()) {
-            strack = muse::key(tracks, strack, muse::nidx);
+        if (ostaff->isVoiceVisible(cr->voice())) {
+            const TracksMap& tracks = excerpt->tracksMapping();
+            if (!tracks.empty()) {
+                strack = muse::key(tracks, strack, muse::nidx);
+            }
         }
     }
 
     SegmentType segmentType = SegmentType::ChordRest;
 
-    // For linked staves the length of staffList is always > 1 since the list contains the staff itself too!
-    const bool linked = ostaff->staffList().size() > 1;
-
     for (const Staff* staff : ostaff->staffList()) {
-        std::list<track_idx_t> tracks;
-        if (!staff->score()->excerpt()) {
-            // On masterScore.
-            track_idx_t track = staff->idx() * VOICES + (strack % VOICES);
-            tracks.push_back(track);
-        } else {
-            const TracksMap& mapping = staff->score()->excerpt()->tracksMapping();
-            if (mapping.empty()) {
-                // This can happen during reading the score and there is
-                // no Tracklist tag specified.
-                // TODO solve this in read302.cpp.
-                tracks.push_back(strack);
-            } else {
-                // linkedPart : linked staves within same part/instrument.
-                // linkedScore: linked staves over different scores via excerpts.
-                const bool linkedPart  = linked && (staff != ostaff) && (staff->score() == ostaff->score());
-                const bool linkedScore = linked && (staff != ostaff) && (staff->score() != ostaff->score());
-                for (track_idx_t track : muse::values(mapping, strack)) {
-                    if (linkedPart && !linkedScore) {
-                        tracks.push_back(staff->idx() * VOICES + muse::value(mapping, track) % VOICES);
-                    } else if (!linkedPart && linkedScore) {
-                        if ((track >> 2) != staff->idx()) {
-                            track += (staff->idx() - (track >> 2)) * VOICES;
-                        }
-                        tracks.push_back(track);
-                    } else {
-                        tracks.push_back(track);
-                    }
-                }
-            }
-        }
+        const std::vector<track_idx_t> linkedTracks = ostaff->getLinkedTracksInStaff(staff, strack);
 
-        for (track_idx_t ntrack : tracks) {
+        for (track_idx_t ntrack : linkedTracks) {
             if (ntrack < staff->part()->startTrack() || ntrack >= staff->part()->endTrack()) {
                 continue;
             }

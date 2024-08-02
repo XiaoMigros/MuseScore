@@ -30,6 +30,7 @@
 #include "lyrics.h"
 #include "measure.h"
 #include "note.h"
+#include "part.h"
 #include "score.h"
 #include "segment.h"
 #include "staff.h"
@@ -1118,6 +1119,18 @@ Segment* Spanner::endSegment() const
     return endSeg;
 }
 
+bool Spanner::elementAppliesToTrack(const track_idx_t refTrack) const
+{
+    if (!hasVoiceAssignmentProperties()) {
+        return refTrack == track() || refTrack == track2();
+    }
+
+    const VoiceAssignment voiceAssignment = getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>();
+
+    return EngravingItem::elementAppliesToTrack(track(), refTrack, voiceAssignment, part()) || EngravingItem::elementAppliesToTrack(
+        track2(), refTrack, voiceAssignment, part());
+}
+
 //---------------------------------------------------------
 //   startMeasure
 //---------------------------------------------------------
@@ -1520,16 +1533,28 @@ String SpannerSegment::formatBarsAndBeats() const
 
 String SpannerSegment::formatStartBarsAndBeats(const Segment* segment) const
 {
-    std::pair<int, float> barbeat = segment->barbeat();
-    return muse::mtrc("engraving", "Start measure: %1; Start beat: %2")
-           .arg(String::number(barbeat.first), String::number(barbeat.second));
+    EngravingItem::BarBeat barbeat = segment->barbeat();
+    String result = muse::mtrc("engraving", "Start measure: %1").arg(String::number(barbeat.bar));
+
+    if (barbeat.displayedBar != barbeat.bar) {
+        result += u"; " + muse::mtrc("engraving", "Start displayed measure: %1").arg(barbeat.displayedBar);
+    }
+
+    result += u"; " + muse::mtrc("engraving", "Start beat: %1").arg(barbeat.beat);
+    return result;
 }
 
 String SpannerSegment::formatEndBarsAndBeats(const Segment* segment) const
 {
-    std::pair<int, float> barbeat = segment->barbeat();
-    return muse::mtrc("engraving", "End measure: %1; End beat: %2")
-           .arg(String::number(barbeat.first), String::number(barbeat.second));
+    EngravingItem::BarBeat barbeat = segment->barbeat();
+    String result = muse::mtrc("engraving", "End measure: %1").arg(String::number(barbeat.bar));
+
+    if (barbeat.displayedBar != barbeat.bar) {
+        result += u"; " + muse::mtrc("engraving", "End displayed measure: %1").arg(barbeat.displayedBar);
+    }
+
+    result += u"; " + muse::mtrc("engraving", "End beat: %1").arg(barbeat.beat);
+    return result;
 }
 
 //---------------------------------------------------------

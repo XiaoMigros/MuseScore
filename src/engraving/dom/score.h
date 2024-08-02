@@ -483,6 +483,7 @@ public:
     // undo/redo ops
     void toggleArticulation(SymId);
     bool toggleArticulation(EngravingItem*, Articulation* atr);
+    void toggleOrnament(SymId);
     void toggleAccidental(AccidentalType, const EditData& ed);
     void changeAccidental(AccidentalType);
     void changeAccidental(Note* oNote, AccidentalType);
@@ -554,7 +555,8 @@ public:
     void deleteLater(EngravingObject* e) { m_updateState.deleteList.push_back(e); }
     void deletePostponed();
 
-    void changeSelectedNotesVoice(voice_idx_t);
+    void changeSelectedElementsVoice(voice_idx_t);
+    void changeSelectedElementsVoiceAssignment(VoiceAssignment);
 
     const std::vector<Part*>& parts() const;
     int visiblePartCount() const;
@@ -872,6 +874,7 @@ public:
         bool needDeselectAll = true;
         bool cloneBoxToAllParts = true;
         bool moveStaffTypeChanges = true;
+        bool ignoreBarLines = false;
     };
 
     MeasureBase* insertMeasure(ElementType type, MeasureBase* beforeMeasure = nullptr,
@@ -1051,6 +1054,7 @@ private:
     void resetTempo();
     void resetTempoRange(const Fraction& tick1, const Fraction& tick2);
     void rebuildTempoAndTimeSigMaps(Measure* m, std::optional<BeatsPerSecond>& tempoPrimo);
+    void fixAnacrusisTempo(const std::vector<Measure*>& measures) const;
 
     void deleteOrShortenOutSpannersFromRange(const Fraction& t1, const Fraction& t2, track_idx_t trackStart, track_idx_t trackEnd,
                                              const SelectionFilter& filter);

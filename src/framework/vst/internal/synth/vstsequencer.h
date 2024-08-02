@@ -27,7 +27,7 @@
 
 #include "vsttypes.h"
 
-typedef typename std::variant<Steinberg::Vst::Event, Steinberg::Vst::ParameterInfo, muse::audio::gain_t> VstSequencerEvent;
+typedef typename std::variant<Steinberg::Vst::Event, muse::vst::ParamChangeEvent, muse::audio::gain_t> VstSequencerEvent;
 
 template<>
 struct std::less<VstSequencerEvent>
@@ -44,9 +44,9 @@ struct std::less<VstSequencerEvent>
                                                        std::get<Steinberg::Vst::Event>(second));
         }
 
-        if (std::holds_alternative<Steinberg::Vst::ParameterInfo>(first)) {
-            return std::less<Steinberg::Vst::ParameterInfo> {}(std::get<Steinberg::Vst::ParameterInfo>(first),
-                                                               std::get<Steinberg::Vst::ParameterInfo>(second));
+        if (std::holds_alternative<muse::vst::ParamChangeEvent>(first)) {
+            return std::less<muse::vst::ParamChangeEvent> {}(std::get<muse::vst::ParamChangeEvent>(first),
+                                                             std::get<muse::vst::ParamChangeEvent>(second));
         }
 
         return std::get<muse::audio::gain_t>(first) < std::get<muse::audio::gain_t>(second);
@@ -54,18 +54,18 @@ struct std::less<VstSequencerEvent>
 };
 
 namespace muse::vst {
-class VstSequencer : public muse::audio::AbstractEventSequencer<VstEvent, PluginParamInfo, muse::audio::gain_t>
+class VstSequencer : public muse::audio::AbstractEventSequencer<VstEvent, ParamChangeEvent, muse::audio::gain_t>
 {
 public:
     void init(ParamsMapping&& mapping, bool useDynamicEvents);
 
+    muse::audio::gain_t currentGain() const;
+
+private:
     void updateOffStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::PlaybackParamList& params) override;
     void updateMainStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::DynamicLevelLayers& dynamics,
                                 const mpe::PlaybackParamLayers& params) override;
 
-    muse::audio::gain_t currentGain() const;
-
-private:
     void updatePlaybackEvents(EventSequenceMap& destination, const mpe::PlaybackEventsMap& events);
     void updateDynamicEvents(EventSequenceMap& destination, const mpe::DynamicLevelLayers& layers);
 
@@ -75,7 +75,6 @@ private:
 
     VstEvent buildEvent(const Steinberg::Vst::Event::EventTypes type, const int32_t noteIdx, const float velocityFraction,
                         const float tuning) const;
-    PluginParamInfo buildParamInfo(const PluginParamId id, const PluginParamValue value) const;
 
     int32_t noteIndex(const mpe::pitch_level_t pitchLevel) const;
     float noteTuning(const mpe::NoteEvent& noteEvent, const int noteIdx) const;
@@ -86,7 +85,6 @@ private:
     bool m_inited = false;
     bool m_useDynamicEvents = false;
     ParamsMapping m_mapping;
-    mpe::PlaybackEventsMap m_playbackEventsMap;
 };
 }
 

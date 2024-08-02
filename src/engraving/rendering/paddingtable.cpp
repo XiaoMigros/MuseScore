@@ -168,9 +168,9 @@ void PaddingTable::createTable(const MStyle& style)
         elem[ElementType::AMBITUS] = style.styleMM(Sid::ambitusMargin);
     }
 
-    table[ElementType::ARPEGGIO][ElementType::NOTE] = style.styleMM(Sid::ArpeggioNoteDistance);
+    table[ElementType::ARPEGGIO][ElementType::NOTE] = style.styleMM(Sid::arpeggioNoteDistance);
     table[ElementType::ARPEGGIO][ElementType::LEDGER_LINE] = 0.3 * spatium;
-    table[ElementType::ARPEGGIO][ElementType::ACCIDENTAL] = style.styleMM(Sid::ArpeggioAccidentalDistance);
+    table[ElementType::ARPEGGIO][ElementType::ACCIDENTAL] = style.styleMM(Sid::arpeggioAccidentalDistance);
 
     // Breath
     table[ElementType::BREATH].fill(1.0 * spatium);
@@ -220,4 +220,8 @@ void PaddingTable::createTable(const MStyle& style)
     table[ElementType::ACCIDENTAL][ElementType::NOTE] = style.styleMM(Sid::accidentalNoteDistance);
     table[ElementType::ACCIDENTAL][ElementType::LEDGER_LINE] = 0.18 * spatium;
     table[ElementType::ACCIDENTAL][ElementType::STEM] = table[ElementType::ACCIDENTAL][ElementType::NOTE];
+
+    table[ElementType::ARTICULATION][ElementType::NOTE] = 0.25 * spatium;
+    table[ElementType::ARTICULATION][ElementType::REST] = 0.25 * spatium;
+    table[ElementType::ARTICULATION][ElementType::ACCIDENTAL] = 0.25 * spatium;
 }

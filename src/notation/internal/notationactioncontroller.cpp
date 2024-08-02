@@ -423,7 +423,18 @@ void NotationActionController::init()
 
     registerAction("repeat-sel", &Controller::repeatSelection);
 
-    registerAction("add-trill", &Interaction::toggleArticulation, mu::engraving::SymId::ornamentTrill);
+    registerAction("add-turn", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentTurn);
+    registerAction("add-turn-inverted", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentTurnInverted);
+    registerAction("add-turn-slash", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentTurnSlash);
+    registerAction("add-trill", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentTrill);
+    registerAction("add-short-trill", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentShortTrill);
+    registerAction("add-mordent", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentMordent);
+    registerAction("add-tremblement", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentTremblement);
+    registerAction("add-prall-mordent", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentPrallMordent);
+    registerAction("add-shake", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentShake3);
+    registerAction("add-shake-muffat", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentShakeMuffat1);
+    registerAction("add-tremblement-couperin", &Interaction::toggleOrnament, mu::engraving::SymId::ornamentTremblementCouperin);
+
     registerAction("add-up-bow", &Interaction::toggleArticulation, mu::engraving::SymId::stringsUpBow);
     registerAction("add-down-bow", &Interaction::toggleArticulation, mu::engraving::SymId::stringsDownBow);
     registerAction("transpose-up", &Interaction::transposeSemitone, 1, PlayMode::PlayNote);
@@ -464,6 +475,11 @@ void NotationActionController::init()
         registerAction("voice-" + std::to_string(i + 1), [this, i]() { changeVoice(static_cast<int>(i)); });
     }
 
+    registerAction("voice-assignment-all-in-instrument", &Interaction::changeSelectedElementsVoiceAssignment,
+                   VoiceAssignment::ALL_VOICE_IN_INSTRUMENT);
+    registerAction("voice-assignment-all-in-staff", &Interaction::changeSelectedElementsVoiceAssignment,
+                   VoiceAssignment::ALL_VOICE_IN_STAFF);
+
     // TAB
     registerAction("string-above", &Controller::move, MoveDirection::Up, false, &Controller::isTablatureStaff);
     registerAction("string-below", &Controller::move, MoveDirection::Down, false, &Controller::isTablatureStaff);
@@ -503,7 +519,7 @@ void NotationActionController::init()
     });
 
     // Register engraving debugging options actions
-    for (auto [code, member] : engravingDebuggingActions) {
+    for (auto& [code, member] : engravingDebuggingActions) {
         dispatcher()->reg(this, code, [this, member = member]() {
             EngravingDebuggingOptions options = engravingConfiguration()->debuggingOptions();
             options.*member = !(options.*member);
@@ -1041,7 +1057,7 @@ void NotationActionController::changeVoice(voice_idx_t voiceIndex)
     noteInput->setCurrentVoice(voiceIndex);
 
     if (!noteInput->isNoteInputMode()) {
-        interaction->changeSelectedNotesVoice(static_cast<int>(voiceIndex));
+        interaction->changeSelectedElementsVoice(voiceIndex);
     }
 }
 
@@ -2195,9 +2211,9 @@ void NotationActionController::registerAction(const ActionCode& code,
     registerAction(code, handler, param1, PlayMode::NoPlay, enabler);
 }
 
-template<typename P1, typename P2>
+template<typename P1, typename P2, typename Q1, typename Q2>
 void NotationActionController::registerAction(const ActionCode& code, void (INotationInteraction::* handler)(P1, P2),
-                                              P1 param1, P2 param2, PlayMode playMode, bool (NotationActionController::* enabler)() const)
+                                              Q1 param1, Q2 param2, PlayMode playMode, bool (NotationActionController::* enabler)() const)
 {
     registerAction(code, [this, handler, param1, param2, playMode]()
     {

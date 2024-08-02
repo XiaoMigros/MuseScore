@@ -212,7 +212,7 @@ public:
     PropertyValue propertyDefault(Pid propertyId) const override;
     virtual void undoChangeProperty(Pid id, const PropertyValue&, PropertyFlags ps) override;
 
-    void computeStartElement();
+    virtual void computeStartElement();
     void computeEndElement();
 
     static Note* endElementFromSpanner(Spanner* sp, EngravingItem* newStart);
@@ -242,6 +242,8 @@ public:
 
     Segment* startSegment() const;
     Segment* endSegment() const;
+
+    bool elementAppliesToTrack(const track_idx_t refTrack) const override;
 
     virtual void setSelected(bool f) override;
     virtual void setVisible(bool f) override;

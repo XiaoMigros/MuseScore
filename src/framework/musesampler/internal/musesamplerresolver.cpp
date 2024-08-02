@@ -113,9 +113,10 @@ bool MuseSamplerResolver::doInit(const io::path_t& libPath)
     if (!ok) {
         LOGE() << "Incompatible MuseSampler library; ignoring";
         m_libHandler.reset();
+    } else {
+        LOGI() << "MuseSampler successfully inited: " << libPath;
     }
 
-    LOGI() << "MuseSampler successfully inited: " << libPath;
     return ok;
 }
 
@@ -235,7 +236,13 @@ std::string MuseSamplerResolver::version() const
         return std::string();
     }
 
-    return String::fromUtf8(m_libHandler->getVersionString()).toStdString();
+    String ver = String::fromUtf8(m_libHandler->getVersionString());
+
+    if (configuration()->shouldShowBuildNumber()) {
+        ver += u"." + String::number(m_libHandler->getBuildNumber());
+    }
+
+    return ver.toStdString();
 }
 
 bool MuseSamplerResolver::isInstalled() const
