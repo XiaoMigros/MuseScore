@@ -461,6 +461,7 @@ public:
     struct LayoutData : public EngravingItem::LayoutData {
         std::vector<TextBlock> blocks;
         bool layoutInvalid = true;
+        bool isEditing = false;
 
         RectF frame;
 
@@ -507,6 +508,7 @@ private:
 
     void drawSelection(muse::draw::Painter*, const RectF&) const;
     void insert(TextCursor*, char32_t code, LayoutData* ldata) const;
+    void insertString(TextCursor* cursor, String string, LayoutData* ldata) const;
     String genText(const LayoutData* ldata) const;
 
     virtual int getPropertyFlagsIdx(Pid id) const override;

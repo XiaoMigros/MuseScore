@@ -66,6 +66,10 @@ static constexpr double superScriptOffset = -0.9; // of x-height
 static const char* FALLBACK_SYMBOL_FONT = "Bravura";
 static const char* FALLBACK_SYMBOLTEXT_FONT = "Bravura Text";
 
+//! FIXME
+//extern String revision;
+static String revision;
+
 //---------------------------------------------------------
 //   isSorted
 /// return true if (r1,c1) is at or before (r2,c2)
@@ -1770,6 +1774,15 @@ void TextBase::insert(TextCursor* cursor, char32_t code, LayoutData* ldata) cons
     cursor->clearSelection();
 }
 
+void TextBase::insertString(TextCursor* cursor, String string, LayoutData* ldata) const
+{
+    //iterate through and do insert
+    for (size_t i = 0; i < string.size(); ++i) {
+        Char c = string.at(i);
+        insert(cursor, c.unicode(), ldata);
+    }
+}
+
 //---------------------------------------------------------
 //   parseStringProperty
 //---------------------------------------------------------
@@ -1850,6 +1863,9 @@ void TextBase::createBlocks(LayoutData* ldata) const
                         ldata->blocks[cursor.row()].insertEmptyFragmentIfNeeded(&cursor); // an empty fragment may be needed on either side of the newline
                     }
                 }
+            } else if (c == '$' && i < m_text.size() - 1 && !ldata->isEditing) {
+                state = 3;
+                token.clear();
             } else {
                 if (symState) {
                     sym += c;
@@ -1903,6 +1919,95 @@ void TextBase::createBlocks(LayoutData* ldata) const
                 } else {
                     // TODO insert(&cursor, SymNames::symIdByName(token));
                 }
+            } else {
+                token += c;
+            }
+        } else if (state == 3) {
+            state = 0;
+            switch (c.toAscii()) {
+            case 'i':
+            case 'I':
+                insertString(&cursor, score()->metaTag(u"partName"), ldata);
+                break;
+            case 'f':
+                insertString(&cursor, masterScore()->fileInfo()->fileName(false).toString(), ldata);
+                break;
+            case 'F':
+                insertString(&cursor, masterScore()->fileInfo()->path().toString(), ldata);
+                break;
+            case 'd':
+                insertString(&cursor, muse::Date::currentDate().toString(muse::DateFormat::ISODate), ldata);
+                break;
+            case 'D':
+            {
+                String creationDate = score()->metaTag(u"creationDate");
+                if (creationDate.isEmpty()) {
+                    insertString(&cursor, masterScore()->fileInfo()->birthTime().date().toString(
+                                     muse::DateFormat::ISODate), ldata);
+                } else {
+                    insertString(&cursor, muse::Date::fromStringISOFormat(creationDate).toString(
+                                     muse::DateFormat::ISODate), ldata);
+                }
+            }
+            break;
+            case 'm':
+                if (score()->dirty() || !masterScore()->saved()) {
+                    insertString(&cursor, muse::Time::currentTime().toString(muse::DateFormat::ISODate), ldata);
+                } else {
+                    insertString(&cursor, masterScore()->fileInfo()->lastModified().time().toString(
+                                     muse::DateFormat::ISODate), ldata);
+                }
+                break;
+            case 'M':
+                if (score()->dirty() || !masterScore()->saved()) {
+                    insertString(&cursor, muse::Date::currentDate().toString(muse::DateFormat::ISODate), ldata);
+                } else {
+                    insertString(&cursor, masterScore()->fileInfo()->lastModified().date().toString(
+                                     muse::DateFormat::ISODate), ldata);
+                }
+                break;
+            case 'C':
+            case 'c':
+            {
+                insertString(&cursor, score()->metaTag(u"copyright"), ldata);
+            }
+            break;
+            case 'v':
+                if (score()->dirty()) {
+                    insertString(&cursor, score()->appVersion(), ldata);
+                } else {
+                    insertString(&cursor, score()->mscoreVersion(), ldata);
+                }
+                break;
+            case 'r':
+                if (score()->dirty()) {
+                    insertString(&cursor, revision, ldata);
+                } else {
+                    int rev = score()->mscoreRevision();
+                    if (rev > 99999) { // MuseScore 1.3 is decimal 5702, 2.0 and later uses a 7-digit hex SHA
+                        insertString(&cursor, String::number(rev, 16), ldata);
+                    } else {
+                        insertString(&cursor, String::number(rev, 10), ldata);
+                    }
+                }
+                break;
+            case '$':
+                insert(&cursor, '$', ldata);
+                break;
+            case ':':
+            {
+                state = 4;
+                token.clear();
+            }
+            break;
+            default:
+                insert(&cursor, '$', ldata);
+                insert(&cursor, c.unicode(), ldata);
+            }
+        } else if (state == 4) {
+            if (c == u':') {
+                state = 0;
+                insertString(&cursor, score()->metaTag(token), ldata);
             } else {
                 token += c;
             }

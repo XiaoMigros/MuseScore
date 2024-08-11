@@ -114,10 +114,11 @@ void TextBase::startEdit(EditData& ed)
     ted->oldXmlText = xmlText();
     ted->startUndoIdx = score()->undoStack()->getCurIdx();
 
-    const LayoutData* ldata = this->ldata();
-    if (!ldata || ldata->layoutInvalid) {
-        renderer()->layoutItem(this);
+    LayoutData* ldata = this->mutldata();
+    if (ldata) {
+        ldata->isEditing = true;
     }
+    renderer()->layoutItem(this);
     if (!ted->cursor()->set(ed.startMove)) {
         resetFormatting();
     }
@@ -232,6 +233,7 @@ void TextBase::endEdit(EditData& ed)
         renderer()->layoutText1(this);
     }
 
+    this->mutldata()->isEditing = false;
     triggerLayout(); // force relayout even if text did not change
 
     if (isLyrics()) {
