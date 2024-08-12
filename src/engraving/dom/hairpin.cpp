@@ -108,7 +108,7 @@ EngravingItem* HairpinSegment::drop(EditData& data)
     Dynamic* d = toDynamic(e->clone());
     d->setTrack(hairpin()->track());
     d->setParent(segment);
-    d->setApplyToVoice(hairpin()->applyToVoice());
+    d->setVoiceAssignment(hairpin()->voiceAssignment());
     score()->undoAddElement(d);
 
     return d;
@@ -223,9 +223,8 @@ EngravingItem* HairpinSegment::propertyDelegate(Pid pid)
         || pid == Pid::HAIRPIN_CIRCLEDTIP
         || pid == Pid::HAIRPIN_HEIGHT
         || pid == Pid::HAIRPIN_CONT_HEIGHT
-        || pid == Pid::DYNAMIC_RANGE
         || pid == Pid::LINE_STYLE
-        || pid == Pid::APPLY_TO_VOICE
+        || pid == Pid::VOICE_ASSIGNMENT
         || pid == Pid::DIRECTION
         || pid == Pid::CENTER_BETWEEN_STAVES
         ) {
@@ -299,7 +298,7 @@ EngravingItem* HairpinSegment::findElementToSnapBefore() const
         bool endsMatch = precedingHairpin->track() == thisHairpin->track()
                          && precedingHairpin->tick2() == startTick
                          && precedingHairpin->placeAbove() == thisHairpin->placeAbove()
-                         && toHairpin(spanner)->applyToVoice() == thisHairpin->applyToVoice();
+                         && toHairpin(spanner)->voiceAssignment() == thisHairpin->voiceAssignment();
         if (endsMatch && precedingHairpin->snapToItemAfter()) {
             return precedingHairpin->backSegment();
         }
@@ -343,7 +342,7 @@ TextBase* HairpinSegment::findStartDynamicOrExpression() const
             }
             bool endsMatch = item->track() == hairpin()->track()
                              && item->placement() == placement()
-                             && item->getProperty(Pid::APPLY_TO_VOICE) == hairpin()->getProperty(Pid::APPLY_TO_VOICE);
+                             && item->getProperty(Pid::VOICE_ASSIGNMENT) == hairpin()->getProperty(Pid::VOICE_ASSIGNMENT);
             if (endsMatch) {
                 dynamicsAndExpr.push_back(toTextBase(item));
             }
@@ -397,7 +396,7 @@ TextBase* HairpinSegment::findEndDynamicOrExpression() const
             }
             bool endsMatch = item->track() == hairpin()->track()
                              && item->placement() == placement()
-                             && item->getProperty(Pid::APPLY_TO_VOICE) == hairpin()->getProperty(Pid::APPLY_TO_VOICE);
+                             && item->getProperty(Pid::VOICE_ASSIGNMENT) == hairpin()->getProperty(Pid::VOICE_ASSIGNMENT);
             if (endsMatch) {
                 dynamicsAndExpr.push_back(toTextBase(item));
             }
@@ -473,7 +472,10 @@ Hairpin::Hairpin(Segment* parent)
     initElementStyle(&hairpinStyle);
 
     resetProperty(Pid::BEGIN_TEXT_PLACE);
+    resetProperty(Pid::END_TEXT_PLACE);
     resetProperty(Pid::CONTINUE_TEXT_PLACE);
+    resetProperty(Pid::BEGIN_HOOK_HEIGHT);
+    resetProperty(Pid::END_HOOK_HEIGHT);
     resetProperty(Pid::HAIRPIN_TYPE);
     resetProperty(Pid::LINE_VISIBLE);
 
@@ -494,6 +496,36 @@ DynamicType Hairpin::dynamicTypeTo() const
 {
     muse::ByteArray ba = endText().toAscii();
     return TConv::dynamicType(ba.constChar());
+}
+
+const Dynamic* Hairpin::dynamicSnappedBefore() const
+{
+    const LineSegment* seg = frontSegment();
+    if (!seg) {
+        return nullptr;
+    }
+
+    const EngravingItem* item = seg->ldata()->itemSnappedBefore();
+    if (!item || !item->isDynamic()) {
+        return nullptr;
+    }
+
+    return toDynamic(item);
+}
+
+const Dynamic* Hairpin::dynamicSnappedAfter() const
+{
+    const LineSegment* seg = backSegment();
+    if (!seg) {
+        return nullptr;
+    }
+
+    const EngravingItem* item = seg->ldata()->itemSnappedAfter();
+    if (!item || !item->isDynamic()) {
+        return nullptr;
+    }
+
+    return toDynamic(item);
 }
 
 //---------------------------------------------------------
@@ -526,6 +558,13 @@ LineSegment* Hairpin::createLineSegment(System* parent)
     return h;
 }
 
+void Hairpin::setDynRange(DynamicRange range)
+{
+    m_dynRange = range;
+
+    setVoiceAssignment(dynamicRangeToVoiceAssignment(range));
+}
+
 //---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
@@ -539,8 +578,6 @@ PropertyValue Hairpin::getProperty(Pid id) const
         return int(m_hairpinType);
     case Pid::VELO_CHANGE:
         return m_veloChange;
-    case Pid::DYNAMIC_RANGE:
-        return int(m_dynRange);
     case Pid::HAIRPIN_HEIGHT:
         return m_hairpinHeight;
     case Pid::HAIRPIN_CONT_HEIGHT:
@@ -549,8 +586,8 @@ PropertyValue Hairpin::getProperty(Pid id) const
         return m_singleNoteDynamics;
     case Pid::VELO_CHANGE_METHOD:
         return m_veloChangeMethod;
-    case Pid::APPLY_TO_VOICE:
-        return applyToVoice();
+    case Pid::VOICE_ASSIGNMENT:
+        return voiceAssignment();
     case Pid::CENTER_BETWEEN_STAVES:
         return centerBetweenStaves();
     case Pid::DIRECTION:
@@ -581,9 +618,6 @@ bool Hairpin::setProperty(Pid id, const PropertyValue& v)
     case Pid::VELO_CHANGE:
         m_veloChange = v.toInt();
         break;
-    case Pid::DYNAMIC_RANGE:
-        m_dynRange = v.value<DynamicRange>();
-        break;
     case Pid::HAIRPIN_HEIGHT:
         m_hairpinHeight = v.value<Spatium>();
         break;
@@ -596,8 +630,8 @@ bool Hairpin::setProperty(Pid id, const PropertyValue& v)
     case Pid::VELO_CHANGE_METHOD:
         m_veloChangeMethod = v.value<ChangeMethod>();
         break;
-    case Pid::APPLY_TO_VOICE:
-        setApplyToVoice(v.value<VoiceApplication>());
+    case Pid::VOICE_ASSIGNMENT:
+        setVoiceAssignment(v.value<VoiceAssignment>());
         break;
     case Pid::CENTER_BETWEEN_STAVES:
         setCenterBetweenStaves(v.value<AutoOnOff>());
@@ -631,9 +665,6 @@ PropertyValue Hairpin::propertyDefault(Pid id) const
     case Pid::VELO_CHANGE:
         return 0;
 
-    case Pid::DYNAMIC_RANGE:
-        return DynamicRange::PART;
-
     case Pid::BEGIN_TEXT:
         if (m_hairpinType == HairpinType::CRESC_LINE) {
             return style().styleV(Sid::hairpinCrescText);
@@ -657,6 +688,7 @@ PropertyValue Hairpin::propertyDefault(Pid id) const
 
     case Pid::BEGIN_TEXT_PLACE:
     case Pid::CONTINUE_TEXT_PLACE:
+    case Pid::END_TEXT_PLACE:
         return TextPlace::LEFT;
 
     case Pid::BEGIN_TEXT_OFFSET:
@@ -670,7 +702,7 @@ PropertyValue Hairpin::propertyDefault(Pid id) const
 
     case Pid::BEGIN_HOOK_HEIGHT:
     case Pid::END_HOOK_HEIGHT:
-        return Spatium(0.0);
+        return Spatium(1.9);
 
     case Pid::LINE_VISIBLE:
         return true;
@@ -687,8 +719,8 @@ PropertyValue Hairpin::propertyDefault(Pid id) const
     case Pid::PLACEMENT:
         return style().styleV(Sid::hairpinPlacement);
 
-    case Pid::APPLY_TO_VOICE:
-        return VoiceApplication::ALL_VOICE_IN_INSTRUMENT;
+    case Pid::VOICE_ASSIGNMENT:
+        return VoiceAssignment::ALL_VOICE_IN_INSTRUMENT;
 
     case Pid::CENTER_BETWEEN_STAVES:
         return AutoOnOff::AUTO;

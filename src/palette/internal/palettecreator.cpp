@@ -90,32 +90,51 @@ using namespace mu;
 using namespace mu::palette;
 using namespace mu::engraving;
 
-template<typename T> std::shared_ptr<T> makeElement(mu::engraving::Score* score)
-{
-    return std::make_shared<T>(score->dummy());
-}
+// Default wrapper...
+template<class C>
+struct makeElementImplWrapper {
+    template<typename ... Args>
+    static std::shared_ptr<C> makeElementImpl(mu::engraving::Score* score, Args&&... args)
+    {
+        return std::make_shared<C>(score->dummy(), std::forward<Args>(args)...);
+    }
+};
 
-#define MAKE_ELEMENT(T, P) \
+// Specialised wrappers...
+#define IMPL_WRAPPER(T, P) \
     template<> \
-    std::shared_ptr<T> makeElement<T>(mu::engraving::Score * score) { return std::make_shared<T>(P); } \
+    struct makeElementImplWrapper<T> { \
+        template<typename ... Args> \
+        static std::shared_ptr<T> makeElementImpl(mu::engraving::Score * score, Args && ... args) \
+        { \
+            return std::make_shared<T>(P, std::forward<Args>(args)...); \
+        } \
+    }; \
 
-MAKE_ELEMENT(Dynamic, score->dummy()->segment())
-MAKE_ELEMENT(MeasureRepeat, score->dummy()->segment())
-MAKE_ELEMENT(Hairpin, score->dummy()->segment())
-MAKE_ELEMENT(SystemText, score->dummy()->segment())
-MAKE_ELEMENT(TempoText, score->dummy()->segment())
-MAKE_ELEMENT(StaffText, score->dummy()->segment())
-MAKE_ELEMENT(Expression, score->dummy()->segment())
-MAKE_ELEMENT(PlayTechAnnotation, score->dummy()->segment())
-MAKE_ELEMENT(Capo, score->dummy()->segment())
-MAKE_ELEMENT(StringTunings, score->dummy()->segment())
-MAKE_ELEMENT(RehearsalMark, score->dummy()->segment())
+IMPL_WRAPPER(Dynamic, score->dummy()->segment())
+IMPL_WRAPPER(MeasureRepeat, score->dummy()->segment())
+IMPL_WRAPPER(Hairpin, score->dummy()->segment())
+IMPL_WRAPPER(SystemText, score->dummy()->segment())
+IMPL_WRAPPER(TempoText, score->dummy()->segment())
+IMPL_WRAPPER(StaffText, score->dummy()->segment())
+IMPL_WRAPPER(Expression, score->dummy()->segment())
+IMPL_WRAPPER(PlayTechAnnotation, score->dummy()->segment())
+IMPL_WRAPPER(Capo, score->dummy()->segment())
+IMPL_WRAPPER(StringTunings, score->dummy()->segment())
+IMPL_WRAPPER(RehearsalMark, score->dummy()->segment())
 
-MAKE_ELEMENT(Jump, score->dummy()->measure())
-MAKE_ELEMENT(MeasureNumber, score->dummy()->measure())
+IMPL_WRAPPER(Jump, score->dummy()->measure())
+IMPL_WRAPPER(MeasureNumber, score->dummy()->measure())
 
-MAKE_ELEMENT(Fingering, score->dummy()->note())
-MAKE_ELEMENT(NoteHead, score->dummy()->note())
+IMPL_WRAPPER(Fingering, score->dummy()->note())
+IMPL_WRAPPER(NoteHead, score->dummy()->note())
+
+// Dispatcher method ...
+template<class C, typename ... Args>
+std::shared_ptr<C> makeElement(mu::engraving::Score* score, Args&&... args)
+{
+    return makeElementImplWrapper<C>::makeElementImpl(score, std::forward<Args>(args)...);
+}
 
 PaletteTreePtr PaletteCreator::newMasterPaletteTree()
 {
@@ -600,7 +619,7 @@ PalettePtr PaletteCreator::newFingeringPalette(bool defaultPalette)
     for (auto i : defaultPalette ? defaultLute : masterLute) {
         auto s = Factory::makeArticulation(gpaletteScore->dummy()->chord());
         s->setSymId(i);
-        sp->appendElement(s, s->typeUserName());
+        sp->appendElement(s, s->subtypeUserName());
     }
     return sp;
 }
@@ -635,7 +654,7 @@ PalettePtr PaletteCreator::newTremoloPalette()
     for (auto i : dots) {
         auto s = Factory::makeArticulation(gpaletteScore->dummy()->chord());
         s->setSymId(i);
-        sp->appendElement(s, s->typeUserName());
+        sp->appendElement(s, s->subtypeUserName());
     }
     return sp;
 }
@@ -743,7 +762,7 @@ PalettePtr PaletteCreator::newArticulationsPalette(bool defaultPalette)
     for (SymId articulationType : defaultPalette ? defaultArticulations : masterArticulations) {
         auto artic = Factory::makeArticulation(gpaletteScore->dummy()->chord());
         artic->setSymId(articulationType);
-        sp->appendElement(artic, artic->typeUserName());
+        sp->appendElement(artic, artic->subtypeUserName());
     }
 
     if (!defaultPalette) {
@@ -801,7 +820,7 @@ PalettePtr PaletteCreator::newOrnamentsPalette(bool defaultPalette)
         auto ornament = Factory::makeOrnament(gpaletteScore->dummy()->chord());
         ornament->setSymId(ornamentType);
         qreal mag = ornament->symId() == SymId::ornamentTrill ? 1.0 : 1.2;
-        sp->appendElement(ornament, ornament->typeUserName(), mag);
+        sp->appendElement(ornament, ornament->subtypeUserName(), mag);
     }
 
     static const std::vector<TrillType> trillTypes = {
@@ -962,7 +981,7 @@ PalettePtr PaletteCreator::newBreathPalette(bool defaultPalette)
     for (auto i : defaultPalette ? defaultFermatas : masterFermatas) {
         auto f = Factory::makeFermata(gpaletteScore->dummy());
         f->setSymIdAndTimeStretch(i);
-        sp->appendElement(f, f->typeUserName());
+        sp->appendElement(f, f->subtypeUserName());
     }
 
     for (BreathType breath : Breath::BREATH_LIST) {
@@ -1274,8 +1293,7 @@ PalettePtr PaletteCreator::newLinesPalette(bool defaultPalette)
     staffTextLine->setEndHookType(HookType::HOOK_90);
     sp->appendElement(staffTextLine, QT_TRANSLATE_NOOP("palette", "Staff text line"));
 
-    auto systemTextLine = makeElement<TextLine>(gpaletteScore);
-    systemTextLine->setSystemFlag(true);
+    auto systemTextLine = makeElement<TextLine>(gpaletteScore, true);
     systemTextLine->setLen(w * 1.5);
     systemTextLine->setBeginText(u"System");
     systemTextLine->setEndHookType(HookType::HOOK_90);
@@ -1509,8 +1527,7 @@ PalettePtr PaletteCreator::newTextPalette(bool defaultPalette)
     stxt->setXmlText(QT_TRANSLATE_NOOP("palette", "System text"));
     sp->appendElement(stxt, QT_TRANSLATE_NOOP("palette", "System text"))->setElementTranslated(true);
 
-    auto systemTextLine = makeElement<TextLine>(gpaletteScore);
-    systemTextLine->setSystemFlag(true);
+    auto systemTextLine = makeElement<TextLine>(gpaletteScore, true);
     systemTextLine->setLen(w * 1.5);
     systemTextLine->setBeginText(u"System");
     systemTextLine->setEndHookType(HookType::HOOK_90);
@@ -1840,7 +1857,7 @@ PalettePtr PaletteCreator::newGuitarPalette(bool defaultPalette)
     for (auto i : luteSymbols) {
         auto s = Factory::makeArticulation(gpaletteScore->dummy()->chord());
         s->setSymId(i);
-        sp->appendElement(s, s->typeUserName());
+        sp->appendElement(s, s->subtypeUserName());
     }
 
     struct PlayTechAnnotationInfo {

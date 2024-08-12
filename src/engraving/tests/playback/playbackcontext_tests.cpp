@@ -149,6 +149,9 @@ TEST_F(Engraving_PlaybackContextTests, Dynamics_MeasureRepeats)
     ctx.update(parts.at(0)->id(), score);
 
     DynamicLevelMap expectedDynamics {
+        // 1st measure
+        { timestampFromTicks(score, 0), dynamicLevelFromType(mpe::DynamicType::Natural) },
+
         // 2nd measure
         { timestampFromTicks(score, 1920), dynamicLevelFromType(mpe::DynamicType::ppp) }, // 1st quarter note
         { timestampFromTicks(score, 3360), dynamicLevelFromType(mpe::DynamicType::p) }, // 4th quarter note
@@ -261,6 +264,49 @@ TEST_F(Engraving_PlaybackContextTests, Dynamics_OnDifferentVoices)
     EXPECT_EQ(actualLayers, expectedLayers);
 
     delete score;
+}
+
+//! See: https://github.com/musescore/MuseScore/issues/23596
+TEST_F(Engraving_PlaybackContextTests, Dynamics_Overlap)
+{
+    // [GIVEN]
+    Score* score = ScoreRW::readScore(PLAYBACK_CONTEXT_TEST_FILES_DIR + "dynamics/dynamics_overlap.mscx");
+
+    const std::vector<Part*>& parts = score->parts();
+    ASSERT_FALSE(parts.empty());
+
+    // [GIVEN] Context for parsing dynamics
+    PlaybackContext ctx;
+
+    // [WHEN] Parse dynamics
+    const Part* part = parts.front();
+    ctx.update(part->id(), score);
+
+    // [WHEN] Get the actual dynamics
+    DynamicLevelLayers actualLayers = ctx.dynamicLevelLayers(score);
+
+    // [THEN] The dynamics match the expectation
+    DynamicLevelMap expectedDynamics;
+
+    // 1st measure: Diminuendo ff -> pp (ends at the 1920 tick)
+    constexpr mpe::dynamic_level_t ff = dynamicLevelFromType(mpe::DynamicType::ff);
+    constexpr mpe::dynamic_level_t pp = dynamicLevelFromType(mpe::DynamicType::pp);
+
+    std::map<int, int> ff_to_pp_curve = TConv::easingValueCurve(1920 - Fraction::eps().ticks(),
+                                                                HAIRPIN_STEPS, static_cast<int>(pp - ff), ChangeMethod::NORMAL);
+    for (const auto& pair : ff_to_pp_curve) {
+        mpe::timestamp_t time = timestampFromTicks(score, pair.first);
+        expectedDynamics.emplace(time, ff + static_cast<dynamic_level_t>(pair.second));
+    }
+
+    // 2nd measure: ff (starts at the 1920 tick)
+    expectedDynamics.emplace(timestampFromTicks(score, 1920), ff);
+
+    EXPECT_FALSE(actualLayers.empty());
+    for (const auto& layer : actualLayers) {
+        const DynamicLevelMap& actualDynamics = layer.second;
+        EXPECT_EQ(actualDynamics, expectedDynamics);
+    }
 }
 
 TEST_F(Engraving_PlaybackContextTests, PlayTechniques)

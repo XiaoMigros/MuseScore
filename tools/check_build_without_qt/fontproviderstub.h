@@ -9,8 +9,6 @@ class FontProviderStub : public IFontProvider
 public:
 
     int addSymbolFont(const String& family, const io::path_t& path) override;
-    int addTextFont(const io::path_t& path) override;
-    void insertSubstitution(const String& familyName, const String& substituteName) override;
 
     double lineSpacing(const Font& f) const override;
     double xHeight(const Font& f) const override;

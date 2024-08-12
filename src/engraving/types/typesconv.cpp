@@ -243,7 +243,7 @@ static const std::vector<Item<ElementType> > ELEMENT_TYPES = {
     { ElementType::TEXTLINE_SEGMENT,     "TextLineSegment",      muse::TranslatableString("engraving", "Text line segment") },
     { ElementType::VOLTA_SEGMENT,        "VoltaSegment",         muse::TranslatableString("engraving", "Volta segment") },
     { ElementType::PEDAL_SEGMENT,        "PedalSegment",         muse::TranslatableString("engraving", "Pedal segment") },
-    { ElementType::LYRICSLINE_SEGMENT,   "LyricsLineSegment",    muse::TranslatableString("engraving", "Melisma line segment") },
+    { ElementType::LYRICSLINE_SEGMENT,   "LyricsLineSegment",    muse::TranslatableString("engraving", "Extension line segment") },
     { ElementType::GLISSANDO_SEGMENT,    "GlissandoSegment",     muse::TranslatableString("engraving", "Glissando segment") },
     { ElementType::LAYOUT_BREAK,         "LayoutBreak",          muse::TranslatableString("engraving", "Layout break") },
     { ElementType::SPACER,               "Spacer",               muse::TranslatableString("engraving", "Spacer") },
@@ -273,7 +273,7 @@ static const std::vector<Item<ElementType> > ELEMENT_TYPES = {
     { ElementType::TEXTLINE,             "TextLine",             muse::TranslatableString("engraving", "Text line") },
     { ElementType::TEXTLINE_BASE,        "TextLineBase",         muse::TranslatableString("engraving", "Text line base") },    // remove
     { ElementType::NOTELINE,             "NoteLine",             muse::TranslatableString("engraving", "Note line") },
-    { ElementType::LYRICSLINE,           "LyricsLine",           muse::TranslatableString("engraving", "Melisma line") },
+    { ElementType::LYRICSLINE,           "LyricsLine",           muse::TranslatableString("engraving", "Extension line") },
     { ElementType::GLISSANDO,            "Glissando",            muse::TranslatableString("engraving", "Glissando") },
     { ElementType::BRACKET,              "Bracket",              muse::TranslatableString("engraving", "Bracket") },
     { ElementType::SEGMENT,              "Segment",              muse::TranslatableString("engraving", "Segment") },
@@ -436,20 +436,20 @@ TiePlacement TConv::fromXml(const AsciiStringView& str, TiePlacement def)
     return findTypeByXmlTag<TiePlacement>(TIE_PLACEMENT, str, def);
 }
 
-static const std::vector<Item<VoiceApplication> > VOICE_APPLICATION = {
-    { VoiceApplication::ALL_VOICE_IN_INSTRUMENT, "allInInstrument" },
-    { VoiceApplication::ALL_VOICE_IN_STAFF,      "allInStaff" },
-    { VoiceApplication::CURRENT_VOICE_ONLY,      "currentVoiceOnly" }
+static const std::vector<Item<VoiceAssignment> > VOICE_ASSIGNMENT = {
+    { VoiceAssignment::ALL_VOICE_IN_INSTRUMENT, "allInInstrument" },
+    { VoiceAssignment::ALL_VOICE_IN_STAFF,      "allInStaff" },
+    { VoiceAssignment::CURRENT_VOICE_ONLY,      "currentVoiceOnly" }
 };
 
-AsciiStringView TConv::toXml(VoiceApplication voiceAppl)
+AsciiStringView TConv::toXml(VoiceAssignment voiceAppl)
 {
-    return findXmlTagByType<VoiceApplication>(VOICE_APPLICATION, voiceAppl);
+    return findXmlTagByType<VoiceAssignment>(VOICE_ASSIGNMENT, voiceAppl);
 }
 
-VoiceApplication TConv::fromXml(const AsciiStringView& str, VoiceApplication def)
+VoiceAssignment TConv::fromXml(const AsciiStringView& str, VoiceAssignment def)
 {
-    return findTypeByXmlTag<VoiceApplication>(VOICE_APPLICATION, str, def);
+    return findTypeByXmlTag<VoiceAssignment>(VOICE_ASSIGNMENT, str, def);
 }
 
 static const std::vector<Item<AutoOnOff> > AUTO_ON_OFF = {
@@ -998,22 +998,6 @@ DynamicType TConv::fromXml(const AsciiStringView& tag, DynamicType def)
     return it->type;
 }
 
-static const std::vector<Item<DynamicRange> > DYNAMIC_RANGES = {
-    { DynamicRange::STAFF,  "staff" },
-    { DynamicRange::PART,   "part" },
-    { DynamicRange::SYSTEM, "system" },
-};
-
-String TConv::translatedUserName(DynamicRange v)
-{
-    return findUserNameByType<DynamicRange>(DYNAMIC_RANGES, v).translated();
-}
-
-String TConv::toXml(DynamicRange v)
-{
-    return String::number(static_cast<int>(v));
-}
-
 DynamicRange TConv::fromXml(const AsciiStringView& tag, DynamicRange def)
 {
     bool ok = false;
@@ -1144,6 +1128,8 @@ static const std::vector<Item<TextStyleType> > TEXTSTYLE_TYPES = {
     { TextStyleType::INSTRUMENT_CHANGE, "instrument_change",    muse::TranslatableString("engraving", "Instrument change") },
     { TextStyleType::HEADER,            "header",               muse::TranslatableString("engraving", "Header") },
     { TextStyleType::FOOTER,            "footer",               muse::TranslatableString("engraving", "Footer") },
+    { TextStyleType::COPYRIGHT,         "copyright",            muse::TranslatableString("engraving", "Copyright") },
+    { TextStyleType::PAGE_NUMBER,       "page_number",          muse::TranslatableString("engraving", "Page number") },
 
     { TextStyleType::MEASURE_NUMBER,    "measure_number",       muse::TranslatableString("engraving", "Measure number") },
     { TextStyleType::MMREST_RANGE,      "mmrest_range",         muse::TranslatableString("engraving", "Multimeasure rest range") },
@@ -1245,6 +1231,8 @@ TextStyleType TConv::fromXml(const AsciiStringView& tag, TextStyleType def)
         { "Instrument Change", TextStyleType::INSTRUMENT_CHANGE },
         { "Header", TextStyleType::HEADER },
         { "Footer", TextStyleType::FOOTER },
+        { "Copyright", TextStyleType::COPYRIGHT },
+        { "Page Number", TextStyleType::PAGE_NUMBER },
 
         { "Measure Number", TextStyleType::MEASURE_NUMBER },
         { "Multimeasure Rest Range", TextStyleType::MMREST_RANGE },
@@ -1514,8 +1502,8 @@ static const std::vector<Item<PlayingTechniqueType> > PLAY_TECH_TYPES = {
     { PlayingTechniqueType::Open,          "open",           muse::TranslatableString("engraving/playtechtype", "Open") },
     { PlayingTechniqueType::Mute,          "mute",           muse::TranslatableString("engraving/playtechtype", "Mute") },
     { PlayingTechniqueType::Tremolo,       "tremolo",        muse::TranslatableString("engraving/playtechtype", "Tremolo") },
-    { PlayingTechniqueType::Detache,       "detache",        muse::TranslatableString("engraving/playtechtype", "Detaché") },
-    { PlayingTechniqueType::Martele,       "martele",        muse::TranslatableString("engraving/playtechtype", "Martèle") },
+    { PlayingTechniqueType::Detache,       "detache",        muse::TranslatableString("engraving/playtechtype", "Détaché") },
+    { PlayingTechniqueType::Martele,       "martele",        muse::TranslatableString("engraving/playtechtype", "Martelé") },
     { PlayingTechniqueType::ColLegno,      "col_legno",      muse::TranslatableString("engraving/playtechtype", "Col legno") },
     { PlayingTechniqueType::SulPonticello, "sul_ponticello", muse::TranslatableString("engraving/playtechtype", "Sul ponticello") },
     { PlayingTechniqueType::SulTasto,      "sul_tasto",      muse::TranslatableString("engraving/playtechtype", "Sul tasto") },

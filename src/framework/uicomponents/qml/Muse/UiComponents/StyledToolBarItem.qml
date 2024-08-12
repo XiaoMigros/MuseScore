@@ -36,9 +36,11 @@ FlatButton {
     width: (Boolean(itemData) && Boolean(itemData.showTitle)) ? implicitWidth : 32
     height: (Boolean(itemData) && Boolean(itemData.showTitle)) ? implicitHeight : 32
 
-    accentButton: Boolean(itemData) && (itemData.checked || menuLoader.isMenuOpened)
+    accentButton: !transparent && Boolean(itemData) && (itemData.checked || menuLoader.isMenuOpened)
 
     text: Boolean(itemData) && itemData.showTitle ? itemData.title : ""
+
+    textFont: Boolean(itemData) && itemData.isTitleBold ? ui.theme.largeBodyFont : ui.theme.bodyFont
 
     icon: Boolean(itemData) ? itemData.icon : IconCode.NONE
     iconFont: ui.theme.toolbarIconsFont
@@ -55,8 +57,17 @@ FlatButton {
     drawFocusBorderInsideRect: true
 
     navigation.name: Boolean(itemData) ? itemData.id : ""
-    accessible.name: (Boolean(itemData) && itemData.checkable ? (itemData.checked ? text + "  " + qsTrc("global", "On") :
-                                                                                    text + "  " + qsTrc("global", "Off")) : text)
+    accessible.name: {
+        if (!Boolean(itemData)) {
+            return ""
+        }
+
+        if (itemData.checkable) {
+            return itemData.title + "  " + (itemData.checked ? qsTrc("global", "On") : qsTrc("global", "Off"))
+        }
+
+        return itemData.title
+    }
     isClickOnKeyNavTriggered: false
     navigation.onTriggered: {
         if (menuLoader.isMenuOpened || hasMenu) {

@@ -48,6 +48,7 @@
 #include "dom/note.h"
 
 #include "dom/ornament.h"
+#include "dom/page.h"
 #include "dom/part.h"
 #include "dom/rest.h"
 #include "dom/score.h"
@@ -325,6 +326,8 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
         f->mutldata()->setPosX(xNote);
     }
 
+    layoutLvArticulation(item, ctx);
+
     fillShape(item, item->mutldata(), ctx.conf());
 }
 
@@ -334,7 +337,7 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
     double mag_ = item->staff() ? item->staff()->staffMag(item) : 1.0;    // palette elements do not have a staff
     double dotNoteDistance = ctx.conf().styleMM(Sid::dotNoteDistance) * mag_;
     double minNoteDistance = ctx.conf().styleMM(Sid::minNoteDistance) * mag_;
-    double minTieLength = ctx.conf().styleMM(Sid::MinTieLength) * mag_;
+    double minTieLength = ctx.conf().styleMM(Sid::minTieLength) * mag_;
 
     for (Chord* c : item->graceNotes()) {
         layoutTablature(c, ctx);
@@ -692,7 +695,51 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
         TLayout::layoutStemSlash(item->stemSlash(), item->stemSlash()->mutldata(), ctx.conf());
     }
 
+    layoutLvArticulation(item, ctx);
+
     fillShape(item, item->mutldata(), ctx.conf());
+}
+
+void ChordLayout::layoutLvArticulation(Chord* item, LayoutContext& ctx)
+{
+    // Laissez vib ties must be layed out with the rest of the note, as they need to be taken into account for horizontal spacing
+    for (Articulation* a : item->articulations()) {
+        if (a->isLaissezVib()) {
+            // Must set direction before laying out
+            if (item->measure()->hasVoices(a->staffIdx(), item->tick(), item->actualTicks()) && a->anchor() == ArticulationAnchor::AUTO) {
+                a->setUp(item->up());         // if there are voices place articulation at stem
+            } else if (a->anchor() == ArticulationAnchor::AUTO) {
+                a->setUp(!item->up());         // place articulation at note head
+            } else {
+                a->setUp(a->anchor() == ArticulationAnchor::TOP);
+            }
+
+            TLayout::layoutItem(a, ctx);
+
+            const Articulation::LayoutData* ldata = a->ldata();
+            const double sp = a->spatium();
+            const Note* note = ldata->up() ? item->upNote() : item->downNote();
+            const int upDir = ldata->up() ? -1 : 1;
+            const double noteHeight = note->height();
+
+            PointF result = note->pos() + item->pos();
+            double center = SlurTieLayout::noteOpticalCenterForTie(note, ldata->up);
+            double visualInsetSp = 0.0;
+            if (note->headGroup() == NoteHeadGroup::HEAD_SLASH || note->shouldHideFret()) {
+                visualInsetSp = 0.2;
+            } else if (item->up() && ldata->up) {
+                visualInsetSp = 0.7;
+            } else {
+                visualInsetSp = 0.1;
+            }
+            double visualInset = visualInsetSp * sp;
+
+            result.rx() += center + visualInset - ldata->bbox().left();
+            result.ry() += (noteHeight / 2 + 0.2 * sp) * upDir;
+
+            a->setPos(result);
+        }
+    }
 }
 
 //---------------------------------------------------------
@@ -707,10 +754,12 @@ void ChordLayout::layoutSpanners(Chord* item, LayoutContext& ctx)
             TLayout::layoutTie(tie, ctx);
         }
         for (Spanner* sp : n->spannerBack()) {
-            if (sp->isGuitarBend()) {
-                continue;
-            }
             TLayout::layoutSpanner(sp, ctx);
+        }
+        for (Spanner* sp : n->spannerFor()) {
+            if ((sp->isGlissando() || sp->isGuitarBend()) && sp->tick2() >= ctx.state().page()->endTick()) {
+                TLayout::layoutSpanner(sp, ctx);
+            }
         }
     }
 }
@@ -1065,7 +1114,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
     Articulation* stacc = nullptr;
     for (Articulation* a : item->articulations()) {
         double kearnHeight = 0.0;
-        if (layoutOnCrossBeamSide && !a->isOnCrossBeamSide()) {
+        if ((layoutOnCrossBeamSide && !a->isOnCrossBeamSide()) || a->isLaissezVib()) {
             continue;
         }
         if (a->isStaccato()) {
@@ -1457,6 +1506,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
     const track_idx_t startTrack = staffIdx * VOICES;
     const track_idx_t endTrack   = startTrack + VOICES;
     const Fraction tick = segment->tick();
+    const StaffType* staffType = staff->staffType(segment->tick());
 
     // we need to check all the notes in all the staves of the part so that we don't get weird collisions
     // between accidentals etc with moved notes
@@ -1468,7 +1518,18 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         skipAccidentals(segment, startTrack, endTrack);
     }
 
-    if (staff && staff->isTabStaff(tick) && (!staff->staffType() || !staff->staffType()->stemThrough())) {
+    const bool isSimpleTab = !staff->staffType() || (!staff->staffType()->stemThrough() && !staff->staffType()->isCommonTabStaff());
+    if (staff && staff->isTabStaff(tick) && isSimpleTab) {
+        // Positions of notes should be reset in case we are changing from common or full tab with offsets to simple which should have none
+        for (track_idx_t track = partStartTrack; track < partEndTrack; ++track) {
+            EngravingItem* e = segment->element(track);
+            if (e && e->isChord() && toChord(e)->vStaffIdx() == staffIdx) {
+                Chord* chord = toChord(e);
+                Chord::LayoutData* chordLdata = chord->mutldata();
+                chordLdata->setPosX(0.0);
+            }
+        }
+
         layoutSegmentElements(segment, startTrack, endTrack, staffIdx, ctx);
         return;
     }
@@ -1478,6 +1539,10 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
     std::vector<Note*> downStemNotes;
     int upVoices       = 0;
     int downVoices     = 0;
+    // Fret width plus white background box for TAB
+    const double fretBackground = ctx.conf().styleS(Sid::tabFretPadding).val() * staff->spatium(tick);
+    // double nominalWidth = !isTab ? ctx.conf().noteHeadWidth() * staff->staffMag(tick)
+    //                       : (ctx.conf().fretWidth(staffType) + 2 * fretBackground) * staff->staffMag(tick);
     double nominalWidth = ctx.conf().noteHeadWidth() * staff->staffMag(tick);
     double maxUpWidth   = 0.0;
     double maxDownWidth = 0.0;
@@ -1533,7 +1598,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         }
     }
 
-    if (upVoices + downVoices && !isTab) {
+    if (upVoices + downVoices && (staffType->stemThrough() || staffType->isCommonTabStaff())) {
         // TODO: use track as secondary sort criteria?
         // otherwise there might be issues with unisons between voices
         // in some corner cases
@@ -1544,7 +1609,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         // layout upstem noteheads
         if (upVoices > 1) {
             std::sort(upStemNotes.begin(), upStemNotes.end(),
-                      [](Note* n1, const Note* n2) ->bool { return n1->line() > n2->line(); });
+                      [](Note* n1, const Note* n2) ->bool { return n1->stringOrLine() > n2->stringOrLine(); });
         }
         if (upVoices) {
             double hw = layoutChords2(upStemNotes, true, ctx);
@@ -1554,7 +1619,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         // layout downstem noteheads
         if (downVoices > 1) {
             std::sort(downStemNotes.begin(), downStemNotes.end(),
-                      [](Note* n1, const Note* n2) ->bool { return n1->line() > n2->line(); });
+                      [](Note* n1, const Note* n2) ->bool { return n1->stringOrLine() > n2->stringOrLine(); });
         }
         if (downVoices) {
             double hw = layoutChords2(downStemNotes, false, ctx);
@@ -1576,56 +1641,59 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         double centerAdjustUp    = 0.0;          // adjustment to upstem chord needed after centering donwstem chord
         double centerAdjustDown  = 0.0;          // adjustment to downstem chord needed after centering upstem chord
 
-        // only center chords if they differ from nominal by at least this amount
-        // this avoids unnecessary centering on differences due only to floating point roundoff
-        // it also allows for the possibility of disabling centering
-        // for notes only "slightly" larger than nominal, like half notes
-        // but this will result in them not being aligned with each other between voices
-        // unless you change to left alignment as described in the comments below
-        double centerThreshold   = 0.01 * sp;
+        if (!isTab) {
+            // only center chords on standard staves.  This is a simpler process for TAB and done elsewhere
+            // only center chords if they differ from nominal by at least this amount
+            // this avoids unnecessary centering on differences due only to floating point roundoff
+            // it also allows for the possibility of disabling centering
+            // for notes only "slightly" larger than nominal, like half notes
+            // but this will result in them not being aligned with each other between voices
+            // unless you change to left alignment as described in the comments below
+            double centerThreshold   = 0.01 * sp;
 
-        // amount by which actual width exceeds nominal, adjusted for staff mag() only
-        double headDiff = maxUpWidth - nominalWidth;
-        // amount by which actual width exceeds nominal, adjusted for staff & chord/note mag()
-        double headDiff2 = maxUpWidth - nominalWidth * (maxUpMag / staff->staffMag(tick));
-        if (headDiff > centerThreshold) {
-            // larger than nominal
-            centerUp = headDiff * -0.5;
-            // maxUpWidth is true width, but we no longer will care about that
-            // instead, we care only about portion to right of origin
-            maxUpWidth += centerUp;
-            // to left align rather than center, delete both of the above
-            if (headDiff2 > centerThreshold) {
-                // if max notehead is wider than nominal with chord/note mag() applied
-                // then noteheads extend to left of origin
-                // because stemPosX() is based on nominal width
-                // so we need to correct for that too
-                centerUp += headDiff2;
-                oversizeUp = headDiff2;
+            // amount by which actual width exceeds nominal, adjusted for staff mag() only
+            double headDiff = maxUpWidth - nominalWidth;
+            // amount by which actual width exceeds nominal, adjusted for staff & chord/note mag()
+            double headDiff2 = maxUpWidth - nominalWidth * (maxUpMag / staff->staffMag(tick));
+            if (headDiff > centerThreshold && !isTab) {
+                // larger than nominal
+                centerUp = headDiff * -0.5;
+                // maxUpWidth is true width, but we no longer will care about that
+                // instead, we care only about portion to right of origin
+                maxUpWidth += centerUp;
+                // to left align rather than center, delete both of the above
+                if (headDiff2 > centerThreshold) {
+                    // if max notehead is wider than nominal with chord/note mag() applied
+                    // then noteheads extend to left of origin
+                    // because stemPosX() is based on nominal width
+                    // so we need to correct for that too
+                    centerUp += headDiff2;
+                    oversizeUp = headDiff2;
+                }
+            } else if (-headDiff > centerThreshold) {
+                // smaller than nominal
+                centerUp = -headDiff * 0.5;
+                if (headDiff2 > centerThreshold) {
+                    // max notehead is wider than nominal with chord/note mag() applied
+                    // perform same adjustment as above
+                    centerUp += headDiff2;
+                    oversizeUp = headDiff2;
+                }
+                centerAdjustDown = centerUp;
             }
-        } else if (-headDiff > centerThreshold) {
-            // smaller than nominal
-            centerUp = -headDiff * 0.5;
-            if (headDiff2 > centerThreshold) {
-                // max notehead is wider than nominal with chord/note mag() applied
-                // perform same adjustment as above
-                centerUp += headDiff2;
-                oversizeUp = headDiff2;
-            }
-            centerAdjustDown = centerUp;
-        }
 
-        headDiff = maxDownWidth - nominalWidth;
-        if (headDiff > centerThreshold) {
-            // larger than nominal
-            centerDown = headDiff * -0.5;
-            // to left align rather than center, change the above to
-            //centerAdjustUp = headDiff;
-            maxDownWidth = nominalWidth - centerDown;
-        } else if (-headDiff > centerThreshold) {
-            // smaller than nominal
-            centerDown = -headDiff * 0.5;
-            centerAdjustUp = centerDown;
+            headDiff = maxDownWidth - nominalWidth;
+            if (headDiff > centerThreshold) {
+                // larger than nominal
+                centerDown = headDiff * -0.5;
+                // to left align rather than center, change the above to
+                //centerAdjustUp = headDiff;
+                maxDownWidth = nominalWidth - centerDown;
+            } else if (-headDiff > centerThreshold && !isTab) {
+                // smaller than nominal
+                centerDown = -headDiff * 0.5;
+                centerAdjustUp = centerDown;
+            }
         }
 
         // handle conflict between upstem and downstem chords
@@ -1633,7 +1701,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         if (upVoices && downVoices) {
             Note* bottomUpNote = upStemNotes.front();
             Note* topDownNote  = downStemNotes.back();
-            int separation = topDownNote->line() - bottomUpNote->line();
+            int separation = topDownNote->stringOrLine() - bottomUpNote->stringOrLine();
 
             std::vector<Note*> overlapNotes;
             overlapNotes.reserve(8);
@@ -1661,21 +1729,21 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
 
                 // build list of overlapping notes
                 for (size_t i = 0, n = upStemNotes.size(); i < n; ++i) {
-                    if (upStemNotes[i]->line() >= topDownNote->line() - 1) {
+                    if (upStemNotes[i]->stringOrLine() >= topDownNote->stringOrLine() - 1) {
                         overlapNotes.push_back(upStemNotes[i]);
                     } else {
                         break;
                     }
                 }
                 for (size_t i = downStemNotes.size(); i > 0; --i) {         // loop most probably needs to be in this reverse order
-                    if (downStemNotes[i - 1]->line() <= bottomUpNote->line() + 1) {
+                    if (downStemNotes[i - 1]->stringOrLine() <= bottomUpNote->stringOrLine() + 1) {
                         overlapNotes.push_back(downStemNotes[i - 1]);
                     } else {
                         break;
                     }
                 }
                 std::sort(overlapNotes.begin(), overlapNotes.end(),
-                          [](Note* n1, const Note* n2) ->bool { return n1->line() > n2->line(); });
+                          [](Note* n1, const Note* n2) ->bool { return n1->stringOrLine() > n2->stringOrLine(); });
 
                 // determine nature of overlap
                 bool shareHeads = true;               // can all overlapping notes share heads?
@@ -1701,7 +1769,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                         }
                     }
                     track_idx_t track = n->track();
-                    int line = n->line();
+                    int line = n->stringOrLine();
                     int d = lastLine - line;
                     switch (d) {
                     case 0:
@@ -1779,8 +1847,8 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 int topDownStemLen = 0;
                 if (!conflictUnison && topDownNote->chord()->stem()) {
                     topDownStemLen = std::round(topDownNote->chord()->stem()->ldata()->bbox().height() / sp * 2);
-                    if (bottomUpNote->line() > firstLedgerBelow - 1 && topDownNote->line() < bottomUpNote->line()
-                        && topDownNote->line() + topDownStemLen >= firstLedgerBelow) {
+                    if (bottomUpNote->stringOrLine() > firstLedgerBelow - 1 && topDownNote->stringOrLine() < bottomUpNote->stringOrLine()
+                        && topDownNote->stringOrLine() + topDownStemLen >= firstLedgerBelow) {
                         ledgerOverlapBelow = true;
                     }
                 }
@@ -1789,8 +1857,8 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 int bottomUpStemLen = 0;
                 if (!conflictUnison && bottomUpNote->chord()->stem()) {
                     bottomUpStemLen = std::round(bottomUpNote->chord()->stem()->ldata()->bbox().height() / sp * 2);
-                    if (topDownNote->line() < -1 && topDownNote->line() < bottomUpNote->line()
-                        && bottomUpNote->line() - bottomUpStemLen <= firstLedgerAbove) {
+                    if (topDownNote->stringOrLine() < -1 && topDownNote->stringOrLine() < bottomUpNote->stringOrLine()
+                        && bottomUpNote->stringOrLine() - bottomUpStemLen <= firstLedgerAbove) {
                         ledgerOverlapAbove = true;
                     }
                 }
@@ -1861,8 +1929,8 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                     } else {
                         // Prevent ledger line & notehead collision
                         double adjSpace
-                            = (topDownNote->line() <= firstLedgerAbove
-                               || bottomUpNote->line() >= firstLedgerBelow) ? ledgerLen - ledgerGap - 0.2 * sp : -0.2 * sp;
+                            = (topDownNote->stringOrLine() <= firstLedgerAbove
+                               || bottomUpNote->stringOrLine() >= firstLedgerBelow) ? ledgerLen - ledgerGap - 0.2 * sp : -0.2 * sp;
                         upOffset = maxDownWidth + adjSpace;
                         if (downHooks) {
                             bool needsHookSpace = (ledgerOverlapBelow || ledgerOverlapAbove);
@@ -1874,21 +1942,25 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 } else {
                     // no direct conflict, so parts can overlap (downstem on left)
                     // just be sure that stems clear opposing noteheads and ledger lines
-                    double clearLeft = 0.0, clearRight = 0.0;
+                    // Stems are in the middle of fret marks on TAB staves
+                    double clearLeft = isTab ? bottomUpNote->chord()->stemPosX() : 0.0;
+                    double clearRight = isTab ? bottomUpNote->chord()->stemPosX() : 0.0;
+                    double overlapPadding = (isTab ? 0 : 0.3) * sp;
                     if (topDownNote->chord()->stem()) {
                         if (ledgerOverlapBelow) {
                             // Create space between stem and ledger line below staff
-                            clearLeft = ledgerLen + ledgerGap + topDownNote->chord()->stem()->lineWidth();
+                            clearLeft += ledgerLen + ledgerGap + topDownNote->chord()->stem()->lineWidth();
                         } else {
-                            clearLeft = topDownNote->chord()->stem()->lineWidth() + 0.3 * sp;
+                            clearLeft += topDownNote->chord()->stem()->lineWidth() + overlapPadding;
                         }
                     }
                     if (bottomUpNote->chord()->stem()) {
                         if (ledgerOverlapAbove) {
                             // Create space between stem and ledger line above staff
-                            clearRight = maxDownWidth + ledgerLen + ledgerGap - maxUpWidth + bottomUpNote->chord()->stem()->lineWidth();
+                            clearRight += maxDownWidth + ledgerLen + ledgerGap - maxUpWidth + bottomUpNote->chord()->stem()->lineWidth();
                         } else {
-                            clearRight = bottomUpNote->chord()->stem()->lineWidth() + std::max(maxDownWidth - maxUpWidth, 0.0) + 0.3 * sp;
+                            clearRight += bottomUpNote->chord()->stem()->lineWidth()
+                                          + std::max(maxDownWidth - maxUpWidth, 0.0) + overlapPadding;
                         }
                     } else {
                         downDots = 0;             // no need to adjust for dots in this case
@@ -1898,14 +1970,17 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                     Note* topUpNote = upStemNotes.back();
                     // Move notes out of the way of straight flags
                     int pad = ctx.conf().styleB(Sid::useStraightNoteFlags) ? 2 : 1;
-                    bool overlapsFlag = topDownNote->line() + topDownStemLen + pad > topUpNote->line();
+                    bool overlapsFlag = topDownNote->stringOrLine() + topDownStemLen + pad > topUpNote->stringOrLine();
                     if (downHooks && (ledgerOverlapBelow || overlapsFlag)) {
                         // we will need more space to avoid collision with hook
                         // but we won't need as much dot adjustment
+                        Hook* hook = topDownNote->chord()->hook();
+                        double hookWidth = hook ? hook->width() : 0.0;
                         if (ledgerOverlapBelow) {
-                            Hook* hook = topDownNote->chord()->hook();
-                            double hookWidth = hook ? hook->width() : 0.0;
                             upOffset = hookWidth + ledgerLen + ledgerGap;
+                        }
+                        if (isTab) {
+                            upOffset = hookWidth + maxDownWidth;
                         }
                         upOffset = std::max(upOffset, maxDownWidth + 0.1 * sp);
                         dotAdjustThreshold = maxUpWidth - 0.3 * sp;
@@ -1962,6 +2037,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
                 Chord::LayoutData* chordLdata = chord->mutldata();
                 if (chord->up()) {
                     if (!muse::RealIsNull(upOffset)) {
+                        oversizeUp = isTab ? oversizeUp / 2 : oversizeUp;
                         chordLdata->moveX(upOffset + centerAdjustUp + oversizeUp);
                         if (downDots && !upDots) {
                             chordLdata->moveX(dotAdjust);
@@ -1992,7 +2068,7 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         }
         if (upVoices + downVoices > 1) {
             std::sort(notes.begin(), notes.end(),
-                      [](Note* n1, const Note* n2) ->bool { return n1->line() > n2->line(); });
+                      [](Note* n1, const Note* n2) ->bool { return n1->stringOrLine() > n2->stringOrLine(); });
         }
         layoutChords3(chords, notes, staff, ctx);
     }
@@ -2055,10 +2131,20 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
 
     for (int idx = startIdx; idx != endIdx; idx += incIdx) {
         Note* note    = notes[idx];                         // current note
-        int line      = note->line();                       // line of current note
+        const int line      = note->stringOrLine();                       // line of current note
         Chord* chord  = note->chord();
-        staff_idx_t staffIdx  = chord->vStaffIdx();                 // staff of current note
-        track_idx_t trackIdx = chord->track();
+
+        const staff_idx_t staffIdx  = chord->vStaffIdx();                 // staff of current note
+        const track_idx_t trackIdx = chord->track();
+        const Staff* st = note->staff();
+        const StaffType* tab = st->staffTypeForElement(note);
+        const bool isTab = note->staff() && note->staff()->isTabStaff(note->chord()->tick());
+
+        if (isTab) {
+            // TAB notes need to be laid out to set the fret string so we can calulate their width
+            // Standard staves can get this information from the notehead symbol, so no need to lay out
+            TLayout::layoutNote(note, note->mutldata());
+        }
 
         // there is a conflict
         // if this is same or adjacent line as previous note (and chords are on same staff!)
@@ -2109,7 +2195,9 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
 
         // accumulate return value
         if (!mirror) {
-            maxWidth = std::max(maxWidth, note->bboxRightPos());
+            const double fretBackground = ctx.conf().styleS(Sid::tabFretPadding).val() * note->spatium();
+            const double noteWidth = isTab ? note->tabHeadWidth(tab) + 2 * fretBackground : note->bboxRightPos();
+            maxWidth = std::max(maxWidth, noteWidth);
         }
 
         // prepare for next iteration
@@ -2157,7 +2245,7 @@ void ChordLayout::placeDots(const std::vector<Chord*>& chords, const std::vector
             }
         }
     }
-    if (!chord || chord->staff()->isTabStaff(chord->tick())) {
+    if (!chord || (chord->staff()->isTabStaff(chord->tick()) && !chord->staff()->staffType(chord->tick())->stemThrough())) {
         return;
     }
     std::vector<Note*> topDownNotes;
@@ -3134,7 +3222,7 @@ void ChordLayout::layoutNote2(Note* item, LayoutContext& ctx)
         double correctMag = chord->notes().size() > 1 ? chord->mag() : item->mag();
         double d  = ctx.conf().point(ctx.conf().styleS(Sid::dotNoteDistance)) * correctMag;
         double dd = ctx.conf().point(ctx.conf().styleS(Sid::dotDotDistance)) * correctMag;
-        double x  = chord->dotPosX() - item->pos().x() - chord->pos().x();
+        double x  = isTabStaff ? chord->dotPosX() - item->pos().x() : chord->dotPosX() - item->pos().x() - chord->pos().x();
         // in case of dots with different size, center-align them
         if (item->mag() != chord->mag() && chord->notes().size() > 1) {
             double relativeMag = item->mag() / chord->mag();
@@ -3422,6 +3510,13 @@ void ChordLayout::fillShape(const Chord* item, ChordRest::LayoutData* ldata)
         shape.add(beamlet->shape().translate(PointF(-xPos, 0.0)));
     }
 
+    for (const Articulation* a : item->articulations()) {
+        // Only add lv to shape
+        if (a->isLaissezVib()) {
+            shape.add(a->shape().translate(a->pos()));
+        }
+    }
+
     ldata->setShape(shape);
 }
 
@@ -3429,7 +3524,7 @@ void ChordLayout::fillShape(const Rest* item, Rest::LayoutData* ldata)
 {
     Shape shape(Shape::Type::Composite);
 
-    if (!item->isGap()) {
+    if (!item->isGap() && !item->shouldNotBeDrawn()) {
         shape.add(chordRestShape(item));
         shape.add(item->symBbox(ldata->sym), item);
         for (const NoteDot* dot : item->dotList()) {

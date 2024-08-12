@@ -67,8 +67,8 @@ void EditTimeTickAnchors::updateAnchors(const EngravingItem* item, track_idx_t t
 
     Fraction startTickExtendedRegion = startMeasure->tick();
     Fraction endTickExtendedRegion = endMeasure->endTick();
-    voice_idx_t voiceIdx = item->getProperty(Pid::APPLY_TO_VOICE).value<VoiceApplication>()
-                           != VoiceApplication::CURRENT_VOICE_ONLY ? VOICES : item->voice();
+    voice_idx_t voiceIdx = item->getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>()
+                           != VoiceAssignment::CURRENT_VOICE_ONLY ? VOICES : item->voice();
 
     score->setShowAnchors(ShowAnchors(voiceIdx, staff, startTickMainRegion, endTickMainRegion, startTickExtendedRegion,
                                       endTickExtendedRegion));
@@ -86,7 +86,8 @@ void EditTimeTickAnchors::updateAnchors(Measure* measure, staff_idx_t staffIdx)
     for (Fraction tick = startTick; tick <= endTick; tick += halfDivision) {
         anchorTicks.insert(tick);
     }
-    for (Segment* seg = measure->first(SegmentType::ChordRest); seg; seg = seg->next(SegmentType::ChordRest)) {
+    for (Segment* seg = measure->first(Segment::CHORD_REST_OR_TIME_TICK_TYPE); seg;
+         seg = seg->next(Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
         anchorTicks.insert(seg->rtick());
     }
 

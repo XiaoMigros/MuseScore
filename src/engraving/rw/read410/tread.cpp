@@ -439,8 +439,8 @@ PropertyValue TRead::readPropertyValue(Pid id, XmlReader& e, ReadContext& ctx)
         return PropertyValue(TConv::fromXml(e.readAsciiText(), GradualTempoChangeType::Undefined));
     case P_TYPE::TIE_PLACEMENT:
         return PropertyValue(TConv::fromXml(e.readAsciiText(), TiePlacement::AUTO));
-    case P_TYPE::VOICE_APPLICATION:
-        return PropertyValue(TConv::fromXml(e.readAsciiText(), VoiceApplication::ALL_VOICE_IN_INSTRUMENT));
+    case P_TYPE::VOICE_ASSIGNMENT:
+        return PropertyValue(TConv::fromXml(e.readAsciiText(), VoiceAssignment::ALL_VOICE_IN_INSTRUMENT));
     case P_TYPE::AUTO_ON_OFF:
         return PropertyValue(TConv::fromXml(e.readAsciiText(), AutoOnOff::AUTO));
     default:
@@ -479,7 +479,7 @@ void TRead::readProperty(EngravingItem* item, XmlReader& xml, ReadContext& ctx, 
     }
 
     // Pre-4.4 compatibility: these items now use DIRECTION property
-    if (pid == Pid::PLACEMENT && item->hasVoiceApplicationProperties()) {
+    if (pid == Pid::PLACEMENT && item->hasVoiceAssignmentProperties()) {
         pid = Pid::DIRECTION;
         v = v.value<PlacementV>() == PlacementV::ABOVE ? PropertyValue(DirectionV::UP) : PropertyValue(DirectionV::DOWN);
     }
@@ -767,14 +767,20 @@ bool TRead::readProperties(StaffTextBase* t, XmlReader& e, ReadContext& ctx)
 
 void TRead::read(Dynamic* d, XmlReader& e, ReadContext& ctx)
 {
+    int mscVersion = ctx.score()->mscVersion();
+
     while (e.readNextStartElement()) {
         const AsciiStringView tag = e.name();
         if (tag == "subtype") {
             d->setDynamicType(e.readText());
         } else if (tag == "velocity") {
             d->setVelocity(e.readInt());
-        } else if (tag == "dynType") {
-            d->setDynRange(TConv::fromXml(e.readAsciiText(), DynamicRange::STAFF));
+        } else if (tag == "dynType") { // obsolete
+            if (mscVersion < 440) {
+                d->setDynRange(TConv::fromXml(e.readAsciiText(), DynamicRange::PART));
+            } else {
+                e.skipCurrentElement();
+            }
         } else if (tag == "veloChange") {
             d->setChangeInVelocity(e.readInt());
         } else if (tag == "veloChangeSpeed") {
@@ -978,13 +984,7 @@ void TRead::read(Instrument* item, XmlReader& e, ReadContext& ctx, Part* part)
         }
     }
 
-    if (item->musicXmlId().isEmpty()) {
-        item->setMusicXmlId(item->recognizeMusicXmlId());
-    }
-
-    if (item->id().isEmpty()) {
-        item->setId(item->recognizeId());
-    }
+    item->updateInstrumentId();
 
     if (item->channel(0) && item->channel(0)->program() == -1) {
         item->channel(0)->setProgram(item->recognizeMidiProgram());
@@ -3053,6 +3053,8 @@ void TRead::read(Hairpin* h, XmlReader& e, ReadContext& ctx)
 {
     h->eraseSpannerSegments();
 
+    int mscVersion = ctx.score()->mscVersion();
+
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (tag == "subtype") {
@@ -3062,8 +3064,12 @@ void TRead::read(Hairpin* h, XmlReader& e, ReadContext& ctx)
             h->setHairpinCircledTip(e.readInt());
         } else if (tag == "veloChange") {
             h->setVeloChange(e.readInt());
-        } else if (tag == "dynType") {
-            h->setDynRange(TConv::fromXml(e.readAsciiText(), DynamicRange::STAFF));
+        } else if (tag == "dynType") { // obsolete
+            if (mscVersion < 440) {
+                h->setDynRange(TConv::fromXml(e.readAsciiText(), DynamicRange::PART));
+            } else {
+                e.skipCurrentElement();
+            }
         } else if (tag == "useTextLine") {        // obsolete
             e.readInt();
             if (h->hairpinType() == HairpinType::CRESC_HAIRPIN) {
@@ -3075,7 +3081,7 @@ void TRead::read(Hairpin* h, XmlReader& e, ReadContext& ctx)
             h->setSingleNoteDynamics(e.readBool());
         } else if (tag == "veloChangeMethod") {
             h->setVeloChangeMethod(TConv::fromXml(e.readAsciiText(), ChangeMethod::NORMAL));
-        } else if (readProperty(h, tag, e, ctx, Pid::APPLY_TO_VOICE)) {
+        } else if (readProperty(h, tag, e, ctx, Pid::VOICE_ASSIGNMENT)) {
         } else if (readProperty(h, tag, e, ctx, Pid::DIRECTION)) {
         } else if (readProperty(h, tag, e, ctx, Pid::CENTER_BETWEEN_STAVES)) {
         } else if (readProperty(h, tag, e, ctx, Pid::SNAP_BEFORE)) {
@@ -3325,7 +3331,6 @@ bool TRead::readProperties(Lyrics* l, XmlReader& e, ReadContext& ctx)
     if (tag == "no") {
         l->setNo(e.readInt());
         if (l->isEven()) {
-            l->setEven(true);
             l->initTextStyleType(TextStyleType::LYRICS_EVEN);
         }
     } else if (tag == "syllabic") {
@@ -4610,7 +4615,7 @@ bool TRead::readProperties(TextBase* t, XmlReader& e, ReadContext& ctx)
             t->setPropertyFlags(Pid::FONT_STYLE, PropertyFlags::UNSTYLED);
         }
     } else if (TRead::readProperty(t, tag, e, ctx, Pid::TEXT_LINKED_TO_MASTER)) {
-    } else if (readProperty(t, tag, e, ctx, Pid::APPLY_TO_VOICE)) {
+    } else if (readProperty(t, tag, e, ctx, Pid::VOICE_ASSIGNMENT)) {
     } else if (readProperty(t, tag, e, ctx, Pid::DIRECTION)) {
     } else if (readProperty(t, tag, e, ctx, Pid::CENTER_BETWEEN_STAVES)) {
     } else if (!readItemProperties(t, e, ctx)) {

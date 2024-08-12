@@ -57,6 +57,7 @@
 #include "mscoreview.h"
 #include "navigate.h"
 #include "note.h"
+#include "ornament.h"
 #include "page.h"
 #include "part.h"
 #include "pitchspelling.h"
@@ -143,6 +144,7 @@ static void resetElementPosition(void*, EngravingItem* e)
 
     e->undoResetProperty(Pid::AUTOPLACE);
     e->undoResetProperty(Pid::OFFSET);
+    e->undoResetProperty(Pid::LEADING_SPACE);
     e->setOffsetChanged(false);
     if (e->isSpanner()) {
         e->undoResetProperty(Pid::OFFSET2);
@@ -1114,7 +1116,7 @@ Segment* Score::setNoteRest(Segment* segment, track_idx_t track, NoteVal nval, F
                 nr = ncr = Factory::createRest(this->dummy()->segment());
                 nr->setTrack(track);
                 ncr->setDurationType(d);
-                ncr->setTicks(d == DurationType::V_MEASURE ? measure->ticks() : d.fraction());
+                ncr->setTicks(d.isMeasure() ? measure->ticks() : d.fraction());
             } else {
                 nr = note = Factory::createNote(this->dummy()->chord());
 
@@ -1818,17 +1820,23 @@ void Score::changeCRlen(ChordRest* cr, const Fraction& dstF, bool fillWithRest)
 
 static void upDownChromatic(bool up, int pitch, Note* n, Key key, int tpc1, int tpc2, int& newPitch, int& newTpc1, int& newTpc2)
 {
+    bool concertPitch = n->concertPitch();
+    AccidentalVal noteAccVal = tpc2alter(concertPitch ? tpc1 : tpc2);
+    AccidentalVal accState = AccidentalVal::NATURAL;
+    if (Measure* m = n->findMeasure()) {
+        accState = m->findAccidental(n);
+    }
     if (up && pitch < 127) {
         newPitch = pitch + 1;
-        if (n->concertPitch()) {
-            if (tpc1 > Tpc::TPC_A + int(key)) {
+        if (concertPitch) {
+            if (tpc1 > Tpc::TPC_A + int(key) && noteAccVal >= accState) {
                 newTpc1 = tpc1 - 5;           // up semitone diatonic
             } else {
                 newTpc1 = tpc1 + 7;           // up semitone chromatic
             }
             newTpc2 = n->transposeTpc(newTpc1);
         } else {
-            if (tpc2 > Tpc::TPC_A + int(key)) {
+            if (tpc2 > Tpc::TPC_A + int(key) && noteAccVal >= accState) {
                 newTpc2 = tpc2 - 5;           // up semitone diatonic
             } else {
                 newTpc2 = tpc2 + 7;           // up semitone chromatic
@@ -1837,15 +1845,15 @@ static void upDownChromatic(bool up, int pitch, Note* n, Key key, int tpc1, int 
         }
     } else if (!up && pitch > 0) {
         newPitch = pitch - 1;
-        if (n->concertPitch()) {
-            if (tpc1 > Tpc::TPC_C + int(key)) {
+        if (concertPitch) {
+            if (tpc1 > Tpc::TPC_C + int(key) || noteAccVal > accState) {
                 newTpc1 = tpc1 - 7;           // down semitone chromatic
             } else {
                 newTpc1 = tpc1 + 5;           // down semitone diatonic
             }
             newTpc2 = n->transposeTpc(newTpc1);
         } else {
-            if (tpc2 > Tpc::TPC_C + int(key)) {
+            if (tpc2 > Tpc::TPC_C + int(key) || noteAccVal > accState) {
                 newTpc2 = tpc2 - 7;           // down semitone chromatic
             } else {
                 newTpc2 = tpc2 + 5;           // down semitone diatonic
@@ -2092,6 +2100,39 @@ void Score::toggleArticulation(SymId attr)
                 }
             }
             Articulation* na = Factory::createArticulation(this->dummy()->chord());
+            na->setSymId(attr);
+            if (!toggleArticulation(el, na)) {
+                delete na;
+            }
+
+            if (cr) {
+                set.insert(cr);
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   toggleOrnament
+///   Toggle attribute \a attr for all selected notes/rests.
+///
+///   Like toggleArticulation, but for ornaments.
+//---------------------------------------------------------
+
+void Score::toggleOrnament(SymId attr)
+{
+    std::set<Chord*> set;
+    for (EngravingItem* el : selection().elements()) {
+        if (el->isNote() || el->isChord()) {
+            Chord* cr = 0;
+            // apply articulation on a given chord only once
+            if (el->isNote()) {
+                cr = toNote(el)->chord();
+                if (muse::contains(set, cr)) {
+                    continue;
+                }
+            }
+            Ornament* na = Factory::createOrnament(this->dummy()->chord());
             na->setSymId(attr);
             if (!toggleArticulation(el, na)) {
                 delete na;
@@ -2551,7 +2592,7 @@ void Score::cmdResetToDefaultLayout()
         Sid::tenutoGateTime,
         Sid::staccatoGateTime,
         Sid::slurGateTime,
-        Sid::SectionPause,
+        Sid::sectionPause,
         Sid::showHeader,
         Sid::headerFirstPage,
         Sid::headerOddEven,
@@ -2915,7 +2956,9 @@ EngravingItem* Score::move(const String& cmd)
         // find next chordrest, which might be a grace note
         // this may override note input cursor
         el = nextChordRest(cr);
-        while (el && el->isRest() && toRest(el)->isGap()) {
+
+        // Skip gap rests if we're not in note entry mode...
+        while (!noteEntryMode() && el && el->isRest() && toRest(el)->isGap()) {
             el = nextChordRest(toChordRest(el));
         }
         if (el && noteEntryMode()) {
@@ -2957,7 +3000,9 @@ EngravingItem* Score::move(const String& cmd)
         // find previous chordrest, which might be a grace note
         // this may override note input cursor
         el = prevChordRest(cr);
-        while (el && el->isRest() && toRest(el)->isGap()) {
+
+        // Skip gap rests if we're not in note entry mode...
+        while (!noteEntryMode() && el && el->isRest() && toRest(el)->isGap()) {
             el = prevChordRest(toChordRest(el));
         }
         if (el && noteEntryMode()) {

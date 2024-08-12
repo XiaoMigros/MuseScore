@@ -114,10 +114,11 @@ void TextBase::startEdit(EditData& ed)
     ted->oldXmlText = xmlText();
     ted->startUndoIdx = score()->undoStack()->getCurIdx();
 
-    const LayoutData* ldata = this->ldata();
-    if (!ldata || ldata->layoutInvalid) {
-        renderer()->layoutItem(this);
+    LayoutData* ldata = this->mutldata();
+    if (ldata) {
+        ldata->isEditing = true;
     }
+    renderer()->layoutItem(this);
     if (!ted->cursor()->set(ed.startMove)) {
         resetFormatting();
     }
@@ -152,25 +153,30 @@ void TextBase::endEdit(EditData& ed)
     // one property change
 
     using Filter = UndoCommand::Filter;
-    const bool textWasEdited = (undo->getCurIdx() != ted->startUndoIdx);
 
+    //! NOTE: Current index can be less than the start index if the text element is newly added and immediately removed through
+    //! undo (the "add element" command will have been popped from the stack before the calling of this method)...
+    const bool textWasEdited = undo->getCurIdx() > ted->startUndoIdx;
     if (textWasEdited) {
         undo->mergeCommands(ted->startUndoIdx);
         undo->last()->filterChildren(Filter::TextEdit, this);
     } else {
         // No text changes in "undo" part of undo stack,
         // hence nothing to merge and filter.
-        undo->cleanRedoStack();     // prevent text editing commands from remaining in undo stack
+        undo->cleanRedoStack(); // prevent text editing commands from remaining in undo stack
+
+        // already removed, no further processing required...
+        if (!ed.element) {
+            return;
+        }
     }
 
-    bool newlyAdded = false;
-
-    if (ted->oldXmlText.isEmpty()) {
+    const bool newlyAdded = ted->oldXmlText.isEmpty();
+    if (newlyAdded) {
         UndoCommand* ucmd = textWasEdited ? undo->prev() : undo->last();
         if (ucmd && ucmd->hasFilteredChildren(Filter::AddElement, this)) {
             // We have just added this element to a score.
             // Combine undo records of text creation with text editing.
-            newlyAdded = true;
             undo->mergeCommands(ted->startUndoIdx - 1);
         }
     }
@@ -202,7 +208,7 @@ void TextBase::endEdit(EditData& ed)
                 undo->current()->filterChildren(f, this);
             }
 
-            ted->setDeleteText(true);       // mark this text element for deletion
+            ted->setDeleteText(true); // mark this text element for deletion
         }
 
         commitText();
@@ -217,16 +223,19 @@ void TextBase::endEdit(EditData& ed)
     }
 
     if (textWasEdited) {
-        setXmlText(ted->oldXmlText);                        // reset text to value before editing
+        setXmlText(ted->oldXmlText); // reset text to value before editing
         undo->reopen();
         resetFormatting();
-        undoChangeProperty(Pid::TEXT, actualXmlText);       // change property to set text to actual value again
-                                                            // this also changes text of linked elements
+
+        // change property to set text to actual value again - this also changes text of linked elements
+        undoChangeProperty(Pid::TEXT, actualXmlText);
+
         renderer()->layoutText1(this);
-        triggerLayout();                                    // force relayout even if text did not change
-    } else {
-        triggerLayout();
     }
+
+    this->mutldata()->isEditing = false;
+    triggerLayout(); // force relayout even if text did not change
+
     if (isLyrics()) {
         // we must adjust previous lyrics before the call to commitText(), in order to make the adjustments
         // part of the same undo command. there is logic above that will skip this call if the text is empty

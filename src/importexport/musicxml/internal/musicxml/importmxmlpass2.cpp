@@ -934,9 +934,10 @@ static void addElemOffset(EngravingItem* el, track_idx_t track, const String& pl
     if (!measure) {
         return;
     }
+    Fraction elTick = tick;
 
     if (!placement.empty()) {
-        if (el->hasVoiceApplicationProperties()) {
+        if (el->hasVoiceAssignmentProperties()) {
             el->setProperty(Pid::DIRECTION, placement == u"above" ? DirectionV::UP : DirectionV::DOWN);
             el->setPropertyFlags(Pid::DIRECTION, PropertyFlags::UNSTYLED);
         } else {
@@ -944,9 +945,13 @@ static void addElemOffset(EngravingItem* el, track_idx_t track, const String& pl
             el->setPropertyFlags(Pid::PLACEMENT, PropertyFlags::UNSTYLED);
         }
     }
+    const Fraction& endTick = measure->score()->endTick();
+    if (elTick > endTick) {
+        elTick = endTick;
+    }
 
     el->setTrack(el->isTempoText() ? 0 : track);      // TempoText must be in track 0
-    Segment* s = measure->getSegment(SegmentType::ChordRest, tick);
+    Segment* s = measure->getSegment(SegmentType::ChordRest, elTick);
     if (el->systemFlag()) {
         Score* score = measure->score();
         Staff* st = score->staff(track2staff(track));
@@ -954,7 +959,7 @@ static void addElemOffset(EngravingItem* el, track_idx_t track, const String& pl
             score->addSystemObjectStaff(st);
         }
         bool found = false;
-        for (EngravingItem* existingEl : muse::values(_pass2.systemElements(), tick.ticks())) {
+        for (EngravingItem* existingEl : muse::values(_pass2.systemElements(), elTick.ticks())) {
             if (el->type() == existingEl->type()) {
                 found = true;
                 break;
@@ -962,7 +967,7 @@ static void addElemOffset(EngravingItem* el, track_idx_t track, const String& pl
         }
         if (!found) {
             el->setParent(s);
-            _pass2.addSystemElement(el, tick);
+            _pass2.addSystemElement(el, elTick);
         }
     } else {
         s->add(el);
@@ -1057,6 +1062,11 @@ static void handleTupletStop(Tuplet*& tuplet, const int normalNotes)
     tuplet->setBaseLen(td);
     Fraction f(normalNotes, td.fraction().denominator());
     f.reduce();
+    if (!f.isValid()) {
+        LOGD("MusicXML::import: tuplet stop but note values too small");
+        tuplet = nullptr;
+        return;
+    }
     tuplet->setTicks(f);
     // TODO determine usefulness of following check
     int totalDuration = 0;
@@ -1441,7 +1451,7 @@ static void addTextToNote(int l, int c, String txt, String placement, String fon
 static void setSLinePlacement(SLine* sli, const String& placement)
 {
     if (placement == u"above" || placement == u"below") {
-        if (sli->hasVoiceApplicationProperties()) {
+        if (sli->hasVoiceAssignmentProperties()) {
             sli->setProperty(Pid::DIRECTION, placement == u"above" ? DirectionV::UP : DirectionV::DOWN);
             sli->setPropertyFlags(Pid::DIRECTION, PropertyFlags::UNSTYLED);
         } else {
@@ -1946,7 +1956,8 @@ void MusicXMLParserPass2::scorePartwise()
             continue;
         }
         const String sysElText = sysEl->isTextBase() ? toTextBase(sysEl)->plainText() : toTextLineBase(sysEl)->beginText();
-        for (EngravingItem* existingEl : seg->annotations()) {
+        std::vector<EngravingItem*> annotations = seg->annotations();
+        for (EngravingItem* existingEl : annotations) {
             const bool bothText = (existingEl->isTextBase() || existingEl->isTextLineBase()) && elIsText;
             if (existingEl && existingEl != sysEl && bothText) {
                 const String existingText
@@ -2627,7 +2638,24 @@ void MusicXMLParserPass2::measure(const String& partId, const Fraction time)
         } else if (m_e.name() == "barline") {
             barline(partId, measure, time + mTime);
         } else if (m_e.name() == "print") {
-            m_e.skipCurrentElement();
+            if (m_score->parts()[0] == m_pass1.getPart(partId)) {
+                // only process for first part
+                while (m_e.readNextStartElement()) {
+                    if (m_e.name() == "page-layout") {
+                        m_e.skipCurrentElement();            // skip but don't log
+                    } else if (m_e.name() == "system-layout") {
+                        m_e.skipCurrentElement();            // skip but don't log
+                    } else if (m_e.name() == "staff-layout") {
+                        m_e.skipCurrentElement();            // skip but don't log
+                    } else if (m_e.name() == "measure-layout") {
+                        measureLayout(measure);
+                    } else {
+                        skipLogCurrElem();
+                    }
+                }
+            } else {
+                m_e.skipCurrentElement();
+            }
         } else {
             skipLogCurrElem();
         }
@@ -2767,6 +2795,25 @@ void MusicXMLParserPass2::setMeasureRepeats(const staff_idx_t scoreRelStaff, Mea
             m_measureRepeatCount[i] = 0;
         }
         measure->setMeasureRepeatCount(m_measureRepeatCount[i], staffIdx);
+    }
+}
+
+//---------------------------------------------------------
+//   measureLayout
+//---------------------------------------------------------
+
+void MusicXMLParserPass2::measureLayout(Measure* measure)
+{
+    while (m_e.readNextStartElement()) {
+        if (m_e.name() == "measure-distance") {
+            const Spatium val(m_e.readText().toDouble() / 10.0);
+            if (!measure->prev()->isHBox()) {
+                MeasureBase* gap = m_score->insertBox(ElementType::HBOX, measure);
+                toHBox(gap)->setBoxWidth(val);
+            }
+        } else {
+            skipLogCurrElem();
+        }
     }
 }
 

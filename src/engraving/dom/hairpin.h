@@ -71,7 +71,7 @@ public:
 
     std::unique_ptr<ElementGroup> getDragGroup(std::function<bool(const EngravingItem*)> isDragged) override;
 
-    bool hasVoiceApplicationProperties() const override { return spanner()->hasVoiceApplicationProperties(); }
+    bool hasVoiceAssignmentProperties() const override { return spanner()->hasVoiceAssignmentProperties(); }
 
     EngravingItem* findElementToSnapBefore() const;
     EngravingItem* findElementToSnapAfter() const;
@@ -113,6 +113,9 @@ public:
     DynamicType dynamicTypeFrom() const;
     DynamicType dynamicTypeTo() const;
 
+    const Dynamic* dynamicSnappedBefore() const;
+    const Dynamic* dynamicSnappedAfter() const;
+
     HairpinType hairpinType() const { return m_hairpinType; }
     void setHairpinType(HairpinType val);
 
@@ -126,7 +129,7 @@ public:
     void setVeloChange(int v) { m_veloChange = v; }
 
     DynamicRange dynRange() const { return m_dynRange; }
-    void setDynRange(DynamicRange t) { m_dynRange = t; }
+    void setDynRange(DynamicRange t);
 
     Spatium hairpinHeight() const { return m_hairpinHeight; }
     void setHairpinHeight(Spatium val) { m_hairpinHeight = val; }
@@ -162,12 +165,12 @@ public:
 
     PointF linePos(Grip grip, System** system) const override;
 
-    bool hasVoiceApplicationProperties() const override { return true; }
+    bool hasVoiceAssignmentProperties() const override { return true; }
 
     void reset() override;
 
-    void setApplyToVoice(VoiceApplication v) { m_applyToVoice = v; }
-    VoiceApplication applyToVoice() const { return m_applyToVoice; }
+    void setVoiceAssignment(VoiceAssignment v) { m_voiceAssignment = v; }
+    VoiceAssignment voiceAssignment() const { return m_voiceAssignment; }
     void setDirection(DirectionV v) { m_direction = v; }
     DirectionV direction() const { return m_direction; }
     void setCenterBetweenStaves(AutoOnOff v) { m_centerBetweenStaves = v; }
@@ -188,14 +191,14 @@ private:
     HairpinType m_hairpinType = HairpinType::INVALID;
     int m_veloChange = 0;
     bool m_hairpinCircledTip = false;
-    DynamicRange m_dynRange = DynamicRange::STAFF;
+    DynamicRange m_dynRange = DynamicRange::PART;
     bool m_singleNoteDynamics = false;
     ChangeMethod m_veloChangeMethod = ChangeMethod::NORMAL;
 
     Spatium m_hairpinHeight;
     Spatium m_hairpinContHeight;
 
-    VoiceApplication m_applyToVoice = VoiceApplication::ALL_VOICE_IN_INSTRUMENT;
+    VoiceAssignment m_voiceAssignment = VoiceAssignment::ALL_VOICE_IN_INSTRUMENT;
     DirectionV m_direction = DirectionV::AUTO;
     AutoOnOff m_centerBetweenStaves = AutoOnOff::AUTO;
 

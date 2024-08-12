@@ -100,7 +100,7 @@ private:
     };
 
     static void collectAccidentals(const std::vector<Chord*> chords, std::vector<Accidental*>& allAccidentals,
-                                   std::vector<Accidental*>& redundantAccidentals);
+                                   std::vector<Accidental*>& redundantAccidentals, std::vector<Accidental*>& invisibleAccidentals);
     static bool accidentalIsRedundant(const Accidental* acc, const std::vector<Accidental*>& allAccidentals);
 
     static void doAccidentalPlacement(AccidentalsLayoutContext& ctx);
@@ -172,6 +172,8 @@ private:
     static double xPosRelativeToSegment(const Accidental* accidental);
 
     static void sortTopDown(std::vector<Accidental*>& accidentals);
+
+    static bool keepAccidentalsCloseToChord(const Chord* chord);
 };
 }
 

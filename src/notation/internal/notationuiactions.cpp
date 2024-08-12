@@ -1387,7 +1387,7 @@ const UiActionList NotationUiActions::m_actions = {
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Othe&r…"),
-             TranslatableString("action", "Enter tuplet: create custom…")
+             TranslatableString("action", "Enter tuplet: other…")
              ),
     UiAction("stretch-",
              mu::context::UiCtxNotationOpened,
@@ -1422,13 +1422,13 @@ const UiActionList NotationUiActions::m_actions = {
     UiAction("reset",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_ANY,
-             TranslatableString("action", "Reset shapes and &positions"),
+             TranslatableString("action", "Reset s&hapes and positions"),
              TranslatableString("action", "Reset shapes and positions")
              ),
     UiAction("reset-to-default-layout",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_ANY,
-             TranslatableString("action", "Reset entire score to default layout"),
+             TranslatableString("action", "Reset entire score to &default layout"),
              TranslatableString("action", "Reset entire score to default layout")
              ),
     UiAction("zoomin",
@@ -1716,8 +1716,8 @@ const UiActionList NotationUiActions::m_actions = {
     UiAction("add-melisma",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_NOTATION_TEXT_EDITING,
-             TranslatableString("action", "Add melisma"),
-             TranslatableString("action", "Lyrics: enter melisma")
+             TranslatableString("action", "Add extension line"),
+             TranslatableString("action", "Lyrics: enter extension line")
              ),
     UiAction("add-lyric-verse",
              mu::context::UiCtxNotationOpened,
@@ -1797,23 +1797,83 @@ const UiActionList NotationUiActions::m_actions = {
              TranslatableString("action", "Mirror notehead"),
              TranslatableString("action", "Mirror notehead")
              ),
+    UiAction("add-turn",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle turn"),
+             TranslatableString("action", "Add ornament: turn")
+             ),
+    UiAction("add-turn-inverted",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle inverted turn"),
+             TranslatableString("action", "Add ornament: inverted turn")
+             ),
+    UiAction("add-turn-slash",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle turn with slash"),
+             TranslatableString("action", "Add ornament: turn with slash")
+             ),
     UiAction("add-trill",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Toggle trill"),
-             TranslatableString("action", "Add/remove ornament: trill")
+             TranslatableString("action", "Add ornament: trill")
+             ),
+    UiAction("add-short-trill",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle short trill"),
+             TranslatableString("action", "Add ornament: short trill")
+             ),
+    UiAction("add-mordent",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle mordent"),
+             TranslatableString("action", "Add ornament: mordent")
+             ),
+    UiAction("add-tremblement",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle tremblement"),
+             TranslatableString("action", "Add ornament: tremblement")
+             ),
+    UiAction("add-prall-mordent",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle prall mordent"),
+             TranslatableString("action", "Add ornament: prall mordent")
+             ),
+    UiAction("add-shake",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle shake"),
+             TranslatableString("action", "Add ornament: shake")
+             ),
+    UiAction("add-shake-muffat",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle shake (Muffat)"),
+             TranslatableString("action", "Add ornament: shake (Muffat)")
+             ),
+    UiAction("add-tremblement-couperin",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Toggle tremblement appuyé (Couperin)"),
+             TranslatableString("action", "Add ornament: tremblement appuyé (Couperin)")
              ),
     UiAction("add-up-bow",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Toggle up bow"),
-             TranslatableString("action", "Add/remove bowing: up bow")
+             TranslatableString("action", "Add bowing: up bow")
              ),
     UiAction("add-down-bow",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Toggle down bow"),
-             TranslatableString("action", "Add/remove bowing: down bow")
+             TranslatableString("action", "Add bowing: down bow")
              ),
     UiAction("reset-style",
              mu::context::UiCtxNotationOpened,
@@ -2335,6 +2395,18 @@ const UiActionList NotationUiActions::m_actions = {
              TranslatableString("action", "Voice 4"),
              TranslatableString("action", "Use voice 4"),
              IconCode::Code::VOICE_4
+             ),
+    UiAction("voice-assignment-all-in-instrument",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_ANY,
+             TranslatableString("action", "All voices on instrument"),
+             TranslatableString("action", "Use all voices on instrument")
+             ),
+    UiAction("voice-assignment-all-in-staff",
+             mu::context::UiCtxNotationOpened,
+             mu::context::CTX_ANY,
+             TranslatableString("action", "All voices on staff"),
+             TranslatableString("action", "Use all voices on staff")
              ),
     UiAction("notation-context-menu",
              mu::context::UiCtxNotationFocused,

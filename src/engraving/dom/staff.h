@@ -261,6 +261,9 @@ public:
 
     Staff* findLinkedInScore(const Score* score) const override;
 
+    track_idx_t getLinkedTrackInStaff(const Staff* linkedStaff, const track_idx_t strack) const;
+    bool trackHasLinksInVoiceZero(track_idx_t track);
+
 private:
 
     friend class Factory;

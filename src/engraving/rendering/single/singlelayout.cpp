@@ -450,7 +450,7 @@ void SingleLayout::layout(Arpeggio* item, const Context& ctx)
     } break;
 
     case ArpeggioType::BRACKET: {
-        double w  = ctx.style().styleS(Sid::ArpeggioHookLen).val() * item->spatium();
+        double w  = ctx.style().styleS(Sid::arpeggioHookLen).val() * item->spatium();
         ldata->setBbox(RectF(0.0, ldata->top, w, ldata->bottom));
     } break;
     }
@@ -778,6 +778,7 @@ void SingleLayout::layout(Chord* item, const Context& ctx)
     ChordLayout::computeUp(item, tctx);
     ChordLayout::layout(item, tctx);
     ChordLayout::layoutStem(item, tctx);
+    ChordLayout::layoutLedgerLines({ item });
 }
 
 void SingleLayout::layout(ChordLine* item, const Context& ctx)

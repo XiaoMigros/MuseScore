@@ -86,7 +86,7 @@ class Segment final : public EngravingItem
     DECLARE_CLASSOF(ElementType::SEGMENT)
 
 protected:
-    EngravingItem* getElement(staff_idx_t staff);       //??
+    EngravingItem* getElement(staff_idx_t staff) const;       //??
 
 public:
 
@@ -224,21 +224,21 @@ public:
     AccessibleItemPtr createAccessible() override;
 #endif
 
-    EngravingItem* firstInNextSegments(staff_idx_t activeStaff);   //<
-    EngravingItem* lastInPrevSegments(staff_idx_t activeStaff);     //<
-    EngravingItem* firstElementForNavigation(staff_idx_t staff);                //<  These methods are used for navigation
-    EngravingItem* lastElementForNavigation(staff_idx_t staff);                 //<  for next-element and prev-element
-    EngravingItem* firstElementOfSegment(Segment* s, staff_idx_t activeStaff);
-    EngravingItem* nextElementOfSegment(Segment* s, EngravingItem* e, staff_idx_t activeStaff);
-    EngravingItem* prevElementOfSegment(Segment* s, EngravingItem* e, staff_idx_t activeStaff);
-    EngravingItem* lastElementOfSegment(Segment* s, staff_idx_t activeStaff);
-    EngravingItem* nextAnnotation(EngravingItem* e);
-    EngravingItem* prevAnnotation(EngravingItem* e);
-    EngravingItem* firstAnnotation(Segment* s, staff_idx_t activeStaff);
-    EngravingItem* lastAnnotation(Segment* s, staff_idx_t activeStaff);
-    Spanner* firstSpanner(staff_idx_t activeStaff);
-    Spanner* lastSpanner(staff_idx_t activeStaff);
-    bool notChordRestType(Segment* s);
+    EngravingItem* firstInNextSegments(staff_idx_t activeStaff) const;   //<
+    EngravingItem* lastInPrevSegments(staff_idx_t activeStaff) const;     //<
+    EngravingItem* firstElementForNavigation(staff_idx_t staff) const;          //<  These methods are used for navigation
+    EngravingItem* lastElementForNavigation(staff_idx_t staff) const;           //<  for next-element and prev-element
+    EngravingItem* firstElementOfSegment(staff_idx_t activeStaff) const;
+    EngravingItem* nextElementOfSegment(EngravingItem* e, staff_idx_t activeStaff) const;
+    EngravingItem* prevElementOfSegment(EngravingItem* e, staff_idx_t activeStaff) const;
+    EngravingItem* lastElementOfSegment(staff_idx_t activeStaff) const;
+    EngravingItem* nextAnnotation(EngravingItem* e) const;
+    EngravingItem* prevAnnotation(EngravingItem* e) const;
+    EngravingItem* firstAnnotation(staff_idx_t activeStaff) const;
+    EngravingItem* lastAnnotation(staff_idx_t activeStaff) const;
+    Spanner* firstSpanner(staff_idx_t activeStaff) const;
+    Spanner* lastSpanner(staff_idx_t activeStaff) const;
+    bool notChordRestType() const;
     using EngravingItem::nextElement;
     EngravingItem* nextElement(staff_idx_t activeStaff);
     using EngravingItem::prevElement;
@@ -287,6 +287,9 @@ public:
     bool isTimeTickType() const { return m_segmentType == SegmentType::TimeTick; }
     bool isRightAligned() const { return isClefType() || isBreathType(); }
 
+    static constexpr SegmentType CHORD_REST_OR_TIME_TICK_TYPE = SegmentType::ChordRest | SegmentType::TimeTick;
+    static constexpr SegmentType durationSegmentsMask = CHORD_REST_OR_TIME_TICK_TYPE; // segment types which may have non-zero tick length
+
     bool canWriteSpannerStartEnd(track_idx_t track, const Spanner* spanner) const;
 
     Fraction shortestChordRest() const;
@@ -303,8 +306,6 @@ public:
     bool goesBefore(const Segment* nextSegment) const;
 
     void checkEmpty() const;
-
-    static constexpr SegmentType durationSegmentsMask = SegmentType::ChordRest | SegmentType::TimeTick;   // segment types which may have non-zero tick length
 
 private:
 

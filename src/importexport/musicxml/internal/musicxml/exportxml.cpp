@@ -422,6 +422,7 @@ private:
     void wavyLineStartStop(const ChordRest* cr, Notations& notations, Ornaments& ornaments, TrillHash& trillStart, TrillHash& trillStop);
     void print(const Measure* const m, const int partNr, const int firstStaffOfPart, const int nrStavesInPart,
                const MeasurePrintContext& mpc);
+    void measureLayout(const double distance);
     void findAndExportClef(const Measure* const m, const int staves, const track_idx_t strack, const track_idx_t etrack);
     void exportDefaultClef(const Part* const part, const Measure* const m);
     void writeElement(EngravingItem* el, const Measure* m, staff_idx_t sstaff, bool useDrumset);
@@ -1390,12 +1391,12 @@ static void defaults(XmlWriter& xml, const MStyle& s, double& millimeters, const
         xml.tag("line-width", { { "type", "leger" } }, s.styleS(Sid::ledgerLineWidth).val() * 10);
         xml.tag("line-width", { { "type", "pedal" } }, s.styleS(Sid::pedalLineWidth).val() * 10);
         xml.tag("line-width", { { "type", "octave shift" } }, s.styleS(Sid::ottavaLineWidth).val() * 10);
-        xml.tag("line-width", { { "type", "slur middle" } }, s.styleS(Sid::SlurMidWidth).val() * 10);
-        xml.tag("line-width", { { "type", "slur tip" } }, s.styleS(Sid::SlurEndWidth).val() * 10);
+        xml.tag("line-width", { { "type", "slur middle" } }, s.styleS(Sid::slurMidWidth).val() * 10);
+        xml.tag("line-width", { { "type", "slur tip" } }, s.styleS(Sid::slurEndWidth).val() * 10);
         xml.tag("line-width", { { "type", "staff" } }, s.styleS(Sid::staffLineWidth).val() * 10);
         xml.tag("line-width", { { "type", "stem" } }, s.styleS(Sid::stemWidth).val() * 10);
-        xml.tag("line-width", { { "type", "tie middle" } }, s.styleS(Sid::TieMidWidth).val() * 10);
-        xml.tag("line-width", { { "type", "tie tip" } }, s.styleS(Sid::TieEndWidth).val() * 10);
+        xml.tag("line-width", { { "type", "tie middle" } }, s.styleS(Sid::tieMidWidth).val() * 10);
+        xml.tag("line-width", { { "type", "tie tip" } }, s.styleS(Sid::tieEndWidth).val() * 10);
         xml.tag("line-width", { { "type", "tuplet bracket" } }, s.styleS(Sid::tupletBracketWidth).val() * 10);
         xml.tag("line-width", { { "type", "wedge" } }, s.styleS(Sid::hairpinLineWidth).val() * 10);
         // note size values in percent
@@ -1410,7 +1411,7 @@ static void defaults(XmlWriter& xml, const MStyle& s, double& millimeters, const
     // for music, words and lyrics, use Tid STAFF (typically used for words)
     // and LYRIC1 to get MusicXML defaults
 
-    xml.tag("music-font", { { "font-family", s.styleSt(Sid::MusicalSymbolFont) } });
+    xml.tag("music-font", { { "font-family", s.styleSt(Sid::musicalSymbolFont) } });
     xml.tag("word-font", { { "font-family", s.styleSt(Sid::staffTextFontFace) }, { "font-size", s.styleD(Sid::staffTextFontSize) } });
     xml.tag("lyric-font",
             { { "font-family", s.styleSt(Sid::lyricsOddFontFace) }, { "font-size", s.styleD(Sid::lyricsOddFontSize) } });
@@ -1442,7 +1443,7 @@ static void creditWords(XmlWriter& xml, const MStyle& s, const page_idx_t pageNr
         return;
     }
 
-    const String mtf = s.styleSt(Sid::MusicalTextFont);
+    const String mtf = s.styleSt(Sid::musicalTextFont);
     const CharFormat defFmt = formatForWords(s);
 
     // export formatted
@@ -4901,7 +4902,7 @@ static void wordsMetronome(XmlWriter& xml, const MStyle& s, TextBase const* cons
     std::list<TextFragment> wordsRight;         // words right of metronome
 
     // set the default words format
-    const String mtf = s.styleSt(Sid::MusicalTextFont);
+    const String mtf = s.styleSt(Sid::musicalTextFont);
     const CharFormat defFmt = formatForWords(s);
 
     if (findMetronome(list, wordsLeft, hasParen, metroLeft, metroRight, wordsRight)) {
@@ -5091,7 +5092,7 @@ void ExportMusicXml::tboxTextAsWords(TextBase const* const text, const staff_idx
 
     // set the default words format
     const MStyle& style = m_score->style();
-    const String mtf = style.styleSt(Sid::MusicalTextFont);
+    const String mtf = style.styleSt(Sid::musicalTextFont);
     const CharFormat defFmt = formatForWords(style);
 
     m_xml.startElement("direction", { { "placement", (relativePosition.y() < 0) ? "above" : "below" } });
@@ -5136,7 +5137,7 @@ void ExportMusicXml::rehearsal(RehearsalMark const* const rmk, staff_idx_t staff
     attr += positioningAttributes(rmk);
     // set the default words format
     const MStyle& style = m_score->style();
-    const String mtf = style.styleSt(Sid::MusicalTextFont);
+    const String mtf = style.styleSt(Sid::musicalTextFont);
     const CharFormat defFmt = formatForWords(style);
     // write formatted
     MScoreTextToMXML mttm(u"rehearsal", attr, defFmt, mtf);
@@ -5306,10 +5307,16 @@ static void writeHairpinText(XmlWriter& xml, const TextLineBase* const tlb, bool
 void ExportMusicXml::hairpin(Hairpin const* const hp, staff_idx_t staff, const Fraction& tick)
 {
     const bool isLineType = hp->isLineType();
+    const bool isStart = hp->tick() == tick;
     int n;
     if (isLineType) {
-        if (!hp->lineVisible() && ((hp->beginText().isEmpty() && hp->tick() == tick)
-                                   || (hp->endText().isEmpty() && hp->tick() != tick))) {
+        if (!hp->lineVisible()) {
+            if ((isStart && hp->beginText().isEmpty()) || (!isStart && hp->endText().isEmpty())) {
+                return;
+            }
+            directionTag(m_xml, m_attr, hp);
+            writeHairpinText(m_xml, hp, isStart);
+            directionETag(m_xml, staff);
             return;
         }
         n = findDashes(hp);
@@ -5340,18 +5347,17 @@ void ExportMusicXml::hairpin(Hairpin const* const hp, staff_idx_t staff, const F
     }
 
     directionTag(m_xml, m_attr, hp);
-    const bool hpTick = hp->tick() == tick;
-    if (hpTick) {
-        writeHairpinText(m_xml, hp, hpTick);
+    if (isStart) {
+        writeHairpinText(m_xml, hp, isStart);
     }
     if (isLineType) {
         if (hp->lineVisible()) {
-            if (hpTick) {
+            if (isStart) {
                 m_xml.startElement("direction-type");
                 String tag = u"dashes type=\"start\"";
                 tag += String(u" number=\"%1\"").arg(n + 1);
                 tag += color2xml(hp);
-                tag += positioningAttributes(hp, hpTick);
+                tag += positioningAttributes(hp, isStart);
                 m_xml.tagRaw(tag);
                 m_xml.endElement();
             } else {
@@ -5363,7 +5369,7 @@ void ExportMusicXml::hairpin(Hairpin const* const hp, staff_idx_t staff, const F
     } else {
         m_xml.startElement("direction-type");
         String tag = u"wedge type=";
-        if (hpTick) {
+        if (isStart) {
             if (hp->hairpinType() == HairpinType::CRESC_HAIRPIN) {
                 tag += u"\"crescendo\"";
                 if (hp->hairpinCircledTip()) {
@@ -5373,7 +5379,7 @@ void ExportMusicXml::hairpin(Hairpin const* const hp, staff_idx_t staff, const F
                 tag += u"\"diminuendo\"";
             }
             tag += color2xml(hp);
-            tag += positioningAttributes(hp, hpTick);
+            tag += positioningAttributes(hp, isStart);
         } else {
             tag += u"\"stop\"";
             if (hp->hairpinCircledTip() && hp->hairpinType() == HairpinType::DECRESC_HAIRPIN) {
@@ -5384,8 +5390,8 @@ void ExportMusicXml::hairpin(Hairpin const* const hp, staff_idx_t staff, const F
         m_xml.tagRaw(tag);
         m_xml.endElement();
     }
-    if (!hpTick) {
-        writeHairpinText(m_xml, hp, hpTick);
+    if (!isStart) {
+        writeHairpinText(m_xml, hp, isStart);
     }
     directionETag(m_xml, staff);
 }
@@ -5550,8 +5556,14 @@ void ExportMusicXml::textLine(TextLineBase const* const tl, staff_idx_t staff, c
 {
     using namespace muse::draw;
 
-    if (!tl->lineVisible() && ((tl->beginText().isEmpty() && tl->tick() == tick)
-                               || (tl->endText().isEmpty() && tl->tick() != tick))) {
+    bool isStart = tl->tick() == tick;
+    if (!tl->lineVisible()) {
+        if ((isStart && tl->beginText().isEmpty()) || (!isStart && tl->endText().isEmpty())) {
+            return;
+        }
+        directionTag(m_xml, m_attr, tl);
+        writeHairpinText(m_xml, tl, isStart);
+        directionETag(m_xml, staff);
         return;
     }
 
@@ -5864,10 +5876,10 @@ void ExportMusicXml::lyrics(const std::vector<Lyrics*>& ll, const track_idx_t tr
                 m_xml.tag("syllabic", s);
                 String attr;         // TODO TBD
                 // set the default words format
-                const String mtf = m_score->style().styleSt(Sid::MusicalTextFont);
+                const String mtf = m_score->style().styleSt(Sid::musicalTextFont);
                 CharFormat defFmt;
-                defFmt.setFontFamily(m_score->style().styleSt(Sid::lyricsEvenFontFace));
-                defFmt.setFontSize(m_score->style().styleD(Sid::lyricsOddFontSize));
+                defFmt.setFontFamily(m_score->style().styleSt(l->isEven() ? Sid::lyricsEvenFontFace : Sid::lyricsOddFontFace));
+                defFmt.setFontSize(m_score->style().styleD(l->isEven() ? Sid::lyricsEvenFontSize : Sid::lyricsOddFontSize));
                 // write formatted
                 MScoreTextToMXML mttm(u"text", attr, defFmt, mtf);
                 mttm.writeTextFragments(l->fragmentList(), m_xml);
@@ -7211,11 +7223,31 @@ void ExportMusicXml::print(const Measure* const m, const int partNr, const int f
                 m_xml.endElement();
             }
 
+            // Measure layout elements.
+            if (m->prev() && m->prev()->isHBox()) {
+                measureLayout(m->prev()->width());
+            }
+
             m_xml.endElement();
         } else if (!newSystemOrPage.empty()) {
             m_xml.tagRaw(String(u"print%1").arg(newSystemOrPage));
         }
+    } else if (m->prev() && m->prev()->isHBox()) {
+        m_xml.startElement("print");
+        measureLayout(m->prev()->width());
+        m_xml.endElement();
     }
+}
+
+//---------------------------------------------------------
+//  measureLayout
+//---------------------------------------------------------
+
+void ExportMusicXml::measureLayout(const double distance)
+{
+    m_xml.startElement("measure-layout");
+    m_xml.tag("measure-distance", String::number(getTenthsFromDots(distance), 2));
+    m_xml.endElement();
 }
 
 //---------------------------------------------------------

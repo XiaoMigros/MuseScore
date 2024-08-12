@@ -65,6 +65,7 @@
 #include "alignmentlayout.h"
 #include "autoplace.h"
 #include "beamlayout.h"
+#include "beamtremololayout.h"
 #include "chordlayout.h"
 #include "harmonylayout.h"
 #include "lyricslayout.h"
@@ -378,13 +379,16 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
     if (ctx.state().endTick() < ctx.state().prevMeasure()->tick()) {
         // we've processed the entire range
         // but we need to continue layout until we reach a system whose last measure is the same as previous layout
-        if (ctx.state().prevMeasure() == ctx.state().systemOldMeasure()) {
+        MeasureBase* curMB = ctx.mutState().curMeasure();
+        Measure* m = curMB && curMB->isMeasure() ? toMeasure(curMB) : nullptr;
+        bool curMeasureMayHaveJoinedBeams = m && BeamLayout::measureMayHaveBeamsJoinedIntoNext(m);
+        if (ctx.state().prevMeasure() == ctx.state().systemOldMeasure() && !curMeasureMayHaveJoinedBeams) {
+            // If current measure has possible beams joining to the next, we need to continue layout. This needs a better solution in future. [M.S.]
             // this system ends in the same place as the previous layout
             // ok to stop
-            if (ctx.state().curMeasure() && ctx.state().curMeasure()->isMeasure()) {
+            if (m) {
                 // we may have previously processed first measure(s) of next system
                 // so now we must restore to original state
-                Measure* m = toMeasure(ctx.mutState().curMeasure());
                 if (m->repeatStart()) {
                     Segment* s = m->findSegmentR(SegmentType::StartRepeatBarLine, Fraction(0, 1));
                     if (!s->enabled()) {
@@ -794,6 +798,9 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
     //    create skylines
     //-------------------------------------------------------------
 
+    std::vector<MeasureNumber*> measureNumbers;
+    std::vector<MMRestRange*> mmrRanges;
+
     for (size_t staffIdx = 0; staffIdx < ctx.dom().nstaves(); ++staffIdx) {
         SysStaff* ss = system->staff(staffIdx);
         Skyline& skyline = ss->skyline();
@@ -810,10 +817,10 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
                 continue;
             }
             if (mno && mno->addToSkyline()) {
-                ss->skyline().add(mno->ldata()->bbox().translated(m->pos() + mno->pos() + mno->staffOffset()), mno);
+                measureNumbers.push_back(mno);
             }
             if (mmrr && mmrr->addToSkyline()) {
-                ss->skyline().add(mmrr->ldata()->bbox().translated(m->pos() + mmrr->pos()), mmrr);
+                mmrRanges.push_back(mmrr);
             }
             if (m->staffLines(staffIdx)->addToSkyline()) {
                 ss->skyline().add(m->staffLines(staffIdx)->ldata()->bbox().translated(m->pos()), m->staffLines(staffIdx));
@@ -918,6 +925,9 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
     Fraction stick = useRange ? ctx.state().startTick() : system->measures().front()->tick();
     Fraction etick = useRange ? ctx.state().endTick() : system->measures().back()->endTick();
     auto spanners = ctx.dom().spannerMap().findOverlapping(stick.ticks(), etick.ticks());
+    std::sort(spanners.begin(), spanners.end(), [](const auto& sp1, const auto& sp2) {
+        return sp1.value->tick() < sp2.value->tick();
+    });
 
     // ties
     if (ctx.conf().isLinearMode()) {
@@ -976,18 +986,6 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
     }
 
     //-------------------------------------------------------------
-    // Drumline sticking
-    //-------------------------------------------------------------
-
-    for (const Segment* s : sl) {
-        for (EngravingItem* e : s->annotations()) {
-            if (e->isSticking()) {
-                TLayout::layoutItem(e, ctx);
-            }
-        }
-    }
-
-    //-------------------------------------------------------------
     // layout slurs
     //-------------------------------------------------------------
 
@@ -1020,6 +1018,30 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
         if (ecr && ecr->isChord()) {
             ChordLayout::layoutArticulations3(toChord(ecr), slur, ctx);
         }
+    }
+
+    //-------------------------------------------------------------
+    // Drumline sticking
+    //-------------------------------------------------------------
+    struct StaffStickingGroups {
+        std::vector<EngravingItem*> stickingsAbove;
+        std::vector<EngravingItem*> stickingsBelow;
+    };
+    std::map<staff_idx_t, StaffStickingGroups> staffStickings;
+    for (const Segment* s : sl) {
+        for (EngravingItem* e : s->annotations()) {
+            if (e->isSticking()) {
+                TLayout::layoutItem(e, ctx);
+                if (e->addToSkyline()) {
+                    e->placeAbove() ? staffStickings[e->staffIdx()].stickingsAbove.push_back(e) : staffStickings[e->staffIdx()].
+                    stickingsBelow.push_back(e);
+                }
+            }
+        }
+    }
+    for (auto staffSticking : staffStickings) {
+        AlignmentLayout::alignItemsGroup(staffSticking.second.stickingsAbove, system);
+        AlignmentLayout::alignItemsGroup(staffSticking.second.stickingsBelow, system);
     }
 
     //-------------------------------------------------------------
@@ -1104,7 +1126,7 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
 
     for (auto interval : spanners) {
         Spanner* sp = interval.value;
-        if (sp->staff() && !sp->staff()->show()) {
+        if (!sp->systemFlag() && sp->staff() && !sp->staff()->show()) {
             continue;
         }
 
@@ -1140,7 +1162,7 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
         }
     }
 
-    AlignmentLayout::alignItems(dynamicsExprAndHairpinsToAlign, system);
+    AlignmentLayout::alignItemsWithTheirSnappingChain(dynamicsExprAndHairpinsToAlign, system);
 
     processLines(system, ctx, spanner, false);
     processLines(system, ctx, ottavas, false);
@@ -1333,7 +1355,7 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
         }
     }
 
-    AlignmentLayout::alignItems(tempoElementsToAlign, system);
+    AlignmentLayout::alignItemsWithTheirSnappingChain(tempoElementsToAlign, system);
 
     //-------------------------------------------------------------
     // Marker and Jump
@@ -1373,6 +1395,17 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
                 TLayout::layoutItem(e, ctx);
             }
         }
+    }
+
+    for (MeasureNumber* mno : measureNumbers) {
+        Autoplace::autoplaceMeasureElement(mno, mno->mutldata());
+        system->staff(mno->staffIdx())->skyline().add(mno->ldata()->bbox().translated(mno->measure()->pos() + mno->pos()
+                                                                                      + mno->staffOffset()), mno);
+    }
+
+    for (MMRestRange* mmrr : mmrRanges) {
+        Autoplace::autoplaceMeasureElement(mmrr, mmrr->mutldata());
+        system->staff(mmrr->staffIdx())->skyline().add(mmrr->ldata()->bbox().translated(mmrr->measure()->pos() + mmrr->pos()), mmrr);
     }
 }
 
@@ -2353,8 +2386,8 @@ void SystemLayout::layout2(System* system, LayoutContext& ctx)
                 }
             }
             dist = std::max(dist, d + minVerticalDistance);
+            dist = std::max(dist, minVertSpaceForCrossStaffBeams(system, si1, si2, ctx));
         }
-        dist = std::max(dist, minVertSpaceForCrossStaffBeams(system, si1, si2));
         ss->setYOff(yOffset);
         ss->setbbox(system->leftMargin(), y - yOffset, system->width() - system->leftMargin(), h);
         ss->saveLayout();
@@ -2379,7 +2412,7 @@ void SystemLayout::layout2(System* system, LayoutContext& ctx)
     SystemLayout::layoutInstrumentNames(system, ctx);
 }
 
-double SystemLayout::minVertSpaceForCrossStaffBeams(System* system, staff_idx_t staffIdx1, staff_idx_t staffIdx2)
+double SystemLayout::minVertSpaceForCrossStaffBeams(System* system, staff_idx_t staffIdx1, staff_idx_t staffIdx2, LayoutContext& ctx)
 {
     double minSpace = -DBL_MAX;
     track_idx_t startTrack = staffIdx1 * VOICES;
@@ -2398,33 +2431,56 @@ double SystemLayout::minVertSpaceForCrossStaffBeams(System* system, staff_idx_t 
                     continue;
                 }
                 Beam* beam = toChord(item)->beam();
-                if (!beam || !beam->cross() || !beam->autoplace() || beam->elements().front() != item) {
+                if (!beam || !beam->autoplace() || beam->elements().front() != item) {
                     continue;
                 }
-                Note* highestOfBottomStaff = nullptr;
-                Note* lowestOfTopStaff = nullptr;
-                for (ChordRest* cr : beam->elements()) {
+                if (beam->ldata()->crossStaffBeamPos != BeamBase::CrossStaffBeamPosition::BETWEEN) {
+                    continue;
+                }
+                const Chord* limitingChordAbove = nullptr;
+                const Chord* limitingChordBelow = nullptr;
+                double limitFromAbove = -DBL_MAX;
+                double limitFromBelow = DBL_MAX;
+                for (const ChordRest* cr : beam->elements()) {
                     if (!cr->isChord()) {
                         continue;
                     }
-                    Chord* chord = toChord(cr);
+                    const Chord* chord = toChord(cr);
+                    double minStemLength = BeamTremoloLayout::minStemLength(chord, beam->ldata()) * (chord->spatium() / 4);
                     bool isUnderCrossBeam = cr->isBelowCrossBeam(beam);
                     if (isUnderCrossBeam && chord->vStaffIdx() == staffIdx2) {
-                        if (!highestOfBottomStaff || chord->upNote()->line() < highestOfBottomStaff->line()) {
-                            highestOfBottomStaff = chord->upNote();
+                        const Note* topNote = chord->upNote();
+                        double noteLimit = topNote->y() - minStemLength;
+                        if (noteLimit < limitFromBelow) {
+                            limitFromBelow = noteLimit;
+                            limitingChordBelow = chord;
                         }
+                        limitFromBelow = std::min(limitFromBelow, noteLimit);
                     } else if (!isUnderCrossBeam && chord->vStaffIdx() == staffIdx1) {
-                        if (!lowestOfTopStaff || chord->downNote()->line() > lowestOfTopStaff->line()) {
-                            lowestOfTopStaff = chord->downNote();
+                        const Note* bottomNote = chord->downNote();
+                        double noteLimit = bottomNote->y() + minStemLength;
+                        if (noteLimit > limitFromAbove) {
+                            limitFromAbove = noteLimit;
+                            limitingChordAbove = chord;
                         }
                     }
                 }
-                if (!highestOfBottomStaff || !lowestOfTopStaff) {
-                    continue;
+                if (limitingChordAbove && limitingChordBelow) {
+                    double minSpaceRequired = limitFromAbove - limitFromBelow;
+                    beam->mutldata()->limitingChordAbove = limitingChordAbove;
+                    beam->mutldata()->limitingChordBelow = limitingChordBelow;
+
+                    const BeamSegment* topBeamSegmentForChordAbove = beam->topLevelSegmentForElement(limitingChordAbove);
+                    const BeamSegment* topBeamSegmentForChordBelow = beam->topLevelSegmentForElement(limitingChordBelow);
+                    if (topBeamSegmentForChordAbove->above == topBeamSegmentForChordBelow->above) {
+                        // In this case the two opposing stems overlap the beam height, so we must subtract it
+                        int strokeCount = std::min(BeamTremoloLayout::strokeCount(beam->ldata(), limitingChordAbove),
+                                                   BeamTremoloLayout::strokeCount(beam->ldata(), limitingChordBelow));
+                        double beamHeight = ctx.conf().styleMM(Sid::beamWidth).val() + beam->beamDist() * (strokeCount - 1);
+                        minSpaceRequired -= beamHeight;
+                    }
+                    minSpace = std::max(minSpace, minSpaceRequired);
                 }
-                double bottomYOfTopStaff = lowestOfTopStaff->y() + lowestOfTopStaff->chord()->minStemLength();
-                double topYofBottomStaff = highestOfBottomStaff->y() - highestOfBottomStaff->chord()->minStemLength();
-                minSpace = std::max(minSpace, bottomYOfTopStaff - topYofBottomStaff);
             }
         }
     }
@@ -2806,11 +2862,9 @@ bool SystemLayout::elementShouldBeCenteredBetweenStaves(const EngravingItem* ite
             return false;
         }
     }
-    staff_idx_t nextIdx = item->placeAbove() ? thisIdx - 1 : thisIdx + 1;
 
-    const SysStaff* thisSystemStaff = system->staff(thisIdx);
-    const SysStaff* nextSystemStaff = system->staff(nextIdx);
-    if (!thisSystemStaff->show() || !nextSystemStaff->show()) {
+    staff_idx_t nextIdx = item->placeAbove() ? system->prevVisibleStaff(thisIdx) : system->nextVisibleStaff(thisIdx);
+    if (nextIdx == muse::nidx || !muse::contains(partStaves, item->score()->staff(nextIdx))) {
         return false;
     }
 
@@ -2826,7 +2880,10 @@ void SystemLayout::centerElementBetweenStaves(EngravingItem* element, const Syst
             return;
         }
     }
-    staff_idx_t nextIdx = isAbove ? thisIdx - 1 : thisIdx + 1;
+    staff_idx_t nextIdx = isAbove ? system->prevVisibleStaff(thisIdx) : system->nextVisibleStaff(thisIdx);
+    IF_ASSERT_FAILED(nextIdx != muse::nidx) {
+        return;
+    }
 
     SysStaff* thisStaff = system->staff(thisIdx);
     SysStaff* nextStaff = system->staff(nextIdx);

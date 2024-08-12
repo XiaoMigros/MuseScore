@@ -1160,6 +1160,9 @@ bool NotationInteraction::dragCopyAllowed(const EngravingItem* element) const
     case ElementType::MEASURE:
     case ElementType::NOTE:
     case ElementType::VBOX:
+    case ElementType::HBOX:
+    case ElementType::TBOX:
+    case ElementType::FBOX:
     // TODO: Bends can't be copy-dragged until corresponding SingleLayout::layout and SingleDraw::draw methods have been implemented
     case ElementType::GUITAR_BEND:
     case ElementType::GUITAR_BEND_SEGMENT:
@@ -1727,15 +1730,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                 // Ensure that list-selection results in the same endSegment as range selection
                 endSegment = cr2->nextSegmentAfterCR(SegmentType::ChordRest | SegmentType::EndBarLine | SegmentType::Clef);
             }
-
-            ByteArray a = element->mimeData();
-//printf("<<%s>>\n", a.data());
-            mu::engraving::XmlReader e(a);
-            mu::engraving::Fraction duration;        // dummy
-            PointF dragOffset;
-            mu::engraving::ElementType type = mu::engraving::EngravingItem::readType(e, &dragOffset, &duration);
-            mu::engraving::Spanner* spanner = static_cast<mu::engraving::Spanner*>(engraving::Factory::createItem(type, score->dummy()));
-            rw::RWRegister::reader()->readItem(spanner, e);
+            mu::engraving::Spanner* spanner = static_cast<mu::engraving::Spanner*>(element->clone());
+            spanner->setScore(score);
             spanner->styleChanged();
             if (spanner->isHairpin()) {
                 score->addHairpin(toHairpin(spanner), cr1, cr2);
@@ -1745,10 +1741,12 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                     startEditElement(frontSegment);
                 }
             } else {
-                score->cmdAddSpanner(spanner, cr1->staffIdx(), startSegment, endSegment, modifiers & Qt::ControlModifier);
+                bool firstStaffOnly = isSystemTextLine(element) && !(modifiers & Qt::ControlModifier);
+                staff_idx_t targetStaff = firstStaffOnly ? 0 : cr1->staffIdx();
+                score->cmdAddSpanner(spanner, targetStaff, startSegment, endSegment, modifiers & Qt::ControlModifier);
             }
-            if (spanner->hasVoiceApplicationProperties()) {
-                spanner->setInitialTrackAndVoiceApplication(cr1->track());
+            if (spanner->hasVoiceAssignmentProperties()) {
+                spanner->setInitialTrackAndVoiceAssignment(cr1->track(), modifiers & ControlModifier);
             } else if (spanner->isVoiceSpecific()) {
                 spanner->setTrack(cr1->track());
             }
@@ -1915,8 +1913,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                 spanner->setScore(score);
                 spanner->styleChanged();
                 score->cmdAddSpanner(spanner, i, startSegment, endSegment, modifiers & Qt::ControlModifier);
-                if (spanner->hasVoiceApplicationProperties()) {
-                    spanner->setInitialTrackAndVoiceApplication(staff2track(i));
+                if (spanner->hasVoiceAssignmentProperties()) {
+                    spanner->setInitialTrackAndVoiceAssignment(staff2track(i), modifiers & ControlModifier);
                 }
                 selectAndStartEditIfNeeded(spanner);
             }
@@ -2057,10 +2055,10 @@ void NotationInteraction::applyDropPaletteElement(mu::engraving::Score* score, m
             }
         }
 
-        if (el && el->hasVoiceApplicationProperties()) {
-            // If target has voice application properties, dropped element takes those and discards the default
-            if (!target->hasVoiceApplicationProperties()) {
-                el->setInitialTrackAndVoiceApplication(el->track());
+        if (el && el->hasVoiceAssignmentProperties()) {
+            // If target has voice assignment properties, dropped element takes those and discards the default
+            if (!target->hasVoiceAssignmentProperties()) {
+                el->setInitialTrackAndVoiceAssignment(target->track(), modifiers & ControlModifier);
             }
         }
 
@@ -2525,7 +2523,7 @@ void NotationInteraction::drawAnchorLines(Painter* painter)
         return;
     }
 
-    const auto dropAnchorColor = configuration()->anchorLineColor();
+    const auto dropAnchorColor = configuration()->anchorColor();
     Pen pen(dropAnchorColor, 2.0 / currentScaling(painter), PenStyle::DotLine);
 
     for (const LineF& anchor : m_anchorLines) {
@@ -3300,8 +3298,8 @@ bool NotationInteraction::handleKeyPress(QKeyEvent* event)
 
 void NotationInteraction::endEditText()
 {
-    EngravingItem* element = m_editData.element;
-    IF_ASSERT_FAILED(element) {
+    EngravingItem** element = &m_editData.element;
+    IF_ASSERT_FAILED(*element) {
         return;
     }
 
@@ -3311,7 +3309,9 @@ void NotationInteraction::endEditText()
 
     doEndEditElement();
 
-    notifyAboutTextEditingEnded(toTextBase(element));
+    if (*element) {
+        notifyAboutTextEditingEnded(toTextBase(*element));
+    }
     notifyAboutTextEditingChanged();
     notifyAboutSelectionChangedIfNeed();
 }
@@ -3745,6 +3745,9 @@ Ret NotationInteraction::canAddBoxes() const
 void NotationInteraction::addBoxes(BoxType boxType, int count, AddBoxesTarget target)
 {
     int beforeBoxIndex = -1;
+    bool moveSignaturesClefs = (target != AddBoxesTarget::AfterSelection);
+    const EngravingItem* selectedItem = nullptr;
+    const MeasureBase* selectedItemMeasure = nullptr;
 
     switch (target) {
     case AddBoxesTarget::AfterSelection:
@@ -3784,10 +3787,37 @@ void NotationInteraction::addBoxes(BoxType boxType, int count, AddBoxesTarget ta
             if (target == AddBoxesTarget::BeforeSelection) {
                 if (beforeBoxIndex < 0 || itemMeasureIndex < beforeBoxIndex) {
                     beforeBoxIndex = itemMeasureIndex;
+                    selectedItem = item;
+                    selectedItemMeasure = itemMeasure;
                 }
             } else {
                 if (itemMeasureIndex + 1 > beforeBoxIndex) {
                     beforeBoxIndex = itemMeasureIndex + 1;
+                    selectedItem = item;
+                    selectedItemMeasure = itemMeasure;
+                }
+            }
+        }
+
+        // special cases for "between measures elements"
+        if (selectedItem && selectedItemMeasure) { // null check
+            ElementType selectedItemType = selectedItem->type();
+            if (selectedItemType == ElementType::CLEF || selectedItemType == ElementType::BAR_LINE
+                || selectedItemType == ElementType::TIMESIG || selectedItemType == ElementType::KEYSIG) {
+                Fraction itemTick = selectedItem->tick();
+                Fraction measureTick = selectedItemMeasure->tick();
+                Fraction measureLastTick = measureTick + selectedItemMeasure->ticks();
+
+                if (itemTick == measureTick) {
+                    if (target == AddBoxesTarget::AfterSelection) {
+                        beforeBoxIndex -= 1;
+                    }
+                    moveSignaturesClefs = (target == AddBoxesTarget::AfterSelection);
+                } else if (itemTick == measureLastTick) {
+                    if (target == AddBoxesTarget::BeforeSelection) {
+                        beforeBoxIndex += 1;
+                    }
+                    moveSignaturesClefs = (target == AddBoxesTarget::AfterSelection);
                 }
             }
         }
@@ -3806,7 +3836,7 @@ void NotationInteraction::addBoxes(BoxType boxType, int count, AddBoxesTarget ta
         break;
     }
 
-    addBoxes(boxType, count, beforeBoxIndex, target != AddBoxesTarget::AfterSelection);
+    addBoxes(boxType, count, beforeBoxIndex, moveSignaturesClefs);
 }
 
 void NotationInteraction::addBoxes(BoxType boxType, int count, int beforeBoxIndex, bool moveSignaturesClef)
@@ -4351,7 +4381,7 @@ bool NotationInteraction::transpose(const TransposeOptions& options)
     return ok;
 }
 
-void NotationInteraction::swapVoices(int voiceIndex1, int voiceIndex2)
+void NotationInteraction::swapVoices(voice_idx_t voiceIndex1, voice_idx_t voiceIndex2)
 {
     if (selection()->isNone()) {
         return;
@@ -4408,7 +4438,7 @@ void NotationInteraction::addFret(int fretIndex)
     apply();
 }
 
-void NotationInteraction::changeSelectedNotesVoice(int voiceIndex)
+void NotationInteraction::changeSelectedElementsVoice(voice_idx_t voiceIndex)
 {
     if (selection()->isNone()) {
         return;
@@ -4419,7 +4449,18 @@ void NotationInteraction::changeSelectedNotesVoice(int voiceIndex)
     }
 
     startEdit();
-    score()->changeSelectedNotesVoice(voiceIndex);
+    score()->changeSelectedElementsVoice(voiceIndex);
+    apply();
+}
+
+void NotationInteraction::changeSelectedElementsVoiceAssignment(VoiceAssignment voiceAssignment)
+{
+    if (selection()->isNone()) {
+        return;
+    }
+
+    startEdit();
+    score()->changeSelectedElementsVoiceAssignment(voiceAssignment);
     apply();
 }
 
@@ -4972,7 +5013,6 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         cr = toChordRest(nextSegment->element(track));
         nextLyrics->setParent(cr);
         nextLyrics->setNo(verse);
-        nextLyrics->setEven(nextLyrics->isEven());
         nextLyrics->setPlacement(placement);
         nextLyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, pFlags);
         nextLyrics->setSyllabic(mu::engraving::LyricsSyllabic::SINGLE);
@@ -5130,7 +5170,6 @@ void NotationInteraction::navigateToNextSyllable()
         toLyrics->setTrack(track);
         toLyrics->setParent(cr);
         toLyrics->setNo(verse);
-        toLyrics->setEven(toLyrics->isEven());
         toLyrics->setPlacement(placement);
         toLyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, pFlags);
         toLyrics->setSyllabic(mu::engraving::LyricsSyllabic::END);
@@ -5213,7 +5252,6 @@ void NotationInteraction::navigateToLyricsVerse(MoveDirection direction)
         lyrics->setTrack(track);
         lyrics->setParent(cr);
         lyrics->setNo(verse);
-        lyrics->setEven(lyrics->isEven());
         lyrics->setPlacement(placement);
         lyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, pFlags);
         lyrics->setFontStyle(fStyle);
@@ -5779,7 +5817,6 @@ void NotationInteraction::addMelisma()
         toLyrics->setTrack(track);
         toLyrics->setParent(cr);
         toLyrics->setNo(verse);
-        toLyrics->setEven(toLyrics->isEven());
         toLyrics->setPlacement(placement);
         toLyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, pFlags);
         toLyrics->setSyllabic(mu::engraving::LyricsSyllabic::SINGLE);
@@ -5841,7 +5878,6 @@ void NotationInteraction::addLyricsVerse()
     lyrics->setPlacement(oldLyrics->placement());
     lyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, oldLyrics->propertyFlags(mu::engraving::Pid::PLACEMENT));
     lyrics->setNo(newVerse);
-    lyrics->setEven(lyrics->isEven());
     lyrics->setFontStyle(fStyle);
     lyrics->setPropertyFlags(mu::engraving::Pid::FONT_STYLE, fFlags);
 
@@ -6052,6 +6088,11 @@ void NotationInteraction::execute(void (mu::engraving::Score::* function)(P), P 
 void NotationInteraction::toggleArticulation(mu::engraving::SymId symId)
 {
     execute(&mu::engraving::Score::toggleArticulation, symId);
+}
+
+void NotationInteraction::toggleOrnament(mu::engraving::SymId symId)
+{
+    execute(&mu::engraving::Score::toggleOrnament, symId);
 }
 
 void NotationInteraction::toggleAutoplace(bool all)

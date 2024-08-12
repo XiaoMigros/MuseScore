@@ -88,8 +88,6 @@ public:
     static String translatedUserName(DynamicType v);
     static AsciiStringView toXml(DynamicType v);
     static DynamicType fromXml(const AsciiStringView& tag, DynamicType def);
-    static String translatedUserName(DynamicRange v);
-    static String toXml(DynamicRange v);
     static DynamicRange fromXml(const AsciiStringView& tag, DynamicRange def);
     static String translatedUserName(DynamicSpeed v);
     static AsciiStringView toXml(DynamicSpeed v);
@@ -242,8 +240,8 @@ public:
     static AsciiStringView toXml(TiePlacement interval);
     static TiePlacement fromXml(const AsciiStringView& str, TiePlacement def);
 
-    static AsciiStringView toXml(VoiceApplication voiceAppl);
-    static VoiceApplication fromXml(const AsciiStringView& str, VoiceApplication def);
+    static AsciiStringView toXml(VoiceAssignment voiceAppl);
+    static VoiceAssignment fromXml(const AsciiStringView& str, VoiceAssignment def);
 
     static AsciiStringView toXml(AutoOnOff autoOnOff);
     static AutoOnOff fromXml(const AsciiStringView& str, AutoOnOff def);

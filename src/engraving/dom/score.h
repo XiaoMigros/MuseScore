@@ -308,6 +308,8 @@ public:
 
     muse::async::Channel<EngravingItem*> elementDestroyed();
 
+    muse::async::Channel<float> layoutProgressChannel() const;
+
     void rebuildBspTree();
     bool noStaves() const { return m_staves.empty(); }
     void insertPart(Part*, size_t targetPartIdx);
@@ -483,6 +485,7 @@ public:
     // undo/redo ops
     void toggleArticulation(SymId);
     bool toggleArticulation(EngravingItem*, Articulation* atr);
+    void toggleOrnament(SymId);
     void toggleAccidental(AccidentalType, const EditData& ed);
     void changeAccidental(AccidentalType);
     void changeAccidental(Note* oNote, AccidentalType);
@@ -554,7 +557,8 @@ public:
     void deleteLater(EngravingObject* e) { m_updateState.deleteList.push_back(e); }
     void deletePostponed();
 
-    void changeSelectedNotesVoice(voice_idx_t);
+    void changeSelectedElementsVoice(voice_idx_t);
+    void changeSelectedElementsVoiceAssignment(VoiceAssignment);
 
     const std::vector<Part*>& parts() const;
     int visiblePartCount() const;
@@ -872,6 +876,7 @@ public:
         bool needDeselectAll = true;
         bool cloneBoxToAllParts = true;
         bool moveStaffTypeChanges = true;
+        bool ignoreBarLines = false;
     };
 
     MeasureBase* insertMeasure(ElementType type, MeasureBase* beforeMeasure = nullptr,
@@ -1051,6 +1056,7 @@ private:
     void resetTempo();
     void resetTempoRange(const Fraction& tick1, const Fraction& tick2);
     void rebuildTempoAndTimeSigMaps(Measure* m, std::optional<BeatsPerSecond>& tempoPrimo);
+    void fixAnacrusisTempo(const std::vector<Measure*>& measures) const;
 
     void deleteOrShortenOutSpannersFromRange(const Fraction& t1, const Fraction& t2, track_idx_t trackStart, track_idx_t trackEnd,
                                              const SelectionFilter& filter);
@@ -1139,6 +1145,8 @@ private:
     ShadowNote* m_shadowNote = nullptr;
 
     muse::async::Channel<LoopBoundaryType, unsigned> m_loopBoundaryTickChanged;
+
+    muse::async::Channel<float> m_layoutProgressChannel;
 
     PaddingTable m_paddingTable;
     double m_minimumPaddingUnit = 0.0;

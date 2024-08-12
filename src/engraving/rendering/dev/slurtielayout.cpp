@@ -1616,6 +1616,7 @@ void SlurTieLayout::adjustX(TieSegment* tieSegment, SlurTiePos& sPos, Grip start
     }
     Shape chordShape = chord->shape().translate(chordSystemPos);
     bool ignoreDot = start && isOuterTieOfChord;
+    bool ignoreAccidental = !start && isOuterTieOfChord;
     static const std::set<ElementType> IGNORED_TYPES = {
         ElementType::HOOK,
         ElementType::STEM_SLASH,
@@ -1624,7 +1625,7 @@ void SlurTieLayout::adjustX(TieSegment* tieSegment, SlurTiePos& sPos, Grip start
     };
     chordShape.remove_if([&](ShapeElement& s) {
         return !s.item() || s.item() == note || muse::contains(IGNORED_TYPES, s.item()->type())
-               || (s.item()->isNoteDot() && ignoreDot) || !s.item()->addToSkyline();
+               || (s.item()->isNoteDot() && ignoreDot) || (s.item()->isAccidental() && ignoreAccidental) || !s.item()->addToSkyline();
     });
 
     const double arcSideMargin = 0.3 * spatium;
@@ -2357,13 +2358,13 @@ void SlurTieLayout::layoutSegment(SlurSegment* item, LayoutContext& ctx, const P
 
 void SlurTieLayout::computeMidThickness(SlurTieSegment* slurTieSeg, double slurTieLengthInSp)
 {
-    const Millimetre endWidth = slurTieSeg->isTieSegment() ? slurTieSeg->style().styleMM(Sid::TieEndWidth)
-                                : slurTieSeg->style().styleMM(Sid::SlurEndWidth);
-    const Millimetre midWidth = slurTieSeg->isTieSegment() ? slurTieSeg->style().styleMM(Sid::TieMidWidth)
-                                : slurTieSeg->style().styleMM(Sid::SlurMidWidth);
+    const Millimetre endWidth = slurTieSeg->isTieSegment() ? slurTieSeg->style().styleMM(Sid::tieEndWidth)
+                                : slurTieSeg->style().styleMM(Sid::slurEndWidth);
+    const Millimetre midWidth = slurTieSeg->isTieSegment() ? slurTieSeg->style().styleMM(Sid::tieMidWidth)
+                                : slurTieSeg->style().styleMM(Sid::slurMidWidth);
     Staff* staff = slurTieSeg->score() ? slurTieSeg->score()->staff(slurTieSeg->vStaffIdx()) : nullptr;
     const double mag = staff ? staff->staffMag(slurTieSeg->slurTie()->tick()) : 1.0;
-    const double minTieLength = mag * slurTieSeg->style().styleS(Sid::MinTieLength).val();
+    const double minTieLength = mag * slurTieSeg->style().styleS(Sid::minTieLength).val();
     const double shortTieLimit = mag * 4.0;
     const double minTieThickness = mag * (0.15 * slurTieSeg->spatium() - endWidth);
     const double normalThickness = mag * (midWidth - endWidth);

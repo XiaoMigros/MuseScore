@@ -227,6 +227,10 @@ private:
     {
         m_expressionCtx.expressionCurve = articulationsApplied.averageDynamicOffsetMap();
 
+        if (!RealIsNull(requiredVelocityFraction)) {
+            m_expressionCtx.velocityOverride = requiredVelocityFraction;
+        }
+
         dynamic_level_t articulationDynamicLevel = articulationsApplied.averageMaxAmplitudeLevel();
         dynamic_level_t nominalDynamicLevel = m_expressionCtx.nominalDynamicLevel;
 
@@ -247,10 +251,6 @@ private:
 
         for (auto& pair : m_expressionCtx.expressionCurve) {
             pair.second = static_cast<dynamic_level_t>(RealRound(pair.second * ratio, 0));
-        }
-
-        if (!RealIsNull(requiredVelocityFraction)) {
-            m_expressionCtx.velocityOverride = requiredVelocityFraction;
         }
     }
 
@@ -294,12 +294,15 @@ struct PlaybackParam {
         Undefined = -1,
         SoundPreset,
         PlayingTechnique,
+        Syllable,
     };
 
     using Value = String;
 
     Type type = Undefined;
     Value val;
+
+    std::optional<bool> isPersistent;
 
     PlaybackParam(Type t, Value v)
         : type(t), val(std::move(v))

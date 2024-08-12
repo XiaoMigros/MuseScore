@@ -400,7 +400,7 @@ void TWrite::writeProperty(const EngravingItem* item, XmlWriter& xml, Pid pid, b
         if (d.isValid() && std::abs(f1 - d.toReal()) < 0.0001) {            // fuzzy compare
             return;
         }
-        p = PropertyValue(Spatium::fromMM(f1, item->style().spatium()));
+        p = PropertyValue(Spatium::fromMM(f1, item->spatium()));
         d = PropertyValue();
     } else if (P_TYPE::POINT == type) {
         PointF p1 = p.value<PointF>();
@@ -503,7 +503,7 @@ void TWrite::writeItemProperties(const EngravingItem* item, XmlWriter& xml, Writ
         }
     }
 
-    if (!item->hasVoiceApplicationProperties() && item->propertyFlags(Pid::PLACEMENT) == PropertyFlags::NOSTYLE) {
+    if (!item->hasVoiceAssignmentProperties() && item->propertyFlags(Pid::PLACEMENT) == PropertyFlags::NOSTYLE) {
         writeProperty(item, xml, Pid::PLACEMENT);
     }
 
@@ -1119,7 +1119,6 @@ void TWrite::write(const Dynamic* item, XmlWriter& xml, WriteContext& ctx)
     xml.startElement(item);
     writeProperty(item, xml, Pid::DYNAMIC_TYPE);
     writeProperty(item, xml, Pid::VELOCITY);
-    writeProperty(item, xml, Pid::DYNAMIC_RANGE);
     writeProperty(item, xml, Pid::AVOID_BARLINES);
     writeProperty(item, xml, Pid::DYNAMICS_SIZE);
     writeProperty(item, xml, Pid::CENTER_ON_NOTEHEAD);
@@ -1147,8 +1146,8 @@ void TWrite::write(const Expression* item, XmlWriter& xml, WriteContext& ctx)
 
 void TWrite::writeProperties(const TextBase* item, XmlWriter& xml, WriteContext& ctx, bool writeText)
 {
-    if (item->hasVoiceApplicationProperties()) {
-        writeProperty(item, xml, Pid::APPLY_TO_VOICE);
+    if (item->hasVoiceAssignmentProperties()) {
+        writeProperty(item, xml, Pid::VOICE_ASSIGNMENT);
         writeProperty(item, xml, Pid::DIRECTION);
         writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
     }
@@ -1597,30 +1596,17 @@ void TWrite::write(const Hairpin* item, XmlWriter& xml, WriteContext& ctx)
     xml.tag("subtype", int(item->hairpinType()));
     writeProperty(item, xml, Pid::VELO_CHANGE);
     writeProperty(item, xml, Pid::HAIRPIN_CIRCLEDTIP);
-    writeProperty(item, xml, Pid::DYNAMIC_RANGE);
-//      writeProperty(xml, Pid::BEGIN_TEXT);
-    writeProperty(item, xml, Pid::END_TEXT);
-//      writeProperty(xml, Pid::CONTINUE_TEXT);
-    writeProperty(item, xml, Pid::LINE_VISIBLE);
     writeProperty(item, xml, Pid::SINGLE_NOTE_DYNAMICS);
     writeProperty(item, xml, Pid::VELO_CHANGE_METHOD);
-    writeProperty(item, xml, Pid::BEGIN_TEXT_OFFSET);
-    writeProperty(item, xml, Pid::CONTINUE_TEXT_OFFSET);
-    writeProperty(item, xml, Pid::END_TEXT_OFFSET);
 
-    writeProperty(item, xml, Pid::APPLY_TO_VOICE);
+    writeProperty(item, xml, Pid::VOICE_ASSIGNMENT);
     writeProperty(item, xml, Pid::DIRECTION);
     writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
 
     writeProperty(item, xml, Pid::SNAP_BEFORE);
     writeProperty(item, xml, Pid::SNAP_AFTER);
 
-    for (const StyledProperty& spp : *item->styledProperties()) {
-        if (!item->isStyled(spp.pid)) {
-            writeProperty(item, xml, spp.pid);
-        }
-    }
-    writeProperties(static_cast<const SLine*>(item), xml, ctx);
+    writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
     xml.endElement();
 }
 

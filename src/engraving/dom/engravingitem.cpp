@@ -339,6 +339,7 @@ void EngravingItem::reset()
     undoResetProperty(Pid::PLACEMENT);
     undoResetProperty(Pid::MIN_DISTANCE);
     undoResetProperty(Pid::OFFSET);
+    undoResetProperty(Pid::LEADING_SPACE);
     setOffsetChanged(false);
     EngravingObject::reset();
 }
@@ -645,9 +646,9 @@ Color EngravingItem::curColor(bool isVisible, Color normalColor) const
 
     if (selected() || marked) {
         voice_idx_t voiceForColorChoice = track() == muse::nidx ? 0 : voice();
-        if (hasVoiceApplicationProperties()) {
-            VoiceApplication voiceApplication = getProperty(Pid::APPLY_TO_VOICE).value<VoiceApplication>();
-            if (voiceApplication != VoiceApplication::CURRENT_VOICE_ONLY) {
+        if (hasVoiceAssignmentProperties()) {
+            VoiceAssignment voiceAssignment = getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>();
+            if (voiceAssignment != VoiceAssignment::CURRENT_VOICE_ONLY) {
                 voiceForColorChoice = VOICES;
             }
         }
@@ -1284,41 +1285,51 @@ void EngravingItem::manageExclusionFromParts(bool exclude)
 
 bool EngravingItem::appliesToAllVoicesInInstrument() const
 {
-    return hasVoiceApplicationProperties()
-           && getProperty(Pid::APPLY_TO_VOICE).value<VoiceApplication>() == VoiceApplication::ALL_VOICE_IN_INSTRUMENT;
+    return hasVoiceAssignmentProperties()
+           && getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>() == VoiceAssignment::ALL_VOICE_IN_INSTRUMENT;
 }
 
-void EngravingItem::setInitialTrackAndVoiceApplication(track_idx_t track)
+void EngravingItem::setInitialTrackAndVoiceAssignment(track_idx_t track, bool curVoiceOnlyOverride)
 {
     IF_ASSERT_FAILED(track != muse::nidx) {
         return;
     }
 
-    if (configuration()->dynamicsApplyToAllVoices()) {
+    if (configuration()->dynamicsApplyToAllVoices() && !curVoiceOnlyOverride) {
         setTrack(trackZeroVoice(track));
-        setProperty(Pid::APPLY_TO_VOICE, VoiceApplication::ALL_VOICE_IN_INSTRUMENT);
+        setProperty(Pid::VOICE_ASSIGNMENT, VoiceAssignment::ALL_VOICE_IN_INSTRUMENT);
     } else {
         setTrack(track);
-        setProperty(Pid::APPLY_TO_VOICE, VoiceApplication::CURRENT_VOICE_ONLY);
+        setProperty(Pid::VOICE_ASSIGNMENT, VoiceAssignment::CURRENT_VOICE_ONLY);
     }
 }
 
-void EngravingItem::checkVoiceApplicationCompatibleWithTrack()
+void EngravingItem::checkVoiceAssignmentCompatibleWithTrack()
 {
     voice_idx_t currentVoice = voice();
-    VoiceApplication voiceApplication = getProperty(Pid::APPLY_TO_VOICE).value<VoiceApplication>();
+    VoiceAssignment voiceAssignment = getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>();
 
-    if (voiceApplication != VoiceApplication::CURRENT_VOICE_ONLY && currentVoice != 0) {
+    if (voiceAssignment != VoiceAssignment::CURRENT_VOICE_ONLY && currentVoice != 0) {
         setProperty(Pid::TRACK, trackZeroVoice(track()));
     }
 }
 
-void EngravingItem::setPlacementBasedOnVoiceApplication(DirectionV styledDirection)
+bool EngravingItem::elementAppliesToTrack(const track_idx_t refTrack) const
+{
+    if (!hasVoiceAssignmentProperties()) {
+        return refTrack == track();
+    }
+    const VoiceAssignment voiceAssignment = getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>();
+
+    return elementAppliesToTrack(track(), refTrack, voiceAssignment, part());
+}
+
+void EngravingItem::setPlacementBasedOnVoiceAssignment(DirectionV styledDirection)
 {
     PlacementV oldPlacement = placement();
     bool offsetIsStyled = isStyled(Pid::OFFSET);
 
-    PlacementV newPlacement;
+    PlacementV newPlacement = PlacementV::BELOW;
 
     DirectionV internalDirectionProperty = getProperty(Pid::DIRECTION).value<DirectionV>();
     if (internalDirectionProperty != DirectionV::AUTO) {
@@ -1329,9 +1340,29 @@ void EngravingItem::setPlacementBasedOnVoiceApplication(DirectionV styledDirecti
         bool isOnLastStaffOfInstrument = staffIdx() == part()->staves().back()->idx();
         newPlacement = isOnLastStaffOfInstrument ? PlacementV::ABOVE : PlacementV::BELOW;
     } else {
-        VoiceApplication voiceApplication = getProperty(Pid::APPLY_TO_VOICE).value<VoiceApplication>();
-        if (voiceApplication == VoiceApplication::ALL_VOICE_IN_INSTRUMENT || voiceApplication == VoiceApplication::ALL_VOICE_IN_STAFF) {
+        VoiceAssignment voiceAssignment = getProperty(Pid::VOICE_ASSIGNMENT).value<VoiceAssignment>();
+        if (voiceAssignment == VoiceAssignment::ALL_VOICE_IN_INSTRUMENT || voiceAssignment == VoiceAssignment::ALL_VOICE_IN_STAFF) {
             if (style().styleB(Sid::dynamicsHairpinsAboveForVocalStaves) && part()->instrument()->isVocalInstrument()) {
+                newPlacement = PlacementV::ABOVE;
+            } else {
+                newPlacement = PlacementV::BELOW;
+            }
+        } else if (voice() == 0) {
+            // Put above the staff only in case of multiple voices at this tick (similar to stem directions)
+            const Measure* measure = score()->tick2measure(tick());
+            Fraction startTick = Fraction(-1, 1);
+            Fraction length = Fraction(-1, 1);
+            if (isSpanner()) {
+                startTick = tick();
+                length = toSpanner(this)->ticks();
+            } else if (const Segment* segment = toSegment(findAncestor(ElementType::SEGMENT))) {
+                startTick = segment->tick();
+                length = segment->ticks();
+            } else if (measure) {
+                startTick = measure->tick();
+                length = measure->ticks();
+            }
+            if (measure && measure->hasVoices(staffIdx(), startTick, length)) {
                 newPlacement = PlacementV::ABOVE;
             } else {
                 newPlacement = PlacementV::BELOW;
@@ -2063,7 +2094,7 @@ void EngravingItem::drawEditMode(Painter* p, EditData& ed, double /*currentViewS
     p->setPen(pen);
     for (int i = 0; i < ed.grips; ++i) {
         if (Grip(i) == ed.curGrip) {
-            p->setBrush(configuration()->formattingMarksColor());
+            p->setBrush(configuration()->formattingColor());
         } else {
             p->setBrush(BrushStyle::NoBrush);
         }
@@ -2356,20 +2387,23 @@ void EngravingItem::setColorsInverionEnabled(bool enabled)
     m_colorsInversionEnabled = enabled;
 }
 
-std::pair<int, float> EngravingItem::barbeat() const
+EngravingItem::BarBeat EngravingItem::barbeat() const
 {
+    EngravingItem::BarBeat barBeat = { 0, 0, 0.0F };
     const EngravingItem* parent = this;
     while (parent && parent->type() != ElementType::SEGMENT && parent->type() != ElementType::MEASURE) {
         parent = parent->parentItem();
     }
 
     if (!parent) {
-        return std::pair<int, float>(0, 0.0F);
+        return barBeat;
     }
 
     int bar = 0;
+    int displayedBar = 0;
     int beat = 0;
     int ticks = 0;
+    const Measure* measure = nullptr;
 
     const TimeSigMap* timeSigMap = score()->sigmap();
     int ticksB = ticks_beat(timeSigMap->timesig(0).timesig().denominator());
@@ -2378,14 +2412,20 @@ std::pair<int, float> EngravingItem::barbeat() const
         const Segment* segment = static_cast<const Segment*>(parent);
         timeSigMap->tickValues(segment->tick().ticks(), &bar, &beat, &ticks);
         ticksB = ticks_beat(timeSigMap->timesig(segment->tick().ticks()).timesig().denominator());
+        measure = segment->findMeasure();
+        if (measure) {
+            displayedBar = measure->no();
+        }
     } else if (parent->type() == ElementType::MEASURE) {
-        const Measure* measure = static_cast<const Measure*>(parent);
+        measure = static_cast<const Measure*>(parent);
         bar = measure->no();
+        displayedBar = bar;
         beat = -1;
         ticks = 0;
     }
 
-    return std::pair<int, float>(bar + 1, beat + 1 + ticks / static_cast<float>(ticksB));
+    barBeat = { bar + 1, displayedBar + 1, beat + 1 + ticks / static_cast<float>(ticksB) };
+    return barBeat;
 }
 
 EngravingItem* EngravingItem::findLinkedInScore(const Score* score) const
@@ -2472,13 +2512,17 @@ void EngravingItem::doInitAccessible()
 String EngravingItem::formatBarsAndBeats() const
 {
     String result;
-    std::pair<int, float> barbeat = this->barbeat();
+    EngravingItem::BarBeat barbeat = this->barbeat();
 
-    if (barbeat.first != 0) {
-        result = muse::mtrc("engraving", "Measure: %1").arg(barbeat.first);
+    if (barbeat.bar != 0) {
+        result = muse::mtrc("engraving", "Measure: %1").arg(barbeat.bar);
 
-        if (!muse::RealIsNull(barbeat.second)) {
-            result += u"; " + muse::mtrc("engraving", "Beat: %1").arg(barbeat.second);
+        if (barbeat.displayedBar != barbeat.bar) {
+            result += u"; " + muse::mtrc("engraving", "Displayed measure: %1").arg(barbeat.displayedBar);
+        }
+
+        if (!muse::RealIsNull(barbeat.beat)) {
+            result += u"; " + muse::mtrc("engraving", "Beat: %1").arg(barbeat.beat);
         }
     }
 
@@ -2544,6 +2588,28 @@ EngravingItem::LayoutData* EngravingItem::mutldataInternal()
         m_layoutData->m_item = this;
     }
     return m_layoutData;
+}
+
+bool EngravingItem::elementAppliesToTrack(const track_idx_t elementTrack, const track_idx_t refTrack,
+                                          const VoiceAssignment voiceAssignment, const Part* part)
+{
+    if (voiceAssignment == VoiceAssignment::CURRENT_VOICE_ONLY && elementTrack == refTrack) {
+        return true;
+    }
+
+    if (voiceAssignment == VoiceAssignment::ALL_VOICE_IN_STAFF && track2staff(elementTrack) == track2staff(refTrack)) {
+        return true;
+    }
+
+    if (!part) {
+        return false;
+    }
+
+    if (voiceAssignment == VoiceAssignment::ALL_VOICE_IN_INSTRUMENT && (part->startTrack() <= refTrack
+                                                                        && part->endTrack() - 1 >= refTrack)) {
+        return true;
+    }
+    return false;
 }
 
 void EngravingItem::LayoutData::setBbox(const RectF& r)

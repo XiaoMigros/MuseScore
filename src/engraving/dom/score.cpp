@@ -266,7 +266,10 @@ Score::~Score()
     imageStore.clearUnused();
 
     delete m_shadowNote;
+    m_shadowNote = nullptr;
+
     delete m_rootItem;
+    m_rootItem = nullptr;
 }
 
 muse::async::Channel<LoopBoundaryType, unsigned> Score::loopBoundaryTickChanged() const
@@ -282,6 +285,11 @@ void Score::notifyLoopBoundaryTickChanged(LoopBoundaryType type, unsigned ticks)
 muse::async::Channel<EngravingItem*> Score::elementDestroyed()
 {
     return m_elementDestroyed;
+}
+
+muse::async::Channel<float> Score::layoutProgressChannel() const
+{
+    return m_layoutProgressChannel;
 }
 
 //---------------------------------------------------------
@@ -411,6 +419,7 @@ void Score::setUpTempoMap()
         sigmap()->clear();
         sigmap()->add(0, SigEvent(fm->ticks(),  fm->timesig(), 0));
     }
+    std::vector<Measure*> anacrusisMeasures;
 
     auto tempoPrimo = std::optional<BeatsPerSecond> {};
 
@@ -426,6 +435,14 @@ void Score::setUpTempoMap()
         m->moveTicks(diff);
         if (m->mmRest()) {
             m->mmRest()->moveTicks(diff);
+        }
+        // TODO: Better to use Measure::isAnacrusis() here
+        // but since it requires irregular() return true it's not working as expected
+        // if user didn't checked "Exclude from measure count" in measure properties,
+        // but reduces the real measure length.
+        // So we use the following workaround:
+        if (m->ticks() < m->timesig()) {
+            anacrusisMeasures.push_back(m);
         }
 
         rebuildTempoAndTimeSigMaps(m, tempoPrimo);
@@ -449,8 +466,10 @@ void Score::setUpTempoMap()
             BeatsPerSecond currentBps = tempomap()->tempo(tickPositionFrom);
             BeatsPerSecond newBps = currentBps * tempoChange->tempoChangeFactor();
 
-            std::map<int, double> tempoCurve = TConv::easingValueCurve(tempoChange->ticks().ticks(),
-                                                                       4 /*stepsCount*/,
+            int totalTicks = tempoChange->ticks().ticks();
+            int stepsCount = std::max(8, totalTicks / Constants::DIVISION);
+            std::map<int, double> tempoCurve = TConv::easingValueCurve(totalTicks,
+                                                                       stepsCount,
                                                                        newBps.val - currentBps.val,
                                                                        tempoChange->easingMethod());
 
@@ -469,6 +488,9 @@ void Score::setUpTempoMap()
     }
 
     masterScore()->updateRepeatListTempo();
+    if (!anacrusisMeasures.empty()) {
+        fixAnacrusisTempo(anacrusisMeasures);
+    }
     m_needSetUpTempoMap = false;
 }
 
@@ -602,6 +624,34 @@ void Score::rebuildTempoAndTimeSigMaps(Measure* measure, std::optional<BeatsPerS
     }
 }
 
+void Score::fixAnacrusisTempo(const std::vector<Measure*>& measures) const
+{
+    auto getTempoTextIfExist = [](const Measure* m) -> TempoText* {
+        for (const Segment& s : m->segments()) {
+            if (s.isChordRestType()) {
+                for (EngravingItem* e : s.annotations()) {
+                    if (e->isTempoText()) {
+                        return toTempoText(e);
+                    }
+                }
+            }
+        }
+        return nullptr;
+    };
+
+    for (Measure* measure : measures) {
+        if (getTempoTextIfExist(measure)) {
+            continue;
+        }
+        Measure* nextMeasure = measure->nextMeasure();
+        if (nextMeasure) {
+            if (TempoText* tt = getTempoTextIfExist(nextMeasure); tt) {
+                tempomap()->setTempo(measure->tick().ticks(), tt->tempo());
+            }
+        }
+    }
+}
+
 //---------------------------------------------------------
 //   pos2measure
 //     Return measure for canvas relative position \a p.
@@ -681,7 +731,7 @@ void Score::dragPosition(const PointF& p, staff_idx_t* rst, Segment** seg, doubl
     }
     track_idx_t etrack = staff2track(i + 1);
 
-    SegmentType st = allowTimeAnchor ? SegmentType::ChordRest | SegmentType::TimeTick : SegmentType::ChordRest;
+    SegmentType st = allowTimeAnchor ? Segment::CHORD_REST_OR_TIME_TICK_TYPE : SegmentType::ChordRest;
     Segment* segment = m->searchSegment(pppp.x(), st, strack, etrack, *seg, spacingFactor);
     if (segment) {
         *rst = i;
@@ -4488,12 +4538,10 @@ ChordRest* Score::findCR(Fraction tick, track_idx_t track) const
     }
     EngravingItem* el = s->element(track);
     if (el && el->isRest() && toRest(el)->isGap()) {
-        s = nullptr;
+        return nullptr;
     }
-    if (s) {
-        return toChordRest(s->element(track));
-    }
-    return nullptr;
+
+    return toChordRest(el);
 }
 
 //---------------------------------------------------------
@@ -5153,33 +5201,60 @@ String Score::nextRehearsalMarkText(RehearsalMark* previous, RehearsalMark* curr
 //    moves selected notes into specified voice if possible
 //---------------------------------------------------------
 
-void Score::changeSelectedNotesVoice(voice_idx_t voice)
+void Score::changeSelectedElementsVoice(voice_idx_t voice)
 {
-    std::vector<EngravingItem*> el;
+    auto isOperationValid = [](Score* score, track_idx_t origTrack, track_idx_t dstTrack) {
+        Excerpt* excerpt = score->excerpt();
+        if (!excerpt) {
+            return true;
+        }
+
+        const track_idx_t dstTrackMapped = muse::key(excerpt->tracksMapping(), dstTrack, muse::nidx);
+        if (dstTrackMapped == muse::nidx) {
+            return false;
+        }
+
+        const track_idx_t origTrackMapped = muse::key(excerpt->tracksMapping(), origTrack, muse::nidx);
+        if (origTrackMapped == dstTrack) {
+            return false;
+        }
+
+        return true;
+    };
+
+    std::vector<EngravingItem*> newElements;
     std::vector<EngravingItem*> oel = selection().elements();       // make copy
     for (EngravingItem* e : oel) {
-        if (e->type() != ElementType::NOTE) {
-            continue;
-        }
+        if (e->isNote()) {
+            Note* note   = toNote(e);
+            Chord* chord = note->chord();
 
-        Note* note   = toNote(e);
-        Chord* chord = note->chord();
+            // move grace notes with main chord only
+            if (chord->isGrace() || chord->isTrillCueNote()) {
+                continue;
+            }
 
-        // move grace notes with main chord only
-        if (chord->isGrace() || chord->isTrillCueNote()) {
-            continue;
-        }
+            if (chord->voice() == voice) {
+                continue;
+            }
 
-        if (chord->voice() != voice) {
+            Score* score = this;
+            if (excerpt() && !chord->staff()->isVoiceVisible(voice)) {
+                // We are on a linked stave with the desired voice not visible
+                // Get note in main score to continue
+                note = toNote(note->findLinkedInScore(m_masterScore));
+                chord = note->chord();
+                score = m_masterScore;
+            }
             Segment* s       = chord->segment();
             Measure* m       = s->measure();
             size_t notes     = chord->notes().size();
-            track_idx_t dstTrack     = chord->staffIdx() * VOICES + voice;
+            track_idx_t dstTrack = chord->staffIdx() * VOICES + voice;
             ChordRest* dstCR = toChordRest(s->element(dstTrack));
             Chord* dstChord  = nullptr;
 
-            if (excerpt() && muse::key(excerpt()->tracksMapping(), dstTrack, muse::nidx) == muse::nidx) {
-                break;
+            if (!isOperationValid(score, chord->track(), dstTrack)) {
+                continue;
             }
 
             // set up destination chord
@@ -5199,7 +5274,7 @@ void Score::changeSelectedNotesVoice(voice_idx_t voice)
                 dstChord->setTicks(chord->ticks());
                 dstChord->setTuplet(dstCR->tuplet());
                 dstChord->setParent(s);
-                undoRemoveElement(dstCR);
+                score->undoRemoveElement(dstCR);
             } else if (!chord->tuplet()) {
                 // rests or gap in destination
                 //   insert new chord if the rests / gap are long enough
@@ -5233,87 +5308,120 @@ void Score::changeSelectedNotesVoice(voice_idx_t voice)
                     dstChord->setParent(s);
                     // makeGapVoice will not back-fill an empty voice
                     if (voice && !dstCR) {
-                        expandVoice(s, /*m->first(SegmentType::ChordRest,*/ dstTrack);
+                        score->expandVoice(s, /*m->first(SegmentType::ChordRest,*/ dstTrack);
                     }
-                    makeGapVoice(s, dstTrack, chord->actualTicks(), s->tick());
+                    score->makeGapVoice(s, dstTrack, chord->actualTicks(), s->tick());
                 }
+            }
+
+            if (!dstChord) {
+                continue;
             }
 
             // move note to destination chord
-            if (dstChord) {
-                // create & add new note
-                Note* newNote = Factory::copyNote(*note);
-                newNote->setSelected(false);
-                newNote->setParent(dstChord);
-                undoAddElement(newNote);
-                el.push_back(newNote);
-                // add new chord if one was created
-                if (dstChord != dstCR) {
-                    undoAddCR(dstChord, m, s->tick());
-                }
-                for (EngravingObject* linked : note->linkList()) {
-                    Note* linkedNote = toNote(linked);
-                    Note* linkedNewNote = linked == note ? newNote : toNote(newNote->findLinkedInStaff(linkedNote->staff()));
-                    // reconnect the tie to this note, if any
-                    Tie* tie = linkedNote->tieBack();
-                    if (tie) {
-                        undoChangeSpannerElements(tie, tie->startNote(), linkedNewNote);
-                    }
-                    // reconnect the tie from this note, if any
-                    tie = linkedNote->tieFor();
-                    if (tie) {
-                        undoChangeSpannerElements(tie, linkedNewNote, tie->endNote());
-                    }
-                }
 
-                // remove original note
-                if (notes > 1) {
-                    undoRemoveElement(note);
-                } else if (notes == 1) {
-                    // take care of slurs
-                    int currentTick = chord->tick().ticks();
-                    for (auto it : score()->spannerMap().findOverlapping(currentTick, currentTick + 1)) {
-                        Spanner* spanner = it.value;
-                        if (!spanner->isSlur()) {
-                            continue;
-                        }
-                        Slur* slur = toSlur(spanner);
-                        if (slur->startElement() == chord) {
-                            undoChangeSpannerElements(slur, dstChord, slur->endElement());
-                        } else if (slur->endElement() == chord) {
-                            undoChangeSpannerElements(slur, slur->startElement(), dstChord);
-                        }
-                    }
-                    // create rest to leave behind
-                    Rest* r = Factory::createRest(s);
-                    r->setTrack(chord->track());
-                    r->setDurationType(chord->durationType());
-                    r->setTicks(chord->ticks());
-                    r->setTuplet(chord->tuplet());
-                    r->setParent(s);
-                    // if there were grace notes, move them
-                    while (!chord->graceNotes().empty()) {
-                        Chord* gc = chord->graceNotes().front();
-                        Chord* ngc = Factory::copyChord(*gc);
-                        undoRemoveElement(gc);
-                        ngc->setParent(dstChord);
-                        ngc->setTrack(dstChord->track());
-                        undoAddElement(ngc);
-                    }
-                    // remove chord, replace with rest
-                    undoRemoveElement(chord);
-                    undoAddCR(r, m, s->tick());
+            // create & add new note
+            Note* newNote = Factory::copyNote(*note);
+            newNote->setSelected(false);
+            newNote->setParent(dstChord);
+            score->undoAddElement(newNote);
+            newElements.push_back(newNote);
+            // add new chord if one was created
+            if (dstChord != dstCR) {
+                score->undoAddCR(dstChord, m, s->tick());
+            }
+            for (EngravingObject* linked : note->linkList()) {
+                Note* linkedNote = toNote(linked);
+                Note* linkedNewNote = linked == note ? newNote : toNote(newNote->findLinkedInStaff(linkedNote->staff()));
+                // reconnect the tie to this note, if any
+                Tie* tie = linkedNote->tieBack();
+                if (tie) {
+                    score->undoChangeSpannerElements(tie, tie->startNote(), linkedNewNote);
+                }
+                // reconnect the tie from this note, if any
+                tie = linkedNote->tieFor();
+                if (tie) {
+                    score->undoChangeSpannerElements(tie, linkedNewNote, tie->endNote());
                 }
             }
+
+            // remove original note
+            if (notes > 1) {
+                score->undoRemoveElement(note);
+            } else if (notes == 1) {
+                // take care of slurs
+                int currentTick = chord->tick().ticks();
+                for (auto it : score->spannerMap().findOverlapping(currentTick, currentTick + 1)) {
+                    Spanner* spanner = it.value;
+                    if (!spanner->isSlur()) {
+                        continue;
+                    }
+                    Slur* slur = toSlur(spanner);
+                    if (slur->startElement() == chord) {
+                        score->undoChangeSpannerElements(slur, dstChord, slur->endElement());
+                    } else if (slur->endElement() == chord) {
+                        score->undoChangeSpannerElements(slur, slur->startElement(), dstChord);
+                    }
+                }
+                // create rest to leave behind
+                Rest* r = Factory::createRest(s);
+                r->setTrack(chord->track());
+                r->setDurationType(chord->durationType());
+                r->setTicks(chord->ticks());
+                r->setTuplet(chord->tuplet());
+                r->setParent(s);
+                // if there were grace notes, move them
+                while (!chord->graceNotes().empty()) {
+                    Chord* gc = chord->graceNotes().front();
+                    Chord* ngc = Factory::copyChord(*gc);
+                    score->undoRemoveElement(gc);
+                    ngc->setParent(dstChord);
+                    ngc->setTrack(dstChord->track());
+                    score->undoAddElement(ngc);
+                }
+                // remove chord, replace with rest
+                score->undoRemoveElement(chord);
+                score->undoAddCR(r, m, s->tick());
+            }
+        } else if (e->hasVoiceAssignmentProperties()) {
+            if (e->isSpannerSegment()) {
+                e = toSpannerSegment(e)->spanner();
+            }
+
+            track_idx_t dstTrack = e->staffIdx() * VOICES + voice;
+            if (!isOperationValid(this, e->track(), dstTrack)) {
+                continue;
+            }
+
+            e->undoChangeProperty(Pid::VOICE, voice);
+            e->undoChangeProperty(Pid::VOICE_ASSIGNMENT, VoiceAssignment::CURRENT_VOICE_ONLY);
+            newElements.push_back(e);
         }
     }
 
-    if (!el.empty()) {
+    if (!newElements.empty()) {
         selection().clear();
+        select(newElements, SelectType::ADD, muse::nidx);
     }
 
-    select(el, SelectType::ADD, muse::nidx);
     setLayoutAll();
+}
+
+void Score::changeSelectedElementsVoiceAssignment(VoiceAssignment voiceAssignment)
+{
+    std::vector<EngravingItem*> newElements;
+
+    for (EngravingItem* e : selection().elements()) {
+        if (e->hasVoiceAssignmentProperties()) {
+            e->undoChangeProperty(Pid::VOICE_ASSIGNMENT, voiceAssignment);
+            newElements.push_back(e);
+        }
+    }
+
+    if (!newElements.empty()) {
+        selection().clear();
+        select(newElements, SelectType::ADD, muse::nidx);
+    }
 }
 
 std::set<staff_idx_t> Score::staffIdxSetFromRange(const track_idx_t trackFrom, const track_idx_t trackTo, StaffAccepted staffAccepted) const
@@ -5698,7 +5806,7 @@ void Score::doLayoutRange(const Fraction& st, const Fraction& et)
         end = std::max(et, spanner->tick2());
     }
 
-    m_engravingFont = engravingFonts()->fontByName(style().value(Sid::MusicalSymbolFont).value<String>().toStdString());
+    m_engravingFont = engravingFonts()->fontByName(style().value(Sid::musicalSymbolFont).value<String>().toStdString());
     m_layoutOptions.noteHeadWidth = m_engravingFont->width(SymId::noteheadBlack, style().spatium() / SPATIUM20);
 
     if (this->cmdState().layoutFlags & LayoutFlag::REBUILD_MIDI_MAPPING) {

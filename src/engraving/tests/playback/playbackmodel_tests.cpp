@@ -831,7 +831,7 @@ TEST_F(Engraving_PlaybackModelTests, SimpleRepeat_Changes_Notification)
     ASSERT_EQ(part->instruments().size(), 1);
 
     // [GIVEN] The articulation profiles repository will be returning profiles for StringsArticulation family
-    ON_CALL(*m_repositoryMock, defaultProfile(ArticulationFamily::Strings)).WillByDefault(Return(m_defaultProfile));
+    ON_CALL(*m_repositoryMock, defaultProfile(_)).WillByDefault(Return(m_defaultProfile));
 
     // [GIVEN] Expected amount of changed events
     int expectedChangedEventsCount = 24;
@@ -896,7 +896,8 @@ TEST_F(Engraving_PlaybackModelTests, TempoChangesDuringNotes) {
         2 * quarterAtTempo(100) + 4 * quarterAtTempo(10) + 2 * quarterAtTempo(100),
 
         // Tied note of two measures long, with ritenuto over it
-        2 * quarterAtTempo(100) + 2 * quarterAtTempo(90) + 2 * quarterAtTempo(80) + 2 * quarterAtTempo(70),
+        quarterAtTempo(100) + quarterAtTempo(95) + quarterAtTempo(90) + quarterAtTempo(85) + quarterAtTempo(80) + quarterAtTempo(75)
+        + quarterAtTempo(70) + quarterAtTempo(65),
 
         // Tied note of two measures long, with tempo changes in the middle of it, with eighth notes tremolo
         static_cast<duration_t>(quarterAtTempo(100) * 0.5),
@@ -919,24 +920,25 @@ TEST_F(Engraving_PlaybackModelTests, TempoChangesDuringNotes) {
         // Tied note of two measures long, with ritenuto over it, with eighth notes tremolo
         static_cast<duration_t>(quarterAtTempo(100) * 0.5),
         static_cast<duration_t>(quarterAtTempo(100) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(100) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(100) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(95) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(95) * 0.5),
         static_cast<duration_t>(quarterAtTempo(90) * 0.5),
         static_cast<duration_t>(quarterAtTempo(90) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(90) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(90) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(85) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(85) * 0.5),
         static_cast<duration_t>(quarterAtTempo(80) * 0.5),
         static_cast<duration_t>(quarterAtTempo(80) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(80) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(80) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(75) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(75) * 0.5),
         static_cast<duration_t>(quarterAtTempo(70) * 0.5),
         static_cast<duration_t>(quarterAtTempo(70) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(70) * 0.5),
-        static_cast<duration_t>(quarterAtTempo(70) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(65) * 0.5),
+        static_cast<duration_t>(quarterAtTempo(65) * 0.5),
 
         // Same as beginning, but now with pedal
         2 * quarterAtTempo(100) + 4 * quarterAtTempo(10) + 2 * quarterAtTempo(100),
-        2 * quarterAtTempo(100) + 2 * quarterAtTempo(90) + 2 * quarterAtTempo(80) + 2 * quarterAtTempo(70),
+        quarterAtTempo(100) + quarterAtTempo(95) + quarterAtTempo(90) + quarterAtTempo(85) + quarterAtTempo(80) + quarterAtTempo(75)
+        + quarterAtTempo(70) + quarterAtTempo(65),
     };
 
     // Allow slight deviations because of rounding errors

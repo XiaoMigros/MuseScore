@@ -85,8 +85,7 @@ public:
     void setVelocity(int v) { m_velocity = v; }
     int velocity() const;
     DynamicRange dynRange() const { return m_dynRange; }
-    void setDynRange(DynamicRange t) { m_dynRange = t; }
-    void undoSetDynRange(DynamicRange t);
+    void setDynRange(DynamicRange t);
 
     int changeInVelocity() const;
     void setChangeInVelocity(int val);
@@ -128,7 +127,7 @@ public:
     void setAnchorToEndOfPrevious(bool v) { m_anchorToEndOfPrevious = v; }
     void checkMeasureBoundariesAndMoveIfNeed();
 
-    bool hasVoiceApplicationProperties() const override { return true; }
+    bool hasVoiceAssignmentProperties() const override { return true; }
 
 private:
 

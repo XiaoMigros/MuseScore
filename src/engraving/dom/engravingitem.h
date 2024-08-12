@@ -489,7 +489,13 @@ public:
     bool colorsInversionEnabled() const;
     void setColorsInverionEnabled(bool enabled);
 
-    std::pair<int, float> barbeat() const;
+    struct BarBeat
+    {
+        int bar;
+        int displayedBar;
+        double beat;
+    };
+    BarBeat barbeat() const;
 
     virtual EngravingItem* findLinkedInScore(const Score* score) const;
     EngravingItem* findLinkedInStaff(const Staff* staff) const;
@@ -582,6 +588,7 @@ public:
         void disconnectItemSnappedBefore();
         void connectItemSnappedAfter(EngravingItem* itemAfter);
         void disconnectItemSnappedAfter();
+        void disconnectSnappedItems() { disconnectItemSnappedBefore(); disconnectItemSnappedAfter(); }
         EngravingItem* itemSnappedBefore() const { return m_itemSnappedBefore; }
         EngravingItem* itemSnappedAfter() const { return m_itemSnappedAfter; }
 
@@ -674,11 +681,12 @@ public:
 
     virtual bool allowTimeAnchor() const { return false; }
 
-    virtual bool hasVoiceApplicationProperties() const { return false; }
+    virtual bool hasVoiceAssignmentProperties() const { return false; }
     bool appliesToAllVoicesInInstrument() const;
-    void setInitialTrackAndVoiceApplication(track_idx_t track);
-    void checkVoiceApplicationCompatibleWithTrack();
-    void setPlacementBasedOnVoiceApplication(DirectionV styledDirection);
+    void setInitialTrackAndVoiceAssignment(track_idx_t track, bool curVoiceOnlyOverride);
+    void checkVoiceAssignmentCompatibleWithTrack();
+    virtual bool elementAppliesToTrack(const track_idx_t refTrack) const;
+    void setPlacementBasedOnVoiceAssignment(DirectionV styledDirection);
 
     void setOffsetChanged(bool val, bool absolute = true, const PointF& diff = PointF());
     //! ---------------------
@@ -700,6 +708,9 @@ protected:
     Color m_color;                // element color attribute
 
     track_idx_t m_track = muse::nidx;         // staffIdx * VOICES + voice
+
+    static bool elementAppliesToTrack(const track_idx_t elementTrack, const track_idx_t refTrack, const VoiceAssignment voiceAssignment,
+                                      const Part* part);
 
 private:
 

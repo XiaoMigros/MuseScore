@@ -1296,7 +1296,8 @@ int Chord::minStaffOverlap(bool up, int staffLines, int beamCount, bool hasHook,
         }
     }
 
-    int staffOverlap = std::min(beamOverlap, (staffLines - 1) * 4);
+    int staffLineOffset = isFullSize ? 1 : 4;
+    int staffOverlap = std::min(beamOverlap, (staffLines - staffLineOffset) * 4);
     if (!up) {
         return staffOverlap;
     }
@@ -2571,6 +2572,15 @@ GraceNotesGroup& Chord::graceNotesAfter(bool filterUnplayable) const
     return m_graceNotesAfter;
 }
 
+Chord* Chord::graceNoteAt(size_t idx) const
+{
+    if (idx > m_graceNotes.size()) {
+        return nullptr;
+    }
+
+    return m_graceNotes.at(idx);
+}
+
 //---------------------------------------------------------
 //   setShowStemSlashInAdvance
 //---------------------------------------------------------
@@ -3209,10 +3219,10 @@ void Chord::computeKerningExceptions()
             m_allowKerningBelow = false;
         }
     }
-    if (m_startEndSlurs.startUp || m_startEndSlurs.endUp) {
+    if ((m_startEndSlurs.startUp || m_startEndSlurs.endUp) && !ldata()->up) {
         m_allowKerningAbove = false;
     }
-    if (m_startEndSlurs.startDown || m_startEndSlurs.endDown) {
+    if ((m_startEndSlurs.startDown || m_startEndSlurs.endDown) && ldata()->up) {
         m_allowKerningBelow = false;
     }
 }
