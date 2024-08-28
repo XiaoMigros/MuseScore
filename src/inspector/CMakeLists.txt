@@ -142,6 +142,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/vibratosettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/hairpinsettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/hairpinsettingsmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/noteanchoredlinesettingsmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/noteanchoredlinesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/ottavasettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/ottavasettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/voltasettingsmodel.cpp

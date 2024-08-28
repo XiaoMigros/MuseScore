@@ -94,6 +94,7 @@ QList<mu::engraving::EngravingItem*> ElementRepositoryService::findElementsByTyp
     case mu::engraving::ElementType::ORNAMENT: return findOrnaments();
     case mu::engraving::ElementType::PEDAL:
     case mu::engraving::ElementType::GLISSANDO:
+    case mu::engraving::ElementType::NOTE_ANCHORED_LINE:
     case mu::engraving::ElementType::VIBRATO:
     case mu::engraving::ElementType::HAIRPIN:
     case mu::engraving::ElementType::VOLTA:
@@ -308,6 +309,7 @@ QList<mu::engraving::EngravingItem*> ElementRepositoryService::findLines(mu::eng
 {
     static const QMap<mu::engraving::ElementType, mu::engraving::ElementType> lineTypeToSegmentType {
         { mu::engraving::ElementType::GLISSANDO, mu::engraving::ElementType::GLISSANDO_SEGMENT },
+        { mu::engraving::ElementType::NOTE_ANCHORED_LINE, mu::engraving::ElementType::NOTE_ANCHORED_LINE_SEGMENT },
         { mu::engraving::ElementType::VIBRATO, mu::engraving::ElementType::VIBRATO_SEGMENT },
         { mu::engraving::ElementType::PEDAL, mu::engraving::ElementType::PEDAL_SEGMENT },
         { mu::engraving::ElementType::HAIRPIN, mu::engraving::ElementType::HAIRPIN_SEGMENT },

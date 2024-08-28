@@ -62,6 +62,7 @@
         <file>qml/MuseScore/Inspector/notation/NotationInspectorSectionLoader.qml</file>
         <file>qml/MuseScore/Inspector/notation/fermatas/FermataSettings.qml</file>
         <file>qml/MuseScore/Inspector/notation/lines/GlissandoSettings.qml</file>
+        <file>qml/MuseScore/Inspector/notation/lines/NoteAnchoredLineSettings.qml</file>
         <file>qml/MuseScore/Inspector/notation/lines/VibratoSettings.qml</file>
         <file>qml/MuseScore/Inspector/notation/lines/SlurAndTieSettings.qml</file>
         <file>qml/MuseScore/Inspector/notation/tempos/TempoSettings.qml</file>
