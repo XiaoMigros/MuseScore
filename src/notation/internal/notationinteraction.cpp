@@ -65,6 +65,7 @@
 #include "engraving/dom/measure.h"
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/navigate.h"
+#include "engraving/dom/noteanchoredline.h"
 #include "engraving/dom/page.h"
 #include "engraving/dom/part.h"
 #include "engraving/dom/rest.h"
@@ -4469,13 +4470,8 @@ void NotationInteraction::changeSelectedElementsVoiceAssignment(VoiceAssignment 
 
 void NotationInteraction::addAnchoredLineToSelectedNotes()
 {
-    if (selection()->isNone()) {
-        return;
-    }
-
-    startEdit();
-    score()->addNoteLine();
-    apply();
+    mu::engraving::NoteAnchoredLine* nal = new mu::engraving::NoteAnchoredLine(this->score()->dummy()->note());
+    applyPaletteElement(nal);
 }
 
 void NotationInteraction::addTextToTopFrame(TextStyleType type)

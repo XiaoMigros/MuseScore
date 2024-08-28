@@ -2098,60 +2098,6 @@ void Score::cmdAddOttava(OttavaType type)
 }
 
 //---------------------------------------------------------
-//   cmdAddNoteLine
-//---------------------------------------------------------
-
-void Score::addNoteLine()
-{
-    std::vector<Note*> selectedNotes;
-
-    if (selection().isRange()) {
-        track_idx_t startTrack = selection().staffStart() * VOICES;
-        track_idx_t endTrack = selection().staffEnd() * VOICES;
-
-        for (track_idx_t track = startTrack; track < endTrack; ++track) {
-            std::vector<Note*> notes = selection().noteList(track);
-            selectedNotes.insert(selectedNotes.end(), notes.begin(), notes.end());
-        }
-    } else {
-        std::vector<Note*> notes = selection().noteList();
-        selectedNotes.insert(selectedNotes.end(), notes.begin(), notes.end());
-    }
-
-    Note* firstNote = nullptr;
-    Note* lastNote  = nullptr;
-
-    for (Note* note : selectedNotes) {
-        if (firstNote == nullptr || firstNote->chord()->tick() > note->chord()->tick()) {
-            firstNote = note;
-        }
-        if (lastNote == nullptr || lastNote->chord()->tick() < note->chord()->tick()) {
-            lastNote = note;
-        }
-    }
-
-    if (!firstNote || !lastNote) {
-        LOGD("addNoteLine: no note %p %p", firstNote, lastNote);
-        return;
-    }
-
-    if (firstNote == lastNote) {
-        LOGD("addNoteLine: no support for note to same note line %p", firstNote);
-        return;
-    }
-
-    TextLine* line = new TextLine(firstNote);
-    line->setParent(firstNote);
-    line->setStartElement(firstNote);
-    line->setDiagonal(true);
-    line->setAnchor(Spanner::Anchor::NOTE);
-    line->setTick(firstNote->chord()->tick());
-    line->setEndElement(lastNote);
-
-    undoAddElement(line);
-}
-
-//---------------------------------------------------------
 //   cmdSetBeamMode
 //---------------------------------------------------------
 
