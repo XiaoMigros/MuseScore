@@ -47,6 +47,24 @@ StyledTabButton {
 
     clip: true
 
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        acceptedButtons: contextMenuLoader.isMenuOpened ? Qt.AllButtons : Qt.RightButton
+        cursorShape: Qt.SizeAllCursor
+        onClicked: (mouse)=> {
+            contextMenuLoader.toggleOpened(root.contextMenuModel, mouse.x, mouse.y)
+        }
+    }
+    
+    StyledMenuLoader {
+        id: contextMenuLoader
+
+        onHandleMenuItem: function(itemId) {
+            root.handleContextMenuItemRequested(itemId)
+        }
+    }
+
     contentItem: Row {
         spacing: root.buttonPadding
 
