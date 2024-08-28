@@ -10044,6 +10044,242 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="PageNoteAnchoredLine">
+       <layout class="QVBoxLayout" name="verticalLayout_69">
+        <item>
+         <widget class="QGroupBox" name="groupBox_noteAnchoredLine">
+          <property name="title">
+           <string>Note anchored lines</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout12">
+           <item row="0" column="0" colspan="2">
+            <widget class="QCheckBox" name="noteAnchoredLinesAvoidNotes">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Avoid notes</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QToolButton" name="resetNoteAnchoredLinesAvoidNotes">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Avoid notes' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_227">
+             <property name="text">
+              <string>Line thickness:</string>
+             </property>
+             <property name="buddy">
+              <cstring>noteAnchoredLineLineWidth</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="noteAnchoredLineLineWidth">
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="suffix">
+              <string>sp</string>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QToolButton" name="resetNoteAnchoredLineLineWidth">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Line thickness' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_226">
+             <property name="text">
+              <string>Line style:</string>
+             </property>
+             <property name="buddy">
+              <cstring>noteAnchoredLineLineStyle</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="noteAnchoredLineLineStyle">
+             <item>
+              <property name="text">
+               <string>Continuous</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Dashed</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Dotted</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Dash-dotted</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Dash-dot-dotted</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QToolButton" name="resetNoteAnchoredLineLineStyle">
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Line style' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_noteAnchoredLine_lineStyle_dashSize">
+             <property name="text">
+              <string>Dash size:</string>
+             </property>
+             <property name="buddy">
+              <cstring>noteAnchoredLineLineStyle</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QDoubleSpinBox" name="noteAnchoredLineLineStyleDashSize">
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="minimum">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QToolButton" name="resetNoteAnchoredLineLineStyleDashSize">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Dash size' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_noteAnchoredLine_lineStyle_gapSize">
+             <property name="text">
+              <string>Gap size:</string>
+             </property>
+             <property name="buddy">
+              <cstring>noteAnchoredLineLineStyle</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QDoubleSpinBox" name="noteAnchoredLineLineStyleGapSize">
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="minimum">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QToolButton" name="resetNoteAnchoredLineLineStyleGapSize">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Reset to default</string>
+             </property>
+             <property name="accessibleName">
+              <string>Reset 'Line style' value</string>
+             </property>
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_44">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="PageTextLine">
        <layout class="QVBoxLayout" name="verticalLayout_45">
         <item>
@@ -14994,6 +15230,16 @@ first note of the system</string>
   <tabstop>bendArrowHeight</tabstop>
   <tabstop>resetBendArrowHeight</tabstop>
   <tabstop>guitarBendCueSizedGraceFrets</tabstop>
+  <tabstop>noteAnchoredLinesAvoidNotes</tabstop>
+  <tabstop>resetNoteAnchoredLinesAvoidNotes</tabstop>
+  <tabstop>noteAnchoredLineLineWidth</tabstop>
+  <tabstop>resetNoteAnchoredLineLineWidth</tabstop>
+  <tabstop>noteAnchoredLineLineStyle</tabstop>
+  <tabstop>resetNoteAnchoredLineLineStyle</tabstop>
+  <tabstop>noteAnchoredLineLineStyleDashSize</tabstop>
+  <tabstop>resetNoteAnchoredLineLineStyleDashSize</tabstop>
+  <tabstop>noteAnchoredLineLineStyleGapSize</tabstop>
+  <tabstop>resetNoteAnchoredLineLineStyleGapSize</tabstop>
   <tabstop>textLinePlacement</tabstop>
   <tabstop>resetTextLinePlacement</tabstop>
   <tabstop>textLinePosAbove</tabstop>

@@ -523,6 +523,12 @@ enum class Sid {
     tieMinDistance,
     headerToLineStartDistance, // determines start point of "dangling" lines (ties, gliss, lyrics...) at start of system
 
+    noteAnchoredLinesAvoidNotes,
+    noteAnchoredLineWidth,
+    noteAnchoredLineLineStyle,
+    noteAnchoredLineDashLineLen,
+    noteAnchoredLineDashGapLen,
+
     tiePlacementSingleNote,
     tiePlacementChord,
     tieMinShoulderHeight,

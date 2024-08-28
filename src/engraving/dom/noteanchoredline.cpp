@@ -32,46 +32,23 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
-//---------------------------------------------------------
-//   noteAnchoredLineStyle
-//---------------------------------------------------------
-
 static const ElementStyle noteAnchoredLineStyle {
-    { Sid::glissandoLineWidth, Pid::LINE_WIDTH },
+    { Sid::noteAnchoredLinesAvoidNotes, Pid::LAYOUT_GLISS_STYLE },
+    { Sid::noteAnchoredLineWidth,       Pid::LINE_WIDTH },
+    { Sid::noteAnchoredLineLineStyle,   Pid::LINE_STYLE },
+    { Sid::noteAnchoredLineDashLineLen, Pid::DASH_LINE_LEN },
+    { Sid::noteAnchoredLineDashGapLen,  Pid::DASH_GAP_LEN },
 };
-
-//---------------------------------------------------------
-//   NoteAnchoredLineSegment
-//---------------------------------------------------------
 
 NoteAnchoredLineSegment::NoteAnchoredLineSegment(NoteAnchoredLine* sp, System* parent)
     : NoteLineBaseSegment(ElementType::NOTE_ANCHORED_LINE_SEGMENT, sp, parent)
 {
 }
 
-//---------------------------------------------------------
-//   propertyDelegate
-//---------------------------------------------------------
-
 EngravingItem* NoteAnchoredLineSegment::propertyDelegate(Pid pid)
 {
-    switch (pid) {
-    /*case Pid::GLISS_TEXT:
-    case Pid::GLISS_SHOW_TEXT:
-    case Pid::FONT_FACE:
-    case Pid::FONT_SIZE:
-    case Pid::FONT_STYLE:
-    case Pid::LINE_WIDTH:
-    case Pid::LAYOUT_GLISS_STYLE:
-        return noteAnchoredLine();*/
-    default:
-        return NoteLineBaseSegment::propertyDelegate(pid);
-    }
+    return NoteLineBaseSegment::propertyDelegate(pid);
 }
-
-//---------------------------------------------------------
-//   NoteAnchoredLine
-//---------------------------------------------------------
 
 NoteAnchoredLine::NoteAnchoredLine(EngravingItem* parent)
     : NoteLineBase(ElementType::NOTE_ANCHORED_LINE, parent)
@@ -82,16 +59,7 @@ NoteAnchoredLine::NoteAnchoredLine(EngravingItem* parent)
 NoteAnchoredLine::NoteAnchoredLine(const NoteAnchoredLine& nal)
     : NoteLineBase(nal)
 {
-    /*_text           = g._text;
-    _showText       = g._showText;
-    _fontFace       = g._fontFace;
-    _fontSize       = g._fontSize;
-    _fontStyle      = g._fontStyle;*/
 }
-
-//---------------------------------------------------------
-//   createLineSegment
-//---------------------------------------------------------
 
 LineSegment* NoteAnchoredLine::createLineSegment(System* parent)
 {
@@ -101,36 +69,20 @@ LineSegment* NoteAnchoredLine::createLineSegment(System* parent)
     return seg;
 }
 
-//---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
 Sid NoteAnchoredLine::getPropertyStyle(Pid id) const
 {
     return NoteLineBase::getPropertyStyle(id);
 }
-
-//---------------------------------------------------------
-//   getProperty
-//---------------------------------------------------------
 
 PropertyValue NoteAnchoredLine::getProperty(Pid id) const
 {
     return NoteLineBase::getProperty(id);
 }
 
-//---------------------------------------------------------
-//   setProperty
-//---------------------------------------------------------
-
 bool NoteAnchoredLine::setProperty(Pid id, const PropertyValue& v)
 {
     return NoteLineBase::setProperty(id, v);
 }
-
-//---------------------------------------------------------
-//   propertyDefault
-//---------------------------------------------------------
 
 PropertyValue NoteAnchoredLine::propertyDefault(Pid id) const
 {

@@ -511,6 +511,12 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(tieMinDistance,                             Spatium(0.5)),
     styleDef(headerToLineStartDistance,                  Spatium(1.0)),
 
+    styleDef(noteAnchoredLinesAvoidNotes,                true),
+    styleDef(noteAnchoredLineWidth,                      Spatium(0.15)),
+    styleDef(noteAnchoredLineLineStyle,                  PropertyValue(LineType::DASHED)),
+    styleDef(noteAnchoredLineDashLineLen,                5.0),
+    styleDef(noteAnchoredLineDashGapLen,                 5.0),
+
     styleDef(tiePlacementSingleNote,                     TiePlacement::OUTSIDE),
     styleDef(tiePlacementChord,                          TiePlacement::OUTSIDE),
     styleDef(tieMinShoulderHeight,                       Spatium(0.3)),

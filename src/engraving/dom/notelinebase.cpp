@@ -43,10 +43,6 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
-//=========================================================
-//   NoteLineBaseSegment
-//=========================================================
-
 NoteLineBaseSegment::NoteLineBaseSegment(const ElementType& type, NoteLineBase* sp, System* parent)
     : LineSegment(type, sp, parent, ElementFlag::MOVABLE)
 {
@@ -62,10 +58,6 @@ EngravingItem* NoteLineBaseSegment::propertyDelegate(Pid pid)
     }
 }
 
-//=========================================================
-//   NoteLineBase
-//=========================================================
-
 NoteLineBase::NoteLineBase(const ElementType& type, EngravingItem* parent)
     : SLine(type, parent, ElementFlag::MOVABLE)
 {
@@ -78,10 +70,6 @@ NoteLineBase::NoteLineBase(const NoteLineBase& nlb)
 {
     m_layoutGlissStyle = nlb.m_layoutGlissStyle;
 }
-
-//---------------------------------------------------------
-//   createLineSegment
-//---------------------------------------------------------
 
 LineSegment* NoteLineBase::createLineSegment(System* parent)
 {
@@ -283,10 +271,6 @@ Note* NoteLineBase::guessFinalNote(Chord* chord, Note* startNote)
     return nullptr;
 }
 
-//---------------------------------------------------------
-//   getProperty
-//---------------------------------------------------------
-
 PropertyValue NoteLineBase::getProperty(Pid propertyId) const
 {
     switch (propertyId) {
@@ -297,10 +281,6 @@ PropertyValue NoteLineBase::getProperty(Pid propertyId) const
     }
     return SLine::getProperty(propertyId);
 }
-
-//---------------------------------------------------------
-//   setProperty
-//---------------------------------------------------------
 
 bool NoteLineBase::setProperty(Pid propertyId, const PropertyValue& v)
 {
@@ -317,10 +297,6 @@ bool NoteLineBase::setProperty(Pid propertyId, const PropertyValue& v)
     triggerLayout();
     return true;
 }
-
-//---------------------------------------------------------
-//   propertyDefault
-//---------------------------------------------------------
 
 PropertyValue NoteLineBase::propertyDefault(Pid propertyId) const
 {
