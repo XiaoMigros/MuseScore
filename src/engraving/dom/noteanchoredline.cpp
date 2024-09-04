@@ -45,11 +45,6 @@ NoteAnchoredLineSegment::NoteAnchoredLineSegment(NoteAnchoredLine* sp, System* p
 {
 }
 
-EngravingItem* NoteAnchoredLineSegment::propertyDelegate(Pid pid)
-{
-    return NoteLineBaseSegment::propertyDelegate(pid);
-}
-
 NoteAnchoredLine::NoteAnchoredLine(EngravingItem* parent)
     : NoteLineBase(ElementType::NOTE_ANCHORED_LINE, parent)
 {
@@ -67,25 +62,5 @@ LineSegment* NoteAnchoredLine::createLineSegment(System* parent)
     seg->setTrack(track());
     seg->setColor(color());
     return seg;
-}
-
-Sid NoteAnchoredLine::getPropertyStyle(Pid id) const
-{
-    return NoteLineBase::getPropertyStyle(id);
-}
-
-PropertyValue NoteAnchoredLine::getProperty(Pid id) const
-{
-    return NoteLineBase::getProperty(id);
-}
-
-bool NoteAnchoredLine::setProperty(Pid id, const PropertyValue& v)
-{
-    return NoteLineBase::setProperty(id, v);
-}
-
-PropertyValue NoteAnchoredLine::propertyDefault(Pid id) const
-{
-    return NoteLineBase::propertyDefault(id);
 }
 } // namespace mu::engraving

@@ -47,8 +47,6 @@ public:
     NoteAnchoredLine* noteAnchoredLine() const { return toNoteAnchoredLine(spanner()); }
 
     NoteAnchoredLineSegment* clone() const override { return new NoteAnchoredLineSegment(*this); }
-
-    EngravingItem* propertyDelegate(Pid) override;
 };
 
 //---------------------------------------------------------
@@ -67,11 +65,6 @@ public:
     NoteAnchoredLine* clone() const override { return new NoteAnchoredLine(*this); }
 
     LineSegment* createLineSegment(System* parent) override;
-
-    Sid getPropertyStyle(Pid propertyId) const override;
-    PropertyValue getProperty(Pid propertyId) const override;
-    bool setProperty(Pid propertyId, const PropertyValue&) override;
-    PropertyValue propertyDefault(Pid propertyId) const override;
 };
 } // namespace mu::engraving
 
