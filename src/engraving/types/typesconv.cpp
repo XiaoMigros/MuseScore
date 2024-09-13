@@ -2470,11 +2470,13 @@ String TConv::translatedUserName(JumpType v)
     return findUserNameByType<JumpType>(JUMP_TYPES, v).translated();
 }
 
-static const std::array<Item<MarkerType>, 11> MARKER_TYPES = { {
+static const std::array<Item<MarkerType>, 13> MARKER_TYPES = { {
     { MarkerType::SEGNO,        "segno",    muse::TranslatableString("engraving", "Segno") },
     { MarkerType::VARSEGNO,     "varsegno", muse::TranslatableString("engraving", "Segno variation") },
+    { MarkerType::JPN_SEGNO,    "jpnsegno", muse::TranslatableString("engraving", "Segno (Japanese style)") },
     { MarkerType::CODA,         "codab",    muse::TranslatableString("engraving", "Coda") },
     { MarkerType::VARCODA,      "varcoda",  muse::TranslatableString("engraving", "Varied coda") },
+    { MarkerType::JPN_CODA,     "jpncoda",  muse::TranslatableString("engraving", "Coda (Japanese style)") },
     { MarkerType::CODETTA,      "codetta",  muse::TranslatableString("engraving", "Doppia Coda") },
     { MarkerType::FINE,         "fine",     muse::TranslatableString("engraving", "Fine") },
     { MarkerType::TOCODA,       "coda",     muse::TranslatableString("engraving", "To coda") },
