@@ -418,8 +418,9 @@ PalettePtr PaletteCreator::newRepeatsPalette(bool defaultPalette)
     const std::vector<MarkerType> allMarkers = {
         MarkerType::SEGNO,
         MarkerType::VARSEGNO,
+        MarkerType::JPN_SEGNO,
         MarkerType::CODA,
-        MarkerType::VARCODA,
+        MarkerType::JPN_CODA,
         MarkerType::CODETTA,
         MarkerType::FINE,
         MarkerType::TOCODA,
@@ -507,18 +508,6 @@ PalettePtr PaletteCreator::newRepeatsPalette(bool defaultPalette)
     il.push_back(3);
     volta->setEndings(il);
     sp->appendElement(volta, QT_TRANSLATE_NOOP("palette", "Terza volta"));
-
-    if (!defaultPalette) {
-        auto vibrato = makeElement<Vibrato>(gpaletteScore);
-        vibrato->setVibratoType(VibratoType::VIBRATO_SAWTOOTH);
-        vibrato->setLen(w);
-        sp->appendElement(vibrato, TConv::userName(VibratoType::VIBRATO_SAWTOOTH));
-
-        vibrato = makeElement<Vibrato>(gpaletteScore);
-        vibrato->setVibratoType(VibratoType::VIBRATO_SAWTOOTH_WIDE);
-        vibrato->setLen(w);
-        sp->appendElement(vibrato, TConv::userName(VibratoType::VIBRATO_SAWTOOTH_WIDE));
-    }
 
     return sp;
 }

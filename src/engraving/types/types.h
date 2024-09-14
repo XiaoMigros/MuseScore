@@ -1012,8 +1012,10 @@ enum class JumpType : char {
 enum class MarkerType : char {
     SEGNO,
     VARSEGNO,
+    JPN_SEGNO,
     CODA,
     VARCODA,
+    JPN_CODA,
     CODETTA, // not in SMuFL, but still needed for 1.x compatibility, rendered as a double coda
     FINE,
     TOCODA,
