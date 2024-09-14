@@ -116,6 +116,7 @@ class Note;
 class NoteEvent;
 class NoteDot;
 class NoteHead;
+class NoteAnchoredLine;
 class Ornament;
 class Ottava;
 
@@ -263,6 +264,7 @@ public:
     static void read(NoteEvent* item, XmlReader& xml, ReadContext& ctx);
     static void read(NoteDot* d, XmlReader& xml, ReadContext& ctx);
     static void read(NoteHead* h, XmlReader& xml, ReadContext& ctx);
+    static void read(NoteAnchoredLine* nal, XmlReader& xml, ReadContext& ctx);
     static void read(Ornament* o, XmlReader& xml, ReadContext& ctx);
     static void read(Ottava* o, XmlReader& xml, ReadContext& ctx);
 

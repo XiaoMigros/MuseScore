@@ -64,6 +64,8 @@
 #include "dom/measurenumber.h"
 #include "dom/measurerepeat.h"
 #include "dom/note.h"
+#include "dom/noteanchoredline.h"
+#include "dom/notelinebase.h"
 #include "dom/ornament.h"
 #include "dom/ottava.h"
 #include "dom/palmmute.h"
@@ -179,6 +181,8 @@ void SingleLayout::layoutItem(EngravingItem* item)
     case ElementType::MEASURE_REPEAT: layout(toMeasureRepeat(item), ctx);
         break;
     case ElementType::NOTEHEAD:     layout(toNoteHead(item), ctx);
+        break;
+    case ElementType::NOTE_ANCHORED_LINE: layout(toNoteAnchoredLine(item), ctx);
         break;
     case ElementType::OTTAVA:       layout(toOttava(item), ctx);
         break;
@@ -940,27 +944,12 @@ void SingleLayout::layout(Dynamic* item, const Context& ctx)
 
 void SingleLayout::layout(Glissando* item, const Context& ctx)
 {
-    double spatium = item->spatium();
-
-    if (item->spannerSegments().empty()) {
-        item->add(item->createLineSegment(ctx.dummyParent()->system()));
-    }
-    LineSegment* s = item->frontSegment();
-    s->setPos(PointF(-spatium * Glissando::GLISS_PALETTE_WIDTH / 2, spatium * Glissando::GLISS_PALETTE_HEIGHT / 2));
-    s->setPos2(PointF(spatium * Glissando::GLISS_PALETTE_WIDTH, -spatium * Glissando::GLISS_PALETTE_HEIGHT));
-    layout(static_cast<GlissandoSegment*>(s), ctx);
+    layoutNoteLineBase(item, ctx);
 }
 
-void SingleLayout::layout(GlissandoSegment* item, const Context&)
+void SingleLayout::layout(GlissandoSegment* item, const Context& ctx)
 {
-    if (item->pos2().x() <= 0) {
-        item->setbbox(RectF());
-        return;
-    }
-
-    RectF r = RectF(0.0, 0.0, item->pos2().x(), item->pos2().y()).normalized();
-    double lw = item->absoluteFromSpatium(item->lineWidth()) * .5;
-    item->setbbox(r.adjusted(-lw, -lw, lw, lw));
+    layoutNoteLineBaseSegment(item, ctx);
 }
 
 void SingleLayout::layout(GradualTempoChange* item, const Context& ctx)
@@ -1280,6 +1269,41 @@ void SingleLayout::layout(Lyrics* item, const Context& ctx)
 void SingleLayout::layout(NoteHead* item, const Context& ctx)
 {
     layout(static_cast<Symbol*>(item), ctx);
+}
+
+void SingleLayout::layout(NoteAnchoredLine* item, const Context& ctx)
+{
+    layoutNoteLineBase(item, ctx);
+}
+
+void SingleLayout::layout(NoteAnchoredLineSegment* item, const Context& ctx)
+{
+    layoutNoteLineBaseSegment(item, ctx);
+}
+
+void SingleLayout::layoutNoteLineBase(NoteLineBase* item, const Context& ctx)
+{
+    double spatium = item->spatium();
+
+    if (item->spannerSegments().empty()) {
+        item->add(item->createLineSegment(ctx.dummyParent()->system()));
+    }
+    LineSegment* s = item->frontSegment();
+    s->setPos(PointF(-spatium * NoteLineBase::NLB_PALETTE_WIDTH / 2, spatium * NoteLineBase::NLB_PALETTE_HEIGHT / 2));
+    s->setPos2(PointF(spatium * NoteLineBase::NLB_PALETTE_WIDTH, -spatium * NoteLineBase::NLB_PALETTE_HEIGHT));
+    layoutNoteLineBaseSegment(static_cast<NoteLineBaseSegment*>(s), ctx);
+}
+
+void SingleLayout::layoutNoteLineBaseSegment(NoteLineBaseSegment* item, const Context&)
+{
+    if (item->pos2().x() <= 0) {
+        item->setbbox(RectF());
+        return;
+    }
+
+    RectF r = RectF(0.0, 0.0, item->pos2().x(), item->pos2().y()).normalized();
+    double lw = item->absoluteFromSpatium(item->noteLineBase()->lineWidth()) * .5;
+    item->setbbox(r.adjusted(-lw, -lw, lw, lw));
 }
 
 void SingleLayout::layout(Marker* item, const Context& ctx)

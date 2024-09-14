@@ -82,6 +82,7 @@ static const QStringList ALL_PAGE_CODES {
     "trill",
     "vibrato",
     "bend",
+    "note-anchored-line",
     "text-line",
     "system-text-line",
     "articulations-and-ornaments",
@@ -331,6 +332,9 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::pedalLineStyle,          false, pedalLineStyle,          resetPedalLineStyle },
         { StyleId::pedalDashLineLen,        false, pedalLineStyleDashSize,  resetPedalLineStyleDashSize },
         { StyleId::pedalDashGapLen,         false, pedalLineStyleGapSize,   resetPedalLineStyleGapSize },
+        { StyleId::noteAnchoredLineLineStyle, false, noteAnchoredLineLineStyle, resetNoteAnchoredLineLineStyle },
+        { StyleId::noteAnchoredLineDashLineLen, false, noteAnchoredLineLineStyleDashSize, resetNoteAnchoredLineLineStyleDashSize },
+        { StyleId::noteAnchoredLineDashGapLen, false, noteAnchoredLineLineStyleGapSize, resetNoteAnchoredLineLineStyleGapSize },
 
         { StyleId::staffUpperBorder,        false, staffUpperBorder,        resetStaffUpperBorder },
         { StyleId::staffLowerBorder,        false, staffLowerBorder,        resetStaffLowerBorder },
@@ -505,6 +509,9 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::pedalPosAbove,           false, pedalLinePosAbove,       resetPedalLinePosAbove },
         { StyleId::pedalPosBelow,           false, pedalLinePosBelow,       resetPedalLinePosBelow },
         { StyleId::pedalLineWidth,          false, pedalLineWidth,          resetPedalLineWidth },
+
+        { StyleId::noteAnchoredLinesAvoidNotes, false, noteAnchoredLinesAvoidNotes, resetNoteAnchoredLinesAvoidNotes },
+        { StyleId::noteAnchoredLineWidth,   false, noteAnchoredLineLineWidth, resetNoteAnchoredLineLineWidth },
 
         { StyleId::trillPlacement,          false, trillLinePlacement,      resetTrillLinePlacement },
         { StyleId::trillPosAbove,           false, trillLinePosAbove,       resetTrillLinePosAbove },
@@ -722,6 +729,15 @@ EditStyle::EditStyle(QWidget* parent)
             label_pedalLine_lineStyle_gapSize,
             pedalLineStyleGapSize,
             resetPedalLineStyleGapSize
+        }),
+
+        new LineStyleSelect(this, noteAnchoredLineLineStyle, {
+            label_noteAnchoredLine_lineStyle_dashSize,
+            noteAnchoredLineLineStyleDashSize,
+            resetNoteAnchoredLineLineStyleDashSize,
+            label_noteAnchoredLine_lineStyle_gapSize,
+            noteAnchoredLineLineStyleGapSize,
+            resetNoteAnchoredLineLineStyleGapSize
         })
     };
 
@@ -1543,6 +1559,10 @@ QString EditStyle::pageCodeForElement(const EngravingItem* element)
     case ElementType::PEDAL:
     case ElementType::PEDAL_SEGMENT:
         return "pedal";
+
+    case ElementType::NOTE_ANCHORED_LINE:
+    case ElementType::NOTE_ANCHORED_LINE_SEGMENT:
+        return "note-anchored-line";
 
     case ElementType::TRILL:
     case ElementType::TRILL_SEGMENT:

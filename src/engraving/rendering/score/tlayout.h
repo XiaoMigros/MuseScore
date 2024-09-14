@@ -77,7 +77,9 @@
 #include "../../dom/mmrestrange.h"
 
 #include "../../dom/note.h"
+#include "../../dom/noteanchoredline.h"
 #include "../../dom/notedot.h"
+#include "../../dom/notelinebase.h"
 
 #include "../../dom/playtechannotation.h"
 
@@ -130,6 +132,11 @@ class LineSegment;
 class Lyrics;
 class LyricsLine;
 class LyricsLineSegment;
+
+class NoteAnchoredLine;
+class NoteAnchoredLineSegment;
+class NoteLineBase;
+class NoteLineBaseSegment;
 
 class Ottava;
 class OttavaSegment;
@@ -278,6 +285,10 @@ public:
     static void layoutNote(const Note* item, Note::LayoutData* ldata);
     static void fillNoteShape(const Note* item, Note::LayoutData* ldata);
     static void layoutNoteDot(const NoteDot* item, NoteDot::LayoutData* ldata);
+    static void layoutNoteAnchoredLine(NoteAnchoredLine* item, LayoutContext& ctx);
+    static void layoutNoteAnchoredLineSegment(NoteAnchoredLineSegment* item, LayoutContext& ctx);
+    static void layoutNoteLineBase(NoteLineBase* item, LayoutContext& ctx, NoteLineBase::LayoutData* ldata);
+    static void layoutNoteLineBaseSegment(NoteLineBaseSegment* item, LayoutContext& ctx);
 
     static void layoutOrnament(const Ornament* item, Ornament::LayoutData* ldata, const LayoutConfiguration& conf);
     static void layoutOrnamentCueNote(Ornament* item, LayoutContext& ctx);

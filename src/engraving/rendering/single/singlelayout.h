@@ -86,6 +86,10 @@ class MeasureNumber;
 class MeasureRepeat;
 
 class NoteHead;
+class NoteAnchoredLine;
+class NoteAnchoredLineSegment;
+class NoteLineBase;
+class NoteLineBaseSegment;
 
 class Ornament;
 class Ottava;
@@ -199,6 +203,7 @@ public:
     static void layout(Lyrics* item, const Context& ctx);
 
     static void layout(NoteHead* item, const Context& ctx);
+    static void layout(NoteAnchoredLine* item, const Context& ctx);
 
     static void layout(Marker* item, const Context& ctx);
     static void layout(MeasureNumber* item, const Context& ctx);
@@ -241,6 +246,7 @@ private:
     static void layout(GuitarBendSegment* item, const Context& ctx);
     static void layout(HairpinSegment* item, const Context& ctx);
     static void layout(LetRingSegment* item, const Context& ctx);
+    static void layout(NoteAnchoredLineSegment* item, const Context& ctx);
     static void layout(OttavaSegment* item, const Context& ctx);
     static void layout(PalmMuteSegment* item, const Context& ctx);
     static void layout(PedalSegment* item, const Context& ctx);
@@ -256,6 +262,9 @@ private:
     static void layoutLine(SLine* item, const Context& ctx);
     static void layoutLineSegment(LineSegment* item, const Context& ctx);
     static void layoutTextLineBaseSegment(TextLineBaseSegment* item, const Context& ctx);
+
+    static void layoutNoteLineBase(NoteLineBase* item, const Context& ctx);
+    static void layoutNoteLineBaseSegment(NoteLineBaseSegment* item, const Context& ctx);
 };
 }
 

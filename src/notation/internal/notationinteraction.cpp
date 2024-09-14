@@ -65,6 +65,7 @@
 #include "engraving/dom/measure.h"
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/navigate.h"
+#include "engraving/dom/noteanchoredline.h"
 #include "engraving/dom/page.h"
 #include "engraving/dom/part.h"
 #include "engraving/dom/rest.h"
@@ -1318,6 +1319,7 @@ bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifier
     case ElementType::ARPEGGIO:
     case ElementType::BREATH:
     case ElementType::GLISSANDO:
+    case ElementType::NOTE_ANCHORED_LINE:
     case ElementType::ARTICULATION:
     case ElementType::FERMATA:
     case ElementType::CHORDLINE:
@@ -1443,6 +1445,7 @@ bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifier
     case ElementType::ARPEGGIO:
     case ElementType::BREATH:
     case ElementType::GLISSANDO:
+    case ElementType::NOTE_ANCHORED_LINE:
     case ElementType::MEASURE_NUMBER:
     case ElementType::BRACKET:
     case ElementType::ARTICULATION:
@@ -1668,7 +1671,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
         };
 
         bool elementIsStandardBend = element->isActionIcon() && toActionIcon(element)->actionType() == ActionIconType::STANDARD_BEND;
-        bool isLineNoteToNote = (element->isGlissando() || elementIsStandardBend)
+        bool isLineNoteToNote = (element->isGlissando() || element->isNoteAnchoredLine() || elementIsStandardBend)
                                 && sel.isList() && sel.elements().size() == 2
                                 && sel.elements()[0]->isNote() && sel.elements()[1]->isNote()
                                 && sel.elements()[1]->tick() != sel.elements()[0]->tick();
@@ -1722,7 +1725,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
             score->cmdToggleLayoutBreak(breakElement->layoutBreakType());
         } else if (element->isSlur() && addSingle) {
             doAddSlur(toSlur(element));
-        } else if (element->isSLine() && !element->isGlissando() && !element->isGuitarBend() && addSingle) {
+        } else if (element->isSLine() && !element->isGlissando() && !element->isNoteAnchoredLine() && !element->isGuitarBend()
+                   && addSingle) {
             mu::engraving::Segment* startSegment = cr1->segment();
             mu::engraving::Segment* endSegment = cr2->segment();
             if (element->type() == mu::engraving::ElementType::PEDAL && cr2 != cr1) {
@@ -1903,7 +1907,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
             }
         } else if (element->isSlur()) {
             doAddSlur(toSlur(element));
-        } else if (element->isSLine() && element->type() != ElementType::GLISSANDO) {
+        } else if (element->isSLine() && element->type() != ElementType::GLISSANDO && element->type() != ElementType::NOTE_ANCHORED_LINE) {
             mu::engraving::Segment* startSegment = sel.startSegment();
             mu::engraving::Segment* endSegment = sel.endSegment();
             bool firstStaffOnly = isSystemTextLine(element) && !(modifiers & Qt::ControlModifier);
@@ -1967,7 +1971,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
             for (mu::engraving::Segment* s = startSegment; s && s != endSegment; s = s->next1()) {
                 for (track_idx_t track = track1; track < track2; ++track) {
                     mu::engraving::EngravingItem* e = s->element(track);
-                    if (e == 0 || !score->selectionFilter().canSelect(e)
+                    if (e == nullptr || !score->selectionFilter().canSelect(e)
                         || !score->selectionFilter().canSelectVoice(track)) {
                         continue;
                     }
@@ -1975,8 +1979,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                         mu::engraving::Chord* chord = toChord(e);
                         for (mu::engraving::Note* n : chord->notes()) {
                             applyDropPaletteElement(score, n, element, modifiers);
-                            if (!(element->isAccidental() || element->isNoteHead()
-                                  || element->isGlissando() || element->isChordLine())) { // only these need to apply to every note
+                            if (!(element->isAccidental() || element->isNoteHead() || element->isGlissando()
+                                  || element->isNoteAnchoredLine() || element->isChordLine())) { // only these need to apply to every note
                                 break;
                             }
                         }
@@ -4474,13 +4478,8 @@ void NotationInteraction::changeSelectedElementsVoiceAssignment(VoiceAssignment 
 
 void NotationInteraction::addAnchoredLineToSelectedNotes()
 {
-    if (selection()->isNone()) {
-        return;
-    }
-
-    startEdit();
-    score()->addNoteLine();
-    apply();
+    mu::engraving::NoteAnchoredLine* nal = new mu::engraving::NoteAnchoredLine(this->score()->dummy()->note());
+    applyPaletteElement(nal);
 }
 
 void NotationInteraction::addTextToTopFrame(TextStyleType type)

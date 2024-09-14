@@ -226,6 +226,9 @@ public:
     static Glissando* createGlissando(EngravingItem* parent, bool isAccessibleEnabled = true);
     static std::shared_ptr<Glissando> makeGlissando(EngravingItem* parent);
 
+    static NoteAnchoredLine* createNoteAnchoredLine(EngravingItem* parent, bool isAccessibleEnabled = true);
+    static std::shared_ptr<NoteAnchoredLine> makeNoteAnchoredLine(EngravingItem* parent);
+
     static GuitarBend* createGuitarBend(Note* parent, bool isAccessibleEnabled = true);
     static std::shared_ptr<GuitarBend> makeGuitarBend(Note* parent);
 

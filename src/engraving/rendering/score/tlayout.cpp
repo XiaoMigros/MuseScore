@@ -97,7 +97,9 @@
 #include "dom/mmrestrange.h"
 
 #include "dom/note.h"
+#include "dom/noteanchoredline.h"
 #include "dom/notedot.h"
+#include "dom/notelinebase.h"
 
 #include "dom/ornament.h"
 #include "dom/ottava.h"
@@ -328,6 +330,12 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
         break;
     case ElementType::NOTE:
         layoutNote(item_cast<const Note*>(item), static_cast<Note::LayoutData*>(ldata));
+        break;
+    case ElementType::NOTE_ANCHORED_LINE:
+        layoutNoteAnchoredLine(item_cast<NoteAnchoredLine*>(item), ctx);
+        break;
+    case ElementType::NOTE_ANCHORED_LINE_SEGMENT:
+        layoutNoteAnchoredLineSegment(item_cast<NoteAnchoredLineSegment*>(item), ctx);
         break;
     case ElementType::NOTEDOT:
         layoutNoteDot(item_cast<const NoteDot*>(item), static_cast<NoteDot::LayoutData*>(ldata));
@@ -2712,205 +2720,10 @@ void TLayout::layoutFretDiagram(const FretDiagram* item, FretDiagram::LayoutData
     }
 }
 
-static void _layoutGlissando(Glissando* item, LayoutContext& ctx, Glissando::LayoutData* ldata)
-{
-    double _spatium = item->spatium();
-
-    TLayout::layoutLine(const_cast<Glissando*>(item), ctx);
-
-    if (item->spannerSegments().empty()) {
-        LOGD("no segments");
-        return;
-    }
-    ldata->setPos(0.0, 0.0);
-
-    String instrId = item->staff()->part()->instrumentId(item->tick());
-    bool harpStaff = instrId == "harp";
-    if (!item->isHarpGliss().has_value()) {
-        item->setIsHarpGliss(harpStaff);
-    } else {
-        if (harpStaff != item->isHarpGliss().value()) {
-            // Preserve whether this gliss has its default playback style
-            bool defaultStyle = false;
-            if (item->isStyled(Pid::GLISS_STYLE)) {
-                defaultStyle = true;
-            }
-            item->setIsHarpGliss(harpStaff);
-            if (defaultStyle) {
-                item->resetProperty(Pid::GLISS_STYLE);
-            }
-
-            // Make sure harp glisses can only be diatonic and chromatic
-            GlissandoStyle glissStyle = item->glissandoStyle();
-            if (item->isHarpGliss().value()
-                && (glissStyle != GlissandoStyle::DIATONIC
-                    && glissStyle != GlissandoStyle::CHROMATIC)) {
-                item->setGlissandoStyle(GlissandoStyle::DIATONIC);
-            }
-        }
-    }
-
-    Note* anchor1 = toNote(item->startElement());
-    Note* anchor2 = toNote(item->endElement());
-    Chord* cr1 = anchor1->chord();
-    Chord* cr2 = anchor2->chord();
-    GlissandoSegment* segm1 = toGlissandoSegment(const_cast<Glissando*>(item)->frontSegment());
-    GlissandoSegment* segm2 = toGlissandoSegment(const_cast<Glissando*>(item)->backSegment());
-
-    // Note: line segments are defined by
-    // initial point: ipos() (relative to system origin)
-    // ending point:  pos2() (relative to initial point)
-
-    // LINE ENDING POINTS TO NOTEHEAD CENTRES
-
-    // assume gliss. line goes from centre of initial note centre to centre of ending note:
-    // move first segment origin and last segment ending point from notehead origin to notehead centre
-    // For TAB: begin at the right-edge of initial note rather than centre
-    PointF offs1 = (cr1->staff()->isTabStaff(cr1->tick()))
-                   ? PointF(anchor1->ldata()->bbox().right(), 0.0)
-                   : PointF(anchor1->headWidth() * 0.5, 0.0);
-
-    PointF offs2 = PointF(anchor2->headWidth() * 0.5, 0.0);
-
-    // AVOID HORIZONTAL LINES
-
-    // for microtonality read tuning, or check note accidental
-    double tune1 = anchor1->tuning();
-    double tune2 = anchor2->tuning();
-    AccidentalType acc1 = anchor1->accidentalType();
-    AccidentalType acc2 = anchor2->accidentalType();
-    if (muse::RealIsNull(tune1) && Accidental::isMicrotonal(acc1)) {
-        tune1 = Accidental::subtype2centOffset(acc1);
-    }
-    if (muse::RealIsNull(tune2) && Accidental::isMicrotonal(acc2)) {
-        tune2 = Accidental::subtype2centOffset(acc2);
-    }
-
-    int upDown = (0 < (anchor2->ppitch() - anchor1->ppitch())) - ((anchor2->ppitch() - anchor1->ppitch()) < 0);
-    // same note, so compare tunings
-    if (upDown == 0) {
-        upDown = (0 < (tune2 - tune1)) - ((tune2 - tune1) < 0);
-    }
-
-    // on TAB's, glissando are by necessity on the same string, this gives an horizontal glissando line;
-    // make bottom end point lower and top ending point higher
-    if (cr1->staff()->isTabStaff(cr1->tick())) {
-        double yOff = cr1->staff()->lineDistance(cr1->tick()) * 0.4 * _spatium;
-        offs1.ry() += yOff * upDown;
-        offs2.ry() -= yOff * upDown;
-    }
-    // if not TAB, angle glissando between notes on the same line
-    else {
-        if (anchor1->line() == anchor2->line()) {
-            offs1.ry() += _spatium * 0.25 * upDown;
-            offs2.ry() -= _spatium * 0.25 * upDown;
-        }
-    }
-
-    // move initial point of first segment and adjust its length accordingly
-    segm1->setPos(segm1->ldata()->pos() + offs1);
-    segm1->setPos2(segm1->ipos2() - offs1);
-    // adjust ending point of last segment
-    segm2->setPos2(segm2->ipos2() + offs2);
-
-    // INTERPOLATION OF INTERMEDIATE POINTS
-    // This probably belongs to SLine class itself; currently it does not seem
-    // to be needed for anything else than Glissando, though
-
-    // get total x-width and total y-height of all segments
-    double xTot = 0.0;
-    for (SpannerSegment* segm : item->spannerSegments()) {
-        xTot += segm->ipos2().x();
-    }
-    double y0   = segm1->ldata()->pos().y();
-    double yTot = segm2->ldata()->pos().y() + segm2->ipos2().y() - y0;
-    yTot -= yStaffDifference(segm2->system(), track2staff(item->track2()), segm1->system(), track2staff(item->track()));
-    double ratio = muse::divide(yTot, xTot, 1.0);
-    // interpolate y-coord of intermediate points across total width and height
-    double xCurr = 0.0;
-    double yCurr;
-    for (unsigned i = 0; i + 1 < item->spannerSegments().size(); i++) {
-        SpannerSegment* segm = const_cast<Glissando*>(item)->segmentAt(i);
-        xCurr += segm->ipos2().x();
-        yCurr = y0 + ratio * xCurr;
-        segm->rypos2() = yCurr - segm->ldata()->pos().y();           // position segm. end point at yCurr
-        // next segment shall start where this segment stopped, corrected for the staff y-difference
-        SpannerSegment* nextSeg = const_cast<Glissando*>(item)->segmentAt(i + 1);
-        yCurr += yStaffDifference(nextSeg->system(), track2staff(item->track2()), segm->system(), track2staff(item->track()));
-        segm = nextSeg;
-        segm->rypos2() += segm->ldata()->pos().y() - yCurr;          // adjust next segm. vertical length
-        segm->mutldata()->setPosY(yCurr);                                // position next segm. start point at yCurr
-    }
-
-    // KEEP CLEAR OF ALL ELEMENTS OF THE CHORD
-    // Remove offset already applied
-    offs1 *= -1.0;
-    offs2 *= -1.0;
-    // Look at chord shapes (but don't consider lyrics)
-    Shape cr1shape = cr1->shape();
-    cr1shape.remove_if([](ShapeElement& s) {
-        if (!s.item() || s.item()->isLyrics()) {
-            return true;
-        } else {
-            return false;
-        }
-    });
-
-    double yAbove = anchor1->ldata()->pos().y() + anchor1->ldata()->bbox().topRight().y();
-    double yBelow = yAbove + anchor1->ldata()->bbox().height();
-    offs1.rx() += cr1shape.rightMostEdgeAtHeight(yAbove, yBelow) - anchor1->pos().x();
-    if (!cr2->staff()->isTabStaff(cr2->tick())) {
-        double yAbove2 = anchor2->ldata()->pos().y() + anchor2->ldata()->bbox().topLeft().y();
-        double yBelow2 = yAbove2 + anchor2->ldata()->bbox().height();
-        double noteMiddle = yAbove2 + anchor2->ldata()->bbox().height() / 2;
-        if (upDown != 0) {
-            int llWidth = ctx.conf().styleS(Sid::ledgerLineWidth).val() * _spatium;
-            // Only check top/bottom half of note depending on gliss approach direction
-            // to avoid clearing acidentals the line won't collide with
-            yAbove2 = upDown == 1 ? noteMiddle - llWidth : yAbove2;
-            yBelow2 = upDown == 1 ? yBelow2 : noteMiddle + llWidth;
-        }
-
-        offs2.rx() -= anchor2->pos().x() - cr2->shape().leftMostEdgeAtHeight(yAbove2, yBelow2);
-    }
-    // Add note distance
-    const double glissNoteDist = 0.25 * item->spatium(); // TODO: style
-    offs1.rx() += glissNoteDist;
-    offs2.rx() -= glissNoteDist;
-
-    // apply offsets: shorten first segment by x1 (and proportionally y) and adjust its length accordingly
-    offs1.ry() = segm1->ipos2().y() * muse::divide(offs1.x(), segm1->ipos2().x(), 1.0);
-    segm1->setPos(segm1->ldata()->pos() + offs1);
-    segm1->setPos2(segm1->ipos2() - offs1);
-    // adjust last segment length by x2 (and proportionally y)
-    offs2.ry() = segm2->ipos2().y() * muse::divide(offs2.x(), segm2->ipos2().x(), 1.0);
-    segm2->setPos2(segm2->ipos2() + offs2);
-
-    for (SpannerSegment* segm : item->spannerSegments()) {
-        TLayout::layoutItem(segm, ctx);
-    }
-
-    // compute glissando bbox as the bbox of the last segment, relative to the end anchor note
-    PointF anchor2PagePos = anchor2->pagePos();
-    PointF system2PagePos;
-    IF_ASSERT_FAILED(cr2->segment()->system()) {
-        system2PagePos = segm2->pos();
-    } else {
-        system2PagePos = cr2->segment()->system()->pagePos();
-    }
-
-    PointF anchor2SystPos = anchor2PagePos - system2PagePos;
-    RectF r = RectF(anchor2SystPos - segm2->pos(), anchor2SystPos - segm2->pos() - segm2->pos2()).normalized();
-    double lw = item->absoluteFromSpatium(item->lineWidth()) * .5;
-    ldata->setBbox(r.adjusted(-lw, -lw, lw, lw));
-
-    const_cast<Glissando*>(item)->addLineAttachPoints();
-}
-
 void TLayout::layoutGlissando(Glissando* item, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    _layoutGlissando(item, ctx, item->mutldata());
+    layoutNoteLineBase(item, ctx, item->mutldata());
 }
 
 void TLayout::layoutGlissandoSegment(GlissandoSegment* item, LayoutContext&)
@@ -4422,6 +4235,18 @@ void TLayout::fillNoteShape(const Note* item, Note::LayoutData* ldata)
     ldata->setShape(shape);
 }
 
+void TLayout::layoutNoteAnchoredLine(NoteAnchoredLine* item, LayoutContext& ctx)
+{
+    LAYOUT_CALL_ITEM(item);
+    layoutNoteLineBase(item, ctx, item->mutldata());
+}
+
+void TLayout::layoutNoteAnchoredLineSegment(NoteAnchoredLineSegment* item, LayoutContext& ctx)
+{
+    LAYOUT_CALL_ITEM(item);
+    layoutNoteLineBaseSegment(item, ctx);
+}
+
 void TLayout::layoutNoteDot(const NoteDot* item, NoteDot::LayoutData* ldata)
 {
     LAYOUT_CALL_ITEM(item);
@@ -4432,6 +4257,224 @@ void TLayout::layoutNoteDot(const NoteDot* item, NoteDot::LayoutData* ldata)
     }
 
     ldata->setBbox(item->symBbox(SymId::augmentationDot));
+}
+
+void TLayout::layoutNoteLineBase(NoteLineBase* item, LayoutContext& ctx, NoteLineBase::LayoutData* ldata)
+{
+    double _spatium = item->spatium();
+
+    TLayout::layoutLine(const_cast<NoteLineBase*>(item), ctx);
+
+    if (item->spannerSegments().empty()) {
+        LOGD("no segments");
+        return;
+    }
+    ldata->setPos(0.0, 0.0);
+
+    Glissando* glissando = item->isGlissando() ? toGlissando(item) : nullptr;
+    if (glissando) {
+        String instrId = item->staff()->part()->instrumentId(item->tick());
+        bool harpStaff = instrId == "harp";
+        if (!glissando->isHarpGliss().has_value()) {
+            glissando->setIsHarpGliss(harpStaff);
+        } else {
+            if (harpStaff != glissando->isHarpGliss().value()) {
+                // Preserve whether this gliss has its default playback style
+                bool defaultStyle = false;
+                if (glissando->isStyled(Pid::GLISS_STYLE)) {
+                    defaultStyle = true;
+                }
+                glissando->setIsHarpGliss(harpStaff);
+                if (defaultStyle) {
+                    glissando->resetProperty(Pid::GLISS_STYLE);
+                }
+
+                // Make sure harp glisses can only be diatonic and chromatic
+                GlissandoStyle glissStyle = glissando->glissandoStyle();
+                if (glissando->isHarpGliss().value()
+                    && (glissStyle != GlissandoStyle::DIATONIC
+                        && glissStyle != GlissandoStyle::CHROMATIC)) {
+                    glissando->setGlissandoStyle(GlissandoStyle::DIATONIC);
+                }
+            }
+        }
+    }
+
+    Note* anchor1 = toNote(item->startElement());
+    Note* anchor2 = toNote(item->endElement());
+    Chord* cr1 = anchor1->chord();
+    Chord* cr2 = anchor2->chord();
+    NoteLineBaseSegment* segm1 = toNoteLineBaseSegment(const_cast<NoteLineBase*>(item)->frontSegment());
+    NoteLineBaseSegment* segm2 = toNoteLineBaseSegment(const_cast<NoteLineBase*>(item)->backSegment());
+
+    // Note: line segments are defined by
+    // initial point: ipos() (relative to system origin)
+    // ending point:  pos2() (relative to initial point)
+
+    // LINE ENDING POINTS TO NOTEHEAD CENTRES
+
+    // assume gliss. line goes from centre of initial note centre to centre of ending note:
+    // move first segment origin and last segment ending point from notehead origin to notehead centre
+    // For TAB: begin at the right-edge of initial note rather than centre
+    PointF offs1 = (cr1->staff()->isTabStaff(cr1->tick()))
+                   ? PointF(anchor1->ldata()->bbox().right(), 0.0)
+                   : PointF(anchor1->headWidth() * 0.5, 0.0);
+
+    PointF offs2 = PointF(anchor2->headWidth() * 0.5, 0.0);
+
+    // AVOID HORIZONTAL LINES
+    int upDown = 0;
+    if (item->layoutGlissStyle()) {
+        // for microtonality read tuning, or check note accidental
+        double tune1 = anchor1->tuning();
+        double tune2 = anchor2->tuning();
+        AccidentalType acc1 = anchor1->accidentalType();
+        AccidentalType acc2 = anchor2->accidentalType();
+        if (muse::RealIsNull(tune1) && Accidental::isMicrotonal(acc1)) {
+            tune1 = Accidental::subtype2centOffset(acc1);
+        }
+        if (muse::RealIsNull(tune2) && Accidental::isMicrotonal(acc2)) {
+            tune2 = Accidental::subtype2centOffset(acc2);
+        }
+
+        upDown = (0 < (anchor2->ppitch() - anchor1->ppitch())) - ((anchor2->ppitch() - anchor1->ppitch()) < 0);
+        // same note, so compare tunings
+        if (upDown == 0) {
+            upDown = (0 < (tune2 - tune1)) - ((tune2 - tune1) < 0);
+        }
+
+        // on TAB's, noteLineBase are by necessity on the same string, this gives an horizontal noteLineBase line;
+        // make bottom end point lower and top ending point higher
+        if (cr1->staff()->isTabStaff(cr1->tick())) {
+            double yOff = cr1->staff()->lineDistance(cr1->tick()) * 0.4 * _spatium;
+            offs1.ry() += yOff * upDown;
+            offs2.ry() -= yOff * upDown;
+        }
+        // if not TAB, angle noteLineBase between notes on the same line
+        else {
+            if (anchor1->line() == anchor2->line()) {
+                offs1.ry() += _spatium * 0.25 * upDown;
+                offs2.ry() -= _spatium * 0.25 * upDown;
+            }
+        }
+    }
+
+    // move initial point of first segment and adjust its length accordingly
+    segm1->setPos(segm1->ldata()->pos() + offs1);
+    segm1->setPos2(segm1->ipos2() - offs1);
+    // adjust ending point of last segment
+    segm2->setPos2(segm2->ipos2() + offs2);
+
+    // INTERPOLATION OF INTERMEDIATE POINTS
+    // This probably belongs to SLine class itself; currently it does not seem
+    // to be needed for anything else than NoteLineBase, though
+
+    // get total x-width and total y-height of all segments
+    double xTot = 0.0;
+    for (SpannerSegment* segm : item->spannerSegments()) {
+        xTot += segm->ipos2().x();
+    }
+    double y0   = segm1->ldata()->pos().y();
+    double yTot = segm2->ldata()->pos().y() + segm2->ipos2().y() - y0;
+    yTot -= yStaffDifference(segm2->system(), track2staff(item->track2()), segm1->system(), track2staff(item->track()));
+    double ratio = muse::divide(yTot, xTot, 1.0);
+    // interpolate y-coord of intermediate points across total width and height
+    double xCurr = 0.0;
+    double yCurr;
+    for (unsigned i = 0; i + 1 < item->spannerSegments().size(); i++) {
+        SpannerSegment* segm = const_cast<NoteLineBase*>(item)->segmentAt(i);
+        xCurr += segm->ipos2().x();
+        yCurr = y0 + ratio * xCurr;
+        segm->rypos2() = yCurr - segm->ldata()->pos().y();           // position segm. end point at yCurr
+        // next segment shall start where this segment stopped, corrected for the staff y-difference
+        SpannerSegment* nextSeg = const_cast<NoteLineBase*>(item)->segmentAt(i + 1);
+        yCurr += yStaffDifference(nextSeg->system(), track2staff(item->track2()), segm->system(), track2staff(item->track()));
+        segm = nextSeg;
+        segm->rypos2() += segm->ldata()->pos().y() - yCurr;          // adjust next segm. vertical length
+        segm->mutldata()->setPosY(yCurr);                                // position next segm. start point at yCurr
+    }
+
+    // KEEP CLEAR OF ALL ELEMENTS OF THE CHORD
+    if (item->layoutGlissStyle()) {
+        // Remove offset already applied
+        offs1 *= -1.0;
+        offs2 *= -1.0;
+        // Look at chord shapes (but don't consider lyrics)
+        Shape cr1shape = cr1->shape();
+        cr1shape.remove_if([](ShapeElement& s) {
+            if (!s.item() || s.item()->isLyrics()) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        double yAbove = anchor1->ldata()->pos().y() + anchor1->ldata()->bbox().topRight().y();
+        double yBelow = yAbove + anchor1->ldata()->bbox().height();
+        offs1.rx() += cr1shape.rightMostEdgeAtHeight(yAbove, yBelow) - anchor1->pos().x();
+        if (!cr2->staff()->isTabStaff(cr2->tick())) {
+            double yAbove2 = anchor2->ldata()->pos().y() + anchor2->ldata()->bbox().topLeft().y();
+            double yBelow2 = yAbove2 + anchor2->ldata()->bbox().height();
+            double noteMiddle = yAbove2 + anchor2->ldata()->bbox().height() / 2;
+            if (upDown != 0) {
+                int llWidth = ctx.conf().styleS(Sid::ledgerLineWidth).val() * _spatium;
+                // Only check top/bottom half of note depending on gliss approach direction
+                // to avoid clearing acidentals the line won't collide with
+                yAbove2 = upDown == 1 ? noteMiddle - llWidth : yAbove2;
+                yBelow2 = upDown == 1 ? yBelow2 : noteMiddle + llWidth;
+            }
+
+            offs2.rx() -= anchor2->pos().x() - cr2->shape().leftMostEdgeAtHeight(yAbove2, yBelow2);
+        }
+        // Add note distance
+        const double glissNoteDist = 0.25 * item->spatium(); // TODO: style
+        offs1.rx() += glissNoteDist;
+        offs2.rx() -= glissNoteDist;
+
+        // apply offsets: shorten first segment by x1 (and proportionally y) and adjust its length accordingly
+        offs1.ry() = segm1->ipos2().y() * muse::divide(offs1.x(), segm1->ipos2().x(), 1.0);
+        segm1->setPos(segm1->ldata()->pos() + offs1);
+        segm1->setPos2(segm1->ipos2() - offs1);
+        // adjust last segment length by x2 (and proportionally y)
+        offs2.ry() = segm2->ipos2().y() * muse::divide(offs2.x(), segm2->ipos2().x(), 1.0);
+        segm2->setPos2(segm2->ipos2() + offs2);
+    }
+
+    for (SpannerSegment* segm : item->spannerSegments()) {
+        TLayout::layoutItem(segm, ctx);
+    }
+
+    // compute noteLineBase bbox as the bbox of the last segment, relative to the end anchor note
+    PointF anchor2PagePos = anchor2->pagePos();
+    PointF system2PagePos;
+    IF_ASSERT_FAILED(cr2->segment()->system()) {
+        system2PagePos = segm2->pos();
+    } else {
+        system2PagePos = cr2->segment()->system()->pagePos();
+    }
+
+    PointF anchor2SystPos = anchor2PagePos - system2PagePos;
+    RectF r = RectF(anchor2SystPos - segm2->pos(), anchor2SystPos - segm2->pos() - segm2->pos2()).normalized();
+    double lw = item->absoluteFromSpatium(item->lineWidth()) * .5;
+    ldata->setBbox(r.adjusted(-lw, -lw, lw, lw));
+
+    const_cast<NoteLineBase*>(item)->addLineAttachPoints();
+}
+
+void TLayout::layoutNoteLineBaseSegment(NoteLineBaseSegment* item, LayoutContext&)
+{
+    NoteLineBaseSegment::LayoutData* ldata = item->mutldata();
+    if (item->pos2().x() <= 0) {
+        ldata->setBbox(RectF());
+        return;
+    }
+
+    if (item->staff()) {
+        ldata->setMag(item->staff()->staffMag(item->tick()));
+    }
+    RectF r = RectF(0.0, 0.0, item->pos2().x(), item->pos2().y()).normalized();
+    double lw = item->absoluteFromSpatium(item->noteLineBase()->lineWidth()) * .5;
+    item->setbbox(r.adjusted(-lw, -lw, lw, lw));
 }
 
 void TLayout::layoutOrnament(const Ornament* item, Ornament::LayoutData* ldata, const LayoutConfiguration& conf)

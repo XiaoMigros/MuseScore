@@ -43,6 +43,7 @@
 #include "notation/clefs/clefsettingsmodel.h"
 #include "notation/lines/hairpinsettingsmodel.h"
 #include "notation/lines/hairpinlinesettingsmodel.h"
+#include "notation/lines/noteanchoredlinesettingsmodel.h"
 #include "notation/lines/ottavasettingsmodel.h"
 #include "notation/lines/voltasettingsmodel.h"
 #include "notation/lines/letringsettingsmodel.h"
@@ -198,6 +199,8 @@ AbstractInspectorModel* InspectorModelCreator::newInspectorModel(InspectorModelT
         return new StringTuningsSettingsModel(parent, repository);
     case InspectorModelType::TYPE_SYMBOL:
         return new SymbolSettingsModel(parent, repository);
+    case InspectorModelType::TYPE_NOTE_ANCHORED_LINE:
+        return new NoteAnchoredLineSettingsModel(parent, repository);
     case InspectorModelType::TYPE_BREATH:
     case InspectorModelType::TYPE_ARPEGGIO:
     case InspectorModelType::TYPE_UNDEFINED:

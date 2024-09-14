@@ -53,6 +53,7 @@
 #include "linkedobjects.h"
 #include "measure.h"
 #include "notedot.h"
+#include "notelinebase.h"
 #include "part.h"
 #include "pitchspelling.h"
 #include "score.h"
@@ -1204,7 +1205,7 @@ void Note::addSpanner(Spanner* l)
     if (e && e->isNote()) {
         Note* note = toNote(e);
         note->addSpannerBack(l);
-        if (l->isGlissando() || l->isGuitarBend()) {
+        if (l->isGlissando() || l->isGuitarBend() || l->isNoteAnchoredLine()) {
             note->chord()->setEndsGlissandoOrGuitarBend(true);
         }
     }
@@ -1287,6 +1288,7 @@ void Note::add(EngravingItem* e)
     case ElementType::TEXTLINE:
     case ElementType::GLISSANDO:
     case ElementType::GUITAR_BEND:
+    case ElementType::NOTE_ANCHORED_LINE:
         addSpanner(toSpanner(e));
         break;
     default:
@@ -1348,6 +1350,7 @@ void Note::remove(EngravingItem* e)
     case ElementType::TEXTLINE:
     case ElementType::GLISSANDO:
     case ElementType::GUITAR_BEND:
+    case ElementType::NOTE_ANCHORED_LINE:
         removeSpanner(toSpanner(e));
         break;
 
@@ -1633,6 +1636,14 @@ bool Note::acceptDrop(EditData& data) const
         }
         return true;
     }
+    if (type == ElementType::NOTE_ANCHORED_LINE) {
+        for (auto ee : m_spannerFor) {
+            if (ee->isNoteAnchoredLine()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     const Staff* st   = staff();
     bool isTablature  = st->isTabStaff(tick());
@@ -1897,38 +1908,39 @@ EngravingItem* Note::drop(EditData& data)
     break;
 
     case ElementType::GLISSANDO:
+    case ElementType::NOTE_ANCHORED_LINE:
     {
         for (auto ee : m_spannerFor) {
-            if (ee->type() == ElementType::GLISSANDO) {
+            if (ee->type() == e->type()) {
                 LOGD("there is already a glissando");
                 delete e;
-                return 0;
+                return nullptr;
             }
         }
 
-        Glissando* gliss = toGlissando(e);
-        EngravingItem* endEl = gliss->endElement();
-        Note* finalNote = endEl && endEl->isNote() ? toNote(endEl) : Glissando::guessFinalNote(chord(), this);
+        NoteLineBase* nlb = toNoteLineBase(e);
+        EngravingItem* endEl = nlb->endElement();
+        Note* finalNote = endEl && endEl->isNote() ? toNote(endEl) : NoteLineBase::guessFinalNote(chord(), this);
         if (finalNote) {
             // init glissando data
-            gliss->setAnchor(Spanner::Anchor::NOTE);
-            gliss->setStartElement(this);
-            gliss->setEndElement(finalNote);
-            gliss->setTick(ch->tick());
-            gliss->setTick2(finalNote->chord()->tick());
-            gliss->setTrack(track());
-            gliss->setTrack2(finalNote->track());
+            nlb->setAnchor(Spanner::Anchor::NOTE);
+            nlb->setStartElement(this);
+            nlb->setEndElement(finalNote);
+            nlb->setTick(ch->tick());
+            nlb->setTick2(finalNote->chord()->tick());
+            nlb->setTrack(track());
+            nlb->setTrack2(finalNote->track());
             // in TAB, use straight line with no text
-            if (staff()->isTabStaff(finalNote->chord()->tick())) {
-                gliss->setGlissandoType(GlissandoType::STRAIGHT);
-                gliss->setShowText(false);
+            if (nlb->isGlissando() && staff()->isTabStaff(finalNote->chord()->tick())) {
+                toGlissando(nlb)->setGlissandoType(GlissandoType::STRAIGHT);
+                toGlissando(nlb)->setShowText(false);
             }
-            gliss->setParent(this);
+            nlb->setParent(this);
             score()->undoAddElement(e);
         } else {
             LOGD("no segment for second note of glissando found");
             delete e;
-            return 0;
+            return nullptr;
         }
     }
     break;
@@ -1981,7 +1993,7 @@ EngravingItem* Note::drop(EditData& data)
         }
         return ch->drop(data);
     }
-    return 0;
+    return nullptr;
 }
 
 void Note::setHeadHasParentheses(bool hasParentheses, bool addToLinked, bool generated)
@@ -3414,7 +3426,7 @@ EngravingItem* Note::nextElement()
         }
         if (!m_spannerFor.empty()) {
             for (auto i : m_spannerFor) {
-                if (i->isGlissando() || i->isGuitarBend()) {
+                if (i->isGlissando() || i->isGuitarBend() || i->isNoteAnchoredLine()) {
                     return i->spannerSegments().front();
                 }
             }
@@ -3479,7 +3491,8 @@ EngravingItem* Note::lastElementBeforeSegment()
 {
     if (!m_spannerFor.empty()) {
         for (auto i : m_spannerFor) {
-            if (i->type() == ElementType::GLISSANDO || i->type() == ElementType::GUITAR_BEND) {
+            if (i->type() == ElementType::GLISSANDO || i->type() == ElementType::GUITAR_BEND
+                || i->type() == ElementType::NOTE_ANCHORED_LINE) {
                 return i->spannerSegments().front();
             }
         }

@@ -24,7 +24,7 @@
 #define MU_ENGRAVING_GLISSANDO_H
 
 #include "engravingitem.h"
-#include "line.h"
+#include "notelinebase.h"
 #include "property.h"
 #include "types.h"
 
@@ -40,7 +40,7 @@ enum class GlissandoType;
 //   @@ GlissandoSegment
 //---------------------------------------------------------
 
-class GlissandoSegment final : public LineSegment
+class GlissandoSegment final : public NoteLineBaseSegment
 {
     OBJECT_ALLOCATOR(engraving, GlissandoSegment)
     DECLARE_CLASSOF(ElementType::GLISSANDO_SEGMENT)
@@ -59,7 +59,7 @@ public:
 //   Glissando
 //---------------------------------------------------------
 
-class Glissando final : public SLine
+class Glissando final : public NoteLineBase
 {
     OBJECT_ALLOCATOR(engraving, Glissando)
     DECLARE_CLASSOF(ElementType::GLISSANDO)
@@ -76,14 +76,8 @@ class Glissando final : public SLine
     M_PROPERTY(int, easeOut, setEaseOut)
 
 public:
-    static constexpr double GLISS_PALETTE_WIDTH = 4.0;
-    static constexpr double GLISS_PALETTE_HEIGHT = 4.0;
-
     Glissando(EngravingItem* parent);
     Glissando(const Glissando&);
-
-    static Note* guessInitialNote(Chord* chord);
-    static Note* guessFinalNote(Chord* chord, Note* startNote);
 
     const TranslatableString& glissandoTypeName() const;
 
@@ -100,7 +94,6 @@ public:
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid) const override;
-    void addLineAttachPoints();
 
     static bool pitchSteps(const Spanner* spanner, std::vector<int>& pitchOffsets);
 

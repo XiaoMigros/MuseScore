@@ -214,6 +214,7 @@ enum class Pid {
     GLISS_EASEIN,
     GLISS_EASEOUT,
     DIAGONAL,
+    LAYOUT_GLISS_STYLE,
     GROUP_NODES,
     LINE_STYLE,
     LINE_WIDTH,

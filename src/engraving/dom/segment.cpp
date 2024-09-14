@@ -2023,7 +2023,7 @@ EngravingItem* Segment::nextElement(staff_idx_t activeStaff)
     }
     default: {
         EngravingItem* p;
-        if (e->isTieSegment() || e->isGlissandoSegment() || e->isGuitarBendSegment()) {
+        if (e->isTieSegment() || e->isGlissandoSegment() || e->isNoteAnchoredLineSegment() || e->isGuitarBendSegment()) {
             SpannerSegment* s = toSpannerSegment(e);
             Spanner* sp = s->spanner();
             p = sp->startElement();
@@ -2200,8 +2200,7 @@ EngravingItem* Segment::prevElement(staff_idx_t activeStaff)
     default: {
         EngravingItem* el = e;
         Segment* seg = this;
-        if (e->type() == ElementType::TIE_SEGMENT
-            || e->type() == ElementType::GLISSANDO_SEGMENT) {
+        if (e->isTieSegment() || e->isGlissandoSegment() || e->isNoteAnchoredLineSegment() || e->isGuitarBendSegment()) {
             SpannerSegment* s = toSpannerSegment(e);
             Spanner* sp = s->spanner();
             el = sp->startElement();

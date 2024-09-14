@@ -35,7 +35,6 @@
 #include "dom/beam.h"
 #include "dom/chord.h"
 #include "dom/fingering.h"
-#include "dom/glissando.h"
 #include "dom/guitarbend.h"
 #include "dom/hook.h"
 
@@ -46,6 +45,7 @@
 
 #include "dom/navigate.h"
 #include "dom/note.h"
+#include "dom/notelinebase.h"
 
 #include "dom/ornament.h"
 #include "dom/page.h"
@@ -2792,6 +2792,8 @@ void ChordLayout::updateLineAttachPoints(Chord* chord, bool isFirstInMeasure, La
                     TLayout::layoutGlissando(toGlissando(sp), ctx);
                 } else if (sp->isGuitarBend()) {
                     TLayout::layoutGuitarBend(toGuitarBend(sp), ctx);
+                } else if (sp->isNoteAnchoredLine()) {
+                    TLayout::layoutNoteAnchoredLine(toNoteAnchoredLine(sp), ctx);
                 }
             }
         }

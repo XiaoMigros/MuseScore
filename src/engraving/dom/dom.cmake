@@ -206,6 +206,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/navigate.h
     ${CMAKE_CURRENT_LIST_DIR}/note.cpp
     ${CMAKE_CURRENT_LIST_DIR}/note.h
+    ${CMAKE_CURRENT_LIST_DIR}/noteanchoredline.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/noteanchoredline.h
     ${CMAKE_CURRENT_LIST_DIR}/notedot.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notedot.h
     ${CMAKE_CURRENT_LIST_DIR}/noteentry.cpp
@@ -213,6 +215,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/noteevent.h
     ${CMAKE_CURRENT_LIST_DIR}/noteline.cpp
     ${CMAKE_CURRENT_LIST_DIR}/noteline.h
+    ${CMAKE_CURRENT_LIST_DIR}/notelinebase.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/notelinebase.h
     ${CMAKE_CURRENT_LIST_DIR}/notifier.h
     ${CMAKE_CURRENT_LIST_DIR}/ornament.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ornament.h

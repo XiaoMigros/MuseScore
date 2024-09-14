@@ -104,6 +104,7 @@
 #include "dom/note.h"
 #include "dom/notedot.h"
 #include "dom/noteline.h"
+#include "dom/noteanchoredline.h"
 #include "dom/ornament.h"
 #include "dom/ottava.h"
 
@@ -268,6 +269,8 @@ void TWrite::writeItem(const EngravingItem* item, XmlWriter& xml, WriteContext& 
     case ElementType::NOTEDOT:      write(item_cast<const NoteDot*>(item), xml, ctx);
         break;
     case ElementType::NOTEHEAD:     write(item_cast<const NoteHead*>(item), xml, ctx);
+        break;
+    case ElementType::NOTE_ANCHORED_LINE: write(item_cast<const NoteAnchoredLine*>(item), xml, ctx);
         break;
     case ElementType::NOTELINE:     write(item_cast<const NoteLine*>(item), xml, ctx);
         break;
@@ -2272,6 +2275,17 @@ void TWrite::write(const NoteDot* item, XmlWriter& xml, WriteContext& ctx)
 void TWrite::write(const NoteHead* item, XmlWriter& xml, WriteContext& ctx)
 {
     write(static_cast<const Symbol*>(item), xml, ctx);
+}
+
+void TWrite::write(const NoteAnchoredLine* item, XmlWriter& xml, WriteContext& ctx)
+{
+    if (!ctx.canWrite(item)) {
+        return;
+    }
+    xml.startElement(item);
+    writeProperty(item, xml, Pid::LAYOUT_GLISS_STYLE);
+    writeProperties(static_cast<const SLine*>(item), xml, ctx);
+    xml.endElement();
 }
 
 void TWrite::write(const NoteLine* item, XmlWriter& xml, WriteContext& ctx)
