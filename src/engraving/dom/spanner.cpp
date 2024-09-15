@@ -21,6 +21,8 @@
  */
 #include "spanner.h"
 
+#include <vector>
+
 #include "translation.h"
 
 #include "anchors.h"
@@ -43,6 +45,16 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
+static const std::vector<Pid> SPANNER_DELEGATED_PIDS = {
+    Pid::PLAY,
+    Pid::COLOR,
+    Pid::VISIBLE,
+    Pid::PLACEMENT,
+    Pid::EXCLUDE_FROM_OTHER_PARTS,
+    Pid::POSITION_LINKED_TO_MASTER,
+    Pid::APPEARANCE_LINKED_TO_MASTER
+};
+
 //---------------------------------------------------------
 //   SpannerSegment
 //---------------------------------------------------------
@@ -58,7 +70,7 @@ SpannerSegment::SpannerSegment(const ElementType& type, System* parent, ElementF
     : EngravingItem(type, parent, f)
 {
     setSpannerSegmentType(SpannerSegmentType::SINGLE);
-    m_spanner = 0;
+    m_spanner = nullptr;
 }
 
 SpannerSegment::SpannerSegment(const SpannerSegment& s)
@@ -135,16 +147,8 @@ muse::ByteArray SpannerSegment::mimeData(const PointF& dragOffset) const
 
 EngravingItem* SpannerSegment::propertyDelegate(Pid pid)
 {
-    switch (pid) {
-    case Pid::PLAY:
-    case Pid::COLOR:
-    case Pid::VISIBLE:
-    case Pid::PLACEMENT:
-    case Pid::EXCLUDE_FROM_OTHER_PARTS:
-    case Pid::POSITION_LINKED_TO_MASTER:
-    case Pid::APPEARANCE_LINKED_TO_MASTER:
+    if (muse::contains(SPANNER_DELEGATED_PIDS, pid)) {
         return spanner();
-    default: break;
     }
 
     return nullptr;
@@ -154,7 +158,7 @@ EngravingItem* SpannerSegment::propertyDelegate(Pid pid)
 //   getProperty
 //---------------------------------------------------------
 
-engraving::PropertyValue SpannerSegment::getProperty(Pid pid) const
+PropertyValue SpannerSegment::getProperty(Pid pid) const
 {
     if (EngravingItem* e = const_cast<SpannerSegment*>(this)->propertyDelegate(pid)) {
         return e->getProperty(pid);
@@ -294,9 +298,6 @@ void SpannerSegment::setSelected(bool f)
 void SpannerSegment::setVisible(bool f)
 {
     if (m_spanner) {
-        for (SpannerSegment* ss : m_spanner->spannerSegments()) {
-            ss->EngravingItem::setVisible(f);
-        }
         m_spanner->setVisible(f);
     } else {
         EngravingItem::setVisible(f);
@@ -310,12 +311,9 @@ void SpannerSegment::setVisible(bool f)
 void SpannerSegment::setColor(const Color& col)
 {
     if (m_spanner) {
-        for (SpannerSegment* ss : m_spanner->spannerSegments()) {
-            ss->m_color = col;
-        }
-        m_spanner->m_color = col;
+        m_spanner->setColor(col);
     } else {
-        m_color = col;
+        EngravingItem::setColor(col);
     }
 }
 
@@ -472,6 +470,9 @@ void Spanner::add(EngravingItem* e)
     ls->setTrack(track());
 //      ls->setAutoplace(autoplace());
     m_segments.push_back(ls);
+    for (Pid id : SPANNER_DELEGATED_PIDS) {
+        ls->setProperty(id, ls->getProperty(id));
+    }
     e->added();
 }
 
@@ -1155,13 +1156,12 @@ Measure* Spanner::endMeasure() const
 
 void Spanner::setSelected(bool f)
 {
-    EngravingItem::setSelected(f);
-
     for (SpannerSegment* ss : spannerSegments()) {
         if (ss->selected() != f) {
             ss->setSelected(f);
         }
     }
+    EngravingItem::setSelected(f);
 }
 
 //---------------------------------------------------------
@@ -1195,9 +1195,9 @@ void Spanner::setAutoplace(bool f)
 void Spanner::setColor(const Color& col)
 {
     for (SpannerSegment* ss : spannerSegments()) {
-        ss->setColor(col);
+        ss->EngravingItem::setColor(col);
     }
-    m_color = col;
+    EngravingItem::setColor(col);
 }
 
 //---------------------------------------------------------
