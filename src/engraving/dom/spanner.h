@@ -88,6 +88,9 @@ public:
 
     void spatiumChanged(double ov, double nv) override;
 
+    virtual Color color() const override;
+    bool visible() const;
+
     PropertyValue getProperty(Pid id) const override;
     bool setProperty(Pid id, const PropertyValue& v) override;
     PropertyValue propertyDefault(Pid id) const override;

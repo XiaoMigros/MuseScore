@@ -129,6 +129,22 @@ muse::ByteArray SpannerSegment::mimeData(const PointF& dragOffset) const
     return EngravingItem::mimeData(dragOffset);
 }
 
+Color SpannerSegment::color() const
+{
+    if (spanner()) {
+        return spanner()->color();
+    }
+    return EngravingItem::color();
+}
+
+bool SpannerSegment::visible() const
+{
+    if (spanner()) {
+        return spanner()->visible();
+    }
+    return EngravingItem::visible();
+}
+
 //---------------------------------------------------------
 //   propertyDelegate
 //---------------------------------------------------------
