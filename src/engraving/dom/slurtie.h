@@ -151,6 +151,10 @@ class SlurTie : public Spanner
     OBJECT_ALLOCATOR(engraving, SlurTie)
 
 public:
+    static const std::vector<double> SLURTIE_DOTTED_PATTERN      { { 0.01, 1.99 }; }   // tighter than Qt PenStyle::DotLine equivalent - would be { 0.01, 2.99 }
+    static const std::vector<double> SLURTIE_DASHED_PATTERN      { { 3.00, 3.00 }; }   // Compensating for caps. Qt default PenStyle::DashLine is { 4.0, 2.0 }
+    static const std::vector<double> SLURTIE_WIDE_DASHED_PATTERN { { 5.00, 6.00 }; }
+
     SlurTie(const ElementType& type, EngravingItem* parent);
     SlurTie(const SlurTie&);
     ~SlurTie();
