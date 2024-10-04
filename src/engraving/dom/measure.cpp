@@ -540,8 +540,7 @@ bool Measure::showsMeasureNumberInAutoMode()
 
     // Measure numbers should not show on first measure unless specified with Sid::showMeasureNumberOne
     // except, when showing numbers on each measure, and first measure is after anacrusis - then show always
-    if (!prevMeasure || prevMeasure->sectionBreak()
-        || (prevMeasure->irregular() && prevMeasure->isFirstInSection() && interval != 1)) {
+    if (isFirstInSection() || (prevMeasure->irregular() && prevMeasure->isFirstInSection() && interval != 1)) {
         return style().styleB(Sid::showMeasureNumberOne);
     }
 
@@ -1283,20 +1282,18 @@ void Measure::insertStaff(Staff* staff, staff_idx_t staffIdx)
 }
 
 //---------------------------------------------------------
-//   staffabbox
+//   staffPageBoundingRect
 //---------------------------------------------------------
 
-RectF Measure::staffabbox(staff_idx_t staffIdx) const
+RectF Measure::staffPageBoundingRect(staff_idx_t staffIdx) const
 {
     System* s = system();
     IF_ASSERT_FAILED(s) {
         return RectF();
     }
-    RectF sb(s->staff(staffIdx)->bbox());
-    RectF rrr(sb.translated(s->pagePos()));
-    RectF rr(abbox());
-    RectF r(rr.x(), rrr.y(), rr.width(), rrr.height());
-    return r;
+    RectF sysStaffPageBbox = s->staff(staffIdx)->bbox().translated(s->pagePos());
+    RectF measurePageBbox = pageBoundingRect();
+    return RectF(measurePageBbox.x(), sysStaffPageBbox.y(), measurePageBbox.width(), sysStaffPageBbox.height());
 }
 
 //---------------------------------------------------------
@@ -1979,8 +1976,14 @@ bool Measure::isFirstInSystem() const
 
 bool Measure::isFirstInSection() const
 {
-    Measure* prevMeasure = this->prevMeasure();
-    return !prevMeasure || prevMeasure->sectionBreak();
+    for (MeasureBase* m = prev(); m; m = m->prev()) {
+        if (m->sectionBreak()) {
+            return true;
+        } else if (m->isMeasure()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 //---------------------------------------------------------

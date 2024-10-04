@@ -523,7 +523,9 @@ void Selection::appendChord(Chord* chord)
                 Note* endNote = toNote(note->tieFor()->endElement());
                 Segment* s = endNote->chord()->segment();
                 if (!s || s->tick() < tickEnd()) {
-                    m_el.push_back(note->tieFor());
+                    for (auto seg : note->tieFor()->spannerSegments()) {
+                        appendFiltered(seg);
+                    }
                 }
             }
         }
@@ -610,9 +612,12 @@ void Selection::updateSelectedElements()
             return;
         }
 
-        if (s2 && s2 == s2->measure()->first() && !(s2->measure()->prevMeasure() && s2->measure()->prevMeasure()->coveringMMRestOrThis())) {
+        if (s2 && s2 == s2->measure()->first()) {
             // we want the last segment of the previous measure (unless it's part of a MMrest)
-            s2 = s2->prev1();
+            Measure* prevMeasure = s2->measure()->prevMeasure();
+            if (!(prevMeasure && prevMeasure != prevMeasure->coveringMMRestOrThis())) {
+                s2 = s2->prev1();
+            }
         }
 
         setRange(s1, s2, staffStart, staffEnd);
@@ -711,14 +716,16 @@ void Selection::updateSelectedElements()
         if (sp->isVolta()) {
             continue;
         }
-        if (sp->isSlur()) {
+        if (sp->isSlur() || sp->isHairpin()) {
             // ignore if start & end elements not calculated yet
             if (!sp->startElement() || !sp->endElement()) {
                 continue;
             }
             if ((sp->tick() >= stick && sp->tick() < etick) || (sp->tick2() >= stick && sp->tick2() < etick)) {
                 if (canSelect(sp->startCR()) && canSelect(sp->endCR())) {
-                    appendFiltered(sp);               // slur with start or end in range selection
+                    for (auto seg : sp->spannerSegments()) {
+                        appendFiltered(seg);               // slur with start or end in range selection
+                    }
                 }
             }
         } else if ((sp->tick() >= stick && sp->tick() < etick) && (sp->tick2() >= stick && sp->tick2() <= etick)) {

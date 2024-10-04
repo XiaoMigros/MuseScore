@@ -125,8 +125,9 @@ static std::shared_ptr<mu::engraving::IEngravingFontsProvider> engravingFonts()
 //   function declarations
 //---------------------------------------------------------
 
-static void addTie(const Notation& notation, Score* score, Note* note, const track_idx_t track, std::map<int, Tie*>& tie,
-                   MxmlLogger* logger, const XmlStreamReader* const xmlreader, const bool fixForCrossStaff);
+static void addTie(const Notation& notation, Note* note, const track_idx_t track, MusicXMLTieMap& tie,
+                   std::vector<Note*>& unstartedTieNotes, std::vector<Note*>& unendedTieNotes, MxmlLogger* logger,
+                   const XmlStreamReader* const xmlreader);
 
 //---------------------------------------------------------
 //   support enums / structs / classes
@@ -1648,6 +1649,8 @@ void MusicXMLParserPass2::initPartState(const String& partId)
     UNUSED(partId);
     m_timeSigDura = Fraction(0, 0);               // invalid
     m_ties.clear();
+    m_unstartedTieNotes.clear();
+    m_unendedTieNotes.clear();
     m_lastVolta = 0;
     m_hasDrumset = false;
     for (int i = 0; i < MAX_NUMBER_LEVEL; ++i) {
@@ -2193,14 +2196,74 @@ void MusicXMLParserPass2::part()
     }
     m_spanners.clear();
 
-    // Clean up unterminated ties
-    for (auto tie : m_ties) {
+    // Clean up any remaining ties
+    MusicXMLTieMap tieMap = m_ties;
+    for (auto& tie : tieMap) {
         if (tie.second) {
-            cleanupUnterminatedTie(tie.second, m_score, m_pass1.exporterString().contains(u"dolet 6"));
-            m_ties[tie.first] = nullptr;
+            m_unendedTieNotes.push_back(tie.second->startNote());
+            m_ties.erase(tie.first);
         }
     }
+    // Find ties between different voices which may have been missed
+    for (Note* startNote : m_unendedTieNotes) {
+        Tie* unendedTie = startNote->tieFor();
+        if (!unendedTie) {
+            continue;
+        }
+        const Chord* startChord = startNote->chord();
+        const Measure* startMeasure = startChord ? startChord->measure() : nullptr;
+        for (Note* endNote : m_unstartedTieNotes) {
+            if (endNote->tieBack()) {
+                continue;
+            }
+            const Chord* endChord = endNote->chord();
+            if (startNote->pitch() == endNote->pitch()
+                && (startMeasure == endChord->measure() || startChord->tick() + startChord->actualTicks() == endChord->tick())) {
+                unendedTie->setEndNote(endNote);
+                endNote->setTieBack(unendedTie);
+            }
+        }
+
+        if (!unendedTie->endNote()) {
+            // Tie started with no matching end tags
+            // Find a note of the same pitch in the same voice immediately following the start chord
+            Segment* nextSeg = startChord->segment();
+            while (nextSeg && nextSeg->tick() < startChord->tick() + startChord->ticks()) {
+                nextSeg = nextSeg->nextCR(startChord->track(), true);
+            }
+            EngravingItem* nextEl = nextSeg ? nextSeg->element(startNote->track()) : nullptr;
+            Chord* nextChord = nextEl && nextEl->isChord() ? toChord(nextEl) : nullptr;
+            Note* matchingNote = nextChord ? nextChord->findNote(startNote->pitch()) : nullptr;
+
+            if (matchingNote && matchingNote->tpc() == startNote->tpc() && matchingNote != startNote) {
+                unendedTie->setEndNote(matchingNote);
+                matchingNote->setTieBack(unendedTie);
+            } else {
+                // try other voices in the stave
+                const Part* part = startChord->part();
+                for (track_idx_t track = part->startTrack(); track < part->endTrack() + VOICES; track++) {
+                    nextEl = nextSeg ? nextSeg->element(track) : nullptr;
+                    nextChord = nextEl && nextEl->isChord() ? toChord(nextEl) : nullptr;
+                    if (nextChord && nextChord->vStaffIdx() != startChord->vStaffIdx()) {
+                        continue;
+                    }
+                    matchingNote = nextChord ? nextChord->findNote(startNote->pitch()) : nullptr;
+                    if (matchingNote && matchingNote->tpc() == startNote->tpc() && matchingNote != startNote) {
+                        unendedTie->setEndNote(matchingNote);
+                        matchingNote->setTieBack(unendedTie);
+                    }
+                }
+            }
+        }
+
+        if (!unendedTie->endNote()) {
+            cleanupUnterminatedTie(unendedTie, m_score, m_pass1.exporterString().contains(u"dolet 6"));
+        }
+    }
+
     m_ties.clear();
+    m_unstartedTieNotes.clear();
+    m_unendedTieNotes.clear();
 
     if (m_hasDrumset) {
         Drumset* drumset = new Drumset;
@@ -2279,7 +2342,7 @@ static void handleBeamAndStemDir(ChordRest* cr, const BeamMode bm, const Directi
         // create a new beam
         beam = Factory::createBeam(cr->score()->dummy()->system());
         beam->setTrack(cr->track());
-        beam->setBeamDirection(sd);
+        beam->setDirection(sd);
     }
     // add ChordRest to beam
     if (beam) {
@@ -2831,7 +2894,7 @@ void MusicXMLParserPass2::measureLayout(Measure* measure)
 {
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "measure-distance") {
-            const Spatium val(m_e.readText().toDouble() / 10.0);
+            const Spatium val(m_e.readDouble() / 10.0);
             if (!measure->prev()->isHBox()) {
                 MeasureBase* gap = m_score->insertBox(ElementType::HBOX, measure);
                 toHBox(gap)->setBoxWidth(val);
@@ -2955,7 +3018,7 @@ void MusicXMLParserPass2::staffDetails(const String& partId, Measure* measure)
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "staff-lines") {
             // save staff lines for later
-            staffLines = m_e.readText().toInt();
+            staffLines = m_e.readInt();
             // for a TAB staff also resize the string table and init with zeroes
             if (t) {
                 if (0 < staffLines) {
@@ -2967,7 +3030,7 @@ void MusicXMLParserPass2::staffDetails(const String& partId, Measure* measure)
         } else if (m_e.name() == "staff-tuning") {
             staffTuning(t);
         } else if (m_e.name() == "staff-size") {
-            const double val = m_e.readText().toDouble() / 100;
+            const double val = m_e.readDouble() / 100;
             m_score->staff(staffIdx)->setProperty(Pid::MAG, val);
         } else {
             skipLogCurrElem();
@@ -3020,9 +3083,9 @@ void MusicXMLParserPass2::staffTuning(StringData* t)
     int octave = 0;
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "tuning-alter") {
-            alter = m_e.readText().toInt();
+            alter = m_e.readInt();
         } else if (m_e.name() == "tuning-octave") {
-            octave = m_e.readText().toInt();
+            octave = m_e.readInt();
         } else if (m_e.name() == "tuning-step") {
             String strStep = m_e.readText();
             int pos = static_cast<int>(String(u"CDEFGAB").indexOf(strStep));
@@ -3078,7 +3141,7 @@ void MusicXMLParserPass2::measureStyle(Measure* measure)
 
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "multiple-rest") {
-            int multipleRest = m_e.readText().toInt();
+            int multipleRest = m_e.readInt();
             if (multipleRest > 1) {
                 m_multiMeasureRestCount = multipleRest;
                 m_score->style().set(Sid::createMultiMeasureRests, true);
@@ -3090,7 +3153,7 @@ void MusicXMLParserPass2::measureStyle(Measure* measure)
             String startStop = m_e.attribute("type");
             // note: possible "slashes" attribute is either redundant with numMeasures or not supported by MuseScore, so ignored either way
             if (startStop == u"start") {
-                int numMeasures = m_e.readText().toInt();
+                int numMeasures = m_e.readInt();
                 for (int i = startStaff; i <= endStaff; i++) {
                     m_measureRepeatNumMeasures[i] = numMeasures;
                     m_measureRepeatCount[i] = numMeasures;   // measure repeat(s) haven't actually started yet in current measure, so this is a lie,
@@ -3234,7 +3297,7 @@ void MusicXMLParserDirection::direction(const String& partId,
         if (m_e.name() == "direction-type") {
             directionType(starts, stops);
         } else if (m_e.name() == "offset") {
-            m_offset = m_pass1.calcTicks(m_e.readText().toInt(), m_pass2.divs(), &m_e);
+            m_offset = m_pass1.calcTicks(m_e.readInt(), m_pass2.divs(), &m_e);
             preventNegativeTick(tick, m_offset, m_logger);
         } else if (m_e.name() == "sound") {
             sound();
@@ -5596,7 +5659,7 @@ void MusicXMLParserPass2::key(const String& partId, Measure* measure, const Frac
 
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "fifths") {
-            Key tKey = Key(m_e.readText().toInt());
+            Key tKey = Key(m_e.readInt());
             Key cKey = tKey;
             Interval v = m_pass1.getPart(partId)->instrument()->transpose();
             if (!v.isZero() && !m_score->style().styleB(Sid::concertPitch)) {
@@ -5689,9 +5752,9 @@ void MusicXMLParserPass2::clef(const String& partId, Measure* measure, const Fra
         if (m_e.name() == "sign") {
             c = m_e.readText();
         } else if (m_e.name() == "line") {
-            line = m_e.readText().toInt();
+            line = m_e.readInt();
         } else if (m_e.name() == "clef-octave-change") {
-            i = m_e.readText().toInt();
+            i = m_e.readInt();
             if (i && !(c == "F" || c == "G" || c == "C")) {
                 LOGD("clef-octave-change only implemented for F and G key");          // TODO
             }
@@ -5925,7 +5988,7 @@ void MusicXMLParserPass2::time(const String& partId, Measure* measure, const Fra
 
 void MusicXMLParserPass2::divisions()
 {
-    m_divs = m_e.readText().toInt();
+    m_divs = m_e.readInt();
     if (!(m_divs > 0)) {
         m_logger->logError(u"illegal divisions", &m_e);
     }
@@ -6840,14 +6903,16 @@ Note* MusicXMLParserPass2::note(const String& partId,
 
     // handle notations
     if (cr) {
-        notations.addToScore(cr, note, noteStartTime.ticks(), m_slurs, m_glissandi, m_spanners, m_trills, m_ties, arpMap, delayedArps);
+        notations.addToScore(cr, note,
+                             noteStartTime.ticks(), m_slurs, m_glissandi, m_spanners, m_trills, m_ties, m_unstartedTieNotes, m_unendedTieNotes, arpMap,
+                             delayedArps);
 
         // if no tie added yet, convert the "tie" into "tied" and add it.
-        if (note && !note->tieFor() && !tieType.empty()) {
+        if (note && !note->tieFor() && !note->tieBack() && !tieType.empty()) {
             Notation notation = Notation(u"tied");
             const String type2 = u"type";
             notation.addAttribute(type2, tieType);
-            addTie(notation, m_score, note, cr->track(), m_ties, m_logger, &m_e, m_pass1.exporterString().contains(u"dolet 6"));
+            addTie(notation, note, cr->track(), m_ties, m_unstartedTieNotes, m_unendedTieNotes, m_logger, &m_e);
         }
     }
 
@@ -7196,14 +7261,14 @@ FretDiagram* MusicXMLParserPass2::frame()
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "first-fret") {
             bool ok {};
-            int val = m_e.readText().toInt(&ok);
+            int val = m_e.readInt(&ok);
             if (ok && val > 0) {
                 fd->setFretOffset(val - 1);
             } else {
                 m_logger->logError(String(u"FretDiagram::readMusicXML: illegal first-fret %1").arg(val), &m_e);
             }
         } else if (m_e.name() == "frame-frets") {
-            int val = m_e.readText().toInt();
+            int val = m_e.readInt();
             if (val > 0) {
                 fd->setProperty(Pid::FRET_FRETS, val);
                 fd->setPropertyFlags(Pid::FRET_FRETS, PropertyFlags::UNSTYLED);
@@ -7216,9 +7281,9 @@ FretDiagram* MusicXMLParserPass2::frame()
             int actualString = -1;
             while (m_e.readNextStartElement()) {
                 if (m_e.name() == "fret") {
-                    fret = m_e.readText().toInt();
+                    fret = m_e.readInt();
                 } else if (m_e.name() == "string") {
-                    string = m_e.readText().toInt();
+                    string = m_e.readInt();
                     actualString = fd->strings() - string;
                 } else if (m_e.name() == "barre") {
                     // Keep barres to be added later
@@ -7250,7 +7315,7 @@ FretDiagram* MusicXMLParserPass2::frame()
                 m_logger->logError(String(u"FretDiagram::readMusicXML: illegal frame-note string %1").arg(string), &m_e);
             }
         } else if (m_e.name() == "frame-strings") {
-            int val = m_e.readText().toInt();
+            int val = m_e.readInt();
             if (val > 0) {
                 fd->setStrings(val);
                 for (int i = 0; i < val; ++i) {
@@ -7326,7 +7391,8 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
                 } else if (m_e.name() == "root-alter") {
                     // attributes: print-object, print-style
                     //             location (left-right)
-                    alter = m_e.readText().toInt();
+                    // Cubase exports this value with a trailing newline
+                    alter = m_e.readText().simplified().toInt();
                 } else {
                     skipLogCurrElem();
                 }
@@ -7368,7 +7434,7 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
                 } else if (m_e.name() == "bass-alter") {
                     // attributes: print-object, print-style
                     //             location (left-right)
-                    alter = m_e.readText().toInt();
+                    alter = m_e.readInt();
                 } else {
                     skipLogCurrElem();
                 }
@@ -7380,9 +7446,9 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
             String degreeType;
             while (m_e.readNextStartElement()) {
                 if (m_e.name() == "degree-value") {
-                    degreeValue = m_e.readText().toInt();
+                    degreeValue = m_e.readInt();
                 } else if (m_e.name() == "degree-alter") {
-                    degreeAlter = m_e.readText().toInt();
+                    degreeAlter = m_e.readInt();
                 } else if (m_e.name() == "degree-type") {
                     degreeType = m_e.readText();
                 } else {
@@ -7408,7 +7474,7 @@ void MusicXMLParserPass2::harmony(const String& partId, Measure* measure, const 
         } else if (m_e.name() == "level") {
             skipLogCurrElem();
         } else if (m_e.name() == "offset") {
-            offset = m_pass1.calcTicks(m_e.readText().toInt(), m_divs, &m_e);
+            offset = m_pass1.calcTicks(m_e.readInt(), m_divs, &m_e);
             preventNegativeTick(sTime, offset, m_logger);
         } else if (m_e.name() == "staff") {
             size_t nstaves = m_pass1.getPart(partId)->nstaves();
@@ -7983,7 +8049,7 @@ void MusicXMLParserNotations::ornaments()
         } else if (m_e.name() == "tremolo") {
             m_hasTremolo = true;
             m_tremoloType = m_e.attribute("type");
-            m_tremoloNr = m_e.readText().toInt();
+            m_tremoloNr = m_e.readInt();
             m_tremoloSmufl = m_e.attribute("smufl");
         } else if (m_e.name() == "inverted-mordent"
                    || m_e.name() == "mordent") {
@@ -8312,8 +8378,9 @@ static void addArpeggio(ChordRest* cr, String& arpeggioType, int arpeggioNo, Arp
 //   addTie
 //---------------------------------------------------------
 
-static void addTie(const Notation& notation, Score* score, Note* note, const track_idx_t track,
-                   std::map<int, Tie*>& ties, MxmlLogger* logger, const XmlStreamReader* const xmlreader, const bool fixForCrossStaff)
+static void addTie(const Notation& notation, Note* note, const track_idx_t track, MusicXMLTieMap& ties,
+                   std::vector<Note*>& unstartedTieNotes, std::vector<Note*>& unendedTieNotes, MxmlLogger* logger,
+                   const XmlStreamReader* const xmlreader)
 {
     IF_ASSERT_FAILED(note) {
         return;
@@ -8324,16 +8391,18 @@ static void addTie(const Notation& notation, Score* score, Note* note, const tra
     const String placement = notation.attribute(u"placement");
     const String lineType = notation.attribute(u"line-type");
 
+    TieLocation loc = TieLocation(note->pitch(), note->track());
+
     if (type.empty()) {
         // ignore, nothing to do
     } else if (type == u"start") {
-        if (ties[note->pitch()]) {
+        if (Tie* activeTie = muse::value(ties, loc, nullptr)) {
             logger->logError(String(u"Tie already active"), xmlreader);
-            cleanupUnterminatedTie(ties[note->pitch()], score, fixForCrossStaff);
-            ties[note->pitch()] = nullptr;
+            unendedTieNotes.push_back(activeTie->startNote());
+            ties.erase(loc);
         }
-        ties[note->pitch()] = Factory::createTie(note);
-        Tie* currTie = ties[note->pitch()];
+        ties[loc] = Factory::createTie(note);
+        Tie* currTie = ties[loc];
         note->setTieFor(currTie);
         currTie->setStartNote(note);
         currTie->setTrack(track);
@@ -8364,8 +8433,7 @@ static void addTie(const Notation& notation, Score* score, Note* note, const tra
         }
         currTie = nullptr;
     } else if (type == "stop") {
-        if (ties[note->pitch()]) {
-            Tie* currTie = ties[note->pitch()];
+        if (Tie* currTie = muse::value(ties, loc, nullptr)) {
             const Note* startNote = currTie->startNote();
             const Chord* startChord = startNote ? startNote->chord() : nullptr;
             const Chord* endChord = note->chord();
@@ -8375,13 +8443,15 @@ static void addTie(const Notation& notation, Score* score, Note* note, const tra
                 currTie->setEndNote(note);
                 note->setTieBack(currTie);
             } else {
-                cleanupUnterminatedTie(ties[note->pitch()], score, fixForCrossStaff);
+                logger->logError(String(u"Intervening note in voice"), xmlreader);
+                unstartedTieNotes.push_back(note);
+                unendedTieNotes.push_back(currTie->startNote());
             }
-            ties[note->pitch()] = nullptr;
+            ties.erase(loc);
         } else {
+            unstartedTieNotes.push_back(note);
             logger->logError(String(u"Non-started tie terminated. No-op."), xmlreader);
         }
-        // ignore
     } else if (type == "let-ring") {
         addArticLaissezVibrer(note);
     } else {
@@ -8675,7 +8745,9 @@ void MusicXMLParserNotations::addNotation(const Notation& notation, ChordRest* c
 
 void MusicXMLParserNotations::addToScore(ChordRest* const cr, Note* const note, const int tick, SlurStack& slurs,
                                          Glissando* glissandi[MAX_NUMBER_LEVEL][2], MusicXmlSpannerMap& spanners,
-                                         TrillStack& trills, std::map<int, Tie*>& ties, ArpeggioMap& arpMap, DelayedArpMap& delayedArps)
+                                         TrillStack& trills, MusicXMLTieMap& ties, std::vector<Note*>& unstartedTieNotes,
+                                         std::vector<Note*>& unendedTieNotes, ArpeggioMap& arpMap,
+                                         DelayedArpMap& delayedArps)
 {
     addArpeggio(cr, m_arpeggioType, m_arpeggioNo, arpMap, delayedArps);
     addBreath(cr, cr->tick(), m_breath);
@@ -8689,7 +8761,7 @@ void MusicXMLParserNotations::addToScore(ChordRest* const cr, Note* const note, 
         } else if (note && (notation.name() == "glissando" || notation.name() == "slide")) {
             addGlissandoSlide(notation, note, glissandi, spanners, m_logger, &m_e);
         } else if (note && notation.name() == "tied") {
-            addTie(notation, m_score, note, cr->track(), ties, m_logger, &m_e, m_pass1.exporterString().contains(u"dolet 6"));
+            addTie(notation, note, cr->track(), ties, unstartedTieNotes, unendedTieNotes, m_logger, &m_e);
         } else if (note && notation.parent() == "technical") {
             addTechnical(notation, note);
         } else {

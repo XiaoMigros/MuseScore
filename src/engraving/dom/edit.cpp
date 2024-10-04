@@ -4412,7 +4412,16 @@ void Score::cmdTimeDelete()
     }
 
     if (!isMaster() && masterScore()) {
-        masterScore()->doTimeDelete(startSegment, endSegment);
+        Measure* masterStartMeas = masterScore()->tick2measure(startSegment->tick());
+        Measure* masterEndMeas = masterScore()->tick2measure(endSegment->tick());
+        if (endSegment->isEndBarLineType()) {
+            Measure* prevEndMeasure = masterEndMeas->prevMeasure();
+            masterEndMeas = prevEndMeasure ? prevEndMeasure : masterEndMeas;
+        }
+        Segment* masterStartSeg
+            = masterStartMeas ? masterStartMeas->findSegment(startSegment->segmentType(), startSegment->tick()) : startSegment;
+        Segment* masterEndSeg = masterEndMeas ? masterEndMeas->findSegment(endSegment->segmentType(), endSegment->tick()) : endSegment;
+        masterScore()->doTimeDelete(masterStartSeg, masterEndSeg);
     } else {
         doTimeDelete(startSegment, endSegment);
     }
@@ -5065,8 +5074,6 @@ void Score::undoChangeElement(EngravingItem* oldElement, EngravingItem* newEleme
 {
     if (!oldElement) {
         undoAddElement(newElement);
-    } else if (oldElement->isSpanner()) {
-        undo(new ChangeElement(oldElement, newElement));
     } else {
         const std::list<EngravingObject*> links = oldElement->linkList();
         for (EngravingObject* obj : links) {
@@ -5075,7 +5082,8 @@ void Score::undoChangeElement(EngravingItem* oldElement, EngravingItem* newEleme
                 undo(new ChangeElement(oldElement, newElement));
             } else {
                 if (item->score()) {
-                    item->score()->undo(new ChangeElement(item, newElement->linkedClone()));
+                    EngravingItem* newClone = newElement->clone();
+                    item->score()->undo(new ChangeElement(item, newClone));
                 }
             }
         }
@@ -6023,7 +6031,9 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             && et != ElementType::FERMATA
             && et != ElementType::HARMONY
             && et != ElementType::HARP_DIAGRAM
-            && et != ElementType::FIGURED_BASS)
+            && et != ElementType::FIGURED_BASS
+            && et != ElementType::CLEF
+            && et != ElementType::AMBITUS)
         ) {
         doUndoAddElement(element);
         return;
@@ -6065,7 +6075,9 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             ElementType::VIBRATO,
             ElementType::TEXTLINE,
             ElementType::PEDAL,
-            ElementType::LYRICS
+            ElementType::LYRICS,
+            ElementType::CLEF,
+            ElementType::AMBITUS
         };
 
         track_idx_t linkedTrack = ostaff->getLinkedTrackInStaff(staff, strack);
@@ -6203,13 +6215,15 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                  || element->isFermata()
                  || element->isHarmony()
                  || element->isHarpPedalDiagram()
-                 || element->isFiguredBass()) {
+                 || element->isFiguredBass()
+                 || element->isClef()
+                 || element->isAmbitus()) {
             Segment* segment
                 = element->explicitParent()->isFretDiagram() ? toSegment(element->explicitParent()->explicitParent()) : toSegment(
                       element->explicitParent());
             Fraction tick    = segment->tick();
             Measure* m       = score->tick2measure(tick);
-            if ((segment->segmentType() == SegmentType::EndBarLine) && (m->tick() == tick)) {
+            if ((segment->segmentType() & (SegmentType::EndBarLine | SegmentType::Clef)) && (m->tick() == tick)) {
                 m = m->prevMeasure();
             }
             Segment* seg     = m->undoGetSegment(segment->segmentType(), tick);

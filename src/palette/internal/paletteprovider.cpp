@@ -614,6 +614,10 @@ void PaletteProvider::init()
     configuration()->isSingleClickToOpenPalette().ch.onReceive(this, [this](bool) {
         emit isSingleClickToOpenPaletteChanged();
     });
+
+    configuration()->isPaletteDragEnabled().ch.onReceive(this, [this](bool) {
+        emit isPaletteDragEnabledChanged();
+    });
 }
 
 void PaletteProvider::setFilter(const QString& filter)
@@ -637,12 +641,6 @@ void PaletteProvider::setSearching(bool searching)
         return;
     }
 
-    if (!searching) {
-        if (m_searchFilterModel) {
-            m_searchFilterModel->setFilterFixedString("");
-        }
-    }
-
     m_isSearching = searching;
 
     m_mainPalette = nullptr;
@@ -658,6 +656,11 @@ bool PaletteProvider::isSinglePalette() const
 bool PaletteProvider::isSingleClickToOpenPalette() const
 {
     return configuration()->isSingleClickToOpenPalette().val;
+}
+
+bool PaletteProvider::isPaletteDragEnabled() const
+{
+    return configuration()->isPaletteDragEnabled().val;
 }
 
 QAbstractItemModel* PaletteProvider::mainPaletteModel()
