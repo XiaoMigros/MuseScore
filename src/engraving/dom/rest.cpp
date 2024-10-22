@@ -486,7 +486,8 @@ int Rest::computeVoiceOffset(int lines, LayoutData* ldata) const
 
 int Rest::computeWholeRestOffset(int voiceOffset, int lines) const
 {
-    if (!isWholeRest()) {
+    if (durationType() != DurationType::V_WHOLE && durationType() != DurationType::V_MEASURE
+        && durationType() != DurationType::V_BREVE) {
         return 0;
     }
     int lineMove = 0;
