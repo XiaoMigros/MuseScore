@@ -92,6 +92,7 @@ enum class P_TYPE {
     NOTEHEAD_TYPE,
     NOTEHEAD_SCHEME,
     NOTEHEAD_GROUP,
+    REST_DURATION_TYPE,
     CLEF_TYPE,
     CLEF_TO_BARLINE_POS,
     DYNAMIC_TYPE,
@@ -236,6 +237,9 @@ public:
         : m_type(P_TYPE::NOTEHEAD_SCHEME), m_data(make_data<NoteHeadScheme>(v)) {}
     PropertyValue(NoteHeadGroup v)
         : m_type(P_TYPE::NOTEHEAD_GROUP), m_data(make_data<NoteHeadGroup>(v)) {}
+
+    PropertyValue(RestVisualDurationType v)
+        : m_type(P_TYPE::REST_DURATION_TYPE), m_data(make_data<RestVisualDurationType>(v)) {}
 
     PropertyValue(ClefType v)
         : m_type(P_TYPE::CLEF_TYPE), m_data(make_data<ClefType>(v)) {}

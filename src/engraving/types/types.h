@@ -427,6 +427,26 @@ enum class NoteHeadType : signed char {
     HEAD_TYPES
 };
 
+// P_TYPE::REST_DURATION_TYPE
+enum class RestVisualDurationType : signed char {
+    AUTO = -1,
+    REST_MAXIMA,
+    REST_LONGA,
+    REST_DOUBLE_WHOLE,
+    REST_WHOLE,
+    REST_HALF,
+    REST_QUARTER,
+    REST_8TH,
+    REST_16TH,
+    REST_32ND,
+    REST_64TH,
+    REST_128TH,
+    REST_256TH,
+    REST_512TH,
+    REST_1024TH,
+    REST_DURATION_TYPES,
+};
+
 // P_TYPE::NOTEHEAD_SCHEME
 enum class NoteHeadScheme : signed char {
     HEAD_AUTO = -1,

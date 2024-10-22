@@ -49,6 +49,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/types/tremolobartypes.h
     ${CMAKE_CURRENT_LIST_DIR}/types/tremolotypes.h
     ${CMAKE_CURRENT_LIST_DIR}/types/voicetypes.h
+    ${CMAKE_CURRENT_LIST_DIR}/types/resttypes.h
     ${CMAKE_CURRENT_LIST_DIR}/models/iinspectormodelcreator.h
     ${CMAKE_CURRENT_LIST_DIR}/models/inspectormodelcreator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/inspectormodelcreator.h
@@ -210,6 +211,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/instrumentname/instrumentnamesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/rests/beams/restbeamsettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/rests/beams/restbeamsettingsmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/rests/beams/restvisualdurationmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/rests/beams/restvisualdurationmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/rests/restsettingsproxymodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/rests/restsettingsproxymodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/dynamics/dynamicsettingsmodel.cpp

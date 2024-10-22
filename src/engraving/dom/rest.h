@@ -107,6 +107,9 @@ public:
 
     bool isWholeRest() const;
 
+    RestVisualDurationType visualDurationType() const { return m_visualDurationType; }
+    void setVisualDurationType(RestVisualDurationType t);
+
     DeadSlapped* deadSlapped() const { return m_deadSlapped; }
 
     int upLine() const override;
@@ -144,6 +147,7 @@ public:
     int computeVoiceOffset(int lines, LayoutData* ldata) const; // Vertical displacement in multi-voice cases
     int computeWholeRestOffset(int voiceOffset, int lines) const;
 
+    SymId quarterSymbol() const { return m_quarterSymbol; }
     SymId getSymbol(DurationType type, int line, int lines) const;
     void updateSymbol(int line, int lines, LayoutData* ldata) const;
     double symWidthNoLedgerLines(LayoutData* ldata) const;
@@ -175,6 +179,9 @@ private:
     DeadSlapped* m_deadSlapped = nullptr;
 
     RestVerticalClearance m_verticalClearance;
+
+    RestVisualDurationType m_visualDurationType = RestVisualDurationType::AUTO;
+    SymId m_quarterSymbol = SymId::restQuarter;
 };
 } // namespace mu::engraving
 #endif

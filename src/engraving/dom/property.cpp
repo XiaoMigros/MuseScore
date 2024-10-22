@@ -267,7 +267,11 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::HARMONY_DURATION,        true,  "harmonyDuration",       P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "harmony duration") },
 
     { Pid::SYSTEM_BRACKET,          false, "type",                  P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "type") },
-    { Pid::GAP,                     false, 0,                       P_TYPE::BOOL,               PropertyGroup::NONE,      DUMMY_QT_TR_NOOP("propertyName", "gap") },
+
+    { Pid::GAP,                     false, 0,                       P_TYPE::BOOL,               PropertyGroup::NONE,            DUMMY_QT_TR_NOOP("propertyName", "gap") },
+    { Pid::REST_QUARTER_SYMBOL,     false, "quarterSymbol",         P_TYPE::SYMID,              PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "quarter symbol") },
+    { Pid::REST_VISUAL_DURATION,    false, "visualDuration",        P_TYPE::REST_DURATION_TYPE, PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "visual duration") },
+
     { Pid::AUTOPLACE,               false, "autoplace",             P_TYPE::BOOL,               PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "autoplace") },
     { Pid::DASH_LINE_LEN,           false, "dashLineLength",        P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "dash line length") },
     { Pid::DASH_GAP_LEN,            false, "dashGapLength",         P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "dash gap length") },
