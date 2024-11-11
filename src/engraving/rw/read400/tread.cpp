@@ -86,6 +86,7 @@
 #include "../../dom/bracket.h"
 #include "../../dom/breath.h"
 #include "../../dom/note.h"
+#include "../../dom/noteline.h"
 #include "../../dom/spanner.h"
 #include "../../dom/fingering.h"
 #include "../../dom/notedot.h"
@@ -156,7 +157,7 @@ using ReadTypes = rtti::TypeList<Accidental, ActionIcon, Ambitus, Arpeggio, Arti
                                  KeySig,
                                  LayoutBreak, LedgerLine, LetRing, Lyrics,
                                  Marker, MeasureNumber, MeasureRepeat, MMRest, MMRestRange,
-                                 Note, NoteDot, NoteHead,
+                                 Note, NoteDot, NoteHead, NoteLine,
                                  Page, PalmMute, Pedal, PlayTechAnnotation,
                                  Rasgueado, RehearsalMark, Rest,
                                  Ornament, Ottava,
@@ -3051,6 +3052,9 @@ void TRead::read(MMRest* r, XmlReader& e, ReadContext& ctx)
             NoteDot* dot = Factory::createNoteDot(r);
             TRead::read(dot, e, ctx);
             r->add(dot);
+        } else if (tag == "mmRestNumberPos") {
+            // Old property, deprecated in 4.5
+            r->setNumberOffset(e.readDouble() - ctx.style().styleS(Sid::mmRestNumberPos).val());
         } else if (TRead::readStyledProperty(r, tag, e, ctx)) {
         } else if (readProperties(r, e, ctx)) {
         } else {

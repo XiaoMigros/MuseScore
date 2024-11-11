@@ -91,7 +91,7 @@ void TieSegment::changeAnchor(EditData& ed, EngravingItem* element)
 
         TieSegment* newSegment = toTieSegment(ed.curGrip == Grip::END ? ss.back() : ss.front());
         score()->endCmd();
-        score()->startCmd();
+        score()->startCmd(TranslatableString("undoableAction", "Change tie anchor"));
         ed.view()->changeEditElement(newSegment);
         triggerLayout();
     }
@@ -170,19 +170,6 @@ bool TieSegment::isEdited() const
         }
     }
     return false;
-}
-
-void TieSegment::addLineAttachPoints()
-{
-    // Add tie attach point to start and end note
-    Note* startNote = tie()->startNote();
-    Note* endNote = tie()->endNote();
-    if (startNote) {
-        startNote->addLineAttachPoint(ups(Grip::START).pos(), tie());
-    }
-    if (endNote) {
-        endNote->addLineAttachPoint(ups(Grip::END).pos(), tie());
-    }
 }
 
 //---------------------------------------------------------

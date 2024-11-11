@@ -37,6 +37,7 @@ static const QMap<mu::engraving::ElementType, InspectorModelType> NOTATION_ELEME
     { mu::engraving::ElementType::STEM, InspectorModelType::TYPE_NOTE },
     { mu::engraving::ElementType::NOTEDOT, InspectorModelType::TYPE_NOTE },
     { mu::engraving::ElementType::NOTEHEAD, InspectorModelType::TYPE_NOTE },
+    { mu::engraving::ElementType::NOTELINE, InspectorModelType::TYPE_NOTE },
     { mu::engraving::ElementType::SHADOW_NOTE, InspectorModelType::TYPE_NOTE },
     { mu::engraving::ElementType::HOOK, InspectorModelType::TYPE_NOTE },
     { mu::engraving::ElementType::BEAM, InspectorModelType::TYPE_NOTE },
@@ -97,6 +98,8 @@ static const QMap<mu::engraving::ElementType, InspectorModelType> NOTATION_ELEME
     { mu::engraving::ElementType::TUPLET, InspectorModelType::TYPE_TUPLET },
     { mu::engraving::ElementType::TEXTLINE, InspectorModelType::TYPE_TEXT_LINE },
     { mu::engraving::ElementType::TEXTLINE_SEGMENT, InspectorModelType::TYPE_TEXT_LINE },
+    { mu::engraving::ElementType::NOTELINE, InspectorModelType::TYPE_NOTELINE },
+    { mu::engraving::ElementType::NOTELINE_SEGMENT, InspectorModelType::TYPE_NOTELINE },
     { mu::engraving::ElementType::GRADUAL_TEMPO_CHANGE, InspectorModelType::TYPE_GRADUAL_TEMPO_CHANGE },
     { mu::engraving::ElementType::GRADUAL_TEMPO_CHANGE_SEGMENT, InspectorModelType::TYPE_GRADUAL_TEMPO_CHANGE },
     { mu::engraving::ElementType::INSTRUMENT_NAME, InspectorModelType::TYPE_INSTRUMENT_NAME },
@@ -355,7 +358,7 @@ void AbstractInspectorModel::setPropertyValue(const QList<engraving::EngravingIt
         return;
     }
 
-    beginCommand();
+    beginCommand(TranslatableString("undoableAction", "Edit element property"));
 
     for (mu::engraving::EngravingItem* item : items) {
         IF_ASSERT_FAILED(item) {
@@ -437,7 +440,7 @@ bool AbstractInspectorModel::updateStyleValue(const mu::engraving::Sid& sid, con
 {
     PropertyValue newVal = PropertyValue::fromQVariant(newValue, mu::engraving::MStyle::valueType(sid));
     if (style() && style()->styleValue(sid) != newVal) {
-        beginCommand();
+        beginCommand(TranslatableString("undoableAction", "Edit style"));
         style()->setStyleValue(sid, newVal);
         endCommand();
         return true;
@@ -685,10 +688,10 @@ INotationUndoStackPtr AbstractInspectorModel::undoStack() const
     return currentNotation() ? currentNotation()->undoStack() : nullptr;
 }
 
-void AbstractInspectorModel::beginCommand()
+void AbstractInspectorModel::beginCommand(const muse::TranslatableString& actionName)
 {
     if (undoStack()) {
-        undoStack()->prepareChanges();
+        undoStack()->prepareChanges(actionName);
     }
 
     //! NOTE prevents unnecessary updating of properties

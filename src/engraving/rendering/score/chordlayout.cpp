@@ -568,7 +568,7 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
     }
 
     // allocate enough room for glissandi
-    if (item->endsGlissandoOrGuitarBend()) {
+    if (item->endsNoteAnchoredLine()) {
         if (!item->rtick().isZero()) {                          // if not at beginning of measure
             lll += _spatium * 0.5 + minTieLength;
         }
@@ -2675,13 +2675,13 @@ void ChordLayout::appendGraceNotes(Chord* chord)
     if (!gnb.empty()) {
         // If this segment already contains grace notes in the same voice (could happen if a
         // previous chord has appended grace-notes-after here) put them in the same vector.
-        EngravingItem* item = segment->preAppendedItem(static_cast<int>(track));
+        EngravingItem* item = segment->preAppendedItem(track);
         if (item && item->isGraceNotesGroup()) {
             GraceNotesGroup* gng = toGraceNotesGroup(item);
             gng->insert(gng->end(), gnb.begin(), gnb.end());
         } else {
             gnb.setAppendedSegment(segment);
-            segment->preAppend(&gnb, static_cast<int>(track));
+            segment->preAppend(&gnb, track);
         }
     }
 
@@ -2695,7 +2695,7 @@ void ChordLayout::appendGraceNotes(Chord* chord)
         }
         if (followingSeg) {
             gna.setAppendedSegment(followingSeg);
-            followingSeg->preAppend(&gna, static_cast<int>(track));
+            followingSeg->preAppend(&gna, track);
         }
     }
 }
@@ -2705,8 +2705,8 @@ void ChordLayout::appendGraceNotes(Chord* chord)
 *  is needed and must be called AFTER horizontal spacing is calculated. */
 void ChordLayout::repositionGraceNotesAfter(Segment* segment, size_t tracks)
 {
-    for (size_t track = 0; track < tracks; track++) {
-        EngravingItem* item = segment->preAppendedItem(static_cast<int>(track));
+    for (track_idx_t track = 0; track < tracks; track++) {
+        EngravingItem* item = segment->preAppendedItem(track);
         if (!item || !item->isGraceNotesGroup()) {
             continue;
         }
@@ -2747,13 +2747,15 @@ void ChordLayout::clearLineAttachPoints(Measure* measure)
  * enforce minTieLength. The true layout of ties and glissandi is done much later. */
 void ChordLayout::updateLineAttachPoints(Chord* chord, bool isFirstInMeasure, LayoutContext& ctx)
 {
-    if (chord->endsGlissandoOrGuitarBend()) {
+    if (chord->endsNoteAnchoredLine()) {
         for (Note* note : chord->notes()) {
             for (Spanner* sp : note->spannerBack()) {
                 if (sp->isGlissando()) {
                     TLayout::layoutGlissando(toGlissando(sp), ctx);
                 } else if (sp->isGuitarBend()) {
                     TLayout::layoutGuitarBend(toGuitarBend(sp), ctx);
+                } else if (sp->isNoteLine()) {
+                    TLayout::layoutNoteLine(toNoteLine(sp), ctx);
                 }
             }
         }
@@ -3509,10 +3511,38 @@ void ChordLayout::fillShape(const MMRest* item, MMRest::LayoutData* ldata, const
     Shape shape(Shape::Type::Composite);
 
     double vStrokeHeight = conf.styleMM(Sid::mmRestHBarVStrokeHeight);
-    shape.add(RectF(0.0, -(vStrokeHeight * .5), ldata->restWidth, vStrokeHeight));
+    shape.add(RectF(0.0, -(vStrokeHeight * .5), ldata->restWidth, vStrokeHeight), item);
     if (item->numberVisible()) {
-        shape.add(item->numberRect());
+        shape.add(item->numberRect().translated(item->numberPos()), item);
     }
 
     ldata->setShape(shape);
+}
+
+void ChordLayout::addLineAttachPoints(Spanner* spanner)
+{
+    assert(spanner->anchor() == Spanner::Anchor::NOTE);
+
+    const SpannerSegment* frontSeg = toSpannerSegment(spanner->frontSegment());
+    const SpannerSegment* backSeg = toSpannerSegment(spanner->backSegment());
+    Note* startNote = nullptr;
+    Note* endNote = nullptr;
+
+    EngravingItem* startElement = spanner->startElement();
+    EngravingItem* endElement = spanner->endElement();
+    if (startElement && startElement->isNote()) {
+        startNote = toNote(startElement);
+    }
+    if (endElement && endElement->isNote()) {
+        endNote = toNote(endElement);
+    }
+    if (!frontSeg || !backSeg || !startNote || !endNote) {
+        return;
+    }
+    double startX = frontSeg->ldata()->pos().x();
+    double endX = backSeg->pos2().x() + backSeg->ldata()->pos().x(); // because pos2 is relative to ipos
+    // Here we don't pass y() because its value is unreliable during the first stages of layout.
+    // The y() is irrelevant anyway for horizontal spacing.
+    startNote->addLineAttachPoint(PointF(startX, 0.0), spanner);
+    endNote->addLineAttachPoint(PointF(endX, 0.0), spanner);
 }

@@ -90,6 +90,7 @@
 #include "../../dom/bracket.h"
 #include "../../dom/breath.h"
 #include "../../dom/note.h"
+#include "../../dom/noteline.h"
 #include "../../dom/spanner.h"
 #include "../../dom/fingering.h"
 #include "../../dom/notedot.h"
@@ -251,6 +252,8 @@ void TRead::readItem(EngravingItem* item, XmlReader& xml, ReadContext& ctx)
     case ElementType::NOTEDOT: read(item_cast<NoteDot*>(item), xml, ctx);
         break;
     case ElementType::NOTEHEAD: read(item_cast<NoteHead*>(item), xml, ctx);
+        break;
+    case ElementType::NOTELINE: read(item_cast<NoteLine*>(item), xml, ctx);
         break;
     case ElementType::PAGE: read(item_cast<Page*>(item), xml, ctx);
         break;
@@ -1967,6 +1970,8 @@ static void setActionIconTypeFromAction(ActionIcon* i, const std::string& action
         { "pre-bend", ActionIconType::PRE_BEND },
         { "grace-note-bend", ActionIconType::GRACE_NOTE_BEND },
         { "slight-bend", ActionIconType::SLIGHT_BEND },
+
+        { "add-noteline", ActionIconType::NOTE_ANCHORED_LINE }
     };
 
     auto it = map.find(actionCode);
@@ -2036,6 +2041,7 @@ bool TRead::readProperties(Ornament* o, XmlReader& xml, ReadContext& ctx)
     if (readProperty(o, tag, xml, ctx, Pid::INTERVAL_ABOVE)) {
     } else if (readProperty(o, tag, xml, ctx, Pid::INTERVAL_BELOW)) {
     } else if (readProperty(o, tag, xml, ctx, Pid::ORNAMENT_SHOW_ACCIDENTAL)) {
+    } else if (readProperty(o, tag, xml, ctx, Pid::ORNAMENT_SHOW_CUE_NOTE)) {
     } else if (readProperty(o, tag, xml, ctx, Pid::START_ON_UPPER_NOTE)) {
     } else if (readProperties(static_cast<Articulation*>(o), xml, ctx)) {
     } else if (tag == "Accidental") {
@@ -3436,6 +3442,10 @@ void TRead::read(MMRest* r, XmlReader& e, ReadContext& ctx)
             NoteDot* dot = Factory::createNoteDot(r);
             TRead::read(dot, e, ctx);
             r->add(dot);
+        } else if (tag == "mmRestNumberPos") {
+            // Old property, deprecated in 4.5
+            r->setNumberOffset(e.readDouble() - ctx.style().styleS(Sid::mmRestNumberPos).val());
+        } else if (TRead::readProperty(r, tag, e, ctx, Pid::MMREST_NUMBER_OFFSET)) {
         } else if (TRead::readStyledProperty(r, tag, e, ctx)) {
         } else if (readProperties(r, e, ctx)) {
         } else {
@@ -3616,6 +3626,11 @@ void TRead::read(NoteDot* d, XmlReader& e, ReadContext& ctx)
 void TRead::read(NoteHead* h, XmlReader& xml, ReadContext& ctx)
 {
     read(static_cast<Symbol*>(h), xml, ctx);
+}
+
+void TRead::read(NoteLine* nl, XmlReader& xml, ReadContext& ctx)
+{
+    TRead::read(static_cast<TextLineBase*>(nl), xml, ctx);
 }
 
 void TRead::read(Ottava* o, XmlReader& e, ReadContext& ctx)
