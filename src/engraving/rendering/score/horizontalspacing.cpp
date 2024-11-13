@@ -26,6 +26,7 @@
 #include "dom/chord.h"
 #include "dom/engravingitem.h"
 #include "dom/glissando.h"
+#include "dom/laissezvib.h"
 #include "dom/lyrics.h"
 #include "dom/note.h"
 #include "dom/rest.h"
@@ -658,6 +659,9 @@ void HorizontalSpacing::enforceMinimumMeasureWidths(const std::vector<Measure*> 
 {
     for (int i = 0; i < measureGroup.size(); ++i) {
         Measure* measure = measureGroup[i];
+        if (measure->isMMRest()) {
+            continue; // minimum mmRest width is already enforced during spacing
+        }
         double minWidth = computeMinMeasureWidth(measure);
         double diff = minWidth - measure->width();
         if (diff > 0) {
@@ -954,6 +958,8 @@ double HorizontalSpacing::minHorizontalDistance(const Segment* f, const Segment*
                     bool straight = toGlissando(attachedLine)->glissandoType() == GlissandoType::STRAIGHT;
                     minLength = straight ? f->style().styleMM(Sid::minStraightGlissandoLength)
                                 : f->style().styleMM(Sid::minWigglyGlissandoLength);
+                } else if (attachedLine->isNoteLine()) {
+                    minLength = f->style().styleMM(Sid::minStraightGlissandoLength);
                 }
                 double tieStartPointX = f->minRight() + headerTieMargin;
                 double notePosX = w + note->pos().x() + toChord(e)->pos().x() + note->headWidth() / 2;
@@ -1084,6 +1090,8 @@ void HorizontalSpacing::computeNotePadding(const Note* note, const EngravingItem
             } else if (laPoint1.line()->isGuitarBend()) {
                 double minBendLength = 2 * note->spatium(); // TODO: style
                 minEndPointsDistance = minBendLength;
+            } else if (laPoint1.line()->isNoteLine()) {
+                minEndPointsDistance = style.styleMM(Sid::minStraightGlissandoLength);
             }
 
             double lapPadding = (laPoint1.pos().x() - note->headWidth()) + minEndPointsDistance - laPoint2.pos().x();
