@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2024 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,43 +19,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_NOTATION_UNDOREDOMODEL_H
-#define MU_NOTATION_UNDOREDOMODEL_H
+#pragma once
 
-#include <QObject>
+#include "uicomponents/view/abstracttoolbarmodel.h"
 
-#include "context/iglobalcontext.h"
-#include "ui/iuiactionsregister.h"
 #include "modularity/ioc.h"
-#include "async/asyncable.h"
+#include "context/iglobalcontext.h"
 
 namespace mu::notation {
-class UndoRedoModel : public QObject, public muse::Injectable, public muse::async::Asyncable
+class UndoRedoToolbarModel : public muse::uicomponents::AbstractToolBarModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QVariant undoItem READ makeUndoItem NOTIFY stackChanged)
-    Q_PROPERTY(QVariant redoItem READ makeRedoItem NOTIFY stackChanged)
-
     muse::Inject<context::IGlobalContext> context = { this };
-    muse::Inject<muse::ui::IUiActionsRegister> actionsRegister = { this };
 
 public:
-    explicit UndoRedoModel(QObject* parent = nullptr);
+    explicit UndoRedoToolbarModel(QObject* parent = nullptr);
 
-    QVariant makeUndoItem();
-    QVariant makeRedoItem();
-
-    Q_INVOKABLE void load();
-    Q_INVOKABLE void undo();
-    Q_INVOKABLE void redo();
-
-signals:
-    void stackChanged();
+    Q_INVOKABLE void load() override;
 
 private:
+    void onActionsStateChanges(const muse::actions::ActionCodeList& codes) override;
+
     INotationUndoStackPtr undoStack() const;
+    void updateItems();
+    void subsribeOnUndoStackChanges();
 };
 }
-
-#endif // MU_NOTATION_UNDOREDOMODEL_H

@@ -4334,7 +4334,7 @@ void Score::cmdSelectSection()
 
 void Score::undo(UndoCommand* cmd, EditData* ed) const
 {
-    undoStack()->push(cmd, ed);
+    undoStack()->pushAndPerform(cmd, ed);
 }
 
 //---------------------------------------------------------
@@ -5728,6 +5728,9 @@ void Score::connectTies(bool silent)
             }
             Chord* c = toChord(e);
             for (Note* n : c->notes()) {
+                if (n->laissezVib()) {
+                    continue;
+                }
                 // connect a tie without end note
                 Tie* tie = n->tieFor();
                 if (tie && !tie->endNote()) {

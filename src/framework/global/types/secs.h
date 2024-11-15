@@ -5,7 +5,7 @@
  * MuseScore
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2024 MuseScore BVBA and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,37 +19,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import QtQuick 2.1
+#pragma once
 
-import Muse.GraphicalEffects 1.0
+#include "number.h"
 
-Item {
-    id: root
-
-    property alias icon: image.source
-    property alias sourceSize: image.sourceSize
-    property alias color: colorOverlay.color
-    property int pixelSize: 16
-
-    implicitHeight: root.icon == "" ? 0 : pixelSize
-    implicitWidth: root.icon == "" ? 0 : pixelSize
-
-    Image {
-        id: image
-
-        anchors.centerIn: parent
-
-        height: pixelSize
-        width: implicitWidth
-
-        fillMode: Image.PreserveAspectFit
-    }
-
-    EffectColorOverlay {
-        id: colorOverlay
-
-        anchors.fill: image
-        source: image
-        color: ui.theme.fontPrimaryColor
-    }
+namespace muse {
+using secs_t = number_t<double>;
 }

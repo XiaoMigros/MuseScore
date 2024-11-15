@@ -82,6 +82,7 @@
 #include "engraving/dom/jump.h"
 #include "engraving/dom/key.h"
 #include "engraving/dom/keysig.h"
+#include "engraving/dom/laissezvib.h"
 #include "engraving/dom/layoutbreak.h"
 #include "engraving/dom/letring.h"
 #include "engraving/dom/linkedobjects.h"
@@ -394,6 +395,7 @@ public:
     double getTenthsFromInches(double) const;
     double getTenthsFromDots(double) const;
     Fraction tick() const { return m_tick; }
+    void writeInstrumentChange(const InstrumentChange* instrChange);
     void writeInstrumentDetails(const Instrument* instrument, const bool concertPitch);
 
     static bool canWrite(const EngravingItem* e);
@@ -4287,7 +4289,7 @@ void ExportMusicXml::chord(Chord* chord, staff_idx_t staff, const std::vector<Ly
             if (note->tieBack()) {
                 m_xml.tag("tie", { { "type", "stop" } });
             }
-            if (note->tieFor()) {
+            if (note->tieFor() && !note->tieFor()->isLaissezVib()) {
                 m_xml.tag("tie", { { "type", "start" } });
             }
         }
@@ -4356,16 +4358,19 @@ void ExportMusicXml::chord(Chord* chord, staff_idx_t staff, const std::vector<Ly
             notations.tag(m_xml, tieBack);
             m_xml.tag("tied", { { "type", "stop" } });
         }
+
+        const LaissezVib* laissezVib = note->laissezVib();
+        if (laissezVib && ExportMusicXml::canWrite(laissezVib)) {
+            notations.tag(m_xml, laissezVib);
+            String rest = slurTieLineStyle(laissezVib);
+            m_xml.tagRaw(String(u"tied type=\"let-ring\"%1").arg(rest));
+        }
+
         const Tie* tieFor = note->tieFor();
-        if (tieFor && ExportMusicXml::canWrite(tieFor)) {
+        if (tieFor && !laissezVib && ExportMusicXml::canWrite(tieFor)) {
             notations.tag(m_xml, tieFor);
             String rest = slurTieLineStyle(tieFor);
             m_xml.tagRaw(String(u"tied type=\"start\"%1").arg(rest));
-        }
-        const Articulation* laissezVibrer = findLaissezVibrer(chord);
-        if (laissezVibrer && ExportMusicXml::canWrite(laissezVibrer)) {
-            notations.tag(m_xml, laissezVibrer);
-            m_xml.tag("tied", { { "type", "let-ring" } });
         }
 
         if (note == nl.front()) {
@@ -4993,7 +4998,14 @@ void ExportMusicXml::tempoText(TempoText const* const text, staff_idx_t staff)
            muPrintable(text->xmlText()));
     */
     m_attr.doAttr(m_xml, false);
-    m_xml.startElement("direction", { { "placement", (text->placement() == PlacementV::BELOW) ? "below" : "above" } });
+
+    XmlWriter::Attributes tempoAttrs;
+    tempoAttrs = { { "placement", (text->placement() == PlacementV::BELOW) ? "below" : "above" } };
+    if (text->systemFlag()) {
+        tempoAttrs.push_back({ "system", text->isLinked() ? "also-top" : "only-top" });
+    }
+
+    m_xml.startElement("direction", tempoAttrs);
     wordsMetronome(m_xml, m_score->style(), text, offset);
 
     if (staff) {
@@ -6396,7 +6408,7 @@ static bool commonAnnotations(ExportMusicXml* exp, const EngravingItem* e, staff
     // optionally writing the associated staff text is done below
     if (e->isInstrumentChange()) {
         const InstrumentChange* instrChange = toInstrumentChange(e);
-        exp->writeInstrumentDetails(instrChange->instrument(), false);
+        exp->writeInstrumentChange(instrChange);
         instrChangeHandled = true;
     }
 
@@ -7760,6 +7772,45 @@ static void writeStaffDetails(XmlWriter& xml, const Part* part)
             xml.endElement();
         }
     }
+}
+
+//---------------------------------------------------------
+//  writeInstrumentChange
+//---------------------------------------------------------
+
+/**
+ Write the instrument change.
+ */
+
+void ExportMusicXml::writeInstrumentChange(const InstrumentChange* instrChange)
+{
+    const Instrument* instr = instrChange->instrument();
+    const Part* part = instrChange->part();
+    const size_t partNr = muse::indexOf(m_score->parts(), part);
+    const int instNr = muse::value(m_instrMap, instr, -1);
+    const String longName = instr->nameAsPlainText();
+    const String shortName = instr->abbreviatureAsPlainText();
+
+    m_xml.startElement("print");
+    if (!longName.isEmpty()) {
+        m_xml.startElement("part-name-display");
+        writeDisplayName(m_xml, longName);
+        m_xml.endElement();
+    }
+    if (!shortName.isEmpty()) {
+        m_xml.startElement("part-abbreviation-display");
+        writeDisplayName(m_xml, shortName);
+        m_xml.endElement();
+    }
+    m_xml.endElement();
+
+    writeInstrumentDetails(instr, m_score->style().styleB(Sid::concertPitch));
+
+    m_xml.startElement("sound");
+    m_xml.startElement("instrument-change");
+    scoreInstrument(m_xml, static_cast<int>(partNr) + 1, instNr + 1, instr->trackName(), instr);
+    m_xml.endElement();
+    m_xml.endElement();
 }
 
 //---------------------------------------------------------
