@@ -79,6 +79,11 @@ public:
 
     double absoluteFromSpatium(const Spatium& sp) const override;
 
+    Shape shape() const;
+    Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, const EngravingItem* item,
+                                  double nShapeFactor = 0.0) const;
+    Shape createDiagonalLineShape(PointF startPoint, PointF endPoint, double lineWidth, EngravingItem* item,
+                                  double nShapeFactor = 0.0) const;
 private:
     Segment* findNewAnchorSegment(const EditData& ed, const Segment* curSeg);
     void undoMoveStartEndAndSnappedItems(bool moveStart, bool moveEnd, Segment* s1, Segment* s2);
