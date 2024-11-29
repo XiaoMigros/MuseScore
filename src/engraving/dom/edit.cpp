@@ -1877,7 +1877,7 @@ void Score::cmdAddTie(bool addToChord)
     }
 
     startCmd();
-    Chord* lastAddedChord = 0;
+    Chord* lastAddedChord = nullptr;
     for (Note* note : noteList) {
         if (note->tieFor()) {
             LOGD("cmdAddTie: note %p has already tie? noteFor: %p", note, note->tieFor());
@@ -1891,6 +1891,7 @@ void Score::cmdAddTie(bool addToChord)
         if (noteEntryMode()) {
             ChordRest* cr = nullptr;
             Chord* c = note->chord();
+            int staffMove = c->staffMove();
 
             // set cursor at position after note
             if (c->isGraceBefore()) {
@@ -1902,12 +1903,12 @@ void Score::cmdAddTie(bool addToChord)
                 m_is.moveToNextInputPos();
                 m_is.setLastSegment(m_is.segment());
 
-                if (m_is.cr() == 0) {
+                if (!m_is.cr()) {
                     expandVoice();
                 }
                 cr = m_is.cr();
             }
-            if (cr == 0) {
+            if (!cr) {
                 break;
             }
 
@@ -1934,9 +1935,6 @@ void Score::cmdAddTie(bool addToChord)
             }
 
             if (n) {
-                if (!lastAddedChord) {
-                    lastAddedChord = n->chord();
-                }
                 // n is not necessarily next note if duration span over measure
                 Note* nnote = searchTieNote(note);
                 while (nnote) {
@@ -1952,12 +1950,23 @@ void Score::cmdAddTie(bool addToChord)
                     tie->setTick(note->chord()->segment()->tick());
                     tie->setTicks(nnote->chord()->segment()->tick() - note->chord()->segment()->tick());
                     undoAddElement(tie);
-                    if (!addFlag || nnote->chord()->tick() >= lastAddedChord->tick() || nnote->chord()->isGrace()) {
+                    if (!addFlag || nnote->chord()->tick() >= n->chord()->tick() || nnote->chord()->isGrace()) {
                         break;
                     } else {
                         note = nnote;
                         m_is.setLastSegment(m_is.segment());
                         nnote = addPitch(nval, true);
+                    }
+                }
+                if (!lastAddedChord) {
+                    lastAddedChord = n->chord();
+                    if (staffMove != 0) {
+                        Note* tn = n;
+                        while (tn->tieFor()) {
+                            Note* endN = tn->tieFor()->endNote();
+                            endN->chord()->setStaffMove(note->chord()->staffMove());
+                            tn = endN;
+                        }
                     }
                 }
             }
