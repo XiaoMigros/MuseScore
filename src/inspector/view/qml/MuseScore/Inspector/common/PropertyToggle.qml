@@ -50,6 +50,7 @@ RowLayout {
                 root.propertyItem.value = !checked
             }
         }
+        clickArea.anchors.fill: root
     }
 
     StyledTextLabel {
