@@ -4615,6 +4615,7 @@ void NotationInteraction::addImageToItem(const muse::io::path_t& imagePath, Engr
         { "bmp", ImageType::RASTER },
         { "tif", ImageType::RASTER },
         { "tiff", ImageType::RASTER },
+        { "gif", ImageType::RASTER },
     };
 
     muse::io::path_t suffix = io::suffix(imagePath);
