@@ -591,7 +591,7 @@ EngravingItem* GuitarBendSegment::propertyDelegate(Pid id)
     case Pid::APPEARANCE_LINKED_TO_MASTER:
         return guitarBend();
     default:
-        return nullptr;
+        return LineSegment::propertyDelegate(id);
     }
 }
 

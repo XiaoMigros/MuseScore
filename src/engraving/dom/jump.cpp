@@ -112,33 +112,6 @@ String Jump::jumpTypeUserName() const
 }
 
 //---------------------------------------------------------
-//   undoSetJumpTo
-//---------------------------------------------------------
-
-void Jump::undoSetJumpTo(const String& s)
-{
-    undoChangeProperty(Pid::JUMP_TO, s);
-}
-
-//---------------------------------------------------------
-//   undoSetPlayUntil
-//---------------------------------------------------------
-
-void Jump::undoSetPlayUntil(const String& s)
-{
-    undoChangeProperty(Pid::PLAY_UNTIL, s);
-}
-
-//---------------------------------------------------------
-//   undoSetContinueAt
-//---------------------------------------------------------
-
-void Jump::undoSetContinueAt(const String& s)
-{
-    undoChangeProperty(Pid::CONTINUE_AT, s);
-}
-
-//---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 
@@ -153,6 +126,8 @@ PropertyValue Jump::getProperty(Pid propertyId) const
         return continueAt();
     case Pid::PLAY_REPEATS:
         return playRepeats();
+    case Pid::PLAY:
+        return playJump();
     default:
         break;
     }
@@ -177,6 +152,9 @@ bool Jump::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::PLAY_REPEATS:
         setPlayRepeats(v.toInt());
+        break;
+    case Pid::PLAY:
+        setPlayJump(v.toBool());
         break;
     default:
         if (!TextBase::setProperty(propertyId, v)) {
@@ -204,6 +182,8 @@ PropertyValue Jump::propertyDefault(Pid propertyId) const
         return false;
     case Pid::PLACEMENT:
         return PlacementV::ABOVE;
+    case Pid::PLAY:
+        return true;
     default:
         break;
     }

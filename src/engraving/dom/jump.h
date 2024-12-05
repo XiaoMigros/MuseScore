@@ -60,16 +60,15 @@ public:
     Measure* measure() const { return toMeasure(explicitParent()); }
 
     String jumpTo() const { return m_jumpTo; }
-    String playUntil() const { return m_playUntil; }
-    String continueAt() const { return m_continueAt; }
     void setJumpTo(const String& s) { m_jumpTo = s; }
+    String playUntil() const { return m_playUntil; }
     void setPlayUntil(const String& s) { m_playUntil = s; }
+    String continueAt() const { return m_continueAt; }
     void setContinueAt(const String& s) { m_continueAt = s; }
-    void undoSetJumpTo(const String& s);
-    void undoSetPlayUntil(const String& s);
-    void undoSetContinueAt(const String& s);
     bool playRepeats() const { return m_playRepeats; }
     void setPlayRepeats(bool val) { m_playRepeats = val; }
+    bool playJump() const { return m_playJump; }
+    void setPlayJump(bool val) { m_playJump = val; }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -86,6 +85,7 @@ private:
     String m_playUntil;
     String m_continueAt;
     bool m_playRepeats = false;
+    bool m_playJump = true;
 };
 
 struct JumpTypeTableItem {

@@ -98,10 +98,12 @@ public:
     void setSpanFrom(int val) { m_spanFrom = val; }
     void setSpanTo(int val) { m_spanTo = val; }
     void setShowTips(bool val);
+    void setPlayBarline(bool val) { m_playBarline = val; }
     int spanStaff() const { return m_spanStaff; }
     int spanFrom() const { return m_spanFrom; }
     int spanTo() const { return m_spanTo; }
     bool showTips() const;
+    bool playBarline() const { return m_playBarline; }
 
     void startEdit(EditData& ed) override;
     bool isEditAllowed(EditData&) const override;
@@ -163,6 +165,7 @@ private:
     int m_spanFrom = 0;         // line number on start and end staves
     int m_spanTo = 0;
     BarLineType m_barLineType = BarLineType::NORMAL;
+    bool m_playBarline = true;
 
     ElementList m_el;          ///< fermata or other articulations
 };
