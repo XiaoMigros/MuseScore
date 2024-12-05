@@ -34,6 +34,7 @@
 
 #include "thirdparty/libmei/cmn.h"
 #include "thirdparty/libmei/cmnornaments.h"
+#include "thirdparty/libmei/fingering.h"
 #include "thirdparty/libmei/harmony.h"
 #include "thirdparty/libmei/shared.h"
 
@@ -213,6 +214,9 @@ public:
     static void fermataFromMEI(engraving::Fermata* fermata, const libmei::Fermata& meiFermata, bool& warning);
     static libmei::Fermata fermataToMEI(const engraving::Fermata* fermata);
 
+    static void fingFromMEI(engraving::Fingering* fing, const muse::StringList& meiLines, const libmei::Fing& meiFing, bool& warning);
+    static libmei::Fing fingToMEI(const engraving::Fingering* fing, StringList& meiLines);
+
     static std::pair<bool, engraving::NoteType> gracegrpFromMEI(const libmei::graceGrpLog_ATTACH meiAttach,
                                                                 const libmei::data_GRACE meiGrace, bool& warning);
     static std::pair<libmei::graceGrpLog_ATTACH, libmei::data_GRACE> gracegrpToMEI(bool isAfter, engraving::NoteType noteType);
@@ -226,8 +230,7 @@ public:
     static void layerIdentFromMEI(engraving::EngravingItem* item, const libmei::Element& meiElement);
     static void layerIdentToMEI(const engraving::EngravingItem* item, libmei::Element& meiElement);
 
-    static void lvFromMEI(engraving::Articulation* lv, const libmei::Lv& meiLv, bool& warning);
-    static libmei::Lv lvToMEI(const engraving::Articulation* lv);
+    static void lvFromMEI(engraving::LaissezVib* lv, const libmei::Lv& meiLv, bool& warning);
 
     static void jumpFromMEI(engraving::Jump* jump, const libmei::RepeatMark& meiRepeatMark, bool& warning);
     static libmei::RepeatMark jumpToMEI(const engraving::Jump* jump, muse::String& text);

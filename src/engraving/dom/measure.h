@@ -260,6 +260,7 @@ public:
     Segment* findSegment(SegmentType st,    const Fraction& f) const { return findSegmentR(st, f - tick()); }
     Segment* undoGetSegment(SegmentType st, const Fraction& f) { return undoGetSegmentR(st, f - tick()); }
     Segment* getSegment(SegmentType st,     const Fraction& f) { return getSegmentR(st, f - tick()); }
+    Segment* undoGetChordRestOrTimeTickSegment(const Fraction& f);
     Segment* getChordRestOrTimeTickSegment(const Fraction& f);
 
     void connectTremolo();
@@ -327,8 +328,8 @@ public:
     bool nextIsOneMeasureRepeat(staff_idx_t staffidx) const;
     bool prevIsOneMeasureRepeat(staff_idx_t staffIdx) const;
 
-    EngravingItem* nextElementStaff(staff_idx_t staff);
-    EngravingItem* prevElementStaff(staff_idx_t staff);
+    EngravingItem* nextElementStaff(staff_idx_t staff, EngravingItem* fromItem = nullptr);
+    EngravingItem* prevElementStaff(staff_idx_t staff, EngravingItem* fromItem = nullptr);
 
     String accessibleInfo() const override;
 

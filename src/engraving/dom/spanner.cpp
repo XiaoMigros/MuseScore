@@ -1150,6 +1150,7 @@ Measure* Spanner::startMeasure() const
 
 Measure* Spanner::endMeasure() const
 {
+    assert(anchor() == Spanner::Anchor::MEASURE);
     return toMeasure(m_endElement);
 }
 
@@ -1527,6 +1528,18 @@ bool Spanner::isUserModified() const
 
 void Spanner::eraseSpannerSegments()
 {
+    for (SpannerSegment* seg : m_segments) {
+        if (System* system = seg->system()) {
+            system->remove(seg);
+        }
+    }
+
+    for (SpannerSegment* seg : m_unusedSegments) {
+        if (System* system = seg->system()) {
+            system->remove(seg);
+        }
+    }
+
     muse::DeleteAll(m_segments);
     muse::DeleteAll(m_unusedSegments);
     m_segments.clear();

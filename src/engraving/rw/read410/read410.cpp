@@ -85,10 +85,7 @@ Err Read410::readScore(Score* score, XmlReader& e, rw::ReadInOutData* data)
         } else if (tag == "Revision") {
             e.skipCurrentElement();
         } else if (tag == "LastEID") {
-            int val = e.readInt(nullptr);
-            if (score->isMaster()) {
-                score->masterScore()->getEID()->init(val);
-            }
+            e.skipCurrentElement();
         } else if (tag == "Score") {
             if (!readScore410(score, e, ctx)) {
                 if (e.error() == muse::XmlStreamReader::CustomError) {
@@ -124,7 +121,13 @@ bool Read410::readScore410(Score* score, XmlReader& e, ReadContext& ctx)
     while (e.readNextStartElement()) {
         ctx.setTrack(muse::nidx);
         const AsciiStringView tag(e.name());
-        if (tag == "Staff") {
+        if (tag == "eid") {
+            AsciiStringView s = e.readAsciiText();
+            EID eid = EID::fromStdString(s);
+            if (eid.isValid()) {
+                score->setEID(eid);
+            }
+        } else if (tag == "Staff") {
             StaffRead::readStaff(score, e, ctx);
         } else if (tag == "Omr") {
             e.skipCurrentElement();
@@ -202,6 +205,8 @@ bool Read410::readScore410(Score* score, XmlReader& e, ReadContext& ctx)
                     e.skipCurrentElement();
                 }
             }
+        } else if (tag == "SystemLocks") {
+            TRead::readSystemLocks(score, e);
         } else if (tag == "Part") {
             Part* part = new Part(score);
             TRead::read(part, e, ctx);
@@ -306,6 +311,7 @@ bool Read410::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
     std::vector<Chord*> graceNotes;
     Beam* startingBeam = nullptr;
     Tuplet* tuplet = nullptr;
+    TremoloTwoChord* prevTremolo = nullptr;
     Fraction dstTick = dst->tick();
     bool pasted = false;
     Fraction tickLen = Fraction(0, 1);
@@ -488,11 +494,21 @@ bool Read410::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                             // disallow tie across barline within two-note tremolo
                             // tremolos can potentially still straddle the barline if no tie is required
                             // but these will be removed later
-                            TremoloTwoChord* t = chord->tremoloTwoChord();
-                            if (t) {
+
+                            if (chord->tremoloTwoChord()) {
+                                prevTremolo = chord->tremoloTwoChord();
+                                prevTremolo->setChord1(chord);
+                                chord->setTremoloTwoChord(prevTremolo);
+                            } else if (!chord->tremoloTwoChord() && prevTremolo) {
+                                prevTremolo->setChord2(chord);
+                                chord->setTremoloTwoChord(prevTremolo);
+                                prevTremolo = nullptr;
+                            }
+
+                            if (TremoloTwoChord* tremolo = chord->tremoloTwoChord()) {
                                 if (doScale) {
-                                    Fraction d = t->durationType().ticks();
-                                    t->setDurationType(d * scale);
+                                    Fraction d = tremolo->durationType().ticks();
+                                    tremolo->setDurationType(d * scale);
                                 }
                                 Measure* m = score->tick2measure(tick);
                                 Fraction ticks = cr->actualTicks();
@@ -515,6 +531,9 @@ bool Read410::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                             if (cr->isChord()) {
                                 Chord* c = toChord(cr);
                                 for (Note* note: c->notes()) {
+                                    if (note->laissezVib()) {
+                                        continue;
+                                    }
                                     Tie* tie = note->tieFor();
                                     if (tie) {
                                         note->setTieFor(0);
@@ -616,7 +635,7 @@ bool Read410::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
 
                     Fraction tick = doScale ? (ctx.tick() - dstTick) * scale + dstTick : ctx.tick();
                     Measure* m = score->tick2measure(tick);
-                    Segment* seg = m->getChordRestOrTimeTickSegment(tick);
+                    Segment* seg = m->undoGetChordRestOrTimeTickSegment(tick);
                     el->setParent(seg);
 
                     // be sure to paste the element in the destination track;

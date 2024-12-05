@@ -50,18 +50,10 @@ Column {
             hoverEnabled: true
 
             onPressed: {
-                var instName = Boolean(root.padModel) ? root.padModel.instrumentName : ""
-
-                // Placeholder logic...
-                switch(root.panelMode) {
-                case PanelMode.EDIT_LAYOUT: return
-                case PanelMode.SOUND_PREVIEW:
-                    console.log("PLAYING: " + instName)
-                    break
-                case PanelMode.WRITE:
-                    console.log("WRITING: " + instName)
-                    break
+                if (!Boolean(root.padModel)) {
+                    return
                 }
+                root.padModel.triggerPad()
             }
         }
 
@@ -78,6 +70,16 @@ Column {
             font: ui.theme.bodyBoldFont
 
             text: Boolean(root.padModel) ? root.padModel.instrumentName : ""
+        }
+
+        PaintedEngravingItem {
+            id: notationPreview
+
+            visible: root.useNotationPreview
+
+            anchors.fill: parent
+
+            engravingItem: Boolean(root.padModel) ? root.padModel.notationPreviewItem : null
         }
 
         states: [
@@ -106,7 +108,7 @@ Column {
         width: parent.width
         height: 1
 
-        color: ui.theme.accentColor
+        color: root.useNotationPreview ? ui.theme.strokeColor : ui.theme.accentColor
     }
 
     Rectangle {
@@ -128,6 +130,17 @@ Column {
             color: ui.theme.fontPrimaryColor
 
             text: Boolean(root.padModel) ? root.padModel.keyboardShortcut : ""
+        }
+
+        StyledIconLabel {
+            id: midiNoteIcon
+
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: midiNoteLabel.left
+
+            color: ui.theme.fontPrimaryColor
+
+            iconCode: IconCode.SINGLE_NOTE
         }
 
         StyledTextLabel {

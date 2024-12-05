@@ -24,7 +24,15 @@
 
 #include <QObject>
 
-class PercussionPanelPadModel : public QObject
+#include "global/utils.h"
+
+#include "async/asyncable.h"
+#include "async/notification.h"
+
+#include "engraving/dom/engravingitem.h"
+
+namespace mu::notation {
+class PercussionPanelPadModel : public QObject, public muse::async::Asyncable
 {
     Q_OBJECT
 
@@ -33,7 +41,7 @@ class PercussionPanelPadModel : public QObject
     Q_PROPERTY(QString keyboardShortcut READ keyboardShortcut NOTIFY keyboardShortcutChanged)
     Q_PROPERTY(QString midiNote READ midiNote NOTIFY midiNoteChanged)
 
-    Q_PROPERTY(bool isEmptySlot READ isEmptySlot NOTIFY isEmptySlotChanged)
+    Q_PROPERTY(QVariant notationPreviewItem READ notationPreviewItemVariant NOTIFY notationPreviewItemChanged)
 
 public:
     explicit PercussionPanelPadModel(QObject* parent = nullptr);
@@ -44,11 +52,18 @@ public:
     QString keyboardShortcut() const { return m_keyboardShortcut; }
     void setKeyboardShortcut(const QString& keyboardShortcut);
 
-    QString midiNote() const { return m_midiNote; }
-    void setMidiNote(const QString& midiNote);
+    int pitch() const { return m_pitch; }
+    void setPitch(int pitch);
 
-    bool isEmptySlot() const { return m_isEmptySlot; }
-    void setIsEmptySlot(bool isEmptySlot);
+    QString midiNote() const { return QString::fromStdString(muse::pitchToString(m_pitch)); }
+
+    void setNotationPreviewItem(mu::engraving::ElementPtr item);
+    mu::engraving::ElementPtr notationPreviewItem() const { return m_notationPreviewItem; }
+
+    const QVariant notationPreviewItemVariant() const;
+
+    Q_INVOKABLE void triggerPad();
+    muse::async::Notification padTriggered() const { return m_triggeredNotification; }
 
 signals:
     void instrumentNameChanged();
@@ -56,13 +71,16 @@ signals:
     void keyboardShortcutChanged();
     void midiNoteChanged();
 
-    void isEmptySlotChanged();
+    void notationPreviewItemChanged();
 
 private:
     QString m_instrumentName;
 
     QString m_keyboardShortcut;
-    QString m_midiNote;
+    int m_pitch = -1;
 
-    bool m_isEmptySlot = true;
+    mu::engraving::ElementPtr m_notationPreviewItem;
+
+    muse::async::Notification m_triggeredNotification;
 };
+}

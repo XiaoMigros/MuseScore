@@ -37,10 +37,12 @@
 #include "engraving/dom/dynamic.h"
 #include "engraving/dom/fermata.h"
 #include "engraving/dom/figuredbass.h"
+#include "engraving/dom/fingering.h"
 #include "engraving/dom/hairpin.h"
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/jump.h"
 #include "engraving/dom/keysig.h"
+#include "engraving/dom/laissezvib.h"
 #include "engraving/dom/lyrics.h"
 #include "engraving/dom/marker.h"
 #include "engraving/dom/measure.h"
@@ -67,6 +69,7 @@
 #include "engraving/dom/volta.h"
 
 #include "thirdparty/libmei/cmn.h"
+#include "thirdparty/libmei/fingering.h"
 #include "thirdparty/libmei/harmony.h"
 #include "thirdparty/libmei/lyrics.h"
 #include "thirdparty/libmei/shared.h"
@@ -814,13 +817,12 @@ bool MeiExporter::writeMeasure(const Measure* measure, int& measureN, bool& isFi
             success = success && this->writeFermata(dynamic_cast<const Fermata*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isFiguredBass()) {
             success = success && this->writeFb(dynamic_cast<const FiguredBass*>(controlEvent.first), controlEvent.second);
+        } else if (controlEvent.first->isFingering()) {
+            success = success && this->writeFing(dynamic_cast<const Fingering*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isHairpin()) {
             success = success && this->writeHairpin(dynamic_cast<const Hairpin*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isHarmony()) {
             success = success && this->writeHarm(dynamic_cast<const Harmony*>(controlEvent.first), controlEvent.second);
-        } else if (controlEvent.first->isArticulation() && !controlEvent.first->isOrnament()) {
-            // laissez vibrer is the only non-ornamental articulation we find in the list, see MeiExporter::writeArtics
-            success = success && this->writeLv(dynamic_cast<const Articulation*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isOrnament()) {
             success = success && this->writeOrnament(dynamic_cast<const Ornament*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isOttava()) {
@@ -972,7 +974,6 @@ bool MeiExporter::writeArtics(const Chord* chord)
 
     for (const Articulation* articulation : chord->articulations()) {
         if (articulation->isArticulation() && !this->isLaissezVibrer(articulation->symId())) {
-            // laissez vibrer is handled as control element
             this->writeArtic(articulation);
         }
     }
@@ -1290,6 +1291,12 @@ bool MeiExporter::writeNote(const Note* note, const Chord* chord, const Staff* s
     }
     if (note->tieBack()) {
         m_endingControlEventMap[note->tieBack()] = "#" + xmlId;
+    }
+
+    for (const EngravingItem* element : note->el()) {
+        if (element->isFingering()) {
+            m_startingControlEventList.push_back(std::make_pair(element, "#" + xmlId));
+        }
     }
 
     if (meiAccid.HasAccid() || meiAccid.HasAccidGes()) {
@@ -1721,6 +1728,28 @@ bool MeiExporter::writeFermata(const Fermata* fermata, const libmei::xsdPositive
 }
 
 /**
+ * Write a fing and its text content.
+ */
+
+bool MeiExporter::writeFing(const Fingering* fing, const std::string& startid)
+{
+    IF_ASSERT_FAILED(fing) {
+        return false;
+    }
+
+    StringList meiLines;
+
+    pugi::xml_node fingNode = m_currentNode.append_child();
+    libmei::Fing meiFing = Convert::fingToMEI(fing, meiLines);
+    meiFing.SetStartid(startid);
+    meiFing.Write(fingNode, this->getXmlIdFor(fing, 'f'));
+
+    this->writeLines(fingNode, meiLines);
+
+    return true;
+}
+
+/**
  * Write a hairpin.
  */
 
@@ -1763,24 +1792,6 @@ bool MeiExporter::writeHarm(const Harmony* harmony, const std::string& startid)
     meiHarm.Write(harmNode, this->getXmlIdFor(harmony, 'h'));
 
     this->writeLines(harmNode, meiLines);
-
-    return true;
-}
-
-/**
- * Write a lv.
- */
-
-bool MeiExporter::writeLv(const Articulation* articulation, const std::string& startid)
-{
-    IF_ASSERT_FAILED(articulation) {
-        return false;
-    }
-
-    pugi::xml_node lvNode = m_currentNode.append_child();
-    libmei::Lv meiLv = Convert::lvToMEI(articulation);
-    meiLv.SetStartid(startid);
-    meiLv.Write(lvNode, this->getXmlIdFor(articulation, 'l'));
 
     return true;
 }
@@ -2008,7 +2019,12 @@ bool MeiExporter::writeTie(const Tie* tie, const std::string& startid)
     libmei::Tie meiTie = Convert::tieToMEI(tie);
     meiTie.SetStartid(startid);
 
-    meiTie.Write(tieNode, this->getXmlIdFor(tie, 't'));
+    meiTie.Write(tieNode, this->getXmlIdFor(tie, tie->isLaissezVib() ? 'l' : 't'));
+
+    // Change open ties by simply adjusting the element name
+    if (tie->isLaissezVib()) {
+        tieNode.set_name("lv");
+    }
 
     // Add the node to the map of open control events
     this->addNodeToOpenControlEvents(tieNode, tie, startid);

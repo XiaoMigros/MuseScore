@@ -42,6 +42,7 @@ class Chord;
 class ChordRest;
 class Clef;
 class EngravingItem;
+class Fingering;
 class Lyrics;
 class Measure;
 class Note;
@@ -130,9 +131,9 @@ private:
     bool writeFb(const engraving::FiguredBass* figuredBass, const std::string& startid);
     bool writeFermata(const engraving::Fermata* fermata, const std::string& startid);
     bool writeFermata(const engraving::Fermata* fermata, const libmei::xsdPositiveInteger_List& staffNs, double tstamp);
+    bool writeFing(const engraving::Fingering* fing, const std::string& startid);
     bool writeHairpin(const engraving::Hairpin* hairpin, const std::string& startid);
     bool writeHarm(const engraving::Harmony* harmony, const std::string& startid);
-    bool writeLv(const engraving::Articulation* articulation, const std::string& startid);
     bool writeOctave(const engraving::Ottava* ottava, const std::string& startid);
     bool writeOrnament(const engraving::Ornament* ornament, const std::string& startid);
     bool writePedal(const engraving::Pedal* pedal, const std::string& startid);

@@ -497,7 +497,7 @@ void RepeatList::collectRepeatListElements()
             }
             // Jumps and Markers
             for (EngravingItem* e : mb->el()) {
-                if (e->isJump()) {
+                if (e->isJump() && toJump(e)->playJump()) {
                     sectionRLElements.push_back(new RepeatListElement(RepeatListElementType::JUMP, e, toMeasure(mb)));
                     if (volta != nullptr) {
                         if ((volta->endMeasure()->tick() < mb->tick())

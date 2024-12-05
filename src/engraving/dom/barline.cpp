@@ -1022,6 +1022,12 @@ PropertyValue BarLine::getProperty(Pid id) const
         return int(spanTo());
     case Pid::BARLINE_SHOW_TIPS:
         return showTips();
+    case Pid::PLAY:
+        if (barLineType() == BarLineType::END_START_REPEAT || barLineType() == BarLineType::END_REPEAT
+            || barLineType() == BarLineType::START_REPEAT) {
+            return playBarline();
+        }
+        return PropertyValue();
     default:
         break;
     }
@@ -1050,6 +1056,12 @@ bool BarLine::setProperty(Pid id, const PropertyValue& v)
     case Pid::BARLINE_SHOW_TIPS:
         setShowTips(v.toBool());
         break;
+    case Pid::PLAY:
+        if (barLineType() == BarLineType::END_START_REPEAT || barLineType() == BarLineType::END_REPEAT
+            || barLineType() == BarLineType::START_REPEAT) {
+            setPlayBarline(v.toBool());
+        }
+        break;
     default:
         return EngravingItem::setProperty(id, v);
     }
@@ -1071,11 +1083,67 @@ void BarLine::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags p
             if (bl->measure()->nextMeasure()) {
                 bl = bl->measure()->nextMeasure()->endBarLine();
             } else {
-                bl = 0;
+                bl = nullptr;
             }
         }
         if (bl) {
             undoChangeBarLineType(const_cast<BarLine*>(bl), v.value<BarLineType>(), true);
+        }
+    } else if (id == Pid::PLAY) {
+        Measure* m = measure();
+        if (!m) {
+            return;
+        }
+        if (m->isMMRest()) {
+            m = m->mmRestLast();
+        }
+
+        if (barLineType() == BarLineType::START_REPEAT) {
+            for (size_t staffIdx = 0; staffIdx < m->score()->nstaves(); ++staffIdx) {
+                if (m->isMeasureRepeatGroupWithPrevM(staffIdx)) {
+                    MScore::setError(MsError::CANNOT_SPLIT_MEASURE_REPEAT);
+                    return;
+                }
+            }
+            for (Score* lscore : m->score()->scoreList()) {
+                Measure* lmeasure = lscore->tick2measure(m->tick());
+                if (lmeasure) {
+                    lmeasure->undoChangeProperty(Pid::REPEAT_START, v.toBool());
+                }
+            }
+            setPlayBarline(v.toBool());
+        } else if (barLineType() == BarLineType::END_REPEAT) {
+            for (size_t staffIdx = 0; staffIdx < m->score()->nstaves(); ++staffIdx) {
+                if (m->isMeasureRepeatGroupWithNextM(staffIdx)) {
+                    MScore::setError(MsError::CANNOT_SPLIT_MEASURE_REPEAT);
+                    return;
+                }
+            }
+            for (Score* lscore : m->score()->scoreList()) {
+                Measure* lmeasure = lscore->tick2measure(m->tick());
+                if (lmeasure) {
+                    lmeasure->undoChangeProperty(Pid::REPEAT_END, v.toBool());
+                }
+            }
+            setPlayBarline(v.toBool());
+        } else if (barLineType() == BarLineType::END_START_REPEAT) {
+            for (size_t staffIdx = 0; staffIdx < m->score()->nstaves(); ++staffIdx) {
+                if (m->isMeasureRepeatGroupWithNextM(staffIdx)) {
+                    MScore::setError(MsError::CANNOT_SPLIT_MEASURE_REPEAT);
+                    return;
+                }
+            }
+            for (Score* lscore : m->score()->scoreList()) {
+                Measure* lmeasure = lscore->tick2measure(m->tick());
+                if (lmeasure) {
+                    lmeasure->undoChangeProperty(Pid::REPEAT_END, v.toBool());
+                    lmeasure = lmeasure->nextMeasure();
+                    if (lmeasure) {
+                        lmeasure->undoChangeProperty(Pid::REPEAT_START, v.toBool());
+                    }
+                }
+            }
+            setPlayBarline(v.toBool());
         }
     } else {
         EngravingObject::undoChangeProperty(id, v, ps);
@@ -1107,6 +1175,9 @@ PropertyValue BarLine::propertyDefault(Pid propertyId) const
 
     case Pid::BARLINE_SHOW_TIPS:
         return false;
+
+    case Pid::PLAY:
+        return true;
     default:
         break;
     }

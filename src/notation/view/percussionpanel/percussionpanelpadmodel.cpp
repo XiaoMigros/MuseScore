@@ -22,6 +22,8 @@
 
 #include "percussionpanelpadmodel.h"
 
+using namespace mu::notation;
+
 PercussionPanelPadModel::PercussionPanelPadModel(QObject* parent)
     : QObject(parent)
 {
@@ -47,22 +49,32 @@ void PercussionPanelPadModel::setKeyboardShortcut(const QString& keyboardShortcu
     emit keyboardShortcutChanged();
 }
 
-void PercussionPanelPadModel::setMidiNote(const QString& midiNote)
+void PercussionPanelPadModel::setPitch(int pitch)
 {
-    if (m_midiNote == midiNote) {
+    if (m_pitch == pitch) {
         return;
     }
 
-    m_midiNote = midiNote;
+    m_pitch = pitch;
     emit midiNoteChanged();
 }
 
-void PercussionPanelPadModel::setIsEmptySlot(bool isEmptySlot)
+void PercussionPanelPadModel::setNotationPreviewItem(mu::engraving::ElementPtr item)
 {
-    if (m_isEmptySlot == isEmptySlot) {
+    if (m_notationPreviewItem == item) {
         return;
     }
 
-    m_isEmptySlot = isEmptySlot;
-    emit isEmptySlotChanged();
+    m_notationPreviewItem = item;
+    emit notationPreviewItemChanged();
+}
+
+const QVariant PercussionPanelPadModel::notationPreviewItemVariant() const
+{
+    return QVariant::fromValue(m_notationPreviewItem);
+}
+
+void PercussionPanelPadModel::triggerPad()
+{
+    m_triggeredNotification.notify();
 }

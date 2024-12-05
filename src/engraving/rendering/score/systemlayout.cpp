@@ -133,6 +133,8 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
     prevMeasureState.curHeader = ctx.state().curMeasure()->header();
     prevMeasureState.curTrailer = ctx.state().curMeasure()->trailer();
 
+    const SystemLock* systemLock = ctx.dom().systemLocks()->lockStartingAt(ctx.state().curMeasure());
+
     while (ctx.state().curMeasure()) {      // collect measure for system
         oldSystem = ctx.mutState().curMeasure()->system();
         system->appendMeasure(ctx.mutState().curMeasure());
@@ -180,7 +182,8 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
             return system;
         }
 
-        bool doBreak = system->measures().size() > 1 && curSysWidth > targetSystemWidth && !ctx.state().prevMeasure()->noBreak();
+        bool doBreak = !systemLock && system->measures().size() > 1 && curSysWidth > targetSystemWidth
+                       && !ctx.state().prevMeasure()->noBreak();
         if (doBreak) {
             breakMeasure = ctx.mutState().curMeasure();
             system->removeLastMeasure();
@@ -223,7 +226,8 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
         switch (ctx.conf().viewMode()) {
         case LayoutMode::PAGE:
         case LayoutMode::SYSTEM:
-            lineBreak = mb->pageBreak() || mb->lineBreak() || mb->sectionBreak();
+            lineBreak = mb->pageBreak() || mb->lineBreak() || mb->sectionBreak() || mb->isEndOfSystemLock()
+                        || (ctx.state().nextMeasure() && ctx.state().nextMeasure()->isStartOfSystemLock());
             break;
         case LayoutMode::FLOAT:
         case LayoutMode::LINE:
@@ -423,6 +427,27 @@ bool SystemLayout::shouldBeJustified(System* system, double curSysWidth, double 
     }
 
     return shouldJustify && !MScore::noHorizontalStretch;
+}
+
+void SystemLayout::layoutSystemLockIndicators(System* system, LayoutContext& ctx)
+{
+    UNUSED(ctx);
+
+    const std::vector<SystemLockIndicator*> lockIndicators = system->lockIndicators();
+    // In PAGE view, at most ONE lock indicator can exist per system.
+    assert(lockIndicators.size() <= 1);
+    system->deleteLockIndicators();
+
+    const SystemLock* lock = system->systemLock();
+    if (!lock) {
+        return;
+    }
+
+    SystemLockIndicator* lockIndicator = new SystemLockIndicator(system, lock);
+    lockIndicator->setParent(system);
+    system->addLockIndicator(lockIndicator);
+
+    TLayout::layoutSystemLockIndicator(lockIndicator, lockIndicator->mutldata());
 }
 
 //---------------------------------------------------------
@@ -1513,7 +1538,7 @@ void SystemLayout::layoutTies(Chord* ch, System* system, const Fraction& stick, 
     std::vector<TieSegment*> stackedBackwardTies;
     for (Note* note : ch->notes()) {
         Tie* t = note->tieFor();
-        if (t) {
+        if (t && !t->isLaissezVib()) {
             TieSegment* ts = SlurTieLayout::tieLayoutFor(t, system);
             if (ts && ts->addToSkyline()) {
                 staff->skyline().add(ts->shape().translate(ts->pos()));
@@ -1531,6 +1556,9 @@ void SystemLayout::layoutTies(Chord* ch, System* system, const Fraction& stick, 
             }
         }
     }
+
+    SlurTieLayout::layoutLaissezVibChord(ch, ctx);
+
     if (!ch->staffType()->isTabStaff()) {
         SlurTieLayout::resolveVerticalTieCollisions(stackedForwardTies);
         SlurTieLayout::resolveVerticalTieCollisions(stackedBackwardTies);
@@ -2596,6 +2624,11 @@ void SystemLayout::centerElementsBetweenStaves(const System* system)
             continue;
         }
         for (const Segment& seg : toMeasure(mb)->segments()) {
+            for (EngravingItem* item : seg.elist()) {
+                if (item && item->isMMRest() && mmRestShouldBeCenteredBetweenStaves(toMMRest(item), system)) {
+                    centerMMRestBetweenStaves(toMMRest(item), system);
+                }
+            }
             for (EngravingItem* item : seg.annotations()) {
                 if ((item->isDynamic() || item->isExpression()) && elementShouldBeCenteredBetweenStaves(item, system)) {
                     centerElementBetweenStaves(item, system);
@@ -2651,6 +2684,23 @@ bool SystemLayout::elementShouldBeCenteredBetweenStaves(const EngravingItem* ite
     return centerProperty == AutoOnOff::ON || item->appliesToAllVoicesInInstrument();
 }
 
+bool SystemLayout::mmRestShouldBeCenteredBetweenStaves(const MMRest* mmRest, const System* system)
+{
+    if (!mmRest->style().styleB(Sid::mmRestBetweenStaves)) {
+        return false;
+    }
+
+    const Part* itemPart = mmRest->part();
+    if (itemPart->nstaves() <= 1) {
+        return false;
+    }
+
+    staff_idx_t thisStaffIdx = mmRest->staffIdx();
+    staff_idx_t prevStaffIdx = system->prevVisibleStaff(thisStaffIdx);
+
+    return prevStaffIdx != muse::nidx && mmRest->score()->staff(prevStaffIdx)->part() == itemPart;
+}
+
 bool SystemLayout::elementHasAnotherStackedOutside(const EngravingItem* element, const Shape& elementShape, const SkylineLine& skylineLine)
 {
     double elemShapeLeft = -elementShape.left();
@@ -2659,7 +2709,9 @@ bool SystemLayout::elementHasAnotherStackedOutside(const EngravingItem* element,
     double elemShapeBottom = elementShape.bottom();
 
     for (const ShapeElement& skylineElement : skylineLine.elements()) {
-        if (!skylineElement.item() || skylineElement.item() == element || skylineElement.item()->parent() == element) {
+        const EngravingItem* skylineItem = skylineElement.item();
+        if (!skylineItem || skylineItem == element || skylineItem->parent() == element
+            || skylineItem == element->ldata()->itemSnappedAfter() || skylineItem == element->ldata()->itemSnappedBefore()) {
             continue;
         }
         bool intersectHorizontally = elemShapeRight > skylineElement.left() && elemShapeLeft < skylineElement.right();
@@ -2740,4 +2792,29 @@ void SystemLayout::centerElementBetweenStaves(EngravingItem* element, const Syst
     element->mutldata()->setStaffCenteringInfo(std::max(availSpaceAbove, 0.0), std::max(availSpaceBelow, 0.0));
 
     updateSkylineForElement(element, system, yMove);
+}
+
+void SystemLayout::centerMMRestBetweenStaves(MMRest* mmRest, const System* system)
+{
+    staff_idx_t thisIdx = mmRest->staffIdx();
+    IF_ASSERT_FAILED(thisIdx > 0) {
+        return;
+    }
+
+    staff_idx_t prevIdx = system->prevVisibleStaff(thisIdx);
+    IF_ASSERT_FAILED(prevIdx != muse::nidx) {
+        return;
+    }
+
+    SysStaff* thisStaff = system->staff(thisIdx);
+    SysStaff* prevStaff = system->staff(prevIdx);
+    double prevStaffHeight = system->score()->staff(prevIdx)->staffHeight(mmRest->tick());
+    double yStaffDiff = prevStaff->y() + prevStaffHeight - thisStaff->y();
+
+    PointF mmRestDefaultNumberPosition = mmRest->numberPos() - PointF(0.0, mmRest->spatium() * mmRest->numberOffset());
+    RectF numberBbox = mmRest->numberRect().translated(mmRestDefaultNumberPosition + mmRest->pos());
+    double yBaseLine = 0.5 * (yStaffDiff - numberBbox.height());
+    double yDiff = yBaseLine - numberBbox.top();
+
+    mmRest->mutldata()->yNumberPos += yDiff;
 }

@@ -24,6 +24,11 @@
 #include "types/translatablestring.h"
 #include "ui/view/iconcodes.h"
 
+#include "engraving/dom/factory.h"
+#include "engraving/dom/undo.h"
+
+#include "defer.h"
+
 static const QString INSTRUMENT_NAMES_CODE("percussion-instrument-names");
 static const QString NOTATION_PREVIEW_CODE("percussion-notation-preview");
 static const QString EDIT_LAYOUT_CODE("percussion-edit-layout");
@@ -31,6 +36,7 @@ static const QString RESET_LAYOUT_CODE("percussion-reset-layout");
 
 using namespace muse;
 using namespace ui;
+using namespace mu::notation;
 
 PercussionPanelModel::PercussionPanelModel(QObject* parent)
     : QObject(parent)
@@ -38,12 +44,26 @@ PercussionPanelModel::PercussionPanelModel(QObject* parent)
     m_padListModel = new PercussionPanelPadListModel(this);
 }
 
+bool PercussionPanelModel::enabled() const
+{
+    return m_enabled;
+}
+
+void PercussionPanelModel::setEnabled(bool enabled)
+{
+    if (m_enabled == enabled) {
+        return;
+    }
+    m_enabled = enabled;
+    emit enabledChanged();
+}
+
 PanelMode::Mode PercussionPanelModel::currentPanelMode() const
 {
     return m_currentPanelMode;
 }
 
-void PercussionPanelModel::setCurrentPanelMode(const PanelMode::Mode& panelMode)
+void PercussionPanelModel::setCurrentPanelMode(const PanelMode::Mode& panelMode, bool updateNoteInput)
 {
     if (m_currentPanelMode == panelMode) {
         return;
@@ -56,6 +76,13 @@ void PercussionPanelModel::setCurrentPanelMode(const PanelMode::Mode& panelMode)
 
     m_currentPanelMode = panelMode;
     emit currentPanelModeChanged(m_currentPanelMode);
+
+    if (!updateNoteInput || !interaction() || !interaction()->noteInput()) {
+        return;
+    }
+
+    const INotationNoteInputPtr noteInput = interaction()->noteInput();
+    panelMode == PanelMode::Mode::WRITE ? noteInput->startNoteInput() : noteInput->endNoteInput();
 }
 
 bool PercussionPanelModel::useNotationPreview() const
@@ -78,6 +105,15 @@ PercussionPanelPadListModel* PercussionPanelModel::padListModel() const
     return m_padListModel;
 }
 
+void PercussionPanelModel::init()
+{
+    setUpConnections();
+
+    globalContext()->currentNotationChanged().onNotify(this, [this] {
+        setUpConnections();
+    });
+}
+
 QList<QVariantMap> PercussionPanelModel::layoutMenuItems() const
 {
     const TranslatableString instrumentNamesTitle("notation", "Instrument names");
@@ -88,7 +124,9 @@ QList<QVariantMap> PercussionPanelModel::layoutMenuItems() const
     // Using IconCode for this instead of "checked" because we want the tick to display on the left
     const int notationPreviewIcon = static_cast<int>(m_useNotationPreview ? IconCode::Code::TICK_RIGHT_ANGLE : IconCode::Code::NONE);
 
-    const TranslatableString editLayoutTitle("notation", "Edit layout");
+    const TranslatableString editLayoutTitle = m_currentPanelMode == PanelMode::Mode::EDIT_LAYOUT
+                                               ? TranslatableString("notation", "Finish editing")
+                                               : TranslatableString("notation", "Edit layout");
     const int editLayoutIcon = static_cast<int>(IconCode::Code::CONFIGURE);
 
     const TranslatableString resetLayoutTitle("notation", "Reset layout");
@@ -120,13 +158,170 @@ void PercussionPanelModel::handleMenuItem(const QString& itemId)
     } else if (itemId == NOTATION_PREVIEW_CODE) {
         setUseNotationPreview(true);
     } else if (itemId == EDIT_LAYOUT_CODE) {
-        setCurrentPanelMode(PanelMode::Mode::EDIT_LAYOUT);
+        const bool currentlyEditing = m_currentPanelMode == PanelMode::Mode::EDIT_LAYOUT;
+        currentlyEditing ? finishEditing() : setCurrentPanelMode(PanelMode::Mode::EDIT_LAYOUT, false);
     } else if (itemId == RESET_LAYOUT_CODE) {
-        m_padListModel->resetLayout();
+        // TODO: Need a mechanism for "default" layouts...
+        // m_padListModel->resetLayout();
     }
 }
 
 void PercussionPanelModel::finishEditing()
 {
-    setCurrentPanelMode(m_panelModeToRestore);
+    Drumset* updatedDrumset = m_padListModel->drumset();
+    m_padListModel->removeEmptyRows();
+
+    NoteInputState inputState = interaction()->noteInput()->state();
+    const Staff* staff = inputState.staff;
+
+    IF_ASSERT_FAILED(staff && staff->part()) {
+        return;
+    }
+
+    Instrument* inst = staff->part()->instrument(inputState.segment->tick());
+
+    IF_ASSERT_FAILED(inst) {
+        return;
+    }
+
+    // Return if nothing changed after edit...
+    if (inst->drumset() && updatedDrumset
+        && *inst->drumset() == *updatedDrumset) {
+        return;
+    }
+
+    for (int i = 0; i < m_padListModel->padList().size(); ++i) {
+        const PercussionPanelPadModel* model = m_padListModel->padList().at(i);
+        if (!model) {
+            continue;
+        }
+        const int row = i / m_padListModel->numColumns();
+        const int column = i % m_padListModel->numColumns();
+        engraving::DrumInstrument& drum = updatedDrumset->drum(model->pitch());
+        drum.panelRow = row;
+        drum.panelColumn = column;
+    }
+
+    INotationUndoStackPtr undoStack = notation()->undoStack();
+
+    DEFER {
+        undoStack->commitChanges();
+    };
+
+    undoStack->prepareChanges(muse::TranslatableString("undoableAction", "Edit percussion panel layout"));
+    score()->undo(new engraving::ChangeDrumset(inst, updatedDrumset, staff->part()));
+
+    setCurrentPanelMode(m_panelModeToRestore, false);
+}
+
+void PercussionPanelModel::customizeKit()
+{
+    dispatcher()->dispatch("customize-kit");
+}
+
+void PercussionPanelModel::setUpConnections()
+{
+    const auto updatePadModels = [this](Drumset* drumset) {
+        if (drumset && m_padListModel->drumset() && *drumset == *m_padListModel->drumset()) {
+            return;
+        }
+
+        if (m_currentPanelMode == PanelMode::Mode::EDIT_LAYOUT) {
+            finishEditing();
+        }
+
+        m_padListModel->setDrumset(drumset);
+    };
+
+    if (!notation()) {
+        updatePadModels(nullptr);
+        return;
+    }
+
+    const INotationNoteInputPtr noteInput = interaction()->noteInput();
+    updatePadModels(noteInput->state().drumset);
+    setEnabled(m_padListModel->hasActivePads());
+
+    noteInput->stateChanged().onNotify(this, [this, updatePadModels]() {
+        if (!notation()) {
+            updatePadModels(nullptr);
+            return;
+        }
+        const INotationNoteInputPtr ni = interaction()->noteInput();
+        updatePadModels(ni->state().drumset);
+    });
+
+    m_padListModel->hasActivePadsChanged().onNotify(this, [this]() {
+        setEnabled(m_padListModel->hasActivePads());
+    });
+
+    m_padListModel->padTriggered().onReceive(this, [this](int pitch) {
+        switch (currentPanelMode()) {
+        case PanelMode::Mode::EDIT_LAYOUT: return;
+        case PanelMode::Mode::WRITE: writePitch(pitch); // fall through
+        case PanelMode::Mode::SOUND_PREVIEW: playPitch(pitch);
+        }
+    });
+}
+
+void PercussionPanelModel::writePitch(int pitch)
+{
+    INotationUndoStackPtr undoStack = notation()->undoStack();
+    if (!interaction() || !undoStack) {
+        return;
+    }
+
+    DEFER {
+        undoStack->commitChanges();
+    };
+
+    undoStack->prepareChanges(muse::TranslatableString("undoableAction", "Enter percussion note"));
+
+    interaction()->noteInput()->startNoteInput();
+
+    score()->addMidiPitch(pitch, false, /*transpose*/ false);
+
+    const mu::engraving::InputState& inputState = score()->inputState();
+    if (inputState.cr()) {
+        interaction()->showItem(inputState.cr());
+    }
+}
+
+void PercussionPanelModel::playPitch(int pitch)
+{
+    const mu::engraving::InputState& inputState = score()->inputState();
+    if (!inputState.cr()) {
+        return;
+    }
+
+    Chord* chord = mu::engraving::Factory::createChord(inputState.lastSegment());
+    chord->setParent(inputState.lastSegment());
+
+    Note* note = mu::engraving::Factory::createNote(chord);
+    note->setParent(chord);
+
+    note->setStaffIdx(mu::engraving::track2staff(inputState.cr()->track()));
+
+    const mu::engraving::NoteVal nval = score()->noteVal(pitch, /*transpose*/ false);
+    note->setNval(nval);
+
+    playbackController()->playElements({ note });
+
+    note->setParent(nullptr);
+    delete note;
+}
+
+const INotationPtr PercussionPanelModel::notation() const
+{
+    return globalContext()->currentNotation();
+}
+
+const INotationInteractionPtr PercussionPanelModel::interaction() const
+{
+    return notation() ? notation()->interaction() : nullptr;
+}
+
+mu::engraving::Score* PercussionPanelModel::score() const
+{
+    return notation() ? notation()->elements()->msScore() : nullptr;
 }

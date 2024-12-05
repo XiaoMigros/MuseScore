@@ -36,9 +36,11 @@
 #include "engraving/dom/dynamic.h"
 #include "engraving/dom/fermata.h"
 #include "engraving/dom/figuredbass.h"
+#include "engraving/dom/fingering.h"
 #include "engraving/dom/hairpin.h"
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/jump.h"
+#include "engraving/dom/laissezvib.h"
 #include "engraving/dom/lyrics.h"
 #include "engraving/dom/marker.h"
 #include "engraving/dom/measure.h"
@@ -1557,6 +1559,40 @@ libmei::Fermata Convert::fermataToMEI(const engraving::Fermata* fermata)
     return meiFermata;
 }
 
+void Convert::fingFromMEI(engraving::Fingering* fing, const StringList& meiLines, const libmei::Fing& meiFing, bool& warning)
+{
+    IF_ASSERT_FAILED(fing) {
+        return;
+    }
+
+    warning = false;
+
+    // text content
+    fing->setPlainText(meiLines.join(u"\n"));
+
+    // @place
+    if (meiFing.HasPlace()) {
+        fing->setPlacement(meiFing.GetPlace() == libmei::STAFFREL_above ? engraving::PlacementV::ABOVE : engraving::PlacementV::BELOW);
+        fing->setPropertyFlags(engraving::Pid::PLACEMENT, engraving::PropertyFlags::UNSTYLED);
+    }
+}
+
+libmei::Fing Convert::fingToMEI(const engraving::Fingering* fing, StringList& meiLines)
+{
+    libmei::Fing meiFing;
+
+    // content
+    String plainText = fing->plainText();
+    meiLines = plainText.split(u"\n");
+
+    // @place
+    if (fing->propertyFlags(engraving::Pid::PLACEMENT) == engraving::PropertyFlags::UNSTYLED) {
+        meiFing.SetPlace(Convert::placeToMEI(fing->placement()));
+    }
+
+    return meiFing;
+}
+
 std::pair<bool, engraving::NoteType> Convert::gracegrpFromMEI(const libmei::graceGrpLog_ATTACH meiAttach, const libmei::data_GRACE meiGrace,
                                                               bool& warning)
 {
@@ -1707,50 +1743,24 @@ libmei::Harm Convert::harmToMEI(const engraving::Harmony* harmony, StringList& m
     return meiHarm;
 }
 
-void Convert::lvFromMEI(engraving::Articulation* lv, const libmei::Lv& meiLv, bool& warning)
+void Convert::lvFromMEI(engraving::LaissezVib* lv, const libmei::Lv& meiLv, bool& warning)
 {
     warning = false;
 
-    lv->setSymId(engraving::SymId::articLaissezVibrerAbove);
-
     // @curvedir
-    switch (meiLv.GetCurvedir()) {
-    case (libmei::curvature_CURVEDIR_above):
-        lv->setAnchor(engraving::ArticulationAnchor::TOP);
-        break;
-    case (libmei::curvature_CURVEDIR_below):
-        lv->setAnchor(engraving::ArticulationAnchor::BOTTOM);
-        break;
-    default:
-        lv->setAnchor(engraving::ArticulationAnchor::AUTO);
-        break;
+    if (meiLv.HasCurvedir()) {
+        lv->setSlurDirection(Convert::curvedirFromMEI(meiLv.GetCurvedir(), warning));
     }
-    lv->setPropertyFlags(engraving::Pid::ARTICULATION_ANCHOR, engraving::PropertyFlags::UNSTYLED);
+
+    // @lform
+    if (meiLv.HasLform()) {
+        bool typeWarning = false;
+        lv->setStyleType(Convert::slurstyleFromMEI(meiLv.GetLform(), typeWarning));
+        warning = (warning || typeWarning);
+    }
 
     // @color
     Convert::colorFromMEI(lv, meiLv);
-}
-
-libmei::Lv Convert::lvToMEI(const engraving::Articulation* lv)
-{
-    libmei::Lv meiLv;
-
-    // @curvedir
-    switch (lv->anchor()) {
-    case (engraving::ArticulationAnchor::TOP):
-        meiLv.SetCurvedir(libmei::curvature_CURVEDIR_above);
-        break;
-    case (engraving::ArticulationAnchor::BOTTOM):
-        meiLv.SetCurvedir(libmei::curvature_CURVEDIR_below);
-        break;
-    default:
-        break;
-    }
-
-    // @color
-    Convert::colorToMEI(lv, meiLv);
-
-    return meiLv;
 }
 
 void Convert::jumpFromMEI(engraving::Jump* jump, const libmei::RepeatMark& meiRepeatMark, bool& warning)
@@ -2664,7 +2674,6 @@ void Convert::slurFromMEI(engraving::SlurTie* slur, const libmei::Slur& meiSlur,
     // @curvedir
     if (meiSlur.HasCurvedir()) {
         slur->setSlurDirection(Convert::curvedirFromMEI(meiSlur.GetCurvedir(), warning));
-        //slur->setPropertyFlags(engraving::Pid::PLACEMENT, engraving::PropertyFlags::UNSTYLED);
     }
 
     // @lform

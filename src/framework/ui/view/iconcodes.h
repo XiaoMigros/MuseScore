@@ -391,6 +391,8 @@ public:
         WAVEFORM = 0xF43C,
         CROSS_STAFF_BEAMING = 0xF43D,
 
+        MAGNET = 0xF43E,
+
         TEMPO_CHANGE = 0xF43F,
 
         PLUGIN = 0xF440,
@@ -433,6 +435,8 @@ public:
         TIE_CHORD_OUTSIDE = 0xF466,
         TIE_CHORD_INSIDE = 0xF467,
 
+        SINGLE_NOTE = 0xF46C,
+
         TRIANGLE_SYMBOL = 0xF46D,
 
         FRETBOARD_VERTICAL = 0xF46F,
@@ -445,8 +449,25 @@ public:
         CLOCK = 0xF475,
 
         PLAYHEAD = 0xF478,
-
         PLAYHEAD_FILLED = 0xF47A,
+
+        NOTE_ANCHORED_LINE = 0xF47B,
+
+        NOTE_LV = 0xF47C,
+
+        LV_OUTSIDE = 0xF47D,
+        LV_INSIDE = 0xF47E,
+        LV_CHORD_OUTSIDE = 0xF47F,
+        LV_CHORD_INSIDE = 0xF480,
+
+        SYSTEM_LOCK_START = 0xF481,
+        SYSTEM_LOCK_END = 0xF482,
+
+        LINE_BREAK = 0xF483,
+        PAGE_BREAK = 0xF484,
+        SECTION_BREAK2 = 0xF485,
+        NO_BREAK = 0xF486,
+        SYSTEM_LOCK = 0xF487,
 
         NONE = 0xFFFF
     };

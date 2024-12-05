@@ -49,11 +49,15 @@ Item {
     */
 
     Component.onCompleted: {
-        padGrid.model.load()
+        padGrid.model.init()
     }
 
     PercussionPanelModel {
         id: percModel
+
+        Component.onCompleted: {
+            percModel.init()
+        }
     }
 
     // TODO: Will live inside percussion panel until #22050 is implemented
@@ -84,6 +88,8 @@ Item {
 
         contentWidth: rowLayout.width
         contentHeight: rowLayout.height
+
+        StyledScrollBar.vertical: verticalScrollBar
 
         function goToBottom() {
             var endY = flickable.contentHeight * (1.0 - flickable.visibleArea.heightRatio)
@@ -186,6 +192,7 @@ Item {
                         height: parent.height + pad.totalBorderWidth - padGrid.spacing
 
                         padModel: model.padModelRole
+                        panelEnabled: percModel.enabled
                         panelMode: percModel.currentPanelMode
                         useNotationPreview: percModel.useNotationPreview
 
@@ -250,10 +257,29 @@ Item {
                 text: qsTrc("notation", "Add row")
                 orientation: Qt.Horizontal
                 onClicked: {
-                    padGrid.model.addRow()
+                    padGrid.model.addEmptyRow()
                     flickable.goToBottom()
                 }
             }
         }
+
+        StyledTextLabel {
+            id: panelDisabledLabel
+
+            visible: !percModel.enabled
+
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: (padGrid.cellHeight / 2) - (panelDisabledLabel.height / 2)
+
+            font: ui.theme.bodyFont
+            text: qsTrc("notation", "Select an unpitched percussion staff to see available sounds")
+        }
+    }
+
+    StyledScrollBar {
+        id: verticalScrollBar
+        height: root.height
+        anchors.right: root.right
     }
 }

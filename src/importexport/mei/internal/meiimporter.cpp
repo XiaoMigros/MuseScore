@@ -35,11 +35,13 @@
 #include "engraving/dom/factory.h"
 #include "engraving/dom/fermata.h"
 #include "engraving/dom/figuredbass.h"
+#include "engraving/dom/fingering.h"
 #include "engraving/dom/hairpin.h"
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/jump.h"
 #include "engraving/dom/key.h"
 #include "engraving/dom/keysig.h"
+#include "engraving/dom/laissezvib.h"
 #include "engraving/dom/layoutbreak.h"
 #include "engraving/dom/lyrics.h"
 #include "engraving/dom/marker.h"
@@ -68,6 +70,7 @@
 #include "engraving/dom/utils.h"
 
 #include "thirdparty/libmei/cmn.h"
+#include "thirdparty/libmei/fingering.h"
 #include "thirdparty/libmei/lyrics.h"
 #include "thirdparty/libmei/shared.h"
 
@@ -537,7 +540,7 @@ EngravingItem* MeiImporter::addToChordRest(const libmei::Element& meiElement, Me
         if (chordRest->isChord()) {
             item = Factory::createArpeggio(toChord(chordRest));
         }
-    } else if (meiElement.m_name == "artic" || meiElement.m_name == "lv") {
+    } else if (meiElement.m_name == "artic") {
         item = Factory::createArticulation(chordRest);
     } else {
         return nullptr;
@@ -2194,6 +2197,8 @@ bool MeiImporter::readControlEvents(pugi::xml_node parentNode, Measure* measure)
             success = success && this->readDynam(xpathNode.node(), measure);
         } else if (elementName == "fermata") {
             success = success && this->readFermata(xpathNode.node(), measure);
+        } else if (elementName == "fing") {
+            success = success && this->readFing(xpathNode.node(), measure);
         } else if (elementName == "hairpin") {
             success = success && this->readHairpin(xpathNode.node(), measure);
         } else if (elementName == "harm") {
@@ -2492,6 +2497,40 @@ bool MeiImporter::readFermata(pugi::xml_node fermataNode, Measure* measure)
 }
 
 /**
+ * Read a fing.
+ */
+
+bool MeiImporter::readFing(pugi::xml_node fingNode, Measure* measure)
+{
+    IF_ASSERT_FAILED(measure) {
+        return false;
+    }
+
+    bool warning;
+    libmei::Fing meiFing;
+    meiFing.Read(fingNode);
+
+    Note* note = this->findStartNote(meiFing);
+    if (!note) {
+        // Warning message given in MeiImporter::findStartNote
+        return true;
+    }
+
+    Fingering* fing = Factory::createFingering(note);
+    m_uids->reg(fing, meiFing.m_xmlId);
+
+    StringList meiLines;
+    size_t meiLine = 0;
+    this->readLines(fingNode, meiLines, meiLine);
+
+    Convert::fingFromMEI(fing, meiLines, meiFing, warning);
+
+    note->add(fing);
+
+    return true;
+}
+
+/**
  * Read a hairpin.
  */
 
@@ -2560,11 +2599,15 @@ bool MeiImporter::readLv(pugi::xml_node lvNode, Measure* measure)
     libmei::Lv meiLv;
     meiLv.Read(lvNode);
 
-    Articulation* lv = static_cast<Articulation*>(this->addToChordRest(meiLv, measure));
-    if (!lv) {
-        // Warning message given in MeiImporter::addToChordRest
+    Note* note = this->findStartNote(meiLv);
+    if (!note) {
         return true;
     }
+
+    LaissezVib* lv = Factory::createLaissezVib(note);
+    lv->setParent(note);
+    note->score()->undoAddElement(lv);
+    m_uids->reg(lv, meiLv.m_xmlId);
 
     Convert::lvFromMEI(lv, meiLv, warning);
 
