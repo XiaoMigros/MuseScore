@@ -188,7 +188,7 @@ PaletteTreePtr PaletteCreator::newDefaultPaletteTree()
     defaultPalette->append(newKeyboardPalette());
     defaultPalette->append(newRepeatsPalette(true));
     defaultPalette->append(newBarLinePalette(true));
-    defaultPalette->append(newLayoutPalette());
+    defaultPalette->append(newLayoutPalette(true));
     defaultPalette->append(newBracketsPalette());
     defaultPalette->append(newOrnamentsPalette(true));
     defaultPalette->append(newBreathPalette(true));
@@ -523,7 +523,7 @@ PalettePtr PaletteCreator::newRepeatsPalette(bool defaultPalette)
     return sp;
 }
 
-PalettePtr PaletteCreator::newLayoutPalette()
+PalettePtr PaletteCreator::newLayoutPalette(bool defaultPalette)
 {
     PalettePtr sp = std::make_shared<Palette>(Palette::Type::Layout);
     //: The name of a palette
@@ -535,14 +535,20 @@ PalettePtr PaletteCreator::newLayoutPalette()
         LayoutBreakType::LINE,
         LayoutBreakType::PAGE,
         LayoutBreakType::SECTION,
-        LayoutBreakType::NOBREAK
     };
     for (LayoutBreakType layoutBreakType : layoutBreaks) {
         auto lb = Factory::makeLayoutBreak(gpaletteScore->dummy()->measure());
         lb->setLayoutBreakType(layoutBreakType);
-        PaletteCellPtr cell = sp->appendElement(lb, TConv::userName(layoutBreakType));
-        cell->mag = 1.2;
+        sp->appendElement(lb, TConv::userName(layoutBreakType));
     }
+
+    if (!defaultPalette) {
+        auto lb = Factory::makeLayoutBreak(gpaletteScore->dummy()->measure());
+        lb->setLayoutBreakType(LayoutBreakType::NOBREAK);
+        sp->appendElement(lb, TConv::userName(LayoutBreakType::NOBREAK));
+    }
+
+    sp->appendActionIcon(ActionIconType::SYSTEM_LOCK, "toggle-system-lock");
 
     static const std::vector<SpacerType> spacers  {
         SpacerType::DOWN,
@@ -726,7 +732,6 @@ PalettePtr PaletteCreator::newArticulationsPalette(bool defaultPalette)
         SymId::articTenutoStaccatoAbove,
         SymId::articMarcatoAbove,
         SymId::articAccentStaccatoAbove,
-        SymId::articLaissezVibrerAbove,
         SymId::articMarcatoStaccatoAbove,
         SymId::articMarcatoTenutoAbove,
         SymId::articStaccatissimoStrokeAbove,
@@ -1016,6 +1021,9 @@ PalettePtr PaletteCreator::newArpeggioPalette()
     for (int i = 0; i < 2; ++i) {
         auto a = makeElement<Glissando>(gpaletteScore);
         a->setGlissandoType(GlissandoType(i));
+        if (a->glissandoType() != a->style().styleV(Sid::glissandoType).value<GlissandoType>()) {
+            a->setPropertyFlags(Pid::GLISS_TYPE, PropertyFlags::UNSTYLED);
+        }
         sp->appendElement(a, a->glissandoTypeName());
     }
 
@@ -1088,6 +1096,7 @@ PalettePtr PaletteCreator::newGraceNotePalette()
 {
     PalettePtr sp = std::make_shared<Palette>(Palette::Type::GraceNote);
     sp->setName(QT_TRANSLATE_NOOP("palette", "Grace notes"));
+    sp->setMag(1.35);
     sp->setGridSize(45, 40);
     sp->setDrawGrid(true);
     sp->setVisible(false);
@@ -1314,6 +1323,8 @@ PalettePtr PaletteCreator::newLinesPalette(bool defaultPalette)
     line->setLen(w);
     line->setDiagonal(true);
     sp->appendElement(line, QT_TRANSLATE_NOOP("palette", "Line"));
+
+    sp->appendActionIcon(ActionIconType::NOTE_ANCHORED_LINE, "add-noteline", 2);
 
     auto a = Factory::makeAmbitus(gpaletteScore->dummy()->segment());
     sp->appendElement(a, QT_TRANSLATE_NOOP("palette", "Ambitus"));

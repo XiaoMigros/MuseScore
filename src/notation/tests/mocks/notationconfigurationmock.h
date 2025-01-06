@@ -63,9 +63,6 @@ public:
     MOCK_METHOD(QColor, borderColor, (), (const, override));
     MOCK_METHOD(int, borderWidth, (), (const, override));
 
-    MOCK_METHOD(QColor, anchorColor, (), (const, override));
-    MOCK_METHOD(muse::async::Channel<QColor>, anchorColorChanged, (), (const, override));
-
     MOCK_METHOD(QColor, playbackCursorColor, (), (const, override));
     MOCK_METHOD(QColor, loopMarkerColor, (), (const, override));
     MOCK_METHOD(int, cursorOpacity, (), (const, override));
@@ -188,9 +185,19 @@ public:
 
     MOCK_METHOD(bool, useNewPercussionPanel, (), (const, override));
     MOCK_METHOD(void, setUseNewPercussionPanel, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, useNewPercussionPanelChanged, (), (const, override));
 
     MOCK_METHOD(bool, autoShowPercussionPanel, (), (const, override));
     MOCK_METHOD(void, setAutoShowPercussionPanel, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, autoShowPercussionPanelChanged, (), (const, override));
+
+    MOCK_METHOD(bool, showPercussionPanelPadSwapDialog, (), (const, override));
+    MOCK_METHOD(void, setShowPercussionPanelPadSwapDialog, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, showPercussionPanelPadSwapDialogChanged, (), (const, override));
+
+    MOCK_METHOD(bool, percussionPanelMoveMidiNotesAndShortcuts, (), (const, override));
+    MOCK_METHOD(void, setPercussionPanelMoveMidiNotesAndShortcuts, (bool), (override));
+    MOCK_METHOD(muse::async::Notification, percussionPanelMoveMidiNotesAndShortcutsChanged, (), (const, override));
 
     MOCK_METHOD(muse::io::path_t, styleFileImportPath, (), (const, override));
     MOCK_METHOD(void, setStyleFileImportPath, (const muse::io::path_t&), (override));

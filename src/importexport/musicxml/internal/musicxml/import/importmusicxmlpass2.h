@@ -176,7 +176,7 @@ struct HarmonyDesc
         m_fretDiagram(m_fretDiagram) {}
 
     HarmonyDesc()
-        : m_track(0), m_harmony(nullptr), m_fretDiagram(nullptr) {}
+        : m_track(muse::nidx), m_harmony(nullptr), m_fretDiagram(nullptr) {}
 };
 using HarmonyMap = std::multimap<int, HarmonyDesc>;
 
@@ -356,6 +356,7 @@ private:
     void addTechnical(const Notation& notation, engraving::Note* note);
     void arpeggio();
     void harmonic();
+    void harmonMute();
     void articulations();
     void dynamics();
     void fermata();
@@ -378,7 +379,6 @@ private:
     muse::String m_dynamicsPlacement;
     engraving::StringList m_dynamicsList;
     std::vector<Notation> m_notations;
-    engraving::SymId m_breath { engraving::SymId::noSym };
     bool m_hasTremolo = false;
     muse::String m_tremoloType;
     int m_tremoloNr = 0;
@@ -502,13 +502,13 @@ private:
     InferredTempoLineStack m_inferredTempoLines;
     MusicXmlExtendedSpannerDesc m_dummyNewMusicXmlSpannerDesc;
 
-    engraving::Glissando* m_glissandi[MAX_NUMBER_LEVEL][2];     // Current slides ([0]) / glissandi ([1])
+    engraving::Glissando* m_glissandi[MAX_NUMBER_LEVEL][2] { {} };   // Current slides ([0]) / glissandi ([1])
 
     MusicXmlTieMap m_ties;
     std::vector<engraving::Note*> m_unstartedTieNotes;
     std::vector<engraving::Note*> m_unendedTieNotes;
     engraving::Volta* m_lastVolta = nullptr;
-    bool m_hasDrumset;                             // drumset defined TODO: move to pass 1
+    bool m_hasDrumset = false;                     // drumset defined TODO: move to pass 1
 
     MusicXmlSpannerMap m_spanners;
 
@@ -524,7 +524,7 @@ private:
     MusicXmlLyricsExtend m_extendedLyrics;         // Lyrics with "extend" requiring fixup
     std::vector<GraceNoteLyrics> m_graceNoteLyrics;   // Lyrics to be moved from grace note to main note
 
-    MusicXmlSlash m_measureStyleSlash;             // Are we inside a measure to be displayed as slashes?
+    MusicXmlSlash m_measureStyleSlash = MusicXmlSlash::NONE;   // Are we inside a measure to be displayed as slashes?
 
     size_t m_nstaves = 0;                          // Number of staves in current part
     std::vector<int> m_measureRepeatNumMeasures;
@@ -635,7 +635,7 @@ private:
     bool m_systemDirection = false;
     std::vector<engraving::EngravingItem*> m_elems;
     engraving::Fraction m_offset;
-    engraving::track_idx_t m_track;
+    engraving::track_idx_t m_track = muse::nidx;
 };
 
 //---------------------------------------------------------
@@ -663,7 +663,7 @@ public:
 private:
     double m_totalY = 0.0;
     engraving::EngravingItem* m_element = nullptr;
-    engraving::track_idx_t m_track = 0;
+    engraving::track_idx_t m_track = muse::nidx;
     muse::String m_placement;
     engraving::Measure* m_measure = nullptr;
     engraving::Fraction m_tick;

@@ -40,7 +40,9 @@ declare_muse_module_opt(LEARN ON)
 declare_muse_module_opt(MIDI ON)
 declare_muse_module_opt(MPE ON)
 declare_muse_module_opt(MULTIINSTANCES ON)
+
 declare_muse_module_opt(MUSESAMPLER ON)
+option(MUSE_MODULE_MUSESAMPLER_LOAD_IN_DEBUG "Load MuseSampler module in debug builds" OFF)
 
 declare_muse_module_opt(NETWORK ON)
 option(MUSE_MODULE_NETWORK_WEBSOCKET "Enable websocket support" OFF)

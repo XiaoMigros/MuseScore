@@ -42,7 +42,9 @@
 #include "mscore.h"
 #include "navigate.h"
 #include "note.h"
+#include "notedot.h"
 #include "noteevent.h"
+#include "noteline.h"
 #include "ornament.h"
 #include "part.h"
 #include "score.h"
@@ -55,13 +57,11 @@
 #include "stringdata.h"
 #include "system.h"
 #include "tie.h"
-
 #include "tremolosinglechord.h"
 #include "tremolotwochord.h"
 #include "trill.h"
 #include "tuplet.h"
 #include "undo.h"
-#include "compat/midi/compatmidirender.h"
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
 #include "accessibility/accessibleitem.h"
@@ -73,17 +73,6 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
-//---------------------------------------------------------
-//   LedgerLineData
-//---------------------------------------------------------
-
-struct LedgerLineData {
-    int line;
-    double minX, maxX;
-    bool visible;
-    bool accidental;
-};
-
 //---------------------------------------------------------
 //   upNote
 //---------------------------------------------------------
@@ -265,7 +254,7 @@ Chord::Chord(Segment* parent)
     m_stemDirection    = DirectionV::AUTO;
     m_arpeggio         = 0;
     m_spanArpeggio     = 0;
-    m_endsGlissando    = false;
+    m_endsNoteAnchoredLine    = false;
     m_noteType         = NoteType::NORMAL;
     m_stemSlash        = 0;
     m_noStem           = false;
@@ -304,7 +293,7 @@ Chord::Chord(const Chord& c, bool link)
     }
     m_stem          = 0;
     m_hook          = 0;
-    m_endsGlissando = false;
+    m_endsNoteAnchoredLine = false;
     m_arpeggio      = 0;
     m_stemSlash     = 0;
 
@@ -341,6 +330,15 @@ Chord::Chord(const Chord& c, bool link)
             score()->undo(new Link(t, const_cast<TremoloSingleChord*>(c.m_tremoloSingleChord)));
         }
         add(t);
+    } else if (c.m_tremoloTwoChord) {
+        if (c.m_tremoloTwoChord->chord1() == &c) {
+            TremoloTwoChord* t = Factory::copyTremoloTwoChord(*(c.m_tremoloTwoChord));
+            if (link) {
+                score()->undo(new Link(t, const_cast<TremoloTwoChord*>(c.m_tremoloTwoChord)));
+            }
+            t->setChords(this, nullptr);
+            add(t);
+        }
     }
 
     for (EngravingItem* e : c.el()) {
@@ -673,7 +671,7 @@ void Chord::add(EngravingItem* e)
         setTremoloSingleChord(item_cast<TremoloSingleChord*>(e));
         break;
     case ElementType::GLISSANDO:
-        m_endsGlissando = true;
+        m_endsNoteAnchoredLine = true;
         break;
     case ElementType::STEM:
         assert(!m_stem);
@@ -781,7 +779,7 @@ void Chord::remove(EngravingItem* e)
         setTremoloSingleChord(nullptr);
         break;
     case ElementType::GLISSANDO:
-        m_endsGlissando = false;
+        m_endsNoteAnchoredLine = false;
         break;
     case ElementType::STEM:
         m_stem = 0;
@@ -880,45 +878,48 @@ void Chord::updateLedgerLines()
 
     // need ledger lines?
     if (downLine() + stepOffset <= lineBelow + 1 && upLine() + stepOffset >= -1) {
+        muse::DeleteAll(m_ledgerLines);
+        m_ledgerLines.clear();
         return;
     }
 
     // the extra length of a ledger line to be added on each side of the notehead
-    double extraLen = style().styleMM(Sid::ledgerLineLength);
-    double hw;
-    double minX, maxX;                           // note extrema in raster units
-    int minLine, maxLine;
+    const double extraLen = style().styleMM(Sid::ledgerLineLength);
+
     bool visible = false;
-    double x;
+
+    struct LedgerLineData {
+        int line;
+        double minX, maxX;
+        bool visible;
+        bool accidental;
+    };
+    std::vector<LedgerLineData> ledgerLineData;
 
     // scan chord notes, collecting visibility and x and y extrema
     // NOTE: notes are sorted from bottom to top (line no. decreasing)
     // notes are scanned twice from outside (bottom or top) toward the staff
     // each pass stops at the first note without ledger lines
-    size_t n = m_notes.size();
-    std::vector<LedgerLineData> ledgerLineData;
-    for (size_t j = 0; j < 2; j++) {               // notes are scanned twice...
-        int from, delta;
+    int n = static_cast<int>(m_notes.size());
+
+    for (const bool topToBottom : { false, true }) {
+        const int from = topToBottom ? n - 1 : 0;
+        const int delta = topToBottom ? -1 : 1;
         std::vector<LedgerLineData> vecLines;
-        hw = 0.0;
-        minX = std::numeric_limits<double>::max();
-        maxX = std::numeric_limits<double>::min();
-        minLine = 0;
-        maxLine = lineBelow;
-        if (j == 0) {                           // ...once from lowest up...
-            from  = 0;
-            delta = +1;
-        } else {
-            from = int(n) - 1;                       // ...once from highest down
-            delta = -1;
-        }
-        for (int i = from; i < int(n) && i >= 0; i += delta) {
-            Note* note = m_notes.at(i);
+        double hw = 0.0;
+        double minX = std::numeric_limits<double>::max();
+        double maxX = std::numeric_limits<double>::min();
+        int minLine = 0;
+        int maxLine = lineBelow;
+
+        for (int i = from; i < n && i >= 0; i += delta) {
+            const Note* note = m_notes.at(i);
             int l = note->line() + stepOffset;
 
             // if 1st pass and note not below staff or 2nd pass and note not above staff
-            if ((!j && l <= lineBelow + 1) || (j && l >= -1)) {
-                break;                          // stop this pass
+            if ((!topToBottom && l <= lineBelow + 1)
+                || (topToBottom && l >= -1)) {
+                break; // stop this pass
             }
             // round line number to even number toward 0
             if (l < 0) {
@@ -927,28 +928,21 @@ void Chord::updateLedgerLines()
                 l = l & ~1;
             }
 
-            if (note->visible()) {              // if one note is visible,
-                visible = true;                 // all lines between it and the staff are visible
+            if (note->visible()) { // if one note is visible,
+                visible = true;    // all lines between it and the staff are visible
             }
             hw = std::max(hw, note->headWidth());
 
-            //
             // Experimental:
-            //  shorten ledger line to avoid collisions with accidentals
+            // shorten ledger line to avoid collisions with accidentals
+            // TODO: do something with the following `accid` flag
             //
             // bool accid = (note->accidental() && note->line() >= (l-1) && note->line() <= (l+1) );
-            //
-            // TODO : do something with this accid flag in the following code!
-            //
 
-            // check if note horiz. pos. is outside current range
-            // if more length on the right, increase range
-//                  note->layout();
-
-            //ledger lines need the leftmost point of the notehead with a respect of bbox
-            x = note->pos().x() + note->bboxXShift();
+            // ledger lines need the leftmost point of the notehead with a respect of bbox
+            const double x = note->pos().x() + note->bboxXShift();
             if (x - extraLen * note->mag() < minX) {
-                minX  = x - extraLen * note->mag();
+                minX = x - extraLen * note->mag();
                 // increase width of all lines between this one and the staff
                 for (auto& d : vecLines) {
                     if (!d.accidental && ((l < 0 && d.line >= l) || (l > 0 && d.line <= l))) {
@@ -966,28 +960,29 @@ void Chord::updateLedgerLines()
                 }
             }
 
-            LedgerLineData lld;
             // check if note vert. pos. is outside current range
             // and, if so, add data for new line(s)
             if (l < minLine) {
                 for (int i1 = l; i1 < minLine; i1 += 2) {
-                    lld.line = i1;
-                    lld.minX = minX;
-                    lld.maxX = maxX;
-                    lld.visible = visible;
-                    lld.accidental = false;
-                    vecLines.push_back(lld);
+                    vecLines.emplace_back(LedgerLineData {
+                            /*line=*/ i1,
+                            /*minX=*/ minX,
+                            /*maxX=*/ maxX,
+                            /*visible=*/ visible,
+                            /*accidental=*/ false
+                        });
                 }
                 minLine = l;
             }
             if (l > maxLine) {
                 for (int i1 = maxLine + 2; i1 <= l; i1 += 2) {
-                    lld.line = i1;
-                    lld.minX = minX;
-                    lld.maxX = maxX;
-                    lld.visible = visible;
-                    lld.accidental = false;
-                    vecLines.push_back(lld);
+                    vecLines.emplace_back(LedgerLineData {
+                            /*line=*/ i1,
+                            /*minX=*/ minX,
+                            /*maxX=*/ maxX,
+                            /*visible=*/ visible,
+                            /*accidental=*/ false
+                        });
                 }
                 maxLine = l;
             }
@@ -1785,9 +1780,8 @@ void Chord::scanElements(void* data, void (* func)(void*, EngravingItem*), bool 
             func(data, ll);
         }
     }
-    size_t n = m_notes.size();
-    for (size_t i = 0; i < n; ++i) {
-        m_notes.at(i)->scanElements(data, func, all);
+    for (Note* note : m_notes) {
+        note->scanElements(data, func, all);
     }
     for (Chord* chord : m_graceNotes) {
         chord->scanElements(data, func, all);
@@ -2395,19 +2389,20 @@ void Chord::setSlash(bool flag, bool stemless)
 }
 
 //---------------------------------------------------------
-//  updateEndsGlissando
-//    sets/resets the chord _endsGlissando according any glissando (or more)
+//  updateEndsNoteAnchoredLine
+//    sets/resets the chord m_endsNoteAnchoredLine according any note anchored line
 //    end into this chord or no.
 //---------------------------------------------------------
 
-void Chord::updateEndsGlissandoOrGuitarBend()
+void Chord::updateEndsNoteAnchoredLine()
 {
-    m_endsGlissando = false;         // assume no glissando ends here
-    // scan all chord notes for glissandi ending on this chord
+    m_endsNoteAnchoredLine = false;         // assume no note anchored line ends here
+    // scan all chord notes for note anchored lines ending on this chord
     for (Note* note : notes()) {
         for (Spanner* sp : note->spannerBack()) {
-            if (sp->type() == ElementType::GLISSANDO) {
-                m_endsGlissando = true;
+            bool isNoteAnchoredTextLine = sp->isNoteLine() && toNoteLine(sp)->enforceMinLength();
+            if (sp->type() == ElementType::GLISSANDO || isNoteAnchoredTextLine) {
+                m_endsNoteAnchoredLine = true;
                 return;
             }
         }
@@ -2856,6 +2851,8 @@ EngravingItem* Chord::nextElement()
 
     case ElementType::GUITAR_BEND_SEGMENT:
     case ElementType::GLISSANDO_SEGMENT:
+    case ElementType::NOTELINE_SEGMENT:
+    case ElementType::LAISSEZ_VIB_SEGMENT:
     case ElementType::TIE_SEGMENT: {
         SpannerSegment* s = toSpannerSegment(e);
         Spanner* sp = s->spanner();
@@ -2934,12 +2931,12 @@ EngravingItem* Chord::prevElement()
     switch (e->type()) {
     case ElementType::NOTE: {
         if (isGrace()) {
-            ChordRest* next = prevChordRest(this);
-            if (next) {
-                if (next->isChord()) {
-                    return toChord(next)->notes().back();
+            ChordRest* prev = prevChordRest(this);
+            if (prev) {
+                if (prev->isChord()) {
+                    return toChord(prev)->notes().back();
                 }
-                return toRest(next);
+                return prev;
             }
         }
 
@@ -2955,12 +2952,12 @@ EngravingItem* Chord::prevElement()
                     return prevNote->bendFor()->frontSegment();
                 }
 
-                ChordRest* next = prevChordRest(this);
-                if (next) {
-                    if (next->isChord()) {
-                        return toChord(next)->notes().back();
+                ChordRest* prev = prevChordRest(this);
+                if (prev) {
+                    if (prev->isChord()) {
+                        return toChord(prev)->notes().back();
                     }
-                    return toRest(next);
+                    return prev;
                 }
             }
         }

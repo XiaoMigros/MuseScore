@@ -47,9 +47,13 @@ static const Settings::Key INVERT_SCORE_COLOR("engraving", "engraving/scoreColor
 
 static const Settings::Key ALL_VOICES_COLOR("engraving", "engraving/colors/allVoicesColor");
 static const Settings::Key FORMATTING_COLOR("engraving", "engraving/colors/formattingColor");
+static const Settings::Key FRAME_COLOR("engraving", "engraving/colors/frameColor");
+static const Settings::Key INVISIBLE_COLOR("engraving", "engraving/colors/invisibleColor");
 static const Settings::Key UNLINKED_COLOR("engraving", "engraving/colors/unlinkedColor");
 
 static const Settings::Key DYNAMICS_APPLY_TO_ALL_VOICES("engraving", "score/dynamicsApplyToAllVoices");
+
+static const Settings::Key DO_NOT_SAVE_EIDS_FOR_BACK_COMPAT("engraving", "engraving/compat/doNotSaveEIDsForBackCompat");
 
 struct VoiceColor {
     Settings::Key key;
@@ -105,11 +109,25 @@ void EngravingConfiguration::init()
 
     settings()->setDefaultValue(DYNAMICS_APPLY_TO_ALL_VOICES, Val(true));
 
-    settings()->setDefaultValue(FORMATTING_COLOR, Val(Color("#A0A0A4").toQColor()));
+    settings()->setDefaultValue(FRAME_COLOR, Val(Color("#A0A0A4").toQColor()));
+    settings()->setDescription(FRAME_COLOR, muse::trc("engraving", "Frame color"));
+    settings()->setCanBeManuallyEdited(FRAME_COLOR, true);
+    settings()->valueChanged(FRAME_COLOR).onReceive(nullptr, [this](const Val& val) {
+        m_frameColorChanged.send(Color::fromQColor(val.toQColor()));
+    });
+
+    settings()->setDefaultValue(FORMATTING_COLOR, Val(Color("#C31989").toQColor()));
     settings()->setDescription(FORMATTING_COLOR, muse::trc("engraving", "Formatting color"));
     settings()->setCanBeManuallyEdited(FORMATTING_COLOR, true);
     settings()->valueChanged(FORMATTING_COLOR).onReceive(nullptr, [this](const Val& val) {
         m_formattingColorChanged.send(Color::fromQColor(val.toQColor()));
+    });
+
+    settings()->setDefaultValue(INVISIBLE_COLOR, Val(Color("#808080").toQColor()));
+    settings()->setDescription(INVISIBLE_COLOR, muse::trc("engraving", "Invisible color"));
+    settings()->setCanBeManuallyEdited(INVISIBLE_COLOR, true);
+    settings()->valueChanged(INVISIBLE_COLOR).onReceive(nullptr, [this](const Val& val) {
+        m_invisibleColorChanged.send(Color::fromQColor(val.toQColor()));
     });
 
     settings()->setDefaultValue(UNLINKED_COLOR, Val(Color(UNLINKED_ITEM_COLOR).toQColor()));
@@ -118,6 +136,12 @@ void EngravingConfiguration::init()
     settings()->valueChanged(UNLINKED_COLOR).onReceive(nullptr, [this](const Val& val) {
         m_unlinkedColorChanged.send(Color::fromQColor(val.toQColor()));
     });
+
+    settings()->setDefaultValue(DO_NOT_SAVE_EIDS_FOR_BACK_COMPAT, Val(false));
+    settings()->setDescription(DO_NOT_SAVE_EIDS_FOR_BACK_COMPAT, muse::trc("engraving", "Do not save EIDs"));
+    settings()->setCanBeManuallyEdited(DO_NOT_SAVE_EIDS_FOR_BACK_COMPAT, false);
+
+    setExperimentalGuitarBendImport(guitarProImportExperimental());
 }
 
 muse::io::path_t EngravingConfiguration::appDataPath() const
@@ -197,11 +221,6 @@ Color EngravingConfiguration::scoreInversionColor() const
 {
     // slightly dulled white for less strain on the eyes
     return Color(220, 220, 220);
-}
-
-Color EngravingConfiguration::invisibleColor() const
-{
-    return "#808080";
 }
 
 Color EngravingConfiguration::lassoColor() const
@@ -319,6 +338,26 @@ muse::async::Channel<Color> EngravingConfiguration::formattingColorChanged() con
     return m_formattingColorChanged;
 }
 
+Color EngravingConfiguration::frameColor() const
+{
+    return Color::fromQColor(settings()->value(FRAME_COLOR).toQColor());
+}
+
+muse::async::Channel<Color> EngravingConfiguration::frameColorChanged() const
+{
+    return m_frameColorChanged;
+}
+
+Color EngravingConfiguration::invisibleColor() const
+{
+    return Color::fromQColor(settings()->value(INVISIBLE_COLOR).toQColor());
+}
+
+muse::async::Channel<Color> EngravingConfiguration::invisibleColorChanged() const
+{
+    return m_invisibleColorChanged;
+}
+
 Color EngravingConfiguration::unlinkedColor() const
 {
     return Color::fromQColor(settings()->value(UNLINKED_COLOR).toQColor());
@@ -349,14 +388,29 @@ bool EngravingConfiguration::isAccessibleEnabled() const
     return accessibilityConfiguration() ? accessibilityConfiguration()->enabled() : false;
 }
 
+bool EngravingConfiguration::doNotSaveEIDsForBackCompat() const
+{
+    return settings()->value(DO_NOT_SAVE_EIDS_FOR_BACK_COMPAT).toBool();
+}
+
+void EngravingConfiguration::setDoNotSaveEIDsForBackCompat(bool doNotSave)
+{
+    settings()->setSharedValue(DO_NOT_SAVE_EIDS_FOR_BACK_COMPAT, Val(doNotSave));
+}
+
 bool EngravingConfiguration::guitarProImportExperimental() const
 {
     return guitarProConfiguration() ? guitarProConfiguration()->experimental() : false;
 }
 
-bool EngravingConfiguration::useStretchedBends() const
+bool EngravingConfiguration::experimentalGuitarBendImport() const
 {
-    return guitarProImportExperimental();
+    return m_experimentalGuitarBendImport;
+}
+
+void EngravingConfiguration::setExperimentalGuitarBendImport(bool enabled)
+{
+    m_experimentalGuitarBendImport = enabled;
 }
 
 bool EngravingConfiguration::shouldAddParenthesisOnStandardStaff() const

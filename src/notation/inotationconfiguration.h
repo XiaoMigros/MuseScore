@@ -73,9 +73,6 @@ public:
     virtual QColor borderColor() const = 0;
     virtual int borderWidth() const = 0;
 
-    virtual QColor anchorColor() const = 0;
-    virtual muse::async::Channel<QColor> anchorColorChanged() const = 0;
-
     virtual QColor playbackCursorColor() const = 0;
     virtual QColor loopMarkerColor() const = 0;
     virtual int cursorOpacity() const = 0;
@@ -196,12 +193,21 @@ public:
     virtual muse::ValCh<bool> midiUseWrittenPitch() const = 0;
     virtual void setMidiUseWrittenPitch(bool useWrittenPitch) = 0;
 
-    // TODO: Delete when the new percussion panel is finished
     virtual bool useNewPercussionPanel() const = 0;
     virtual void setUseNewPercussionPanel(bool use) = 0;
+    virtual muse::async::Notification useNewPercussionPanelChanged() const = 0;
 
     virtual bool autoShowPercussionPanel() const = 0;
     virtual void setAutoShowPercussionPanel(bool autoShow) = 0;
+    virtual muse::async::Notification autoShowPercussionPanelChanged() const = 0;
+
+    virtual bool showPercussionPanelPadSwapDialog() const = 0;
+    virtual void setShowPercussionPanelPadSwapDialog(bool show) = 0;
+    virtual muse::async::Notification showPercussionPanelPadSwapDialogChanged() const = 0;
+
+    virtual bool percussionPanelMoveMidiNotesAndShortcuts() const = 0;
+    virtual void setPercussionPanelMoveMidiNotesAndShortcuts(bool move) = 0;
+    virtual muse::async::Notification percussionPanelMoveMidiNotesAndShortcutsChanged() const = 0;
 
     virtual muse::io::path_t styleFileImportPath() const = 0;
     virtual void setStyleFileImportPath(const muse::io::path_t& path) = 0;

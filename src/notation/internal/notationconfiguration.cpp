@@ -93,12 +93,12 @@ static const Settings::Key PIANO_KEYBOARD_NUMBER_OF_KEYS(module_name,  "pianoKey
 
 static const Settings::Key USE_NEW_PERCUSSION_PANEL_KEY(module_name,  "ui/useNewPercussionPanel");
 static const Settings::Key AUTO_SHOW_PERCUSSION_PANEL_KEY(module_name,  "ui/autoShowPercussionPanel");
+static const Settings::Key SHOW_PERCUSSION_PANEL_SWAP_DIALOG(module_name,  "ui/showPercussionPanelPadSwapDialog");
+static const Settings::Key PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS(module_name,  "ui/percussionPanelMoveMidiNotesAndShortcuts");
 
 static const Settings::Key STYLE_FILE_IMPORT_PATH_KEY(module_name, "import/style/styleFile");
 
 static constexpr int DEFAULT_GRID_SIZE_SPATIUM = 2;
-
-static const Settings::Key ANCHOR_COLOR(module_name, "ui/colors/anchorColor");
 
 void NotationConfiguration::init()
 {
@@ -227,18 +227,24 @@ void NotationConfiguration::init()
         m_midiInputUseWrittenPitch.set(val.toBool());
     });
 
-    settings()->setDefaultValue(USE_NEW_PERCUSSION_PANEL_KEY, Val(false));
-    settings()->setDefaultValue(AUTO_SHOW_PERCUSSION_PANEL_KEY, Val(true));
-
-    settings()->setDefaultValue(ANCHOR_COLOR, Val(QColor("#C31989")));
-    settings()->setDescription(ANCHOR_COLOR, muse::qtrc("notation", "Anchor color").toStdString());
-    settings()->setCanBeManuallyEdited(ANCHOR_COLOR, true);
-    settings()->valueChanged(ANCHOR_COLOR).onReceive(nullptr, [this](const Val& val) {
-        m_anchorColorChanged.send(val.toQColor());
+    settings()->setDefaultValue(USE_NEW_PERCUSSION_PANEL_KEY, Val(false)); // TODO: true when new percussion panel is ready
+    settings()->valueChanged(USE_NEW_PERCUSSION_PANEL_KEY).onReceive(this, [this](const Val&) {
+        m_useNewPercussionPanelChanged.notify();
     });
 
-    anchorColorChanged().onReceive(this, [this](const QColor&) {
-        m_foregroundChanged.notify();
+    settings()->setDefaultValue(AUTO_SHOW_PERCUSSION_PANEL_KEY, Val(true));
+    settings()->valueChanged(AUTO_SHOW_PERCUSSION_PANEL_KEY).onReceive(this, [this](const Val&) {
+        m_autoShowPercussionPanelChanged.notify();
+    });
+
+    settings()->setDefaultValue(SHOW_PERCUSSION_PANEL_SWAP_DIALOG, Val(true));
+    settings()->valueChanged(SHOW_PERCUSSION_PANEL_SWAP_DIALOG).onReceive(this, [this](const Val&) {
+        m_showPercussionPanelPadSwapDialogChanged.notify();
+    });
+
+    settings()->setDefaultValue(PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS, Val(true));
+    settings()->valueChanged(PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS).onReceive(this, [this](const Val&) {
+        m_percussionPanelMoveMidiNotesAndShortcutsChanged.notify();
     });
 
     engravingConfiguration()->scoreInversionChanged().onNotify(this, [this]() {
@@ -246,6 +252,10 @@ void NotationConfiguration::init()
     });
 
     engravingConfiguration()->formattingColorChanged().onReceive(this, [this](const Color&) {
+        m_foregroundChanged.notify();
+    });
+
+    engravingConfiguration()->invisibleColorChanged().onReceive(this, [this](const Color&) {
         m_foregroundChanged.notify();
     });
 
@@ -263,16 +273,6 @@ void NotationConfiguration::init()
     context()->currentProjectChanged().onNotify(this, [this]() {
         resetStyleDialogPageIndices();
     });
-}
-
-QColor NotationConfiguration::anchorColor() const
-{
-    return settings()->value(ANCHOR_COLOR).toQColor();
-}
-
-muse::async::Channel<QColor> NotationConfiguration::anchorColorChanged() const
-{
-    return m_anchorColorChanged;
 }
 
 QColor NotationConfiguration::backgroundColor() const
@@ -911,6 +911,11 @@ void NotationConfiguration::setUseNewPercussionPanel(bool use)
     settings()->setSharedValue(USE_NEW_PERCUSSION_PANEL_KEY, Val(use));
 }
 
+Notification NotationConfiguration::useNewPercussionPanelChanged() const
+{
+    return m_useNewPercussionPanelChanged;
+}
+
 bool NotationConfiguration::autoShowPercussionPanel() const
 {
     return settings()->value(AUTO_SHOW_PERCUSSION_PANEL_KEY).toBool();
@@ -919,6 +924,41 @@ bool NotationConfiguration::autoShowPercussionPanel() const
 void NotationConfiguration::setAutoShowPercussionPanel(bool autoShow)
 {
     settings()->setSharedValue(AUTO_SHOW_PERCUSSION_PANEL_KEY, Val(autoShow));
+}
+
+Notification NotationConfiguration::autoShowPercussionPanelChanged() const
+{
+    return m_autoShowPercussionPanelChanged;
+}
+
+bool NotationConfiguration::showPercussionPanelPadSwapDialog() const
+{
+    return settings()->value(SHOW_PERCUSSION_PANEL_SWAP_DIALOG).toBool();
+}
+
+void NotationConfiguration::setShowPercussionPanelPadSwapDialog(bool show)
+{
+    settings()->setSharedValue(SHOW_PERCUSSION_PANEL_SWAP_DIALOG, Val(show));
+}
+
+Notification NotationConfiguration::showPercussionPanelPadSwapDialogChanged() const
+{
+    return m_showPercussionPanelPadSwapDialogChanged;
+}
+
+bool NotationConfiguration::percussionPanelMoveMidiNotesAndShortcuts() const
+{
+    return settings()->value(PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS).toBool();
+}
+
+void NotationConfiguration::setPercussionPanelMoveMidiNotesAndShortcuts(bool move)
+{
+    settings()->setSharedValue(PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS, Val(move));
+}
+
+Notification NotationConfiguration::percussionPanelMoveMidiNotesAndShortcutsChanged() const
+{
+    return m_percussionPanelMoveMidiNotesAndShortcutsChanged;
 }
 
 void NotationConfiguration::setPianoKeyboardNumberOfKeys(int number)

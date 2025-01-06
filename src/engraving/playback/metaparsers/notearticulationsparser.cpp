@@ -194,18 +194,16 @@ void NoteArticulationsParser::parseNoteHead(const Note* note, const RenderingCon
 
 void NoteArticulationsParser::parseSpanners(const Note* note, const RenderingContext& ctx, mpe::ArticulationMap& result)
 {
-    const Score* score = note->score();
-
     for (const Spanner* spanner : note->spannerFor()) {
         int spannerFrom = spanner->tick().ticks();
         int spannerTo = spannerFrom + std::abs(spanner->ticks().ticks());
         int spannerDurationTicks = spannerTo - spannerFrom;
 
         if (spannerDurationTicks == 0) {
-            continue;
+            spannerDurationTicks = ctx.nominalDurationTicks;
         }
 
-        auto spannerTnD = timestampAndDurationFromStartAndDurationTicks(score, spannerFrom, spannerDurationTicks, 0);
+        auto spannerTnD = timestampAndDurationFromStartAndDurationTicks(ctx.score, spannerFrom, spannerDurationTicks, 0);
 
         RenderingContext spannerContext = ctx;
         spannerContext.nominalTimestamp = spannerTnD.timestamp;

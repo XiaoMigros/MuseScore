@@ -56,14 +56,10 @@
 #include "engraving/dom/stafftext.h"
 #include "engraving/dom/stafftype.h"
 #include "engraving/dom/stringdata.h"
-#include "engraving/dom/stretchedbend.h"
 #include "types/symid.h"
-#include "engraving/dom/tempotext.h"
-#include "engraving/dom/text.h"
 #include "engraving/dom/tie.h"
 #include "engraving/dom/timesig.h"
 #include "engraving/dom/tremolosinglechord.h"
-#include "engraving/dom/tremolobar.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/volta.h"
 #include "engraving/dom/fretcircle.h"
@@ -853,6 +849,10 @@ void GuitarPro5::readMeasures(int /*startingTempo*/)
 bool GuitarPro5::read(IODevice* io)
 {
     m_continiousElementsBuilder = std::make_unique<ContiniousElementsBuilder>(score);
+    if (engravingConfiguration()->experimentalGuitarBendImport()) {
+        m_guitarBendImporter = std::make_unique<GuitarBendImporter>(score);
+    }
+
     f = io;
 
     readInfo();
@@ -1087,7 +1087,9 @@ bool GuitarPro5::read(IODevice* io)
     }
 
     m_continiousElementsBuilder->addElementsToScore();
-    StretchedBend::prepareBends(m_stretchedBends);
+    if (engravingConfiguration()->experimentalGuitarBendImport()) {
+        m_guitarBendImporter->applyBendsToChords();
+    }
 
     return true;
 }
@@ -1137,7 +1139,6 @@ GuitarPro::ReadNoteResult GuitarPro5::readNoteEffects(Note* note)
         int grace_pitch = note->staff()->part()->instrument()->stringData()->getPitch(note->string(), fret, nullptr);
 
         auto gnote = score->setGraceNote(note->chord(), grace_pitch, note_type, grace_len);
-        score->deselect(gnote);
 
         // gp5 not supports more than one grace note,
         // so it's always should be shown as eight note

@@ -60,7 +60,6 @@ public:
 
     Color defaultColor() const override;
     Color scoreInversionColor() const override;
-    Color invisibleColor() const override;
     Color lassoColor() const override;
     Color warningColor() const override;
     Color warningSelectedColor() const override;
@@ -90,6 +89,12 @@ public:
     Color formattingColor() const override;
     muse::async::Channel<Color> formattingColorChanged() const override;
 
+    Color frameColor() const override;
+    muse::async::Channel<Color> frameColorChanged() const override;
+
+    Color invisibleColor() const override;
+    muse::async::Channel<Color> invisibleColorChanged() const override;
+
     Color unlinkedColor() const override;
     muse::async::Channel<Color> unlinkedColorChanged() const override;
 
@@ -99,8 +104,12 @@ public:
 
     bool isAccessibleEnabled() const override;
 
+    bool doNotSaveEIDsForBackCompat() const override;
+    void setDoNotSaveEIDsForBackCompat(bool doNotSave) override;
+
     bool guitarProImportExperimental() const override;
-    bool useStretchedBends() const override;
+    bool experimentalGuitarBendImport() const override;
+    void setExperimentalGuitarBendImport(bool enabled) override;
     bool shouldAddParenthesisOnStandardStaff() const override;
     bool negativeFretsAllowed() const override;
     bool crossNoteHeadAlwaysBlack() const override;
@@ -114,11 +123,14 @@ private:
     muse::async::Channel<voice_idx_t, Color> m_voiceColorChanged;
     muse::async::Notification m_scoreInversionChanged;
     muse::async::Channel<Color> m_formattingColorChanged;
+    muse::async::Channel<Color> m_frameColorChanged;
+    muse::async::Channel<Color> m_invisibleColorChanged;
     muse::async::Channel<Color> m_unlinkedColorChanged;
 
     muse::ValNt<DebuggingOptions> m_debuggingOptions;
 
     bool m_multiVoice = false;
+    bool m_experimentalGuitarBendImport = false;
 };
 }
 
