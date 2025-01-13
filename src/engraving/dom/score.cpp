@@ -156,7 +156,7 @@ Score::Score(const modularity::ContextPtr& iocCtx)
     }
 
     Score::validScores.insert(this);
-    m_masterScore = 0;
+    m_masterScore = nullptr;
 
     m_engravingFont = engravingFonts()->fontByName("Leland");
 
@@ -180,6 +180,7 @@ Score::Score(MasterScore* parent, bool forcePartStyle /* = true */)
 {
     Score::validScores.insert(this);
     m_masterScore = parent;
+
     if (DefaultStyle::defaultStyleForParts()) {
         m_style = *DefaultStyle::defaultStyleForParts();
     } else {
@@ -251,6 +252,9 @@ Score::~Score()
     }
 
     m_spanner.clear();
+
+    muse::DeleteAll(m_systemLocks.allLocks());
+    m_systemLocks.clear();
 
     muse::DeleteAll(m_parts);
     m_parts.clear();
@@ -561,6 +565,10 @@ void Score::rebuildTempoAndTimeSigMaps(Measure* measure, std::optional<BeatsPerS
                 } else if (e->isTempoText()) {
                     TempoText* tt = toTempoText(e);
 
+                    if (!tt->playTempoText()) {
+                        continue;
+                    }
+
                     if (tt->isNormal() && !tt->isRelative() && !tempoPrimo) {
                         tempoPrimo = tt->tempo();
                     } else if (tt->isRelative()) {
@@ -631,7 +639,7 @@ void Score::fixAnacrusisTempo(const std::vector<Measure*>& measures) const
         for (const Segment& s : m->segments()) {
             if (s.isChordRestType()) {
                 for (EngravingItem* e : s.annotations()) {
-                    if (e->isTempoText()) {
+                    if (e->isTempoText() && toTempoText(e)->playTempoText()) {
                         return toTempoText(e);
                     }
                 }
@@ -4334,7 +4342,7 @@ void Score::cmdSelectSection()
 
 void Score::undo(UndoCommand* cmd, EditData* ed) const
 {
-    undoStack()->push(cmd, ed);
+    undoStack()->pushAndPerform(cmd, ed);
 }
 
 //---------------------------------------------------------
@@ -5728,6 +5736,9 @@ void Score::connectTies(bool silent)
             }
             Chord* c = toChord(e);
             for (Note* n : c->notes()) {
+                if (n->laissezVib()) {
+                    continue;
+                }
                 // connect a tie without end note
                 Tie* tie = n->tieFor();
                 if (tie && !tie->endNote()) {
@@ -5885,6 +5896,22 @@ void Score::autoUpdateSpatium()
 
     style().setSpatium(targetSpatium);
     createPaddingTable();
+}
+
+void Score::addSystemLock(const SystemLock* lock)
+{
+    m_systemLocks.add(lock);
+
+    lock->startMB()->triggerLayout();
+    lock->endMB()->triggerLayout();
+}
+
+void Score::removeSystemLock(const SystemLock* lock)
+{
+    m_systemLocks.remove(lock);
+
+    lock->startMB()->triggerLayout();
+    lock->endMB()->triggerLayout();
 }
 
 //---------------------------------------------------------

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="4.40">
+<museScore version="4.50">
   <Score>
     <Division>480</Division>
     <Style>
@@ -189,10 +189,8 @@
               <tpc>15</tpc>
               <Spanner type="Glissando">
                 <Glissando>
-                  <text>gliss.</text>
                   <linkedMain/>
                   <diagonal>1</diagonal>
-                  <anchor>3</anchor>
                   </Glissando>
                 <next>
                   <location>
@@ -482,10 +480,8 @@
               <tpc>15</tpc>
               <Spanner type="Glissando">
                 <Glissando>
-                  <text>gliss.</text>
                   <linkedMain/>
                   <diagonal>1</diagonal>
-                  <anchor>3</anchor>
                   </Glissando>
                 <next>
                   <location>
@@ -803,11 +799,9 @@
                 <tpc>15</tpc>
                 <Spanner type="Glissando">
                   <Glissando>
-                    <text>gliss.</text>
                     <linked>
                       </linked>
                     <diagonal>1</diagonal>
-                    <anchor>3</anchor>
                     </Glissando>
                   <next>
                     <location>
@@ -1179,11 +1173,9 @@
                 <tpc>15</tpc>
                 <Spanner type="Glissando">
                   <Glissando>
-                    <text>gliss.</text>
                     <linked>
                       </linked>
                     <diagonal>1</diagonal>
-                    <anchor>3</anchor>
                     </Glissando>
                   <next>
                     <location>

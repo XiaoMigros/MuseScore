@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="4.40">
+<museScore version="4.50">
   <Score>
     <Division>480</Division>
     <Style>
@@ -33,6 +33,7 @@
         <trackName></trackName>
         <instrumentId>voice.vocals</instrumentId>
         <Channel>
+          <program value="52"/>
           </Channel>
         </Instrument>
       </Part>

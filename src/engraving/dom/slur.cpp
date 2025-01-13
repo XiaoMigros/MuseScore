@@ -151,6 +151,12 @@ bool SlurSegment::edit(EditData& ed)
         return false;
     }
     if (cr && cr != e1) {
+        if (cr->staff() != e->staff() && (cr->staffType()->isTabStaff() || e->staffType()->isTabStaff())) {
+            return false; // Cross-staff slurs don't make sense for TAB staves
+        }
+        if (cr->staff()->isLinked(e->staff())) {
+            return false; // Don't allow slur to cross into staff that's linked to this
+        }
         changeAnchor(ed, cr);
     }
     return true;
@@ -172,7 +178,7 @@ void SlurSegment::changeAnchor(EditData& ed, EngravingItem* element)
     // save current start/end elements
     for (EngravingObject* e : spanner()->linkList()) {
         Spanner* sp = toSpanner(e);
-        score()->undoStack()->push1(new ChangeStartEndSpanner(sp, sp->startElement(), sp->endElement()));
+        score()->undoStack()->pushWithoutPerforming(new ChangeStartEndSpanner(sp, sp->startElement(), sp->endElement()));
     }
 
     if (ed.curGrip == Grip::START) {
@@ -224,8 +230,10 @@ void SlurSegment::changeAnchor(EditData& ed, EngravingItem* element)
                     }
                 }
             }
-            score()->undo(new ChangeStartEndSpanner(sp, se, ee));
-            renderer()->layoutItem(sp);
+            if (se && ee) {
+                score()->undo(new ChangeStartEndSpanner(sp, se, ee));
+                renderer()->layoutItem(sp);
+            }
         }
     }
 
@@ -317,6 +325,21 @@ bool SlurSegment::isEdited() const
 bool SlurSegment::isEndPointsEdited() const
 {
     return !(m_ups[int(Grip::START)].off.isNull() && m_ups[int(Grip::END)].off.isNull());
+}
+
+double SlurSegment::endWidth() const
+{
+    return style().styleMM(Sid::slurEndWidth);
+}
+
+double SlurSegment::midWidth() const
+{
+    return style().styleMM(Sid::slurMidWidth);
+}
+
+double SlurSegment::dottedWidth() const
+{
+    return style().styleMM(Sid::slurDottedWidth);
 }
 
 Slur::Slur(const Slur& s)

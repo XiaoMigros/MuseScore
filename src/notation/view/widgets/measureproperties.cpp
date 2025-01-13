@@ -128,6 +128,7 @@ mu::engraving::Measure* getPrevMeasure(mu::engraving::Measure* m)
 
 void MeasurePropertiesDialog::gotoNextMeasure()
 {
+    apply();
     if (getNextMeasure(m_measure)) {
         setMeasure(getNextMeasure(m_measure));
     }
@@ -142,6 +143,7 @@ void MeasurePropertiesDialog::gotoNextMeasure()
 
 void MeasurePropertiesDialog::gotoPreviousMeasure()
 {
+    apply();
     if (getPrevMeasure(m_measure)) {
         setMeasure(getPrevMeasure(m_measure));
     }
@@ -313,7 +315,7 @@ void MeasurePropertiesDialog::apply()
 
     mu::engraving::Score* score = m_measure->score();
 
-    m_notation->undoStack()->prepareChanges();
+    m_notation->undoStack()->prepareChanges(muse::TranslatableString("undoableAction", "Edit measure properties"));
     bool propertiesChanged = false;
     for (size_t staffIdx = 0; staffIdx < score->nstaves(); ++staffIdx) {
         bool v = visible(static_cast<int>(staffIdx));

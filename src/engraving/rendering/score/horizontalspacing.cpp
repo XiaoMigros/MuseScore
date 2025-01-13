@@ -26,6 +26,7 @@
 #include "dom/chord.h"
 #include "dom/engravingitem.h"
 #include "dom/glissando.h"
+#include "dom/laissezvib.h"
 #include "dom/lyrics.h"
 #include "dom/note.h"
 #include "dom/rest.h"
@@ -241,14 +242,14 @@ std::vector<HorizontalSpacing::SegmentPosition> HorizontalSpacing::spaceSegments
     std::vector<SegmentPosition> placedSegments;
     placedSegments.reserve(segList.size());
 
-    for (int i = 0; i < segList.size(); ++i) {
+    for (size_t i = 0; i < segList.size(); ++i) {
         Segment* curSeg = segList[i];
         if (ignoreSegmentForSpacing(curSeg)) {
             placedSegments.emplace_back(curSeg, ctx.xCur);
             continue;
         }
 
-        if (i < startSegIdx) {
+        if (static_cast<int>(i) < startSegIdx) {
             placedSegments.emplace_back(curSeg, curSeg->xPosInSystemCoords());
             ctx.xCur = curSeg->xPosInSystemCoords() + curSeg->width();
             continue;
@@ -319,8 +320,8 @@ void HorizontalSpacing::spaceAgainstPreviousSegments(Segment* segment, std::vect
         checkLyricsAgainstLeftMargin(segment, x, ctx);
     }
 
-    for (int i = static_cast<int>(prevSegPositions.size()) - 1; i >= 0; --i) {
-        const SegmentPosition& prevSegPos = prevSegPositions[i];
+    for (size_t i = prevSegPositions.size(); i > 0; --i) {
+        const SegmentPosition& prevSegPos = prevSegPositions[i - 1];
         Segment* prevSeg = prevSegPos.segment;
         double xPrevSeg = prevSegPos.xPosInSystemCoords;
 
@@ -339,7 +340,7 @@ void HorizontalSpacing::spaceAgainstPreviousSegments(Segment* segment, std::vect
             if (prevCRSegmentsCount > 0) {
                 double spaceIncrease = (x - ctx.xCur) / prevCRSegmentsCount;
                 double xMovement = spaceIncrease;
-                for (int j = i + 1; j < prevSegPositions.size(); ++j) {
+                for (size_t j = i; j < prevSegPositions.size(); ++j) {
                     SegmentPosition& segPos = prevSegPositions[j];
                     segPos.xPosInSystemCoords += xMovement;
                     if (segPos.segment->isChordRestType()) {
@@ -433,9 +434,9 @@ void HorizontalSpacing::checkLyricsAgainstRightMargin(std::vector<SegmentPositio
 {
     int chordRestSegmentsCount = 0;
 
-    for (int i = int(segPositions.size()) - 1; i > 0; --i) {
+    for (size_t i = segPositions.size(); i > 1; --i) {
         double systemEdge = segPositions.back().xPosInSystemCoords + segPositions.back().segment->minRight();
-        SegmentPosition& segPos = segPositions[i];
+        SegmentPosition& segPos = segPositions[i - 1];
         double x = segPos.xPosInSystemCoords;
         Segment* seg = segPos.segment;
         if (!seg->measure()->isLastInSystem()) {
@@ -458,7 +459,7 @@ void HorizontalSpacing::checkLyricsAgainstRightMargin(std::vector<SegmentPositio
             double lyricsOvershoot = xMaxLyrics - systemEdge;
             double spaceIncrease = lyricsOvershoot / chordRestSegmentsCount;
             double xMovement = spaceIncrease;
-            for (int j = i + 1; j < segPositions.size(); ++j) {
+            for (size_t j = i; j < segPositions.size(); ++j) {
                 SegmentPosition& sp = segPositions[j];
                 sp.xPosInSystemCoords += xMovement;
                 if (sp.segment->isChordRestType()) {
@@ -505,7 +506,7 @@ void HorizontalSpacing::moveRightAlignedSegments(std::vector<SegmentPosition>& p
 
 double HorizontalSpacing::chordRestSegmentNaturalWidth(Segment* segment, HorizontalSpacingContext& ctx)
 {
-    double durationStretch = segment->computeDurationStretch(segment->prev(SegmentType::ChordRest));
+    double durationStretch = computeSegmentDurationStretch(segment, segment->prev(SegmentType::ChordRest));
 
     Measure* measure = segment->measure();
     double userStretch = std::clamp(measure->userStretch(), 0.1, 10.0); // TODO: enforce via UI, not here
@@ -522,6 +523,94 @@ double HorizontalSpacing::chordRestSegmentNaturalWidth(Segment* segment, Horizon
     double naturalWidth = minNoteSpace * segTotalStretch * ctx.stretchReduction * QUARTER_NOTE_SPACING;
 
     return naturalWidth;
+}
+
+double HorizontalSpacing::computeSegmentDurationStretch(const Segment* curSeg, const Segment* prevSeg)
+{
+    if (curSeg->isMMRestSegment()) {
+        return durationStretchForMMRests(curSeg);
+    }
+
+    Fraction segTicks = curSeg->ticks();
+    Fraction shortestCR = curSeg->shortestChordRest();
+    Fraction prevShortestCR = prevSeg ? prevSeg->shortestChordRest() : Fraction(0, 1);
+
+    bool hasAdjacent = curSeg->isChordRestType() && shortestCR == segTicks;
+    bool prevHasAdjacent = prevSeg && (prevSeg->isChordRestType() && prevShortestCR == prevSeg->ticks());
+
+    double durStretch;
+    const MStyle& style = curSeg->style();
+    double slope = style.styleD(Sid::measureSpacing);
+
+    if (hasAdjacent || curSeg->measure()->isMMRest()) {
+        durStretch = durationStretchForTicks(slope, segTicks);
+    } else {
+        // Polyrythms
+        if (prevSeg && !prevHasAdjacent && prevShortestCR < shortestCR) {
+            durStretch = durationStretchForTicks(slope, prevShortestCR) * (segTicks / prevShortestCR).toDouble();
+        } else {
+            durStretch = durationStretchForTicks(slope, shortestCR) * (segTicks / shortestCR).toDouble();
+        }
+    }
+
+    if (style.styleB(Sid::scaleRythmicSpacingForSmallNotes) && needsCueSizeSpacing(curSeg)) {
+        durStretch *= curSeg->style().styleD(Sid::smallNoteMag);
+    }
+
+    return durStretch;
+}
+
+double HorizontalSpacing::durationStretchForMMRests(const Segment* segment)
+{
+    static constexpr Fraction QUARTER = Fraction(1, 4);
+    static constexpr int MIN_MMREST_COUNT  = 2;
+
+    const MStyle& style = segment->style();
+    const Measure* measure = segment->measure();
+
+    Fraction timeSig = measure->timesig();
+    bool constantWidth = style.styleB(Sid::mmRestConstantWidth);
+    int mmRestWidthIncrementCap = style.styleI(Sid::mmRestMaxWidthIncrease);
+
+    Fraction baseDuration = constantWidth ? style.styleI(Sid::mmRestReferenceWidth) * QUARTER : timeSig;
+    Fraction durationIncrement = constantWidth ? QUARTER : Fraction(1, timeSig.denominator());
+    int incrementCount = std::max(measure->mmRestCount() - MIN_MMREST_COUNT, 0);
+    incrementCount = std::min(incrementCount, mmRestWidthIncrementCap);
+
+    Fraction resultDuration = baseDuration + incrementCount * durationIncrement;
+
+    return durationStretchForTicks(style.styleD(Sid::measureSpacing), resultDuration);
+}
+
+double HorizontalSpacing::durationStretchForTicks(double slope, const Fraction& ticks)
+{
+    static constexpr Fraction REFERENCE_DURATION = Fraction(1, 4);
+
+    Fraction durationRatio = ticks / REFERENCE_DURATION;
+
+    return pow(slope, log2(durationRatio.toDouble()));
+}
+
+bool HorizontalSpacing::needsCueSizeSpacing(const Segment* segment)
+{
+    IF_ASSERT_FAILED(segment->isChordRestType()) {
+        return false;
+    }
+
+    bool hasCueSizedCR = false;
+    for (EngravingItem* item : segment->elist()) {
+        if (!item) {
+            continue;
+        }
+        const ChordRest* cr = toChordRest(item);
+        if (cr->isSmall()) {
+            hasCueSizedCR = true;
+        } else if (cr->actualTicks() == segment->ticks()) {
+            return false;
+        }
+    }
+
+    return hasCueSizedCR;
 }
 
 void HorizontalSpacing::applyCrossBeamSpacingCorrection(Segment* thisSeg, Segment* nextSeg, double& width)
@@ -656,13 +745,16 @@ double HorizontalSpacing::computeMinMeasureWidth(Measure* m)
 
 void HorizontalSpacing::enforceMinimumMeasureWidths(const std::vector<Measure*> measureGroup)
 {
-    for (int i = 0; i < measureGroup.size(); ++i) {
+    for (size_t i = 0; i < measureGroup.size(); ++i) {
         Measure* measure = measureGroup[i];
+        if (measure->isMMRest()) {
+            continue; // minimum mmRest width is already enforced during spacing
+        }
         double minWidth = computeMinMeasureWidth(measure);
         double diff = minWidth - measure->width();
         if (diff > 0) {
             stretchMeasureToTargetWidth(measure, minWidth);
-            for (int j = i + 1; j < measureGroup.size(); ++j) {
+            for (size_t j = i + 1; j < measureGroup.size(); ++j) {
                 measureGroup[j]->mutldata()->moveX(diff);
             }
         }
@@ -954,6 +1046,8 @@ double HorizontalSpacing::minHorizontalDistance(const Segment* f, const Segment*
                     bool straight = toGlissando(attachedLine)->glissandoType() == GlissandoType::STRAIGHT;
                     minLength = straight ? f->style().styleMM(Sid::minStraightGlissandoLength)
                                 : f->style().styleMM(Sid::minWigglyGlissandoLength);
+                } else if (attachedLine->isNoteLine()) {
+                    minLength = f->style().styleMM(Sid::minStraightGlissandoLength);
                 }
                 double tieStartPointX = f->minRight() + headerTieMargin;
                 double notePosX = w + note->pos().x() + toChord(e)->pos().x() + note->headWidth() / 2;
@@ -1084,6 +1178,8 @@ void HorizontalSpacing::computeNotePadding(const Note* note, const EngravingItem
             } else if (laPoint1.line()->isGuitarBend()) {
                 double minBendLength = 2 * note->spatium(); // TODO: style
                 minEndPointsDistance = minBendLength;
+            } else if (laPoint1.line()->isNoteLine()) {
+                minEndPointsDistance = style.styleMM(Sid::minStraightGlissandoLength);
             }
 
             double lapPadding = (laPoint1.pos().x() - note->headWidth()) + minEndPointsDistance - laPoint2.pos().x();

@@ -28,6 +28,7 @@
 #include "mscoreview.h"
 #include "navigate.h"
 #include "score.h"
+#include "dynamic.h"
 #include "lyrics.h"
 
 #include "log.h"
@@ -109,10 +110,10 @@ void TextBase::startEdit(EditData& ed)
     ted->e = this;
     ted->cursor()->startEdit();
 
-    assert(!score()->undoStack()->active());        // make sure we are not in a Cmd
+    assert(!score()->undoStack()->hasActiveCommand()); // make sure we are not in a Cmd
 
     ted->oldXmlText = xmlText();
-    ted->startUndoIdx = score()->undoStack()->getCurIdx();
+    ted->startUndoIdx = score()->undoStack()->currentIndex();
 
     const LayoutData* ldata = this->ldata();
     if (!ldata || ldata->layoutInvalid) {
@@ -157,7 +158,7 @@ void TextBase::endEdit(EditData& ed)
 
     //! NOTE: Current index can be less than the start index if the text element is newly added and immediately removed through
     //! undo (the "add element" command will have been popped from the stack before the calling of this method)...
-    const bool textWasEdited = undo->getCurIdx() > ted->startUndoIdx;
+    const bool textWasEdited = undo->currentIndex() > ted->startUndoIdx;
     if (textWasEdited) {
         undo->mergeCommands(ted->startUndoIdx);
         undo->last()->filterChildren(Filter::TextEdit, this);
@@ -204,9 +205,9 @@ void TextBase::endEdit(EditData& ed)
             Filter::Link,
         };
 
-        if (newlyAdded && !undo->current()->hasUnfilteredChildren(filters, this)) {
+        if (newlyAdded && !undo->activeCommand()->hasUnfilteredChildren(filters, this)) {
             for (Filter f : filters) {
-                undo->current()->filterChildren(f, this);
+                undo->activeCommand()->filterChildren(f, this);
             }
 
             ted->setDeleteText(true); // mark this text element for deletion
@@ -230,6 +231,10 @@ void TextBase::endEdit(EditData& ed)
 
         // change property to set text to actual value again - this also changes text of linked elements
         undoChangeProperty(Pid::TEXT, actualXmlText);
+
+        if (isDynamic()) {
+            undoChangeProperty(Pid::DYNAMIC_TYPE, actualXmlText);
+        }
 
         renderer()->layoutText1(this);
     }
@@ -711,10 +716,10 @@ bool TextBase::edit(EditData& ed)
         }
     }
     if (!s.isEmpty()) {
+        deleteSelectedText(ed);
         if (currentFormat->fontFamily() == u"ScoreText") {
             currentFormat->setFontFamily(propertyDefault(Pid::FONT_FACE).value<String>());
         }
-        deleteSelectedText(ed);
         score()->undo(new InsertText(m_cursor, s), &ed);
 
         int startPosition = cursor->currentPosition();
@@ -907,7 +912,7 @@ void TextBase::paste(EditData& ed, const String& txt)
     bool symState = false;
     CharFormat format = *static_cast<TextEditData*>(ed.getData(this).get())->cursor()->format();
 
-    score()->startCmd();
+    score()->startCmd(TranslatableString("undoableAction", "Paste text"));
     for (size_t i = 0; i < txt.size(); i++) {
         Char c = txt.at(i);
         if (state == 0) {

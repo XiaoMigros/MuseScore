@@ -1299,7 +1299,7 @@
     <message>
         <location filename="../../src/notation/view/widgets/editstaff.ui" line="651"/>
         <source>Interval from written to sounding pitch</source>
-        <translation type="unfinished"/>
+        <translation>Jarak nada dari yang tertulis ke titinada yang berbunyi</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstaff.ui" line="654"/>
@@ -1474,7 +1474,7 @@
     <message>
         <location filename="../../src/notation/view/widgets/editstafftype.ui" line="532"/>
         <source>Marks are drawn:</source>
-        <translation type="unfinished"/>
+        <translation>Tanda-tandanya tertulis:</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstafftype.ui" line="548"/>
@@ -1704,7 +1704,7 @@
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="13954"/>
         <source>Edit text style</source>
-        <translation type="unfinished"/>
+        <translation>Edit gaya teks</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="14072"/>
@@ -1791,7 +1791,7 @@
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="8174"/>
         <source>Hairpins</source>
-        <translation type="unfinished"/>
+        <translation>Penjepit rambut</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="199"/>
@@ -2248,7 +2248,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="884"/>
         <source>Reset &apos;Min. vertical distance&apos; value</source>
-        <translation>Reset nilai &apos;Jarak vertikal min.&apos;</translation>
+        <translation>Atur ulang nilai &apos;Jarak vertikal min.&apos;</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="894"/>
@@ -2417,7 +2417,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="94"/>
         <source>Clefs, key &amp; time signatures</source>
-        <translation type="unfinished"/>
+        <translation>Klef, tanda kunci, dan tanda birama</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="357"/>
@@ -2713,7 +2713,7 @@ space unit</extracomment>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3832"/>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3899"/>
         <source>Visibility</source>
-        <translation type="unfinished"/>
+        <translation>Visibilitas</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3839"/>
@@ -2748,7 +2748,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3893"/>
         <source>Key signatures</source>
-        <translation type="unfinished"/>
+        <translation>Tanda kunci</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3906"/>
@@ -2763,7 +2763,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3920"/>
         <source>Show courtesy key signatures</source>
-        <translation type="unfinished"/>
+        <translation>Tampilkan tanda kunci bantu</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3930"/>
@@ -2773,7 +2773,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3936"/>
         <source>Show courtesy time signatures</source>
-        <translation type="unfinished"/>
+        <translation>Tampilkan tanda birama bantu</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4006"/>
@@ -2788,23 +2788,23 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="149"/>
         <source>Dynamics &amp; hairpins</source>
-        <translation type="unfinished"/>
+        <translation>Dinamika dan jepitan rambut</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="587"/>
         <source>Instrument names</source>
-        <translation type="unfinished"/>
+        <translation>Nama-nama instrumen</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="593"/>
         <source>Hide if there is only 1 instrument</source>
-        <translation type="unfinished"/>
+        <translation>Sembunyikan jika hanya ada 1 instrumen</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="602"/>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="622"/>
         <source>Long name</source>
-        <translation type="unfinished"/>
+        <translation>Nama lengkap</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="612"/>
@@ -2820,7 +2820,7 @@ space unit</extracomment>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="642"/>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="677"/>
         <source>Hide</source>
-        <translation type="unfinished"/>
+        <translation>Sembunyikan</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="649"/>
@@ -2836,7 +2836,7 @@ space unit</extracomment>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="663"/>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="670"/>
         <source>Short name</source>
-        <translation type="unfinished"/>
+        <translation>Nama singkat</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="3990"/>
@@ -2856,7 +2856,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4066"/>
         <source>Tuning</source>
-        <translation type="unfinished"/>
+        <translation>Penyetelan</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4076"/>
@@ -2866,17 +2866,17 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4081"/>
         <source>Semitones offset</source>
-        <translation type="unfinished"/>
+        <translation>Offset semiton</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4086"/>
         <source>Cents offset</source>
-        <translation type="unfinished"/>
+        <translation>Offset sen</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4103"/>
         <source>Only for a change to C Maj / A min</source>
-        <translation type="unfinished"/>
+        <translation>Hanya untuk perubahan ke C mayor / A minor</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4110"/>
@@ -3597,7 +3597,7 @@ first note of the system</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="6687"/>
         <source>Properties</source>
-        <translation type="unfinished"/>
+        <translation>Properti</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="6693"/>
@@ -4375,7 +4375,7 @@ first note of the system</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12461"/>
         <source>of font height</source>
-        <translation type="unfinished"/>
+        <translation>dari tinggi teks</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="8138"/>
@@ -4458,12 +4458,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12566"/>
         <source>Top</source>
-        <translation type="unfinished"/>
+        <translation>Atas</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12573"/>
         <source>Bottom</source>
-        <translation type="unfinished"/>
+        <translation>Bawah</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12589"/>
@@ -4473,7 +4473,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12596"/>
         <source>Historic</source>
-        <translation type="unfinished"/>
+        <translation>Bersejarah</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12662"/>
@@ -4550,7 +4550,7 @@ text x-height):</source>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12890"/>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12962"/>
         <source>Standard</source>
-        <translation type="unfinished"/>
+        <translation>Standar</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12903"/>
@@ -4560,12 +4560,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12913"/>
         <source>Full German</source>
-        <translation type="unfinished"/>
+        <translation>Jerman Penuh</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12923"/>
         <source>Solfeggio</source>
-        <translation type="unfinished"/>
+        <translation>Solmisasi</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="12933"/>
@@ -4677,12 +4677,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="718"/>
         <source>Swing settings</source>
-        <translation type="unfinished"/>
+        <translation>Pengaturan ayunan</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="743"/>
         <source>Eighth note</source>
-        <translation>Not 1/8</translation>
+        <translation>Not seperdelapan</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="750"/>
@@ -4702,7 +4702,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="4097"/>
         <source>♮ in key signatures</source>
-        <translation type="unfinished"/>
+        <translation>♮ dalam tanda kunci</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="5108"/>
@@ -4774,7 +4774,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="13592"/>
         <source>Palm mute (P.M.)</source>
-        <translation type="unfinished"/>
+        <translation>Peredaman telapak tangan (P.M.)</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="13754"/>
@@ -5267,7 +5267,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/measureproperties.ui" line="306"/>
         <source>Play count:</source>
-        <translation type="unfinished"/>
+        <translation>Hitung putar:</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/measureproperties.ui" line="351"/>
@@ -5437,12 +5437,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="180"/>
         <source>Width:</source>
-        <translation type="unfinished"/>
+        <translation>Lebar:</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="193"/>
         <source>Scaling</source>
-        <translation type="unfinished"/>
+        <translation>Penskalaan</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="199"/>
@@ -5463,12 +5463,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="252"/>
         <source>Inch (in)</source>
-        <translation type="unfinished"/>
+        <translation>Inci (in)</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="259"/>
         <source>Millimeter (mm)</source>
-        <translation type="unfinished"/>
+        <translation>Milimeter (mm)</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="288"/>
@@ -5496,13 +5496,13 @@ text x-height):</source>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="338"/>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="420"/>
         <source>Bottom</source>
-        <translation type="unfinished"/>
+        <translation>Bawah</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="373"/>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="474"/>
         <source>Top</source>
-        <translation type="unfinished"/>
+        <translation>Atas</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/pagesettings.ui" line="492"/>
@@ -5525,7 +5525,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/view/widgets/realizeharmonydialog.ui" line="41"/>
         <source>Chord symbols to be realized:</source>
-        <translation type="unfinished"/>
+        <translation>Simbol akor untuk diwujudkan:</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/realizeharmonydialog.ui" line="95"/>
@@ -5734,7 +5734,7 @@ text x-height):</source>
         <location filename="../../src/notation/view/widgets/stafftextpropertiesdialog.ui" line="27"/>
         <location filename="../../src/notation/view/widgets/stafftextpropertiesdialog.ui" line="33"/>
         <source>Swing settings</source>
-        <translation type="unfinished"/>
+        <translation>Pengaturan ayunan</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/stafftextpropertiesdialog.ui" line="54"/>
@@ -6563,7 +6563,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="2007"/>
         <source>Note input</source>
-        <translation type="unfinished"/>
+        <translation>Masukan not</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="62"/>
@@ -6793,12 +6793,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="504"/>
         <source>Parts</source>
-        <translation type="unfinished"/>
+        <translation>Bagian</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="511"/>
         <source>Page view</source>
-        <translation type="unfinished"/>
+        <translation>Tampilan halaman</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="525"/>
@@ -7383,12 +7383,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="272"/>
         <source>Move pitch down an octave</source>
-        <translation type="unfinished"/>
+        <translation>Turunkan nada satu oktaf</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="278"/>
         <source>Move pitch up an octave</source>
-        <translation type="unfinished"/>
+        <translation>Naikkan nada satu oktaf</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="284"/>
@@ -7443,12 +7443,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="359"/>
         <source>Select all</source>
-        <translation type="unfinished"/>
+        <translation>Pilih semua</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="365"/>
         <source>Select section</source>
-        <translation type="unfinished"/>
+        <translation>Pilih bagian</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="371"/>
@@ -7478,7 +7478,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="402"/>
         <source>Format style…</source>
-        <translation type="unfinished"/>
+        <translation>Gaya format…</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="408"/>
@@ -7498,7 +7498,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="426"/>
         <source>Transpose…</source>
-        <translation type="unfinished"/>
+        <translation>Transposisikan…</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="432"/>
@@ -7538,7 +7538,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="493"/>
         <source>Copy lyrics</source>
-        <translation type="unfinished"/>
+        <translation>Salin lirik</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="499"/>
@@ -7548,7 +7548,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="512"/>
         <source>Display page view</source>
-        <translation type="unfinished"/>
+        <translation>Tampilkan tampilan halaman</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="518"/>
@@ -7580,40 +7580,40 @@ text x-height):</source>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="545"/>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="546"/>
         <source>Staff/Part properties…</source>
-        <translation type="unfinished"/>
+        <translation>Properti Staf/Bagian...</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="570"/>
         <source>Add/remove system breaks…</source>
-        <translation type="unfinished"/>
+        <translation>Beri/hilangkan pemisah barisan...</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="625"/>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="626"/>
         <source>Add/remove system break</source>
-        <translation type="unfinished"/>
+        <translation>Beri/hilangkan pemisah barisan</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="631"/>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="632"/>
         <source>Add/remove page break</source>
-        <translation type="unfinished"/>
+        <translation>Beri/hilangkan pemisah halaman</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="637"/>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="638"/>
         <source>Add/remove section break</source>
-        <translation type="unfinished"/>
+        <translation>Beri/hilangkan pemisah bagian</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="644"/>
         <source>Split measure before selected note/rest</source>
-        <translation type="unfinished"/>
+        <translation>Pisahkan birama sebelum not/tanda istirahat yang terpilih</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="650"/>
         <source>Join selected measures</source>
-        <translation type="unfinished"/>
+        <translation>Gabungkan birama yang terpilih</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="693"/>
@@ -7703,7 +7703,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="864"/>
         <source>&amp;Unison</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Prim</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="865"/>
@@ -8266,12 +8266,12 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1774"/>
         <source>Move pitch up diatonically</source>
-        <translation type="unfinished"/>
+        <translation>Naikkan nada secara diatonis</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1780"/>
         <source>Move pitch down diatonically</source>
-        <translation type="unfinished"/>
+        <translation>Turunkan nada secara diatonis</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1888"/>
@@ -8840,7 +8840,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="58"/>
         <source>&amp;Full screen</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Layar penuh</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="65"/>
@@ -9260,17 +9260,17 @@ text x-height):</source>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1929"/>
         <source>Transpose up</source>
-        <translation type="unfinished"/>
+        <translation>Transposisi naik</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1935"/>
         <source>Transpose down</source>
-        <translation type="unfinished"/>
+        <translation>Transposisi turun</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1713"/>
         <source>Next syllable</source>
-        <translation type="unfinished"/>
+        <translation>Suku kata berikutnya</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="1971"/>
@@ -10239,7 +10239,13 @@ text x-height):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/HomePage/HomeMenu.qml" line="92"/>
+        <location filename="../../src/appshell/qml/HomePage/HomeMenu.qml" line="90"/>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="86"/>
+        <source>Muse Sounds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/appshell/qml/HomePage/HomeMenu.qml" line="91"/>
         <source>Learn</source>
         <translation type="unfinished"/>
     </message>
@@ -10279,7 +10285,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="180"/>
         <source>Note input</source>
-        <translation type="unfinished"/>
+        <translation>Masukan not</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="209"/>
@@ -10289,17 +10295,17 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="234"/>
         <source>Instruments</source>
-        <translation type="unfinished"/>
+        <translation>Instrumen</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="259"/>
         <source>Properties</source>
-        <translation type="unfinished"/>
+        <translation>Properti</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="281"/>
         <source>Selection filter</source>
-        <translation type="unfinished"/>
+        <translation>Saring pilihan</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="309"/>
@@ -10309,7 +10315,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="343"/>
         <source>Piano keyboard</source>
-        <translation type="unfinished"/>
+        <translation>Piano kibor</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/NotationPage/NotationPage.qml" line="373"/>
@@ -10335,7 +10341,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/internal/applicationactioncontroller.cpp" line="321"/>
         <source>Are you sure you want to revert to factory settings?</source>
-        <translation type="unfinished"/>
+        <translation>Apakah Anda yakin Anda ingin mengembalikan ke setelan pabrik?</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationactioncontroller.cpp" line="322"/>
@@ -10352,7 +10358,7 @@ This action will not delete any of your scores.</source>
     <message>
         <location filename="../../src/appshell/internal/applicationactioncontroller.cpp" line="340"/>
         <source>Would you like to restart MuseScore Studio now?</source>
-        <translation type="unfinished"/>
+        <translation>Apakah Anda ingin memulai ulang MuseScore Studio sekarang?</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationactioncontroller.cpp" line="341"/>
@@ -10367,7 +10373,7 @@ This action will not delete any of your scores.</source>
     <message>
         <location filename="../../src/appshell/internal/startupscenario.cpp" line="190"/>
         <source>The previous session quit unexpectedly.</source>
-        <translation type="unfinished"/>
+        <translation>Sesi sebelumnya keluar tanpa terduga.</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/startupscenario.cpp" line="191"/>
@@ -10407,7 +10413,7 @@ This action will not delete any of your scores.</source>
     <message>
         <location filename="../../src/appshell/view/internal/splashscreen/loadingscreenview.cpp" line="54"/>
         <source>Loading…‎</source>
-        <translation type="unfinished"/>
+        <translation>Memuat…</translation>
     </message>
     <message>
         <location filename="../../src/appshell/view/internal/splashscreen/loadingscreenview.cpp" line="99"/>
@@ -10447,7 +10453,7 @@ This action will not delete any of your scores.</source>
     <message>
         <location filename="../../src/appshell/qml/AboutDialog.qml" line="33"/>
         <source>About MuseScore Studio</source>
-        <translation type="unfinished"/>
+        <translation>Tentang MuseScore Studio</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/AboutDialog.qml" line="85"/>
@@ -10950,7 +10956,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/LanguagesSection.qml" line="92"/>
         <source>Restart required</source>
-        <translation type="unfinished"/>
+        <translation>Perlu mulai ulang</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/MidiDevicesSection.qml" line="42"/>
@@ -11032,7 +11038,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInputSection.qml" line="31"/>
         <location filename="../../src/appshell/view/preferences/preferencesmodel.cpp" line="163"/>
         <source>Note input</source>
-        <translation type="unfinished"/>
+        <translation>Masukan not</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInputSection.qml" line="47"/>
@@ -11541,7 +11547,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     </message>
     <message>
         <location filename="../../src/framework/audio/internal/platform/jack/jackaudiodriver.cpp" line="240"/>
-        <location filename="../../src/framework/audio/internal/platform/lin/linuxaudiodriver.cpp" line="255"/>
+        <location filename="../../src/framework/audio/internal/platform/lin/linuxaudiodriver.cpp" line="265"/>
         <location filename="../../src/framework/audio/internal/platform/osx/osxaudiodriver.mm" line="196"/>
         <location filename="../../src/framework/audio/internal/platform/win/wasapiaudiodriver.cpp" line="218"/>
         <location filename="../../src/framework/audio/internal/platform/win/wincoreaudiodriver.cpp" line="457"/>
@@ -11874,113 +11880,113 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2206"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2210"/>
         <source>Acciaccatura</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2208"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2212"/>
         <source>Appoggiatura</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2212"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2216"/>
         <source>Grace note after</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2216"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2220"/>
         <source>Grace note before</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2218"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2222"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="187"/>
         <source>Note</source>
         <translation>Catatan</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3136"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3174"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3140"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3178"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="747"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="759"/>
         <source>Voice: %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3144"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3148"/>
         <source>(on %1‰ off %2‰)</source>
         <extracomment>Note-on and note-off times relative to note duration, expressed in thousandths (per mille)</extracomment>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3150"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3179"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3154"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3183"/>
         <source>Beat slash</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3150"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3179"/>
-        <source>Rhythm slash</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/engraving/dom/note.cpp" line="3154"/>
         <location filename="../../src/engraving/dom/note.cpp" line="3183"/>
+        <source>Rhythm slash</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/engraving/dom/note.cpp" line="3158"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3187"/>
         <source>%1; String: %2; Fret: %3</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3160"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3164"/>
         <source>%1; Pitch: %2; Duration: %3%4%5</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3189"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3193"/>
         <source>%1 head %2</source>
         <extracomment>head as in note head. %1 is head type (circle, cross, etc.). %2 is pitch (e.g. Db4).</extracomment>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3191"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3195"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="762"/>
         <source>Cross-staff above</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3193"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3197"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="764"/>
         <source>Cross-staff below</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3197"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3201"/>
         <source>too low</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3199"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3203"/>
         <source>too high</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3201"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3205"/>
         <source>too low for amateurs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3203"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3207"/>
         <source>too high for amateurs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/noteentry.cpp" line="411"/>
+        <location filename="../../src/engraving/dom/noteentry.cpp" line="415"/>
         <source>Note input will remove measure repeat</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/noteentry.cpp" line="412"/>
+        <location filename="../../src/engraving/dom/noteentry.cpp" line="416"/>
         <source>This measure contains a measure repeat. If you enter notes here, it will be deleted. Do you want to continue?</source>
         <translation type="unfinished"/>
     </message>
@@ -12026,7 +12032,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/segment.cpp" line="2393"/>
+        <location filename="../../src/engraving/dom/segment.cpp" line="2401"/>
         <source>Annotations:</source>
         <translation type="unfinished"/>
     </message>
@@ -12034,9 +12040,9 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <location filename="../../src/engraving/dom/barline.cpp" line="1226"/>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="1097"/>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="1108"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3229"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3241"/>
-        <location filename="../../src/engraving/dom/segment.cpp" line="2419"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3233"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3245"/>
+        <location filename="../../src/engraving/dom/segment.cpp" line="2427"/>
         <source>Start of %1</source>
         <translation type="unfinished"/>
     </message>
@@ -12044,16 +12050,16 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <location filename="../../src/engraving/dom/barline.cpp" line="1229"/>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="1100"/>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="1110"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3233"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3249"/>
-        <location filename="../../src/engraving/dom/segment.cpp" line="2434"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3237"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3253"/>
+        <location filename="../../src/engraving/dom/segment.cpp" line="2442"/>
         <source>End of %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/engraving/dom/stafftype.cpp" line="1205"/>
         <source>Standard</source>
-        <translation type="unfinished"/>
+        <translation>Standar</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/stafftype.cpp" line="1206"/>
@@ -12795,7 +12801,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="288"/>
         <source>Horizontal frame</source>
-        <translation type="unfinished"/>
+        <translation>Bingkai horizontal</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="289"/>
@@ -13693,37 +13699,37 @@ Fret %1 on strings %2</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1540"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1553"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="170"/>
         <source>Start measure: %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1543"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1556"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="172"/>
         <source>Start displayed measure: %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1546"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1559"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="174"/>
         <source>Start beat: %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1553"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1566"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="177"/>
         <source>End measure: %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1556"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1569"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="179"/>
         <source>End displayed measure: %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1559"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1572"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="181"/>
         <source>End beat: %1</source>
         <translation type="unfinished"/>
@@ -15354,27 +15360,27 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/hairpintype</name>
     <message>
-        <location filename="../../src/engraving/dom/hairpin.cpp" line="771"/>
+        <location filename="../../src/engraving/dom/hairpin.cpp" line="779"/>
         <source>Crescendo hairpin</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/hairpin.cpp" line="773"/>
+        <location filename="../../src/engraving/dom/hairpin.cpp" line="781"/>
         <source>Decrescendo hairpin</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/hairpin.cpp" line="775"/>
+        <location filename="../../src/engraving/dom/hairpin.cpp" line="783"/>
         <source>Crescendo line</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/hairpin.cpp" line="777"/>
+        <location filename="../../src/engraving/dom/hairpin.cpp" line="785"/>
         <source>Decrescendo line</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/hairpin.cpp" line="779"/>
+        <location filename="../../src/engraving/dom/hairpin.cpp" line="787"/>
         <source>Custom</source>
         <translation type="unfinished"/>
     </message>
@@ -16046,7 +16052,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2522"/>
         <source>Standard</source>
-        <translation type="unfinished"/>
+        <translation>Standar</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2523"/>
@@ -18282,7 +18288,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/framework/shortcuts/qml/Muse/Shortcuts/internal/MidiMappingBottomPanel.qml" line="69"/>
         <location filename="../../src/framework/shortcuts/qml/Muse/Shortcuts/internal/ShortcutsTopPanel.qml" line="79"/>
-        <location filename="../../src/framework/uicomponents/qml/Muse/UiComponents/TextInputField.qml" line="263"/>
+        <location filename="../../src/framework/uicomponents/qml/Muse/UiComponents/TextInputField.qml" line="264"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/fretdiagrams/FretDiagramSettings.qml" line="181"/>
         <source>Clear</source>
         <translation>Hapus</translation>
@@ -18807,7 +18813,7 @@ Fret %1 on strings %2</source>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/ProjectUploadedDialog.qml" line="108"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1348"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1370"/>
         <source>Success!</source>
         <translation>Berhasil!</translation>
     </message>
@@ -18891,6 +18897,13 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/symbols/SymbolSettings.qml" line="83"/>
         <source>°</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/framework/cloud/qml/Muse/Cloud/CloudScoresView.qml" line="220"/>
+        <location filename="../../src/framework/learn/qml/Muse/Learn/internal/Playlist.qml" line="142"/>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="172"/>
+        <source>Please check your internet connection or try again later.</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -19809,7 +19822,7 @@ Ruas birama jemputan</translation>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/bends/BendSettings.qml" line="75"/>
         <source>Hide</source>
-        <translation type="unfinished"/>
+        <translation>Sembunyikan</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/bends/BendSettings.qml" line="81"/>
@@ -20459,7 +20472,7 @@ Ruas birama jemputan</translation>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/notes/BeamSettings.qml" line="227"/>
         <source>Force horizontal</source>
-        <translation type="unfinished"/>
+        <translation>Paksakan horizontal</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/notes/BeamSettings.qml" line="254"/>
@@ -21174,7 +21187,7 @@ Ruas birama jemputan</translation>
     <message>
         <location filename="../../src/inspector/models/notation/frames/horizontalframesettingsmodel.cpp" line="34"/>
         <source>Horizontal frame</source>
-        <translation type="unfinished"/>
+        <translation>Bingkai horizontal</translation>
     </message>
     <message>
         <location filename="../../src/inspector/models/notation/frames/textframesettingsmodel.cpp" line="33"/>
@@ -21199,7 +21212,7 @@ Ruas birama jemputan</translation>
     <message>
         <location filename="../../src/inspector/models/notation/instrumentname/instrumentnamesettingsmodel.cpp" line="33"/>
         <source>Instrument names</source>
-        <translation type="unfinished"/>
+        <translation>Nama-nama instrumen</translation>
     </message>
     <message>
         <location filename="../../src/inspector/models/notation/jumps/jumpsettingsmodel.cpp" line="32"/>
@@ -21931,7 +21944,7 @@ Ruas birama jemputan</translation>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsView.qml" line="55"/>
         <location filename="../../src/stubs/instrumentsscene/qml/MuseScore/InstrumentsScene/InstrumentsDialog.qml" line="37"/>
         <source>Instruments</source>
-        <translation type="unfinished"/>
+        <translation>Instrumen</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsView.qml" line="136"/>
@@ -22105,7 +22118,6 @@ Ruas birama jemputan</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/framework/learn/qml/Muse/Learn/internal/Playlist.qml" line="142"/>
         <source>Please check your internet connection or try again later.</source>
         <translation type="unfinished"/>
     </message>
@@ -22194,6 +22206,19 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     </message>
 </context>
 <context>
+    <name>musesounds</name>
+    <message>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/internal/SoundLibraryItem.qml" line="120"/>
+        <source>Get it now</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="167"/>
+        <source>Sorry, we are unable to load these sounds right now</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>network</name>
     <message>
         <location filename="../../src/framework/network/networkerrors.h" line="50"/>
@@ -22241,7 +22266,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/measures/InsertMeasuresPopup.qml" line="86"/>
         <source>At end of score</source>
-        <translation type="unfinished"/>
+        <translation>Pada akhir skor</translation>
     </message>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/EditGridSizeDialog.qml" line="54"/>
@@ -22380,7 +22405,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/PartsTopPanel.qml" line="55"/>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/PartsDialog.qml" line="34"/>
         <source>Parts</source>
-        <translation type="unfinished"/>
+        <translation>Bagian</translation>
     </message>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/PartsTopPanel.qml" line="60"/>
@@ -22478,104 +22503,104 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     </message>
     <message>
         <location filename="../../src/braille/internal/notationbraille.cpp" line="863"/>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="695"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="700"/>
         <source>Note input mode</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/braille/internal/notationbraille.cpp" line="868"/>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="695"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="700"/>
         <source>Normal mode</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="869"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="874"/>
         <source>Cannot create tuplet</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="869"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="874"/>
         <source>Note value is too short</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1299"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1312"/>
         <source>All Supported Files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1300"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1313"/>
         <source>Scalable Vector Graphics</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1301"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1314"/>
         <source>JPEG</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1302"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1315"/>
         <source>PNG Bitmap Graphic</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1303"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1316"/>
         <source>Bitmap</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1304"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1317"/>
         <source>TIFF</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1307"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1320"/>
         <source>Insert Image</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1657"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1670"/>
         <source>MuseScore style files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1658"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1671"/>
         <source>MuseScore style file</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1661"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1674"/>
         <location filename="../../src/notation/view/widgets/editstyle.cpp" line="2344"/>
         <source>Load style</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1662"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1675"/>
         <source>Save style</source>
         <translation>Simpan gaya</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1672"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1685"/>
         <source>The style file could not be loaded.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1677"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1690"/>
         <source>Since this style file is from a different version of MuseScore Studio, your score is not guaranteed to display correctly.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1679"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1692"/>
         <source>Click OK to load anyway.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1693"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1706"/>
         <source>The style file could not be saved.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1694"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1707"/>
         <source>An error occurred.</source>
         <translation type="unfinished"/>
     </message>
@@ -22905,7 +22930,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1305"/>
+        <location filename="../../src/notation/internal/notationactioncontroller.cpp" line="1318"/>
         <location filename="../../src/notation/view/selectionfiltermodel.cpp" line="161"/>
         <source>All</source>
         <translation>Semua</translation>
@@ -22918,7 +22943,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/view/selectionfiltermodel.cpp" line="173"/>
         <source>Hairpins</source>
-        <translation type="unfinished"/>
+        <translation>Penjepit rambut</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/selectionfiltermodel.cpp" line="175"/>
@@ -23014,7 +23039,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="128"/>
         <source>Bottom</source>
-        <translation type="unfinished"/>
+        <translation>Bawah</translation>
     </message>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="139"/>
@@ -23024,7 +23049,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="139"/>
         <source>Top</source>
-        <translation type="unfinished"/>
+        <translation>Atas</translation>
     </message>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="145"/>
@@ -23885,7 +23910,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.cpp" line="791"/>
         <source>Standard</source>
-        <translation type="unfinished"/>
+        <translation>Standar</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.cpp" line="792"/>
@@ -24073,17 +24098,17 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
 <context>
     <name>notation/measureproperties</name>
     <message>
-        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="186"/>
+        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="178"/>
         <source>Measure properties for measure %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="232"/>
+        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="224"/>
         <source>Visible</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="239"/>
+        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="231"/>
         <source>Stemless</source>
         <translation>Tanpa tangkai</translation>
     </message>
@@ -24501,7 +24526,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/palette/view/widgets/keyedit.cpp" line="309"/>
         <location filename="../../src/palette/view/widgets/masterpalette.cpp" line="168"/>
         <source>Key signatures</source>
-        <translation type="unfinished"/>
+        <translation>Tanda kunci</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="319"/>
@@ -25305,7 +25330,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/palette/internal/paletteprovider.cpp" line="337"/>
         <source>Hide</source>
-        <translation type="unfinished"/>
+        <translation>Sembunyikan</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/paletteprovider.cpp" line="338"/>
@@ -27106,13 +27131,18 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1220"/>
+        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1238"/>
         <source>Loading audio samples</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/playback/view/internal/outputresourceitem.cpp" line="15"/>
         <source>No effect</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/playback/view/internal/outputresourceitem.cpp" line="73"/>
+        <source>Get more effects</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -27146,23 +27176,28 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="349"/>
+        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="95"/>
+        <source>Get more sounds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="391"/>
         <source>Bank %1, preset %2</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="403"/>
-        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="462"/>
+        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="445"/>
+        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="504"/>
         <source>Choose automatically</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="445"/>
+        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="487"/>
         <source>Preset %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="454"/>
+        <location filename="../../src/playback/view/internal/inputresourceitem.cpp" line="496"/>
         <source>Bank %1</source>
         <translation type="unfinished"/>
     </message>
@@ -27306,7 +27341,7 @@ failed.</source>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/NewScore/GeneralInfoView.qml" line="70"/>
-        <location filename="../../src/project/internal/notationproject.cpp" line="84"/>
+        <location filename="../../src/project/internal/notationproject.cpp" line="85"/>
         <source>Untitled score</source>
         <translation type="unfinished"/>
     </message>
@@ -27409,106 +27444,106 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="720"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="723"/>
         <source>Do you want to save changes to the score “%1” before closing?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="723"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="726"/>
         <source>Your changes will be lost if you don’t save them.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1664"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1686"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1720"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1742"/>
         <source>Open anyway</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1677"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1733"/>
         <source>This file was saved using a newer version of MuseScore Studio. Please visit &lt;a href=&quot;https://musescore.org&quot;&gt;musescore.org&lt;/a&gt; to obtain the latest version.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1683"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1739"/>
         <source>File “%1” is corrupted</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1698"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1754"/>
         <source>File “%1” is corrupted and cannot be opened</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1699"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1755"/>
         <source>Get help for this issue on musescore.org.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1554"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1701"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1576"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1757"/>
         <source>Get help</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1469"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1551"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1491"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1573"/>
         <source>Your score cannot be uploaded to the cloud</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1470"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1492"/>
         <source>This score has become corrupted and contains errors. You can fix the errors manually, or save the score to your computer and get help for this issue on musescore.org.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1477"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1499"/>
         <source>Save as…</source>
         <translation>Simpan sebagai</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1482"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1518"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1504"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1540"/>
         <source>Revert to last saved</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1503"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1525"/>
         <source>This score has become corrupted and contains errors</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1504"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1526"/>
         <source>You can continue saving it locally, although the file may become unusable. You can try to fix the errors manually, or get help for this issue on musescore.org.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1506"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1528"/>
         <source>You can continue saving it locally, although the file may become unusable. To preserve your score, revert to the last saved version, or fix the errors manually. You can also get help for this issue on musescore.org.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1513"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1535"/>
         <source>Save anyway</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1550"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1572"/>
         <source>Your score cannot be saved</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1552"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1574"/>
         <source>This score is corrupted. You can get help for this issue on musescore.org.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1585"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1641"/>
         <source>Revert to last saved?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1586"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1642"/>
         <source>Your changes will be lost. This action cannot be undone.</source>
         <translation type="unfinished"/>
     </message>
@@ -27523,113 +27558,123 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1676"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1715"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1732"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1771"/>
         <source>Cannot read file %1</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1720"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1776"/>
         <source>This file does not exist or cannot be accessed at the moment.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1684"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1740"/>
         <source>This file contains errors that could cause MuseScore Studio to malfunction.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1723"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1626"/>
+        <source>Try again</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1779"/>
         <source>This file could not be opened. Please make sure that MuseScore Studio has permission to read this file.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1730"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1786"/>
         <source>An error occurred while reading this file.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1783"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1839"/>
         <source>All supported files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1784"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1840"/>
         <source>MuseScore files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1785"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1841"/>
         <source>MusicXML files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1786"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1842"/>
         <source>MIDI files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1787"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1843"/>
         <source>MuseData files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1788"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1844"/>
         <source>Capella files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1789"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1845"/>
         <source>BB files (experimental)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1790"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1846"/>
         <source>Overture / Score Writer files (experimental)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1791"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1847"/>
         <source>Bagpipe Music Writer files (experimental)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1792"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1848"/>
         <source>Guitar Pro files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1793"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1849"/>
         <source>Power Tab Editor files (experimental)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1794"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1850"/>
         <source>MEI files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1795"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1851"/>
         <source>Uncompressed MuseScore folders (experimental)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1796"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1852"/>
         <source>MuseScore developer files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1797"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1853"/>
         <source>MuseScore backup files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1809"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1865"/>
         <source>Open</source>
         <translation>Buka</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectconfiguration.cpp" line="334"/>
+        <location filename="../../src/project/internal/projectconfiguration.cpp" line="123"/>
+        <source>Create backup of file on disk before saving new changes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/projectconfiguration.cpp" line="340"/>
         <source>Untitled</source>
         <translation>Tidak Berjudul</translation>
     </message>
@@ -27791,7 +27836,6 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/framework/cloud/qml/Muse/Cloud/CloudScoresView.qml" line="220"/>
         <source>Please check your internet connection or try again later.</source>
         <translation type="unfinished"/>
     </message>
@@ -27848,7 +27892,7 @@ failed.</source>
         <location filename="../../src/project/qml/MuseScore/Project/SaveToCloudDialog.qml" line="195"/>
         <source>Visibility</source>
         <extracomment>visibility of a score on MuseScore.com: private, public or unlisted</extracomment>
-        <translation type="unfinished"/>
+        <translation>Visibilitas</translation>
     </message>
     <message>
         <location filename="../../src/framework/cloud/qml/Muse/Cloud/internal/CloudScoresListView.qml" line="97"/>
@@ -27961,7 +28005,7 @@ failed.</source>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/ExportDialog.qml" line="95"/>
         <source>Select all</source>
-        <translation type="unfinished"/>
+        <translation>Pilih semua</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/ExportDialog.qml" line="109"/>
@@ -28066,7 +28110,7 @@ failed.</source>
         <location filename="../../src/project/internal/exportprojectscenario.cpp" line="74"/>
         <source>Parts</source>
         <extracomment>Used in export filename suggestion. Please use only characters that are valid for filenames.</extracomment>
-        <translation type="unfinished"/>
+        <translation>BHagian</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/exportprojectscenario.cpp" line="363"/>
@@ -28923,24 +28967,34 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="424"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="521"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="427"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="524"/>
         <source>Log in or create a free account on musescore.com to open this score.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1342"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1364"/>
         <source>View online</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1345"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1367"/>
         <source>All saved changes will now update to the cloud. You can manage this file in the score manager on musescore.com.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1570"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1592"/>
         <source>An unknown error occurred while saving this file.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1610"/>
+        <source>An error occurred while saving your score</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1612"/>
+        <source>To preserve your score, try saving it again. If this message still appears, please save your score as new copy. You can also get help for this issue on %1.&lt;br/&gt;&lt;br/&gt;Error details (please cite when asking for support): %2</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -28950,7 +29004,7 @@ failed.</source>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="234"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="964"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="986"/>
         <source>Log in to musescore.com to save this score to the cloud.</source>
         <translation type="unfinished"/>
     </message>
@@ -29022,17 +29076,18 @@ failed.</source>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="577"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1622"/>
         <source>Save as…</source>
         <translation>Simpan sebagai</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="401"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1419"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1441"/>
         <source>Unable to connect to the cloud</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1420"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1442"/>
         <source>Your changes will be saved to a local file until the connection resumes.</source>
         <translation type="unfinished"/>
     </message>
@@ -29049,18 +29104,28 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1578"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1600"/>
         <source>Your score could not be saved</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1433"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1455"/>
         <source>Please add at least one instrument to enable saving.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/framework/cloud/view/cloudsmodel.cpp" line="196"/>
         <source>Share on Audio.com</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/notationproject.cpp" line="834"/>
+        <source>File “%1” could not be opened for validation. %2</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/notationproject.cpp" line="845"/>
+        <source>“%1” is corrupted or damaged.</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -29375,7 +29440,7 @@ failed.</source>
         <location filename="../../src/framework/uicomponents/qml/Muse/UiComponents/internal/StyledMenuItem.qml" line="75"/>
         <location filename="../../src/framework/uicomponents/qml/Muse/UiComponents/internal/ValueListItem.qml" line="247"/>
         <location filename="../../src/notation/view/widgets/editstringdata.cpp" line="113"/>
-        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="218"/>
+        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="210"/>
         <source>checked</source>
         <comment>checkstate</comment>
         <extracomment>Describes the 'on' state of a toggle-able ui item.</extracomment>
@@ -29385,7 +29450,7 @@ failed.</source>
         <location filename="../../src/framework/uicomponents/qml/Muse/UiComponents/internal/StyledMenuItem.qml" line="77"/>
         <location filename="../../src/framework/uicomponents/qml/Muse/UiComponents/internal/ValueListItem.qml" line="247"/>
         <location filename="../../src/notation/view/widgets/editstringdata.cpp" line="113"/>
-        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="218"/>
+        <location filename="../../src/notation/view/widgets/measureproperties.cpp" line="210"/>
         <source>unchecked</source>
         <comment>checkstate</comment>
         <extracomment>Describes the 'off' state of a toggle-able ui item.</extracomment>
@@ -29715,12 +29780,10 @@ failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/framework/update/qml/Muse/Update/internal/MuseSoundsReleaseInfoBottomPanel.qml" line="51"/>
         <source>No thanks</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/framework/update/qml/Muse/Update/internal/MuseSoundsReleaseInfoBottomPanel.qml" line="68"/>
         <source>Take me to Muse Hub</source>
         <translation type="unfinished"/>
     </message>

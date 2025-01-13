@@ -1325,29 +1325,43 @@ static void addOtherOrnamentToChord(const Notation& notation, ChordRest* cr)
 
 static bool convertArticulationToSymId(const String& mxmlName, SymId& id)
 {
-    // map MusicXML articulation name to MuseScore symbol
+    // map MusicXML notations name to MuseScore symbol
     static const std::map<String, SymId> map {
-        { u"accent",          SymId::articAccentAbove },
-        { u"staccatissimo",   SymId::articStaccatissimoWedgeAbove },
-        { u"staccato",        SymId::articStaccatoAbove },
-        { u"tenuto",          SymId::articTenutoAbove },
-        { u"strong-accent",   SymId::articMarcatoAbove },
-        { u"delayed-turn",    SymId::ornamentTurn },
-        { u"turn",            SymId::ornamentTurn },
-        { u"inverted-turn",   SymId::ornamentTurnInverted },
-        { u"stopped",         SymId::brassMuteClosed },
-        { u"up-bow",          SymId::stringsUpBow },
-        { u"down-bow",        SymId::stringsDownBow },
-        { u"detached-legato", SymId::articTenutoStaccatoAbove },
-        { u"spiccato",        SymId::articStaccatissimoAbove },
-        { u"snap-pizzicato",  SymId::pluckedSnapPizzicatoAbove },
-        { u"schleifer",       SymId::ornamentPrecompSlide },
-        { u"open",            SymId::brassMuteOpen },
-        { u"open-string",     SymId::brassMuteOpen },
-        { u"thumb-position",  SymId::stringsThumbPosition },
-        { u"soft-accent",     SymId::articSoftAccentAbove },
-        { u"stress",          SymId::articStressAbove },
-        { u"unstress",        SymId::articUnstressAbove }
+        // ornaments
+        { u"delayed-turn",           SymId::ornamentTurn },
+        { u"inverted-turn",          SymId::ornamentTurnInverted },
+        { u"vertical-turn",          SymId::ornamentTurnUp },
+        { u"inverted-vertical-turn", SymId::ornamentTurnUpS },
+        { u"turn",                   SymId::ornamentTurn },
+        { u"schleifer",              SymId::ornamentPrecompSlide },
+        { u"haydn",                  SymId::ornamentHaydn },
+        // articulations
+        { u"accent",                 SymId::articAccentAbove },
+        { u"strong-accent",          SymId::articMarcatoAbove },
+        { u"staccato",               SymId::articStaccatoAbove },
+        { u"tenuto",                 SymId::articTenutoAbove },
+        { u"detached-legato",        SymId::articTenutoStaccatoAbove },
+        { u"staccatissimo",          SymId::articStaccatissimoWedgeAbove },
+        { u"spiccato",               SymId::articStaccatissimoAbove },
+        { u"stress",                 SymId::articStressAbove },
+        { u"unstress",               SymId::articUnstressAbove },
+        { u"soft-accent",            SymId::articSoftAccentAbove },
+        // technical
+        { u"up-bow",                 SymId::stringsUpBow },
+        { u"down-bow",               SymId::stringsDownBow },
+        { u"open-string",            SymId::brassMuteOpen },
+        { u"thumb-position",         SymId::stringsThumbPosition },
+        { u"double-tongue",          SymId::doubleTongueAbove },
+        { u"triple-tongue",          SymId::tripleTongueAbove },
+        { u"stopped",                SymId::brassMuteClosed },
+        { u"snap-pizzicato",         SymId::pluckedSnapPizzicatoAbove },
+        { u"heel",                   SymId::keyboardPedalHeel1 },
+        { u"toe",                    SymId::keyboardPedalToe1 },
+        { u"fingernails",            SymId::pluckedWithFingernails },
+        { u"brass-bend",             SymId::brassBend },
+        { u"flip",                   SymId::brassFlip },
+        { u"smear",                  SymId::brassSmear },
+        { u"open",                   SymId::brassMuteOpen }
     };
 
     auto it = map.find(mxmlName);
@@ -1726,24 +1740,6 @@ SpannerSet MusicXmlParserPass2::findIncompleteSpannersAtPartEnd()
 }
 
 //---------------------------------------------------------
-//   addArticLaissezVibrer
-//---------------------------------------------------------
-
-static void addArticLaissezVibrer(const Note* const note)
-{
-    IF_ASSERT_FAILED(note) {
-        return;
-    }
-
-    Chord* chord = note->chord();
-    if (!findLaissezVibrer(chord)) {
-        Articulation* na = Factory::createArticulation(chord);
-        na->setSymId(SymId::articLaissezVibrerBelow);
-        chord->add(na);
-    }
-}
-
-//---------------------------------------------------------
 //   cleanupUnterminatedTie
 //---------------------------------------------------------
 /**
@@ -1980,7 +1976,7 @@ void MusicXmlParserPass2::scorePartwise()
     // this creates non-generated barlines spanning only the current instrument
     // BarLine::_spanStaff is set using the default in Staff::_barLineSpan
     Measure* const lm = m_score->lastMeasure();
-    if (lm && lm->endBarLineType() == BarLineType::NORMAL) {
+    if (lm && lm->endBarLineType() & BarLineType::NORMAL) {
         for (staff_idx_t staffidx = 0; staffidx < m_score->nstaves(); ++staffidx) {
             const Staff* staff = m_score->staff(staffidx);
             auto b = createBarline(m_score, staffidx * VOICES, BarLineType::NORMAL, true, u"", staff->barLineSpan());
@@ -2239,7 +2235,7 @@ void MusicXmlParserPass2::part()
         if (!unendedTie->endNote()) {
             // Tie started with no matching end tags
             // Find a note of the same pitch in the same voice immediately following the start chord
-            Segment* nextSeg = startChord->segment();
+            Segment* nextSeg = startChord ? startChord->segment() : nullptr;
             while (nextSeg && nextSeg->tick() < startChord->tick() + startChord->ticks()) {
                 nextSeg = nextSeg->nextCR(startChord->track(), true);
             }
@@ -2250,7 +2246,7 @@ void MusicXmlParserPass2::part()
             if (matchingNote && matchingNote->tpc() == startNote->tpc() && matchingNote != startNote) {
                 unendedTie->setEndNote(matchingNote);
                 matchingNote->setTieBack(unendedTie);
-            } else {
+            } else if (startChord) {
                 // try other voices in the stave
                 const Part* p = startChord->part();
                 for (track_idx_t track = p->startTrack(); track < p->endTrack() + VOICES; track++) {
@@ -2907,7 +2903,7 @@ void MusicXmlParserPass2::measureLayout(Measure* measure)
     while (m_e.readNextStartElement()) {
         if (m_e.name() == "measure-distance") {
             const Spatium val(m_e.readDouble() / 10.0);
-            if (!measure->prev()->isHBox()) {
+            if (!measure->prev() || !measure->prev()->isHBox()) {
                 MeasureBase* gap = m_score->insertBox(ElementType::HBOX, measure);
                 toHBox(gap)->setBoxWidth(val);
             }
@@ -5111,7 +5107,7 @@ void MusicXmlParserDirection::wedge(const String& type, const int number,
 
 String MusicXmlExtendedSpannerDesc::toString() const
 {
-    String spStr = sp ? String::number(size_t(sp->eid().id())) : u"null";
+    String spStr = sp ? String::fromStdString(sp->eid().toStdString()) : u"null";
     return String(u"sp %1 tp %2 tick2 %3 track2 %4 %5 %6")
            .arg(spStr, tick2.toString())
            .arg(static_cast<int>(track2))
@@ -5418,10 +5414,10 @@ void MusicXmlParserPass2::barline(const String& partId, Measure* measure, const 
     bool visible = true;
     if (determineBarLineType(barStyle, repeat, type, visible)) {
         const track_idx_t track = m_pass1.trackForPart(partId);
-        if (type == BarLineType::START_REPEAT) {
+        if (type & BarLineType::START_REPEAT) {
             // combine start_repeat flag with current state initialized during measure parsing
             measure->setRepeatStart(true);
-        } else if (type == BarLineType::END_REPEAT) {
+        } else if (type & BarLineType::END_REPEAT) {
             // combine end_repeat flag with current state initialized during measure parsing
             measure->setRepeatEnd(true);
         } else {
@@ -6030,18 +6026,14 @@ void MusicXmlParserPass2::divisions()
 // the type for all rests.
 // Sibelius calls all whole-measure rests "whole", even if the duration != 4/4
 
-static bool isWholeMeasureRest(const String& type, const Fraction dura, const Fraction mDura)
+static bool isWholeMeasureRest(const String& type, const Fraction restDuration, const Fraction measureDuration)
 {
-    if (!dura.isValid()) {
+    if (!restDuration.isValid() || !measureDuration.isValid()) {
         return false;
     }
 
-    if (!mDura.isValid()) {
-        return false;
-    }
-
-    return (type.empty() && dura == mDura)
-           || (type == u"whole" && dura == mDura);
+    return (type.empty() && restDuration == measureDuration)
+           || (type == u"whole" && restDuration == measureDuration);
 }
 
 //---------------------------------------------------------
@@ -6053,36 +6045,30 @@ static bool isWholeMeasureRest(const String& type, const Fraction dura, const Fr
  * This includes whole measure rest detection.
  */
 
-static TDuration determineDuration(const bool rest, const bool measureRest, const String& type, const int dots, const Fraction dura,
-                                   const Fraction mDura)
+static TDuration determineDuration(const bool isRest, const bool measureRest, const String& type, const int dots,
+                                   const Fraction chordRestDuration, const Fraction measureDuration)
 {
-    //LOGD("determineDuration rest %d type '%s' dots %d dura %s mDura %s",
-    //       rest, muPrintable(type), dots, muPrintable(dura.print()), muPrintable(mDura.print()));
+    //LOGD("determineDuration %s, type <%s>, dots %d, duration %s, measure duration %s",
+    //      isRest ? "rest" : "chord", muPrintable(durationType), dots, muPrintable(chordRestDuration.toString()), muPrintable(measureDuration.toString()));
 
     TDuration res;
-    if (rest) {
-        if (measureRest || isWholeMeasureRest(type, dura, mDura)) {
-            res.setType(DurationType::V_MEASURE);
-        } else if (type.empty()) {
-            // If no type, set duration type based on duration.
-            // Note that sometimes unusual duration (e.g. 261/256) are found.
-            res.setVal(dura.ticks());
-        } else {
-            ByteArray ba = type.toAscii();
-            res.setType(TConv::fromXml(ba.constChar(), DurationType::V_INVALID));
-            res.setDots(dots);
-        }
+    if (isRest && (measureRest || isWholeMeasureRest(type, chordRestDuration, measureDuration))) {
+        res.setType(DurationType::V_MEASURE);
+    } else if (type.empty()) {
+        // If no type, set duration type based on duration.
+        // Note that sometimes unusual duration (e.g. 261/256) are found.
+        res.setVal(chordRestDuration.ticks());
     } else {
         ByteArray ba = type.toAscii();
         res.setType(TConv::fromXml(ba.constChar(), DurationType::V_INVALID));
         res.setDots(dots);
         if (res.type() == DurationType::V_INVALID) {
-            res.setType(DurationType::V_QUARTER);        // default, TODO: use dura ?
+            res.setType(DurationType::V_QUARTER);        // default, TODO: use measureDuration ?
         }
     }
 
-    //LOGD("-> dur %hhd (%s) dots %d ticks %s",
-    //       res.type(), muPrintable(res.name()), res.dots(), muPrintable(dura.print()));
+    //LOGD("-> duration %hhd, dots %d, ticks %s",
+    //      res.type(), res.dots(), muPrintable(chordRestDuration.toString()));
 
     return res;
 }
@@ -6923,8 +6909,8 @@ Note* MusicXmlParserPass2::note(const String& partId,
     // handle notations
     if (cr) {
         notations.addToScore(cr, note,
-                             noteStartTime.ticks(), m_slurs, m_glissandi, m_spanners, m_trills, m_ties, m_unstartedTieNotes, m_unendedTieNotes, arpMap,
-                             delayedArps);
+                             noteStartTime.ticks(), m_slurs, m_glissandi, m_spanners, m_trills, m_ties, m_unstartedTieNotes,
+                             m_unendedTieNotes, arpMap, delayedArps);
 
         // if no tie added yet, convert the "tie" into "tied" and add it.
         if (note && !note->tieFor() && !note->tieBack() && !tieType.empty()) {
@@ -7384,7 +7370,7 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
     const String placement = m_e.attribute("placement");
     const bool printObject = m_e.asciiAttribute("print-object") != "no";
 
-    String kind, kindText, functionText, symbols, parens;
+    String kind, kindText, functionText, inversionText, symbols, parens;
     std::list<HDegree> degreeList;
 
     FretDiagram* fd = nullptr;
@@ -7428,8 +7414,36 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
             ha->setRootTpc(Tpc::TPC_INVALID);
             ha->setBaseTpc(Tpc::TPC_INVALID);
             functionText = m_e.readText();
-            // TODO: parse to decide between ROMAN and NASHVILLE
             ha->setHarmonyType(HarmonyType::ROMAN);
+        } else if (m_e.name() == "numeral") {
+            ha->setRootTpc(Tpc::TPC_INVALID);
+            ha->setBaseTpc(Tpc::TPC_INVALID);
+            while (m_e.readNextStartElement()) {
+                if (m_e.name() == "numeral-root") {
+                    functionText = m_e.attribute("text");
+                    const String numeralRoot = m_e.readText();
+                    if (functionText.isEmpty() || functionText.at(0).isDigit()) {
+                        ha->setHarmonyType(HarmonyType::NASHVILLE);
+                        ha->setFunction(numeralRoot);
+                    } else {
+                        ha->setHarmonyType(HarmonyType::ROMAN);
+                    }
+                } else if (m_e.name() == "numeral-alter") {
+                    const int alter = m_e.readText().toInt();
+                    switch (alter) {
+                    case -1:
+                        ha->setFunction(u"b" + ha->hFunction());
+                        break;
+                    case 1:
+                        ha->setFunction(u"#" + ha->hFunction());
+                        break;
+                    default:
+                        break;
+                    }
+                } else {
+                    skipLogCurrElem();
+                }
+            }
         } else if (m_e.name() == "kind") {
             // attributes: use-symbols  yes-no
             //             text, stack-degrees, parentheses-degree, bracket-degrees,
@@ -7442,8 +7456,16 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
                 ha->setRootTpc(Tpc::TPC_INVALID);
             }
         } else if (m_e.name() == "inversion") {
-            // attributes: print-style
-            skipLogCurrElem();
+            const int inversion = m_e.readText().toInt();
+            switch (inversion) {
+            case 1: inversionText = u"6";
+                break;
+            case 2: inversionText = u"64";
+                break;
+            default:
+                inversionText = u"";
+                break;
+            }
         } else if (m_e.name() == "bass") {
             String step;
             int alter = 0;
@@ -7511,7 +7533,7 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
     }
 
     const ChordDescription* d = nullptr;
-    if (ha->rootTpc() != Tpc::TPC_INVALID) {
+    if (ha->rootTpc() != Tpc::TPC_INVALID || ha->harmonyType() == HarmonyType::NASHVILLE) {
         d = ha->fromXml(kind, kindText, symbols, parens, degreeList);
     }
     if (d) {
@@ -7519,7 +7541,7 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
         ha->setTextName(d->names.front());
     } else {
         ha->setId(-1);
-        String textName = functionText + kindText;
+        String textName = functionText + kindText + inversionText;
         ha->setTextName(textName);
     }
     ha->render();
@@ -7543,7 +7565,8 @@ void MusicXmlParserPass2::harmony(const String& partId, Measure* measure, const 
                 continue;
             }
             HarmonyDesc& foundHarmonyDesc = itr->second;
-            if (track2staff(foundHarmonyDesc.m_track) == track2staff(track) && foundHarmonyDesc.m_harmony->descr() == ha->descr()) {
+            if (track2staff(foundHarmonyDesc.m_track) == track2staff(track) && foundHarmonyDesc.m_harmony
+                && foundHarmonyDesc.m_harmony->descr() == ha->descr()) {
                 if (foundHarmonyDesc.m_harmony && foundHarmonyDesc.fretDiagramVisible() == newHarmonyDesc.fretDiagramVisible()) {
                     // Matching harmony with matching visibility of fret diagram.  No need to add
                     insert = false;
@@ -7989,30 +8012,38 @@ void MusicXmlParserNotations::articulations()
             }
             m_e.skipCurrentElement();  // skip but don't log
         } else if (m_e.name() == "breath-mark") {
+            std::vector<XmlStreamReader::Attribute> attributes = m_e.attributes();
             String value = m_e.readText();
+            engraving::SymId breath = SymId::noSym;
             if (value == "tick") {
-                m_breath = SymId::breathMarkTick;
+                breath = SymId::breathMarkTick;
             } else if (value == "upbow") {
-                m_breath = SymId::breathMarkUpbow;
+                breath = SymId::breathMarkUpbow;
             } else if (value == "salzedo") {
-                m_breath = SymId::breathMarkSalzedo;
+                breath = SymId::breathMarkSalzedo;
             } else {
                 // Use comma as the default symbol
-                m_breath = SymId::breathMarkComma;
+                breath = SymId::breathMarkComma;
             }
+            m_notations.push_back(Notation::notationWithAttributes(u"breath",
+                                                                   attributes, u"articulations", breath));
         } else if (m_e.name() == "caesura") {
+            std::vector<XmlStreamReader::Attribute> attributes = m_e.attributes();
             String value = m_e.readText();
+            engraving::SymId caesura = SymId::noSym;
             if (value == "curved") {
-                m_breath = SymId::caesuraCurved;
+                caesura = SymId::caesuraCurved;
             } else if (value == "short") {
-                m_breath = SymId::caesuraShort;
+                caesura = SymId::caesuraShort;
             } else if (value == "thick") {
-                m_breath = SymId::caesuraThick;
+                caesura = SymId::caesuraThick;
             } else if (value == "single") {
-                m_breath = SymId::caesuraSingleStroke;
+                caesura = SymId::caesuraSingleStroke;
             } else { // Use as the default symbol
-                m_breath = SymId::caesura;
+                caesura = SymId::caesura;
             }
+            m_notations.push_back(Notation::notationWithAttributes(u"breath",
+                                                                   attributes, u"articulations", caesura));
         } else if (m_e.name() == "doit"
                    || m_e.name() == "falloff"
                    || m_e.name() == "plop"
@@ -8118,6 +8149,8 @@ void MusicXmlParserNotations::technical()
             m_notations.push_back(notation);
         } else if (m_e.name() == "harmonic") {
             harmonic();
+        } else if (m_e.name() == "harmon-mute") {
+            harmonMute();
         } else if (m_e.name() == "other-technical") {
             otherTechnical();
         } else {
@@ -8165,6 +8198,44 @@ void MusicXmlParserNotations::harmonic()
     if (notation.subType() != "") {
         m_notations.push_back(notation);
     }
+}
+
+//---------------------------------------------------------
+//   harmonMute
+//---------------------------------------------------------
+
+/**
+ Parse the /score-partwise/part/measure/note/notations/technical/harmon-mute node.
+ */
+
+void MusicXmlParserNotations::harmonMute()
+{
+    engraving::SymId mute = SymId::brassHarmonMuteClosed;
+    const std::vector<XmlStreamReader::Attribute> attributes = m_e.attributes();
+    while (m_e.readNextStartElement()) {
+        String name = String::fromAscii(m_e.name().ascii());
+        if (name == "harmon-closed") {
+            const String location = m_e.attribute("location");
+            String value = m_e.readText();
+            if (value == "yes") {
+                mute = SymId::brassHarmonMuteClosed;
+            } else if (value == "no") {
+                mute = SymId::brassHarmonMuteStemOpen;
+            } else if (value == "half") {
+                if (location == "left") {
+                    mute = SymId::brassHarmonMuteStemHalfLeft;
+                } else if (location == "right") {
+                    mute = SymId::brassHarmonMuteStemHalfRight;
+                } else {
+                    m_logger->logError(String(u"unsupported harmon-closed location '%1'").arg(location), &m_e);
+                    mute = SymId::brassHarmonMuteStemHalfLeft;
+                }
+            }
+        } else {
+            m_e.skipCurrentElement();
+        }
+    }
+    m_notations.push_back(Notation::notationWithAttributes(u"harmon-closed", attributes, u"technical", mute));
 }
 
 //---------------------------------------------------------
@@ -8460,7 +8531,7 @@ static void addTie(const Notation& notation, Note* note, const track_idx_t track
             const Chord* startChord = startNote ? startNote->chord() : nullptr;
             const Chord* endChord = note->chord();
             const Measure* startMeasure = startChord ? startChord->measure() : nullptr;
-            if (startMeasure == endChord->measure() || startChord->tick() + startChord->actualTicks() == endChord->tick()) {
+            if (startMeasure == endChord->measure() || (startChord && startChord->tick() + startChord->actualTicks() == endChord->tick())) {
                 // only connect if they're in the same bar, or there are no notes/rests in the same voice between them
                 currTie->setEndNote(note);
                 note->setTieBack(currTie);
@@ -8475,7 +8546,9 @@ static void addTie(const Notation& notation, Note* note, const track_idx_t track
             logger->logError(String(u"Non-started tie terminated. No-op."), xmlreader);
         }
     } else if (type == "let-ring") {
-        addArticLaissezVibrer(note);
+        LaissezVib* lvTie = Factory::createLaissezVib(note);
+        lvTie->setParent(note);
+        note->score()->undoAddElement(lvTie);
     } else {
         logger->logError(String(u"unknown tied type %1").arg(type), xmlreader);
     }
@@ -8530,18 +8603,23 @@ static void addWavyLine(ChordRest* cr, const Fraction& tick,
 //   addBreath
 //---------------------------------------------------------
 
-static void addBreath(ChordRest* cr, const Fraction& tick, SymId breath)
+static void addBreath(const Notation& notation, ChordRest* cr)
 {
-    if (breath != SymId::noSym && !cr->isGrace()) {
-        const Fraction& ticks = cr->ticks();
-        Segment* const seg = cr->measure()->getSegment(SegmentType::Breath, tick + ticks);
-        Breath* const b = Factory::createBreath(seg);
-        // b->setTrack(trk + voice); TODO check next line
-        b->setTrack(cr->track());
-        b->setSymId(breath);
-        b->setPlacement(b->propertyDefault(Pid::PLACEMENT).value<PlacementV>());
-        seg->add(b);
+    const SymId breath = notation.symId();
+    const Color color = Color::fromString(notation.attribute(u"color"));
+    const String placement = notation.attribute(u"placement");
+
+    Segment* const seg = cr->measure()->getSegment(SegmentType::Breath, cr->tick() + cr->ticks());
+    Breath* const b = Factory::createBreath(seg);
+    // b->setTrack(trk + voice); TODO check next line
+    b->setTrack(cr->track());
+    b->setSymId(breath);
+    if (color.isValid()) {
+        b->setColor(color);
     }
+    b->setPlacement(placement == u"below" ? PlacementV::BELOW : PlacementV::ABOVE);
+    b->setPropertyFlags(Pid::PLACEMENT, PropertyFlags::UNSTYLED);
+    seg->add(b);
 }
 
 //---------------------------------------------------------
@@ -8552,20 +8630,21 @@ static void addChordLine(const Notation& notation, Note* note,
                          MusicXmlLogger* logger, const XmlStreamReader* const xmlreader)
 {
     const String chordLineType = notation.subType();
+    const Color color = Color::fromString(notation.attribute(u"color"));
     if (!chordLineType.empty()) {
         if (note) {
             ChordLine* const chordline = Factory::createChordLine(note->chord());
             if (chordLineType == u"falloff") {
                 chordline->setChordLineType(ChordLineType::FALL);
-            }
-            if (chordLineType == u"doit") {
+            } else if (chordLineType == u"doit") {
                 chordline->setChordLineType(ChordLineType::DOIT);
-            }
-            if (chordLineType == u"plop") {
+            } else if (chordLineType == u"plop") {
                 chordline->setChordLineType(ChordLineType::PLOP);
-            }
-            if (chordLineType == u"scoop") {
+            } else if (chordLineType == u"scoop") {
                 chordline->setChordLineType(ChordLineType::SCOOP);
+            }
+            if (color.isValid()) {
+                chordline->setColor(color);
             }
             note->chord()->add(chordline);
         } else {
@@ -8729,7 +8808,9 @@ void MusicXmlParserNotations::parse()
 void MusicXmlParserNotations::addNotation(const Notation& notation, ChordRest* const cr, Note* const note)
 {
     if (notation.symId() != SymId::noSym) {
-        if (notation.name() == u"fermata") {
+        if (notation.name() == u"breath") {
+            addBreath(notation, cr);
+        } else if (notation.name() == u"fermata") {
             addFermataToChord(notation, cr);
 
             // Terminate tempo line
@@ -8771,7 +8852,6 @@ void MusicXmlParserNotations::addToScore(ChordRest* const cr, Note* const note, 
                                          DelayedArpMap& delayedArps)
 {
     addArpeggio(cr, m_arpeggioType, m_arpeggioNo, arpMap, delayedArps);
-    addBreath(cr, cr->tick(), m_breath);
     addWavyLine(cr, Fraction::fromTicks(tick), m_wavyLineNo, m_wavyLineType, spanners, trills, m_logger, &m_e);
 
     for (const Notation& notation : m_notations) {

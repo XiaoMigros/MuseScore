@@ -54,7 +54,6 @@ public:
 
     virtual Color defaultColor() const = 0;
     virtual Color scoreInversionColor() const = 0;
-    virtual Color invisibleColor() const = 0;
     virtual Color lassoColor() const = 0;
     virtual Color warningColor() const = 0;
     virtual Color warningSelectedColor() const = 0;
@@ -81,8 +80,14 @@ public:
     virtual Color formattingColor() const = 0;
     virtual muse::async::Channel<Color> formattingColorChanged() const = 0;
 
+    virtual Color invisibleColor() const = 0;
+    virtual muse::async::Channel<Color> invisibleColorChanged() const = 0;
+
     virtual Color unlinkedColor() const = 0;
     virtual muse::async::Channel<Color> unlinkedColorChanged() const = 0;
+
+    virtual Color frameColor() const = 0;
+    virtual muse::async::Channel<Color> frameColorChanged() const = 0;
 
     virtual Color highlightSelectionColor(voice_idx_t voiceIndex = 0) const = 0;
 
@@ -116,9 +121,13 @@ public:
 
     virtual bool isAccessibleEnabled() const = 0;
 
+    virtual bool doNotSaveEIDsForBackCompat() const = 0;
+    virtual void setDoNotSaveEIDsForBackCompat(bool doNotSave) = 0;
+
     /// these configurations will be removed after solving https://github.com/musescore/MuseScore/issues/14294
     virtual bool guitarProImportExperimental() const = 0;
-    virtual bool useStretchedBends() const = 0;
+    virtual bool experimentalGuitarBendImport() const = 0;
+    virtual void setExperimentalGuitarBendImport(bool enabled) = 0;
     virtual bool shouldAddParenthesisOnStandardStaff() const = 0;
     virtual bool negativeFretsAllowed() const = 0;
     virtual bool crossNoteHeadAlwaysBlack() const = 0;

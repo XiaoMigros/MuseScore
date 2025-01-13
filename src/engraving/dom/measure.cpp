@@ -585,7 +585,7 @@ bool Measure::showsMeasureNumber()
 ///   Search for chord at position \a tick in \a track
 //---------------------------------------------------------
 
-Chord* Measure::findChord(Fraction t, track_idx_t track)
+Chord* Measure::findChord(Fraction t, track_idx_t track) const
 {
     t -= tick();
     for (Segment* seg = last(); seg; seg = seg->prev()) {
@@ -607,7 +607,7 @@ Chord* Measure::findChord(Fraction t, track_idx_t track)
 ///   Search for chord or rest at position \a tick at \a staff in \a voice.
 //---------------------------------------------------------
 
-ChordRest* Measure::findChordRest(Fraction t, track_idx_t track)
+ChordRest* Measure::findChordRest(Fraction t, track_idx_t track) const
 {
     t -= tick();
     for (const Segment& seg : m_segments) {
@@ -722,6 +722,23 @@ Segment* Measure::getChordRestOrTimeTickSegment(const Fraction& f)
     return seg;
 }
 
+Segment* Measure::undoGetChordRestOrTimeTickSegment(const Fraction& f)
+{
+    Segment* seg = findSegment(SegmentType::ChordRest, f);
+    if (!seg) {
+        seg = findSegment(SegmentType::TimeTick, f);
+    }
+    if (!seg) {
+        if (f - tick() == ticks()) { // end of measure
+            seg = undoGetSegment(SegmentType::TimeTick, f);
+        } else {
+            seg = undoGetSegment(SegmentType::ChordRest, f);
+        }
+    }
+
+    return seg;
+}
+
 //---------------------------------------------------------
 //   getSegmentR
 ///   Get a segment of type st at relative tick position t.
@@ -763,7 +780,9 @@ void Measure::add(EngravingItem* e)
         while (s && s->rtick() == t) {
             if (!seg->isChordRestType() && (seg->segmentType() == s->segmentType())) {
                 LOGD("there is already a <%s> segment", seg->subTypeName());
-                return;
+                /// HACK: REMOVED to prevent crash in 4.4.3.
+                /// Adding multiple identical segments may cause problems, so we should resolve this properly
+                // return;
             }
             if (seg->goesBefore(s)) {
                 break;
@@ -1377,6 +1396,15 @@ bool Measure::acceptDrop(EditData& data) const
         case ActionIconType::STAFF_TYPE_CHANGE:
             viewer->setDropRectangle(staffRect);
             return true;
+        case ActionIconType::SYSTEM_LOCK:
+        {
+            LayoutMode layoutMode = score()->layoutMode();
+            if (layoutMode == LayoutMode::PAGE || layoutMode == LayoutMode::SYSTEM) {
+                viewer->setDropRectangle(canvasBoundingRect().adjusted(-x(), 0.0, 0.0, 0.0));
+                return true;
+            }
+            return false;
+        }
         default:
             break;
         }
@@ -1713,6 +1741,9 @@ EngravingItem* Measure::drop(EditData& data)
             score()->undoAddElement(stc);
             break;
         }
+        case ActionIconType::SYSTEM_LOCK:
+            score()->makeIntoSystem(system()->first(), this);
+            break;
         default:
             break;
         }
@@ -3050,9 +3081,9 @@ double Measure::userStretch() const
 //   nextElementStaff
 //---------------------------------------------------------
 
-EngravingItem* Measure::nextElementStaff(staff_idx_t staff)
+EngravingItem* Measure::nextElementStaff(staff_idx_t staff, EngravingItem* fromItem)
 {
-    EngravingItem* e = score()->selection().element();
+    EngravingItem* e = fromItem ? fromItem : score()->selection().element();
     if (!e && !score()->selection().elements().empty()) {
         e = score()->selection().elements().front();
     }
@@ -3086,9 +3117,9 @@ EngravingItem* Measure::nextElementStaff(staff_idx_t staff)
 //   prevElementStaff
 //---------------------------------------------------------
 
-EngravingItem* Measure::prevElementStaff(staff_idx_t staff)
+EngravingItem* Measure::prevElementStaff(staff_idx_t staff, EngravingItem* fromItem)
 {
-    EngravingItem* e = score()->selection().element();
+    EngravingItem* e = fromItem ? fromItem : score()->selection().element();
     if (!e && !score()->selection().elements().empty()) {
         e = score()->selection().elements().front();
     }

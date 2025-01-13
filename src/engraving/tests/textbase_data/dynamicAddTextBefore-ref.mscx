@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="4.40">
+<museScore version="4.50">
   <Score>
     <Division>480</Division>
     <Style>
@@ -129,7 +129,8 @@
             <text>𝅘𝅥 = 100</text>
             </Tempo>
           <Dynamic>
-            <subtype>other-dynamics</subtype>
+            <subtype>f</subtype>
+            <velocity>96</velocity>
             <text>poco <sym>dynamicForte</sym></text>
             </Dynamic>
           <Chord>

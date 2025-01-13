@@ -43,6 +43,7 @@
 #include "hairpin.h"
 #include "harppedaldiagram.h"
 #include "hook.h"
+#include "laissezvib.h"
 #include "linkedobjects.h"
 #include "lyrics.h"
 #include "measure.h"
@@ -162,7 +163,7 @@ bool SelectionFilter::canSelect(const EngravingItem* e) const
     if (e->isTextBase()) { // only TEXT, INSTRCHANGE and STAFFTEXT are caught here, rest are system thus not in selection
         return isFiltered(SelectionFilterType::OTHER_TEXT);
     }
-    if (e->isSLine()) { // Volta
+    if (e->isSLine()) { // NoteLine, Volta
         return isFiltered(SelectionFilterType::OTHER_LINE);
     }
     if (e->type() == ElementType::TREMOLO_TWOCHORD) {
@@ -405,6 +406,64 @@ Measure* Selection::findMeasure() const
     return m;
 }
 
+MeasureBase* Selection::startMeasureBase() const
+{
+    EngravingItem* selectionElement = element();
+    if (selectionElement) {
+        if (selectionElement->isHBox()) {
+            return toMeasureBase(selectionElement);
+        }
+        MeasureBase* mb = selectionElement->findMeasureBase();
+        if (mb) {
+            return mb;
+        }
+    }
+
+    bool mmrests = m_score->style().styleB(Sid::createMultiMeasureRests);
+    Fraction refTick = tickStart();
+
+    return mmrests ? m_score->tick2measureMM(refTick) : m_score->tick2measure(refTick);
+}
+
+MeasureBase* Selection::endMeasureBase() const
+{
+    EngravingItem* selectionElement = element();
+    if (selectionElement) {
+        if (selectionElement->isHBox()) {
+            return toMeasureBase(selectionElement);
+        }
+        MeasureBase* mb = selectionElement->findMeasureBase();
+        if (mb) {
+            return mb;
+        }
+    }
+
+    bool mmrests = m_score->style().styleB(Sid::createMultiMeasureRests);
+    Fraction refTick = tickEnd() - Fraction::eps();
+
+    return mmrests ? m_score->tick2measureMM(refTick) : m_score->tick2measure(refTick);
+}
+
+std::vector<System*> Selection::selectedSystems() const
+{
+    const MeasureBase* startMB = startMeasureBase();
+    const MeasureBase* endMB = endMeasureBase();
+    if (!startMB || !endMB) {
+        return {};
+    }
+
+    bool mmrests = score()->style().styleB(Sid::createMultiMeasureRests);
+    std::vector<System*> systems;
+    for (const MeasureBase* mb = startMB; mb && mb->isBeforeOrEqual(endMB); mb = mmrests ? mb->nextMM() : mb->next()) {
+        System* sys = mb->system();
+        if ((mb->isMeasure() || mb->isHBox()) && (systems.empty() || sys != systems.back())) {
+            systems.push_back(sys);
+        }
+    }
+
+    return systems;
+}
+
 void Selection::deselectAll()
 {
     if (m_state == SelState::RANGE) {
@@ -541,6 +600,9 @@ void Selection::appendChord(Chord* chord)
                     m_el.push_back(sp);
                 }
             }
+        }
+        if (note->laissezVib()) {
+            appendFiltered(note->laissezVib()->frontSegment());
         }
     }
 }
@@ -1066,6 +1128,7 @@ muse::ByteArray Selection::symbolListMimeData() const
                           case ElementType::PEDAL:
                           case ElementType::TRILL:
                           case ElementType::TEXTLINE:
+                          case ElementType::NOTELINE:
                           case ElementType::SEGMENT:
                           case ElementType::SYSTEM:
                           case ElementType::COMPOUND:
