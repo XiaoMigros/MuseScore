@@ -104,6 +104,7 @@ Ret SvgWriter::write(INotationPtr notation, io::IODevice& destinationDevice, con
         painter.translate(-pageRect.topLeft());
     }
 
+    printer.setResolution(configuration()->exportPdfDpiResolution());
     mu::engraving::MScore::pixelRatio = mu::engraving::DPI / printer.logicalDpiX();
 
     const bool TRANSPARENT_BACKGROUND = muse::value(options, OptionKey::TRANSPARENT_BACKGROUND,
