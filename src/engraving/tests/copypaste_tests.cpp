@@ -809,3 +809,49 @@ TEST_F(Engraving_CopyPasteTests, copypasteparts)
 
     MScore::useRead302InTestMode = useRead302;
 }
+
+TEST_F(Engraving_CopyPasteTests, copypastejumps)
+{
+    bool useRead302 = MScore::useRead302InTestMode;
+    MScore::useRead302InTestMode = false;
+
+    MasterScore* score = ScoreRW::readScore(COPYPASTE_DATA_DIR + String("copypaste_jumps.mscx"));
+    EXPECT_TRUE(score);
+
+    Measure* m1 = score->firstMeasure();
+    Measure* m2 = m1->nextMeasure();
+    Measure* m3 = m2->nextMeasure();
+
+    EXPECT_TRUE(m1);
+    EXPECT_TRUE(m2);
+    EXPECT_TRUE(m3);
+
+    // select the jump in the first measure
+    for (EngravingItem* e : m1->el()) {
+        if (e->isJump()) {
+            score->select(e, SelectType::SINGLE);
+            break;
+        }
+    }
+
+    // copy it
+    EXPECT_TRUE(score->selection().canCopy());
+    String mimeType = score->selection().mimeType();
+    EXPECT_TRUE(!mimeType.isEmpty());
+    QMimeData* mimeData = new QMimeData;
+    mimeData->setData(mimeType, score->selection().mimeData().toQByteArray());
+
+    //paste to second measure
+    score->select(m2->first()->element(0));
+
+    score->startCmd(TranslatableString::untranslatable("Copy/paste tests"));
+    QMimeDataAdapter ma(mimeData);
+    score->cmdPaste(&ma, 0);
+    score->endCmd();
+
+    // add new command: paste marker on barline
+
+    EXPECT_TRUE(ScoreComp::saveCompareScore(score, String("copypaste_jumps.mscx"),
+                                            COPYPASTE_DATA_DIR + String("copypaste_jumps-ref.mscx")));
+    delete score;
+}

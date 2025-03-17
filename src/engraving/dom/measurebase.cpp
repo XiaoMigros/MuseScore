@@ -22,13 +22,16 @@
 
 #include "measurebase.h"
 
+#include "actionicon.h"
 #include "factory.h"
 #include "layoutbreak.h"
 #include "measure.h"
+#include "mscoreview.h"
 #include "score.h"
 #include "staff.h"
 #include "stafftypechange.h"
 #include "system.h"
+#include "undo.h"
 
 #include "log.h"
 
@@ -139,6 +142,141 @@ System* MeasureBase::nextNonVBoxSystem() const
     }
 
     return nextSystem != curSystem ? nextSystem : nullptr;
+}
+
+bool MeasureBase::acceptDrop(EditData& data) const
+{
+    MuseScoreView* viewer = data.view();
+    PointF pos = data.pos;
+    EngravingItem* e = data.dropElement;
+
+    staff_idx_t staffIdx;
+    Segment* seg;
+    if (!score()->pos2measure(pos, &staffIdx, 0, &seg, 0)) {
+        return false;
+    }
+
+    RectF staffRect = system()->staff(staffIdx)->bbox().translated(system()->canvasPos());
+    staffRect.intersect(canvasBoundingRect());
+
+    //! NOTE: Should match NotationInteraction::dragMeasureAnchorElement
+    switch (e->type()) {
+    case ElementType::FBOX:
+    case ElementType::HBOX:
+    case ElementType::TBOX:
+    case ElementType::VBOX:
+        // Always drop to all staves
+        viewer->setDropRectangle(canvasBoundingRect());
+        return true;
+
+    case ElementType::ACTION_ICON:
+        switch (toActionIcon(e)->actionType()) {
+        case ActionIconType::VFRAME:
+        case ActionIconType::HFRAME:
+        case ActionIconType::TFRAME:
+        case ActionIconType::FFRAME:
+        case ActionIconType::MEASURE:
+            viewer->setDropRectangle(canvasBoundingRect());
+            return true;
+        case ActionIconType::SYSTEM_LOCK:
+        {
+            LayoutMode layoutMode = score()->layoutMode();
+            if (layoutMode == LayoutMode::PAGE || layoutMode == LayoutMode::SYSTEM) {
+                viewer->setDropRectangle(canvasBoundingRect().adjusted(-x(), 0.0, 0.0, 0.0));
+                return true;
+            }
+            return false;
+        }
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+    return false;
+}
+
+EngravingItem* MeasureBase::drop(EditData& data)
+{
+    EngravingItem* e = data.dropElement;
+    staff_idx_t staffIdx = muse::nidx;
+    Segment* seg = nullptr;
+    score()->pos2measure(data.pos, &staffIdx, 0, &seg, 0);
+    switch (e->type()) {
+    case ElementType::FBOX:
+    case ElementType::HBOX:
+    case ElementType::TBOX:
+    case ElementType::VBOX:
+    {
+        MeasureBase* beforeMeasure = this;
+        if (isMeasure()) {
+            Measure* m = toMeasure(this);
+            if (m->isMMRest()) {
+                beforeMeasure = m->mmRestFirst();
+                score()->deselectAll();
+            }
+            for (staff_idx_t staffIdx = 0; staffIdx < score()->nstaves(); ++staffIdx) {
+                if (m->isMeasureRepeatGroupWithPrevM(staffIdx)) {
+                    MScore::setError(MsError::CANNOT_SPLIT_MEASURE_REPEAT);
+                    return nullptr;
+                }
+            }
+        } else {
+            beforeMeasure = top(); // don't try to insert in front of nested frame
+        }
+        Fraction tick = beforeMeasure->tick();
+
+        MeasureBase* newMeasureBase = toMeasureBase(e);
+        newMeasureBase->setTick(tick);
+        newMeasureBase->setNext(beforeMeasure);
+        newMeasureBase->setPrev(beforeMeasure ? beforeMeasure->prev() : score()->last());
+
+        score()->undo(new InsertMeasures(newMeasureBase, newMeasureBase));
+        Score::InsertMeasureOptions options;
+        if (options.needDeselectAll) {
+            score()->deselectAll();
+        }
+
+        if (options.cloneBoxToAllParts) {
+            newMeasureBase->manageExclusionFromParts(/*exclude =*/ false);
+        }
+
+        return newMeasureBase;
+    }
+
+    case ElementType::ACTION_ICON:
+        switch (toActionIcon(e)->actionType()) {
+        case ActionIconType::VFRAME:
+            score()->insertBox(ElementType::VBOX, this);
+            break;
+        case ActionIconType::HFRAME:
+            score()->insertBox(ElementType::HBOX, this);
+            break;
+        case ActionIconType::TFRAME:
+            score()->insertBox(ElementType::TBOX, this);
+            break;
+        case ActionIconType::FFRAME:
+            score()->insertBox(ElementType::FBOX, this);
+            break;
+        case ActionIconType::MEASURE:
+            score()->insertMeasure(ElementType::MEASURE, this);
+            break;
+        case ActionIconType::SYSTEM_LOCK:
+            score()->makeIntoSystem(system()->first(), this);
+            break;
+        default:
+            break;
+        }
+        break;
+
+    default:
+        LOGD("MeasureBase: cannot drop %s here", e->typeName());
+        delete e;
+        break;
+    }
+    return nullptr;
 }
 
 //---------------------------------------------------------
