@@ -106,6 +106,9 @@ public:
     Measure* nextMeasureMM() const;
     Measure* prevMeasureMM() const;
 
+    bool acceptDrop(EditData&) const override;
+    EngravingItem* drop(EditData&) override;
+
     ElementList& el() { return m_el; }
     const ElementList& el() const { return m_el; }
 
