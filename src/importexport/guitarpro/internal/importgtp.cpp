@@ -65,7 +65,6 @@
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stafftext.h"
 #include "engraving/dom/stafftype.h"
-#include "engraving/dom/stretchedbend.h"
 #include "engraving/dom/stringdata.h"
 #include "engraving/dom/tempotext.h"
 #include "engraving/dom/text.h"
@@ -636,17 +635,8 @@ void GuitarPro::createBend(Note* note, std::vector<PitchValue>& bendData)
         return;
     }
 
-    bool useStretchedBends = engravingConfiguration()->useStretchedBends();
-
-    if (useStretchedBends) {
-        Chord* chord = toChord(note->parent());
-        StretchedBend* stretchedBend = Factory::createStretchedBend(chord);
-        stretchedBend->setPitchValues(bendData);
-        stretchedBend->setTrack(note->track());
-        stretchedBend->setNote(note);
-        note->setStretchedBend(stretchedBend);
-        chord->add(stretchedBend);
-        m_stretchedBends.push_back(stretchedBend);
+    if (engravingConfiguration()->experimentalGuitarBendImport()) {
+        m_guitarBendImporter->collectBend(note, bendData);
     } else {
         Bend* bend = Factory::createBend(note);
         bend->setPoints(bendData);
@@ -933,6 +923,11 @@ void GuitarPro::createMeasures()
         //            m->setRepeatFlags(bars[i].repeatFlags);
         m->setRepeatCount(bars[i].repeats);           // supported in gp5
 
+        if (bars[i].repeatFlags == (mu::engraving::Repeat::START | mu::engraving::Repeat::END)) {
+            m->setRepeatEnd(true);
+            m->setRepeatStart(true);
+            voltaSequence = 1;
+        }
         // reset the volta sequence if we have an opening repeat
         if (bars[i].repeatFlags == mu::engraving::Repeat::START) {
             voltaSequence = 1;
@@ -2657,7 +2652,9 @@ bool GuitarPro3::read(IODevice* io)
     }
 
     m_continiousElementsBuilder->addElementsToScore();
-    StretchedBend::prepareBends(m_stretchedBends);
+    if (engravingConfiguration()->experimentalGuitarBendImport()) {
+        m_guitarBendImporter->applyBendsToChords();
+    }
 
     return true;
 }
@@ -2853,10 +2850,12 @@ static void createLinkedTabs(MasterScore* score)
                 StaffTypes::TAB_5SIMPLE,
                 StaffTypes::TAB_6SIMPLE,
                 StaffTypes::TAB_7SIMPLE,
-                StaffTypes::TAB_8SIMPLE
+                StaffTypes::TAB_8SIMPLE,
+                StaffTypes::TAB_9SIMPLE,
+                StaffTypes::TAB_10SIMPLE,
             };
 
-            size_t index = (lines >= 4 && lines <= 8) ? lines - 4 : 2;
+            size_t index = (lines >= 4 && lines <= 10) ? lines - 4 : 2;
 
             dstStaff->setStaffType(fr, *StaffType::preset(types.at(index)));
             dstStaff->setLines(fr, static_cast<int>(lines));

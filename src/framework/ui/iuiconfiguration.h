@@ -75,6 +75,8 @@ public:
     virtual int iconsFontSize(IconSizeType type) const = 0;
     virtual async::Notification iconsFontChanged() const = 0;
 
+    virtual io::path_t appIconPath() const = 0;
+
     virtual std::string musicalFontFamily() const = 0;
     virtual int musicalFontSize() const = 0;
     virtual async::Notification musicalFontChanged() const = 0;
@@ -105,6 +107,10 @@ public:
     virtual bool isVisible(const QString& key, bool def = true) const = 0;
     virtual void setIsVisible(const QString& key, bool val) = 0;
     virtual async::Notification isVisibleChanged(const QString& key) const = 0;
+
+    virtual QString uiItemState(const QString& itemName) const = 0;
+    virtual void setUiItemState(const QString& itemName, const QString& value) = 0;
+    virtual async::Notification uiItemStateChanged(const QString& itemName) const = 0;
 
     virtual ToolConfig toolConfig(const QString& toolName, const ToolConfig& defaultConfig) const = 0;
     virtual void setToolConfig(const QString& toolName, const ToolConfig& config) = 0;

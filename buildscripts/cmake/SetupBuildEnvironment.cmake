@@ -41,7 +41,7 @@ endif()
 set(BUILD_SHARED_LIBS OFF)
 set(SHARED_LIBS_INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
-if(MUE_COMPILE_USE_SHARED_LIBS_IN_DEBUG AND BUILD_IS_DEBUG)
+if(MUSE_COMPILE_USE_SHARED_LIBS_IN_DEBUG AND BUILD_IS_DEBUG)
     if(CC_IS_GCC OR CC_IS_MINGW)
         set(BUILD_SHARED_LIBS ON)
     endif()
@@ -66,6 +66,11 @@ endif(OS_IS_MAC)
 
 # MSVC-specific
 if(CC_IS_MSVC)
+    # TODO: remove this
+    # It is necessary because of the following line in src/app/CMakeLists.txt:
+    # `set_target_properties(${QtLibrary} PROPERTIES MAP_IMPORTED_CONFIG_DEBUG "RELEASE")`
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL") # i.e. not MultiThreaded$<$<CONFIG:Debug>:Debug>DLL
+
     add_compile_options("/EHsc")
     add_compile_options("/utf-8")
 

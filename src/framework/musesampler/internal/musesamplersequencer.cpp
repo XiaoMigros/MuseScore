@@ -79,6 +79,8 @@ static const std::unordered_map<ArticulationType, ms_NoteArticulation> ARTICULAT
     { ArticulationType::ColLegno, ms_NoteArticulation_ColLegno },
     { ArticulationType::SulTasto, ms_NoteArticulation_SulTasto },
     { ArticulationType::SulPont, ms_NoteArticulation_SulPonticello },
+
+    { ArticulationType::LaissezVibrer, ms_NoteArticulation_LaissezVibrer },
 };
 
 static const std::unordered_map<ArticulationType, ms_NoteHead> NOTEHEAD_TYPES = {
@@ -356,7 +358,7 @@ void MuseSamplerSequencer::addNoteEvent(const mpe::NoteEvent& noteEvent)
     for (const auto& art : noteEvent.expressionCtx().articulations) {
         auto ms_art = convertArticulationType(art.first);
 
-        if (art.first == ArticulationType::Pedal) {
+        if (art.first == ArticulationType::Pedal || art.first == ArticulationType::LetRing) {
             // Pedal on:
             m_samplerLib->addPedalEvent(m_sampler, track, art.second.meta.timestamp, 1.0);
             // Pedal off:

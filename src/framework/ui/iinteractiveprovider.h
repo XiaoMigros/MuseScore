@@ -38,19 +38,21 @@ class IInteractiveProvider : MODULE_EXPORT_INTERFACE
 public:
     virtual ~IInteractiveProvider() = default;
 
-    virtual RetVal<Val> question(const std::string& title, const IInteractive::Text& text, const IInteractive::ButtonDatas& buttons,
-                                 int defBtn = int(IInteractive::Button::NoButton), const IInteractive::Options& options = {}) = 0;
+    virtual RetVal<Val> question(const std::string& contentTitle, const IInteractive::Text& text, const IInteractive::ButtonDatas& buttons,
+                                 int defBtn = int(IInteractive::Button::NoButton), const IInteractive::Options& options = {},
+                                 const std::string& dialogTitle = "") = 0;
 
-    virtual RetVal<Val> info(const std::string& title, const IInteractive::Text& text, const IInteractive::ButtonDatas& buttons,
-                             int defBtn = int(IInteractive::Button::NoButton), const IInteractive::Options& options = {}) = 0;
+    virtual RetVal<Val> info(const std::string& contentTitle, const IInteractive::Text& text, const IInteractive::ButtonDatas& buttons,
+                             int defBtn = int(IInteractive::Button::NoButton), const IInteractive::Options& options = {},
+                             const std::string& dialogTitle = "") = 0;
 
-    virtual RetVal<Val> warning(const std::string& title, const IInteractive::Text& text, const std::string& detailedText = {},
+    virtual RetVal<Val> warning(const std::string& contentTitle, const IInteractive::Text& text, const std::string& detailedText = {},
                                 const IInteractive::ButtonDatas& buttons = {}, int defBtn = int(IInteractive::Button::NoButton),
-                                const IInteractive::Options& options = {}) = 0;
+                                const IInteractive::Options& options = {}, const std::string& dialogTitle = "") = 0;
 
-    virtual RetVal<Val> error(const std::string& title, const IInteractive::Text& text, const std::string& detailedText = {},
+    virtual RetVal<Val> error(const std::string& contentTitle, const IInteractive::Text& text, const std::string& detailedText = {},
                               const IInteractive::ButtonDatas& buttons = {}, int defBtn = int(IInteractive::Button::NoButton),
-                              const IInteractive::Options& options = {}) = 0;
+                              const IInteractive::Options& options = {}, const std::string& dialogTitle = "") = 0;
 
     virtual Ret showProgress(const std::string& title, Progress* progress) = 0;
 
@@ -76,6 +78,7 @@ public:
     virtual void closeAllDialogs() = 0;
 
     virtual ValCh<Uri> currentUri() const = 0;
+    virtual RetVal<bool> isCurrentUriDialog() const = 0;
     virtual async::Notification currentUriAboutToBeChanged() const = 0;
     virtual std::vector<Uri> stack() const = 0;
 

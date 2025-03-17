@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(mscore LANGUAGES C CXX)
+project(MuseScore LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -66,12 +66,14 @@ option(MUE_BUILD_BRAILLE_TESTS "Build braille tests" ON)
 option(MUE_BUILD_CONVERTER_MODULE "Build converter module" ON)
 option(MUE_BUILD_ENGRAVING_TESTS "Build engraving tests" ON)
 option(MUE_BUILD_ENGRAVING_DEVTOOLS "Build engraving devtools" ON)
+option(MUE_BUILD_ENGRAVING_PLAYBACK "Build engraving playback" ON)
 option(MUE_BUILD_IMPORTEXPORT_MODULE "Build importexport module" ON)
 option(MUE_BUILD_IMPORTEXPORT_TESTS "Build importexport tests" ON)
 option(MUE_BUILD_VIDEOEXPORT_MODULE "Build videoexport module" OFF)
 option(MUE_BUILD_IMAGESEXPORT_MODULE "Build imagesexport module" ON)
 option(MUE_BUILD_INSPECTOR_MODULE "Build inspector module" ON)
 option(MUE_BUILD_INSTRUMENTSSCENE_MODULE "Build instruments scene module" ON)
+option(MUE_BUILD_MUSESOUNDS_MODULE "Build MuseSounds module" ON)
 option(MUE_BUILD_NOTATION_MODULE "Build notation module" ON)
 option(MUE_BUILD_NOTATION_TESTS "Build notation tests" ON)
 option(MUE_BUILD_PALETTE_MODULE "Build palette module" ON)
@@ -92,10 +94,11 @@ set(MUE_VTEST_MSCORE_REF_BIN "${CMAKE_CURRENT_LIST_DIR}/../MU_ORIGIN/MuseScore/b
 
 # === Compile ===
 option(MUE_COMPILE_INSTALL_QTQML_FILES "Whether to bundle qml files along with the installation (relevant on macOS only)" ON)
-option(MUE_COMPILE_USE_UNITY "Use unity build." ON)
-option(MUE_COMPILE_USE_CCACHE "Try use ccache" ON)
-option(MUE_COMPILE_USE_SHARED_LIBS_IN_DEBUG "Build shared libs if possible in debug" OFF)
 option(MUE_COMPILE_MACOS_PRECOMPILED_DEPS_PATH "Path to precompiled dependencies (macOS only; optional: if not specified, some libraries will be used from the system and others will be built from source)" "")
+
+option(MUSE_COMPILE_USE_UNITY "Use unity build" ON)
+option(MUSE_COMPILE_USE_CCACHE "Try use ccache" ON)
+option(MUSE_COMPILE_USE_SHARED_LIBS_IN_DEBUG "Build shared libs if possible in debug" OFF)
 
 # === System libraries ===
 # Important for the maintainers of Linux distributions
@@ -132,9 +135,9 @@ set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
 
 include(SetupBuildEnvironment)
 include(GetPlatformInfo)
-if (MUE_COMPILE_USE_CCACHE)
+if (MUSE_COMPILE_USE_CCACHE)
     include(TryUseCcache)
-endif(MUE_COMPILE_USE_CCACHE)
+endif()
 
 
 ###########################################
@@ -155,7 +158,7 @@ if (MUSE_MODULE_NETWORK_WEBSOCKET)
     set(QT_ADD_WEBSOCKET ON)
 endif()
 
-include(FindQt6)
+include(SetupQt6)
 
 if (MUE_DOWNLOAD_SOUNDFONT)
     include(DownloadSoundFont)

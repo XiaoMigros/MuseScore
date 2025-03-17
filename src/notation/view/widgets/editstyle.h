@@ -83,6 +83,8 @@ private:
     void setHeaderFooterToolTip();
     void adjustPagesStackSize(int currentPageIndex);
 
+    bool isBoolStyleRepresentedByButtonGroup(StyleId id);
+
     struct WidgetAndView {
         QWidget* widget = nullptr;
         QQuickView* view = nullptr;
@@ -152,7 +154,6 @@ private slots:
     void endEditUserStyleName();
     void resetUserStyleName();
     void updateParenthesisIndicatingTiesGroupState();
-    void clefVisibilityChanged(bool);
 
 private:
     QString m_currentPageCode;

@@ -482,7 +482,7 @@ void SingleDraw::draw(const Note* item, Painter* painter)
         }
         const Staff* st = item->staff();
         const StaffType* tab = st->staffTypeForElement(item);
-        if (item->tieBack() && !tab->showBackTied()) {
+        if (item->tieBackNonPartial() && !tab->showBackTied()) {
             if (item->chord()->measure()->system() == item->tieBack()->startNote()->chord()->measure()->system() && item->el().empty()) {
                 // fret should be hidden, so return without drawing it
                 return;
@@ -1927,7 +1927,7 @@ void SingleDraw::draw(const KeySig* item, Painter* painter)
 
     if (!item->explicitParent() && (item->isAtonal() || item->isCustom()) && ldata->keySymbols.empty()) {
         // empty custom or atonal key signature - draw something for palette
-        painter->setPen(item->configuration()->formattingColor());
+        painter->setPen(item->configuration()->scoreGreyColor());
         item->drawSymbol(SymId::timeSigX, painter, PointF(item->symWidth(SymId::timeSigX) * -0.5, 2.0 * item->spatium()));
     }
 }
@@ -1936,22 +1936,14 @@ void SingleDraw::draw(const LayoutBreak* item, Painter* painter)
 {
     TRACE_DRAW_ITEM;
 
-    Pen pen;
-    pen.setColor(item->configuration()->fontPrimaryColor());
-    pen.setWidthF(item->lineWidth() / 2);
-    pen.setJoinStyle(PenJoinStyle::MiterJoin);
-    pen.setCapStyle(PenCapStyle::SquareCap);
-    pen.setDashPattern({ 1, 3 });
-
+    Pen pen(item->configuration()->fontPrimaryColor());
     painter->setPen(pen);
-    painter->setBrush(BrushStyle::NoBrush);
-    painter->drawRect(item->iconBorderRect());
 
-    pen.setWidthF(item->lineWidth());
-    pen.setStyle(PenStyle::SolidLine);
+    Font f(item->font());
+    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
+    painter->setFont(f);
 
-    painter->setPen(pen);
-    painter->drawPath(item->iconPath());
+    painter->drawSymbol(PointF(0.0, 0.0), item->iconCode());
 }
 
 void SingleDraw::draw(const LedgerLine* item, Painter* painter)
@@ -2064,7 +2056,7 @@ void SingleDraw::draw(const ShadowNote* item, Painter* painter)
     PointF ap(item->pagePos());
     painter->translate(ap);
     double lw = item->style().styleMM(Sid::stemWidth) * item->mag();
-    Pen pen(item->configuration()->highlightSelectionColor(item->voice()), lw, PenStyle::SolidLine, PenCapStyle::FlatCap);
+    Pen pen(item->color(), lw, PenStyle::SolidLine, PenCapStyle::FlatCap);
     painter->setPen(pen);
 
     bool up = item->computeUp();
@@ -2361,23 +2353,23 @@ void SingleDraw::draw(const TieSegment* item, Painter* painter)
         painter->setBrush(Brush(pen.color()));
         pen.setCapStyle(PenCapStyle::RoundCap);
         pen.setJoinStyle(PenJoinStyle::RoundJoin);
-        pen.setWidthF(item->style().styleMM(Sid::tieEndWidth) * mag);
+        pen.setWidthF(item->endWidth() * mag);
         break;
     case SlurStyleType::Dotted:
         painter->setBrush(BrushStyle::NoBrush);
         pen.setCapStyle(PenCapStyle::RoundCap);           // True dots
         pen.setDashPattern(dotted);
-        pen.setWidthF(item->style().styleMM(Sid::tieDottedWidth) * mag);
+        pen.setWidthF(item->dottedWidth() * mag);
         break;
     case SlurStyleType::Dashed:
         painter->setBrush(BrushStyle::NoBrush);
         pen.setDashPattern(dashed);
-        pen.setWidthF(item->style().styleMM(Sid::tieDottedWidth) * mag);
+        pen.setWidthF(item->dottedWidth() * mag);
         break;
     case SlurStyleType::WideDashed:
         painter->setBrush(BrushStyle::NoBrush);
         pen.setDashPattern(wideDashed);
-        pen.setWidthF(item->style().styleMM(Sid::tieDottedWidth) * mag);
+        pen.setWidthF(item->dottedWidth() * mag);
         break;
     case SlurStyleType::Undefined:
         break;

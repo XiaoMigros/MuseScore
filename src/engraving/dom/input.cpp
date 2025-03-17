@@ -35,6 +35,7 @@
 #include "select.h"
 #include "staff.h"
 #include "stem.h"
+#include "tuplet.h"
 
 using namespace mu;
 
@@ -50,7 +51,21 @@ bool InputState::isValid() const
 //   drumset
 //---------------------------------------------------------
 
-const Drumset* InputState::drumset() const
+Staff* InputState::staff() const
+{
+    if (!m_segment || m_track == muse::nidx) {
+        return nullptr;
+    }
+
+    return m_segment->score()->staff(mu::engraving::track2staff(m_track));
+}
+
+staff_idx_t InputState::staffIdx() const
+{
+    return mu::engraving::track2staff(m_track);
+}
+
+Drumset* InputState::drumset() const
 {
     if (!m_segment || m_track == muse::nidx) {
         return nullptr;
@@ -124,8 +139,23 @@ void InputState::setDots(int n)
 
 void InputState::setVoice(voice_idx_t v)
 {
-    if (v >= VOICES || m_track == muse::nidx) {
+    const Score* score = m_segment ? m_segment->score() : nullptr;
+
+    if (!score || v >= VOICES || v == voice() || m_track == muse::nidx) {
         return;
+    }
+
+    // TODO: Inserting notes to a new voice in the middle of a tuplet is not yet supported. In this case
+    // we'll move the input to the start of the tuplet...
+    if (const Segment* prevSeg = segment()) {
+        const ChordRest* prevCr = prevSeg->cr(track());
+        //! NOTE: if there's an existing ChordRest at the new voiceIndex, we don't need to move the cursor
+        if (prevCr && prevCr->topTuplet() && !prevSeg->cr(v)) {
+            Segment* newSeg = score->tick2segment(prevCr->topTuplet()->tick());
+            if (newSeg) {
+                setSegment(newSeg);
+            }
+        }
     }
 
     setTrack((m_track / VOICES) * VOICES + v);
@@ -173,6 +203,8 @@ void InputState::update(Selection& selection)
     setDuration(DurationType::V_INVALID);
     setRest(false);
     setAccidentalType(AccidentalType::NONE);
+    setNotes({});
+
     Note* n1 = nullptr;
     ChordRest* cr1 = nullptr;
     bool differentAccidentals = false;

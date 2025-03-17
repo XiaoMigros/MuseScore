@@ -115,6 +115,7 @@ enum class Sid {
     lyricsMelismaForce,
     lyricsMelismaMinLength,
     lyricsDashPosAtStartOfSystem,
+    lyricsAvoidBarlines,
 
     lyricsOddFontFace,
     lyricsOddFontSize,
@@ -163,6 +164,7 @@ enum class Sid {
     repeatBarTips,
     startBarlineSingle,
     startBarlineMultiple,
+    maskBarlinesForText,
 
     bracketWidth,
     bracketDistance,
@@ -181,7 +183,6 @@ enum class Sid {
     keysigLeftMargin,
     ambitusMargin,
     timesigLeftMargin,
-    timesigScale,
 
     midClefKeyRightMargin,
     clefKeyRightMargin,
@@ -195,6 +196,29 @@ enum class Sid {
 
     clefBarlineDistance,
     timesigBarlineDistance,
+
+    timeSigPlacement,
+
+    timeSigCenterOnBarline,
+    timeSigVSMarginCentered,
+    timeSigVSMarginNonCentered,
+    timeSigCenterAcrossStaveGroup,
+
+    timeSigNormalStyle,
+    timeSigNormalScale,
+    timeSigNormalScaleLock,
+    timeSigNormalNumDist,
+    timeSigNormalY,
+    timeSigAboveStyle,
+    timeSigAboveScale,
+    timeSigAboveScaleLock,
+    timeSigAboveNumDist,
+    timeSigAboveY,
+    timeSigAcrossStyle,
+    timeSigAcrossScale,
+    timeSigAcrossScaleLock,
+    timeSigAcrossNumDist,
+    timeSigAcrossY,
 
     useStraightNoteFlags,
     stemWidth,
@@ -254,6 +278,7 @@ enum class Sid {
     articulationAnchorOther,
     articulationStemHAlign,
     articulationKeepTogether,
+    trillAlwaysShowCueNote,
     lastSystemFillLimit,
 
     hairpinPlacement,
@@ -442,6 +467,7 @@ enum class Sid {
     measureNumberAllStaves,
 
     smallNoteMag,
+    scaleRythmicSpacingForSmallNotes,
     graceNoteMag,
     graceToMainNoteDist,
     graceToGraceNoteDist,
@@ -481,8 +507,14 @@ enum class Sid {
     mergeMatchingRests,
     createMultiMeasureRests,
     minEmptyMeasures,
+    singleMeasureMMRestUseNormalRest,
+    singleMeasureMMRestShowNumber,
     minMMRestWidth,
+    mmRestConstantWidth,
+    mmRestReferenceWidth,
+    mmRestMaxWidthIncrease,
     mmRestNumberPos,
+    mmRestBetweenStaves,
     mmRestNumberMaskHBar,
     multiMeasureRestMargin,
     mmRestHBarThickness,
@@ -519,16 +551,23 @@ enum class Sid {
     tieMidWidth,
     tieDottedWidth,
     minTieLength,
+    minHangingTieLength,
     minStraightGlissandoLength,
     minWigglyGlissandoLength,
     slurMinDistance,
     tieMinDistance,
-    headerToLineStartDistance, // determines start point of "dangling" lines (ties, gliss, lyrics...) at start of system
+    laissezVibMinDistance,
+    headerToLineStartDistance,   // determines start point of "dangling" lines (ties, gliss, lyrics...) when preceded by header clefs/timesigs/keysigs
+    lineEndToBarlineDistance,  // determines end point of "dangling" lines (ties, gliss, lyrics...) in relation to barlines
 
     tiePlacementSingleNote,
     tiePlacementChord,
+    tieDotsPlacement,
     tieMinShoulderHeight,
     tieMaxShoulderHeight,
+
+    minLaissezVibLength,
+    laissezVibUseSmuflSym,
 
     sectionPause,
     musicalSymbolFont,
@@ -1254,6 +1293,27 @@ enum class Sid {
     systemTextLineTextAlign,
     systemTextLineSystemFlag,
 
+    noteLinePlacement,
+    noteLineFontFace,
+    noteLineFontSize,
+    noteLineLineSpacing,
+    noteLineFontSpatiumDependent,
+    noteLineFontStyle,
+    noteLineColor,
+    noteLineAlign,
+    noteLineOffset,
+    noteLineFrameType,
+    noteLineFramePadding,
+    noteLineFrameWidth,
+    noteLineFrameRound,
+    noteLineFrameFgColor,
+    noteLineFrameBgColor,
+
+    noteLineWidth,
+    noteLineStyle,
+    noteLineDashLineLen,
+    noteLineDashGapLen,
+
     glissandoFontFace,
     glissandoFontSize,
     glissandoLineSpacing,
@@ -1272,6 +1332,12 @@ enum class Sid {
     glissandoText,
     glissandoStyle,
     glissandoStyleHarp,
+
+    glissandoType,
+    glissandoLineStyle,
+    glissandoDashLineLen,
+    glissandoDashGapLen,
+    glissandoShowText,
 
     bendFontFace,
     bendFontSize,
@@ -1722,6 +1788,26 @@ enum class Sid {
     autoplaceEnabled,
     defaultsVersion,
 
+    changesBeforeBarlineRepeats,
+    changesBeforeBarlineOtherJumps,
+
+    placeClefsBeforeRepeats,
+    changesBetweenEndStartRepeat,
+
+    showCourtesiesRepeats,
+    useParensRepeatCourtesies,
+
+    showCourtesiesOtherJumps,
+    useParensOtherJumpCourtesies,
+
+    showCourtesiesAfterCancellingRepeats,
+    useParensRepeatCourtesiesAfterCancelling,
+
+    showCourtesiesAfterCancellingOtherJumps,
+    useParensOtherJumpCourtesiesAfterCancelling,
+
+    smallParens,
+
     STYLES
     ///\}
 };
@@ -1733,7 +1819,7 @@ using StyleIdSet = std::unordered_set<Sid>;
 //   VerticalAlignRange
 //---------------------------------------------------------
 
-enum class VerticalAlignRange {
+enum class VerticalAlignRange : unsigned char {
     SEGMENT, MEASURE, SYSTEM
 };
 

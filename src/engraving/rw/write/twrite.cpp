@@ -89,6 +89,7 @@
 
 #include "dom/keysig.h"
 
+#include "dom/laissezvib.h"
 #include "dom/layoutbreak.h"
 #include "dom/ledgerline.h"
 #include "dom/letring.h"
@@ -103,12 +104,15 @@
 
 #include "dom/note.h"
 #include "dom/notedot.h"
+#include "dom/noteline.h"
 #include "dom/ornament.h"
 #include "dom/ottava.h"
 
 #include "dom/page.h"
 #include "dom/palmmute.h"
+#include "dom/parenthesis.h"
 #include "dom/part.h"
+#include "dom/partialtie.h"
 #include "dom/pedal.h"
 #include "dom/pickscrape.h"
 #include "dom/playtechannotation.h"
@@ -244,6 +248,8 @@ void TWrite::writeItem(const EngravingItem* item, XmlWriter& xml, WriteContext& 
         break;
     case ElementType::KEYSIG:       write(item_cast<const KeySig*>(item), xml, ctx);
         break;
+    case ElementType::LAISSEZ_VIB:  write(item_cast<const LaissezVib*>(item), xml, ctx);
+        break;
     case ElementType::LAYOUT_BREAK: write(item_cast<const LayoutBreak*>(item), xml, ctx);
         break;
     case ElementType::LEDGER_LINE:  write(item_cast<const LedgerLine*>(item), xml, ctx);
@@ -268,6 +274,8 @@ void TWrite::writeItem(const EngravingItem* item, XmlWriter& xml, WriteContext& 
         break;
     case ElementType::NOTEHEAD:     write(item_cast<const NoteHead*>(item), xml, ctx);
         break;
+    case ElementType::NOTELINE:     write(item_cast<const NoteLine*>(item), xml, ctx);
+        break;
     case ElementType::ORNAMENT:     write(item_cast<const Ornament*>(item), xml, ctx);
         break;
     case ElementType::OTTAVA:       write(item_cast<const Ottava*>(item), xml, ctx);
@@ -275,6 +283,12 @@ void TWrite::writeItem(const EngravingItem* item, XmlWriter& xml, WriteContext& 
     case ElementType::PAGE:         write(item_cast<const Page*>(item), xml, ctx);
         break;
     case ElementType::PALM_MUTE:    write(item_cast<const PalmMute*>(item), xml, ctx);
+        break;
+    case ElementType::PARENTHESIS:    write(item_cast<const Parenthesis*>(item), xml, ctx);
+        break;
+    case ElementType::PARTIAL_LYRICSLINE:  write(item_cast<const PartialLyricsLine*>(item), xml, ctx);
+        break;
+    case ElementType::PARTIAL_TIE:  write(item_cast<const PartialTie*>(item), xml, ctx);
         break;
     case ElementType::PEDAL:        write(item_cast<const Pedal*>(item), xml, ctx);
         break;
@@ -414,6 +428,43 @@ void TWrite::writeProperty(const EngravingItem* item, XmlWriter& xml, Pid pid, b
     xml.tagProperty(pid, p, d);
 }
 
+void TWrite::writeSystemLocks(const Score* score, XmlWriter& xml)
+{
+    std::vector<const SystemLock*> locks = score->systemLocks()->allLocks();
+    if (locks.empty()) {
+        return;
+    }
+
+    xml.startElement("SystemLocks");
+    for (const SystemLock* sl : locks) {
+        writeSystemLock(sl, xml);
+    }
+    xml.endElement();
+}
+
+void TWrite::writeItemEid(const EngravingObject* item, XmlWriter& xml, WriteContext& ctx)
+{
+    if (MScore::testMode || ctx.configuration()->doNotSaveEIDsForBackCompat() || item->score()->isPaletteScore() || ctx.clipboardmode()) {
+        return;
+    }
+
+    EID eid = item->eid();
+    if (!eid.isValid()) {
+        eid = item->assignNewEID();
+    }
+    xml.tag("eid", eid.toStdString());
+}
+
+void TWrite::writeSystemLock(const SystemLock* systemLock, XmlWriter& xml)
+{
+    xml.startElement("systemLock");
+
+    xml.tag("startMeasure", systemLock->startMB()->eid().toStdString());
+    xml.tag("endMeasure", systemLock->endMB()->eid().toStdString());
+
+    xml.endElement();
+}
+
 void TWrite::writeStyledProperties(const EngravingItem* item, XmlWriter& xml)
 {
     for (const StyledProperty& spp : *item->styledProperties()) {
@@ -423,9 +474,7 @@ void TWrite::writeStyledProperties(const EngravingItem* item, XmlWriter& xml)
 
 void TWrite::writeItemProperties(const EngravingItem* item, XmlWriter& xml, WriteContext& ctx)
 {
-    if (!MScore::testMode && !item->score()->isPaletteScore()) {
-        xml.tag("eid", item->eid().toUint64());
-    }
+    TWrite::writeItemEid(item, xml, ctx);
 
     bool autoplaceEnabled = item->score()->style().styleB(Sid::autoplaceEnabled);
     if (!autoplaceEnabled) {
@@ -633,6 +682,7 @@ void TWrite::write(const Ornament* item, XmlWriter& xml, WriteContext& ctx)
     writeProperty(item, xml, Pid::INTERVAL_ABOVE);
     writeProperty(item, xml, Pid::INTERVAL_BELOW);
     writeProperty(item, xml, Pid::ORNAMENT_SHOW_ACCIDENTAL);
+    writeProperty(item, xml, Pid::ORNAMENT_SHOW_CUE_NOTE);
     writeProperty(item, xml, Pid::START_ON_UPPER_NOTE);
     writeProperties(static_cast<const Articulation*>(item), xml, ctx);
     xml.endElement();
@@ -747,7 +797,7 @@ void TWrite::writeProperties(const Box* item, XmlWriter& xml, WriteContext& ctx)
         Pid::BOX_HEIGHT, Pid::BOX_WIDTH, Pid::TOP_GAP, Pid::BOTTOM_GAP,
         Pid::LEFT_MARGIN, Pid::RIGHT_MARGIN, Pid::TOP_MARGIN, Pid::BOTTOM_MARGIN, Pid::BOX_AUTOSIZE, Pid::SIZE_SPATIUM_DEPENDENT
     }) {
-        bool force = (item->isVBox() && id == Pid::BOX_HEIGHT) || (item->isHBox() && id == Pid::BOX_WIDTH);
+        bool force = ((item->isVBox() || item->isFBox()) && id == Pid::BOX_HEIGHT) || (item->isHBox() && id == Pid::BOX_WIDTH);
         writeProperty(item, xml, id, force);
     }
     writeItemProperties(item, xml, ctx);
@@ -776,7 +826,18 @@ void TWrite::write(const VBox* item, XmlWriter& xml, WriteContext& ctx)
 
 void TWrite::write(const FBox* item, XmlWriter& xml, WriteContext& ctx)
 {
-    write(static_cast<const Box*>(item), xml, ctx);
+    xml.startElement(item);
+
+    writeProperty(item, xml, Pid::FRET_FRAME_TEXT_SCALE);
+    writeProperty(item, xml, Pid::FRET_FRAME_DIAGRAM_SCALE);
+    writeProperty(item, xml, Pid::FRET_FRAME_COLUMN_GAP);
+    writeProperty(item, xml, Pid::FRET_FRAME_ROW_GAP);
+    writeProperty(item, xml, Pid::FRET_FRAME_CHORDS_PER_ROW);
+    writeProperty(item, xml, Pid::FRET_FRAME_H_ALIGN);
+
+    writeProperties(static_cast<const Box*>(item), xml, ctx);
+
+    xml.endElement();
 }
 
 void TWrite::write(const TBox* item, XmlWriter& xml, WriteContext& ctx)
@@ -1074,6 +1135,7 @@ void TWrite::write(const Clef* item, XmlWriter& xml, WriteContext& ctx)
     writeProperty(item, xml, Pid::CLEF_TYPE_TRANSPOSING);
     writeProperty(item, xml, Pid::CLEF_TO_BARLINE_POS);
     writeProperty(item, xml, Pid::IS_HEADER);
+    writeProperty(item, xml, Pid::IS_COURTESY);
     if (!item->showCourtesy()) {
         xml.tag("showCourtesyClef", item->showCourtesy());
     }
@@ -1440,14 +1502,14 @@ void TWrite::write(const Glissando* item, XmlWriter& xml, WriteContext& ctx)
     }
     xml.startElement(item);
     if (item->showText() && !item->text().isEmpty()) {
-        xml.tag("text", item->text());
+        xml.tagProperty("text", item->text(), item->propertyDefault(Pid::GLISS_TEXT));
     }
 
     if (ctx.clipboardmode() && item->isHarpGliss().has_value()) {
         xml.tagProperty("isHarpGliss", PropertyValue(item->isHarpGliss().value()));
     }
 
-    for (auto id : { Pid::GLISS_TYPE, Pid::GLISS_STYLE, Pid::GLISS_SHIFT, Pid::GLISS_EASEIN, Pid::GLISS_EASEOUT }) {
+    for (auto id : { Pid::GLISS_SHIFT, Pid::GLISS_EASEIN, Pid::GLISS_EASEOUT }) {
         writeProperty(item, xml, id);
     }
     for (const StyledProperty& spp : *item->styledProperties()) {
@@ -1507,7 +1569,6 @@ void TWrite::writeProperties(const SLine* item, XmlWriter& xml, WriteContext& ct
     }
     writeProperty(item, xml, Pid::LINE_WIDTH);
     writeProperty(item, xml, Pid::LINE_STYLE);
-    writeProperty(item, xml, Pid::COLOR);
     writeProperty(item, xml, Pid::ANCHOR);
     writeProperty(item, xml, Pid::DASH_LINE_LEN);
     writeProperty(item, xml, Pid::DASH_GAP_LEN);
@@ -2071,9 +2132,19 @@ void TWrite::write(const KeySig* item, XmlWriter& xml, WriteContext& ctx)
     if (!item->showCourtesy()) {
         xml.tag("showCourtesySig", item->showCourtesy());
     }
+    writeProperty(item, xml, Pid::IS_COURTESY);
     if (item->forInstrumentChange()) {
         xml.tag("forInstrumentChange", true);
     }
+    xml.endElement();
+}
+
+void TWrite::write(const LaissezVib* item, XmlWriter& xml, WriteContext& ctx)
+{
+    xml.startElement(item);
+    writeProperty(item, xml, Pid::MIN_LENGTH);
+    writeProperty(item, xml, Pid::TIE_PLACEMENT);
+    writeProperties(static_cast<const SlurTie*>(item), xml, ctx);
     xml.endElement();
 }
 
@@ -2083,7 +2154,8 @@ void TWrite::write(const LayoutBreak* item, XmlWriter& xml, WriteContext& ctx)
     writeItemProperties(item, xml, ctx);
 
     for (auto id :
-         { Pid::LAYOUT_BREAK, Pid::PAUSE, Pid::START_WITH_LONG_NAMES, Pid::START_WITH_MEASURE_ONE, Pid::FIRST_SYSTEM_INDENTATION }) {
+         { Pid::LAYOUT_BREAK, Pid::PAUSE, Pid::START_WITH_LONG_NAMES, Pid::START_WITH_MEASURE_ONE, Pid::FIRST_SYSTEM_INDENTATION,
+           Pid::SHOW_COURTESY }) {
         writeProperty(item, xml, id);
     }
 
@@ -2180,7 +2252,7 @@ void TWrite::write(const MMRest* item, XmlWriter& xml, WriteContext& ctx)
 {
     xml.startElement("Rest"); // for compatibility, see also Measure::readVoice()
     writeProperties(static_cast<const ChordRest*>(item), xml, ctx);
-    writeProperty(item, xml, Pid::MMREST_NUMBER_POS);
+    writeProperty(item, xml, Pid::MMREST_NUMBER_OFFSET);
     writeProperty(item, xml, Pid::MMREST_NUMBER_VISIBLE);
     writeItems(item->el(), xml, ctx);
     xml.endElement();
@@ -2219,12 +2291,26 @@ void TWrite::write(const Note* item, XmlWriter& xml, WriteContext& ctx)
         }
     }
 
-    if (item->tieFor()) {
+    if (item->laissezVib()) {
+        write(item->laissezVib(), xml, ctx);
+    }
+
+    if (item->incomingPartialTie() && !ctx.clipboardmode()) {
+        write(item->incomingPartialTie(), xml, ctx);
+    }
+
+    if (item->outgoingPartialTie() && !ctx.clipboardmode()) {
+        write(item->outgoingPartialTie(), xml, ctx);
+    }
+
+    if (item->tieForNonPartial()) {
         writeSpannerStart(item->tieFor(), xml, ctx, item, item->track());
     }
-    if (item->tieBack()) {
+
+    if (item->tieBackNonPartial()) {
         writeSpannerEnd(item->tieBack(), xml, ctx, item, item->track());
     }
+
     if ((item->chord() == 0 || item->chord()->playEventType() != PlayEventType::Auto) && !item->playEvents().empty()) {
         xml.startElement("Events");
         for (const NoteEvent& e : item->playEvents()) {
@@ -2275,6 +2361,16 @@ void TWrite::write(const NoteHead* item, XmlWriter& xml, WriteContext& ctx)
     write(static_cast<const Symbol*>(item), xml, ctx);
 }
 
+void TWrite::write(const NoteLine* item, XmlWriter& xml, WriteContext& ctx)
+{
+    if (!ctx.canWrite(item)) {
+        return;
+    }
+    xml.startElement(item);
+    writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
+    xml.endElement();
+}
+
 void TWrite::write(const Ottava* item, XmlWriter& xml, WriteContext& ctx)
 {
     if (!ctx.canWrite(item)) {
@@ -2306,6 +2402,18 @@ void TWrite::write(const PalmMute* item, XmlWriter& xml, WriteContext& ctx)
     }
     xml.startElement(item);
     writeProperties(static_cast<const TextLineBase*>(item), xml, ctx);
+    xml.endElement();
+}
+
+void TWrite::write(const Parenthesis* item, XmlWriter& xml, WriteContext& ctx)
+{
+    if (!ctx.canWrite(item)) {
+        return;
+    }
+
+    xml.startElement(item);
+    writeProperty(item, xml, Pid::HORIZONTAL_DIRECTION);
+    writeItemProperties(item, xml, ctx);
     xml.endElement();
 }
 
@@ -2351,6 +2459,27 @@ void TWrite::write(const Part* item, XmlWriter& xml, WriteContext& ctx)
 
     write(item->instrument(), xml, ctx, item);
 
+    xml.endElement();
+}
+
+void TWrite::write(const PartialTie* item, XmlWriter& xml, WriteContext& ctx)
+{
+    xml.startElement(item);
+    writeProperty(item, xml, Pid::TIE_PLACEMENT);
+    writeProperty(item, xml, Pid::PARTIAL_SPANNER_DIRECTION);
+    writeProperties(static_cast<const SlurTie*>(item), xml, ctx);
+    xml.endElement();
+}
+
+void TWrite::write(const PartialLyricsLine* item, XmlWriter& xml, WriteContext& ctx)
+{
+    if (!ctx.canWrite(item)) {
+        return;
+    }
+    xml.startElement(item);
+    writeProperty(item, xml, Pid::VERSE);
+    xml.tag("isEndMelisma", item->isEndMelisma());
+    writeItemProperties(item, xml, ctx);
     xml.endElement();
 }
 
@@ -2469,6 +2598,11 @@ void TWrite::write(const Slur* item, XmlWriter& xml, WriteContext& ctx)
     xml.startElement(item);
     if (ctx.clipboardmode()) {
         xml.tag("stemArr", Slur::calcStemArrangement(item->startElement(), item->endElement()));
+    }
+
+    // We don't know if the paste destination has the correct repeat structure for partial slurs to be permitted
+    if (!ctx.clipboardmode()) {
+        writeProperty(item, xml, Pid::PARTIAL_SPANNER_DIRECTION);
     }
     writeProperties(static_cast<const SlurTie*>(item), xml, ctx);
     xml.endElement();
@@ -2907,6 +3041,7 @@ void TWrite::write(const SoundFlag* item, XmlWriter& xml, WriteContext&)
 void TWrite::write(const TempoText* item, XmlWriter& xml, WriteContext& ctx)
 {
     xml.startElement(item);
+    writeProperty(item, xml, Pid::PLAY);
     xml.tag("tempo", TConv::toXml(item->tempo()));
     if (item->followText()) {
         xml.tag("followText", item->followText());
@@ -2978,6 +3113,7 @@ void TWrite::write(const TimeSig* item, XmlWriter& xml, WriteContext& ctx)
         write(&item->groups(), xml, ctx);
     }
     writeProperty(item, xml, Pid::SHOW_COURTESY);
+    writeProperty(item, xml, Pid::IS_COURTESY);
     writeProperty(item, xml, Pid::SCALE);
 
     xml.endElement();

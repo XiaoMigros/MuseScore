@@ -54,7 +54,6 @@ SlurTieSegment::SlurTieSegment(const SlurTieSegment& b)
         m_ups[i]   = b.m_ups[i];
         m_ups[i].p = PointF();
     }
-    mutldata()->path.set_value(b.ldata()->path());
 }
 
 bool SlurTieSegment::isEditAllowed(EditData& ed) const
@@ -325,14 +324,14 @@ void SlurTieSegment::drawEditMode(Painter* p, EditData& ed, double /*currentView
     polygon[4] = PointF(ed.grip[int(Grip::END)].center());
     polygon[5] = PointF(ed.grip[int(Grip::DRAG)].center());
     polygon[6] = PointF(ed.grip[int(Grip::START)].center());
-    p->setPen(Pen(configuration()->formattingColor(), 0.0));
+    p->setPen(Pen(configuration()->scoreGreyColor(), 0.0));
     p->drawPolyline(polygon);
 
     p->setPen(Pen(configuration()->defaultColor(), 0.0));
     for (int i = 0; i < ed.grips; ++i) {
         // Can't use ternary operator, because we want different overloads of `setBrush`
         if (Grip(i) == ed.curGrip) {
-            p->setBrush(configuration()->formattingColor());
+            p->setBrush(configuration()->scoreGreyColor());
         } else {
             p->setBrush(BrushStyle::NoBrush);
         }

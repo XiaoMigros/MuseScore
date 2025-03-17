@@ -276,12 +276,11 @@ bool NavigableAppMenuModel::processEventForAppMenu(QEvent* event)
     bool isNavigationWithSymbol = !modifiers
                                   && isSingleSymbol
                                   && isNavigationStarted;
-    bool isNavigationWithAlt = (modifiers & Qt::AltModifier)
-                               && !(modifiers & Qt::ShiftModifier)
+    bool isNavigationWithAlt = (modifiers == Qt::AltModifier)
                                && isSingleSymbol;
 
     bool isAltKey = key == Qt::Key_Alt
-                    && key != Qt::Key_Shift
+                    && !(modifiers & Qt::ControlModifier)
                     && !(modifiers & Qt::ShiftModifier);
 
     switch (event->type()) {
@@ -307,9 +306,10 @@ bool NavigableAppMenuModel::processEventForAppMenu(QEvent* event)
             break;
         }
 
+        m_needActivateHighlight = false;
+
         if (isNavigationStarted && isNavigateKey(key)) {
             navigate(key);
-            m_needActivateHighlight = false;
 
             event->accept();
             return true;
@@ -317,14 +317,11 @@ bool NavigableAppMenuModel::processEventForAppMenu(QEvent* event)
             QSet<int> activatePossibleKeys = possibleKeys(keyEvent);
             if (hasItem(activatePossibleKeys)) {
                 navigate(activatePossibleKeys);
-                m_needActivateHighlight = true;
 
                 event->accept();
                 return true;
             }
         }
-
-        m_needActivateHighlight = false;
 
         break;
     }
@@ -338,10 +335,9 @@ bool NavigableAppMenuModel::processEventForAppMenu(QEvent* event)
             restoreMUNavigationSystemState();
         } else {
             if (m_needActivateHighlight) {
+                m_needActivateHighlight = false;
                 saveMUNavigationSystemState();
                 navigateToFirstMenu();
-            } else {
-                m_needActivateHighlight = true;
             }
         }
 
@@ -466,6 +462,7 @@ void NavigableAppMenuModel::navigateToSubItem(const QString& menuId, const QSet<
 void NavigableAppMenuModel::resetNavigation()
 {
     setHighlightedMenuId("");
+    m_needActivateHighlight = false;
 }
 
 void NavigableAppMenuModel::navigateToFirstMenu()

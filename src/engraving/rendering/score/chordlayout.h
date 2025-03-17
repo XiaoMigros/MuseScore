@@ -77,7 +77,6 @@ public:
     static void resolveRestVSRest(std::vector<Rest*>& rests, const Staff* staff, Segment* segment, LayoutContext& ctx,
                                   bool considerBeams = false);
     static void layoutChordBaseFingering(Chord* chord, System* system, LayoutContext& ctx);
-    static void layoutStretchedBends(Chord* chord, LayoutContext& ctx);
 
     static void crossMeasureSetup(Chord* chord, bool on, LayoutContext& ctx);
 
@@ -89,6 +88,10 @@ public:
     static void fillShape(const Rest* item, Rest::LayoutData* ldata);
     static void fillShape(const MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutConfiguration& conf);
     static void fillShape(const MMRest* item, MMRest::LayoutData* ldata, const LayoutConfiguration& conf);
+
+    static void addLineAttachPoints(Spanner* spanner);
+
+    static bool chordHasDotsAllInvisible(Chord* chord);
 
 private:
     static void layoutPitched(Chord* item, LayoutContext& ctx);

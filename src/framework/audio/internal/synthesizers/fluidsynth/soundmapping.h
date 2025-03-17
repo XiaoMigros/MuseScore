@@ -651,6 +651,8 @@ static const auto& mappingByCategory(const mpe::SoundCategory category)
         { { mpe::SoundId::Cuica,  {} }, { midi::Program(128, 0) } },
 
         { { mpe::SoundId::Drumset,  {} }, { midi::Program(128, 0) } },
+        { { mpe::SoundId::Drumset,  { mpe::SoundSubCategory::FourPiece } }, { midi::Program(128, 0) } },
+        { { mpe::SoundId::Drumset,  { mpe::SoundSubCategory::FivePiece } }, { midi::Program(128, 0) } },
         { { mpe::SoundId::Drumset,  { mpe::SoundSubCategory::Orchestral } }, { midi::Program(128, 48) } },
 
         { { mpe::SoundId::Drum,  { mpe::SoundSubCategory::Bass } }, { midi::Program(128, 48) } },
@@ -750,6 +752,8 @@ static const auto& mappingByCategory(const mpe::SoundCategory category)
         { { mpe::SoundId::Clap,  { mpe::SoundSubCategory::Hand } }, { midi::Program(128, 0) } },
         { { mpe::SoundId::Slap,  { mpe::SoundSubCategory::Hand } }, { midi::Program(128, 0) } },
         { { mpe::SoundId::Stamp,  { mpe::SoundSubCategory::Foot } }, { midi::Program(128, 0) } },
+
+        { { mpe::SoundId::Taiko, {} }, { midi::Program(128, 0) } },
 
         { { mpe::SoundId::Synthesizer,  { mpe::SoundSubCategory::Electric,
                                           mpe::SoundSubCategory::Percussive } }, { midi::Program(128, 0) } }
@@ -1014,8 +1018,12 @@ inline const ArticulationMapping& articulationSounds(const mpe::PlaybackSetupDat
     return empty;
 }
 
-static const mpe::ArticulationTypeSet PEDAL_CC_SUPPORTED_TYPES = {
-    mpe::ArticulationType::Pedal
+static const mpe::ArticulationTypeSet SUSTAIN_PEDAL_CC_SUPPORTED_TYPES = {
+    mpe::ArticulationType::Pedal, mpe::ArticulationType::LetRing,
+};
+
+static const mpe::ArticulationTypeSet SOSTENUTO_PEDAL_CC_SUPPORTED_TYPES = {
+    mpe::ArticulationType::LaissezVibrer,
 };
 
 static const mpe::ArticulationTypeSet BEND_SUPPORTED_TYPES = {

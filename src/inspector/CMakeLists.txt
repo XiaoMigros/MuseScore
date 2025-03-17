@@ -134,6 +134,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/frames/textframesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/frames/verticalframesettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/frames/verticalframesettingsmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/frames/fretframesettingsmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/frames/fretframesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/fretdiagrams/fretdiagramsettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/fretdiagrams/fretdiagramsettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/glissandosettingsmodel.cpp
@@ -154,6 +156,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/textlinesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/gradualtempochangesettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/gradualtempochangesettingsmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/notelinesettingsmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/models/notation/lines/notelinesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/images/imagesettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/images/imagesettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/models/notation/jumps/jumpsettingsmodel.cpp

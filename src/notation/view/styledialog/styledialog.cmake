@@ -18,4 +18,10 @@ set(STYLEDIALOG_SRC
     ${CMAKE_CURRENT_LIST_DIR}/accidentalgrouppagemodel.h
     ${CMAKE_CURRENT_LIST_DIR}/fretboardspagemodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fretboardspagemodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/glissandosectionmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/glissandosectionmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/notelinesectionmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/notelinesectionmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/clefkeytimesigpagemodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/clefkeytimesigpagemodel.h
     )

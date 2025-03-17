@@ -66,6 +66,7 @@
 
 #include "../../dom/keysig.h"
 
+#include "../../dom/laissezvib.h"
 #include "../../dom/layoutbreak.h"
 
 #include "../../dom/marker.h"
@@ -136,9 +137,12 @@ class OttavaSegment;
 
 class PalmMute;
 class PalmMuteSegment;
+class Parenthesis;
 class Pedal;
 class PedalSegment;
 class PickScrapeSegment;
+
+class NoteLineSegment;
 
 class RasgueadoSegment;
 
@@ -211,7 +215,7 @@ public:
     static void layoutHBox2(HBox* item, const LayoutContext& ctx);
     static void layoutVBox(const VBox* item, VBox::LayoutData* ldata, const LayoutContext& ctx);
     static void layoutFBox(const FBox* item, FBox::LayoutData* ldata, const LayoutContext& ctx);
-    static void layoutTBox(const TBox* item, FBox::LayoutData* ldata, const LayoutContext& ctx);
+    static void layoutTBox(const TBox* item, TBox::LayoutData* ldata, const LayoutContext& ctx);
 
     static void layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, const LayoutConfiguration& conf);
     static void layoutBreath(const Breath* item, Breath::LayoutData* ldata, const LayoutConfiguration& conf);
@@ -257,7 +261,9 @@ public:
 
     static void layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const LayoutConfiguration& conf);
 
+    static void layoutLaissezVib(LaissezVib* item);
     static void layoutLayoutBreak(const LayoutBreak* item, LayoutBreak::LayoutData* ldata);
+    static void layoutSystemLockIndicator(const SystemLockIndicator* item, SystemLockIndicator::LayoutData* ldata);
     static void layoutLedgerLine(LedgerLine* item, LayoutContext& ctx);
     static void layoutLetRing(LetRing* item, LayoutContext& ctx);
     static void layoutLetRingSegment(LetRingSegment* item, LayoutContext& ctx);
@@ -278,6 +284,9 @@ public:
     static void layoutNote(const Note* item, Note::LayoutData* ldata);
     static void fillNoteShape(const Note* item, Note::LayoutData* ldata);
     static void layoutNoteDot(const NoteDot* item, NoteDot::LayoutData* ldata);
+    static void layoutNoteAnchoredLine(SLine* item, SLine::LayoutData* ldata, LayoutContext& ctx);
+    static void layoutNoteLine(NoteLine* item, LayoutContext& ctx);
+    static void layoutNoteLineSegment(NoteLineSegment* item, LayoutContext& ctx);
 
     static void layoutOrnament(const Ornament* item, Ornament::LayoutData* ldata, const LayoutConfiguration& conf);
     static void layoutOrnamentCueNote(Ornament* item, LayoutContext& ctx);
@@ -287,6 +296,7 @@ public:
 
     static void layoutPalmMute(PalmMute* item, LayoutContext& ctx);
     static void layoutPalmMuteSegment(PalmMuteSegment* item, LayoutContext& ctx);
+    static void layoutParenthesis(Parenthesis* item, LayoutContext& ctx);
     static void layoutPedal(Pedal* item, LayoutContext& ctx);
     static void layoutPedalSegment(PedalSegment* item, LayoutContext& ctx);
     static void layoutPickScrapeSegment(PickScrapeSegment* item, LayoutContext& ctx);
@@ -328,6 +338,7 @@ public:
     static void layoutBaseTextBase(TextBase* item, LayoutContext& ctx);  // base class
     static void layoutBaseTextBase1(TextBase* item, const LayoutContext& ctx);  // base class
     static void layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* data);
+    static void computeTextHighResShape(const TextBase* item, TextBase::LayoutData* ldata);
 
     static void layoutText(const Text* item, Text::LayoutData* ldata);
 

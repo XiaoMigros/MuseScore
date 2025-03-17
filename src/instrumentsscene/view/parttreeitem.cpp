@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2024 MuseScore Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,11 +27,11 @@ using namespace mu::instrumentsscene;
 using namespace mu::notation;
 using namespace muse;
 
-using ItemType = InstrumentsTreeItemType::ItemType;
-
 PartTreeItem::PartTreeItem(IMasterNotationPtr masterNotation, INotationPtr notation, QObject* parent)
-    : AbstractInstrumentsPanelTreeItem(ItemType::PART, masterNotation, notation, parent)
+    : AbstractLayoutPanelTreeItem(LayoutPanelItemType::PART, masterNotation, notation, parent), Injectable(iocCtxForQmlObject(this))
 {
+    setIsSelectable(true);
+
     listenVisibilityChanged();
 }
 
@@ -52,22 +52,23 @@ void PartTreeItem::init(const notation::Part* masterPart)
     setId(part->id());
     setTitle(part->instrument()->nameAsPlainText());
     setIsVisible(visible);
-    setIsEditable(partExists);
+    setSettingsAvailable(partExists);
+    setSettingsEnabled(partExists);
     setIsExpandable(partExists);
     setIsRemovable(partExists);
 
-    m_instrumentId = part->instrumentId();
+    m_part = part;
     m_isInited = true;
 }
 
-bool PartTreeItem::isSelectable() const
+const Part* PartTreeItem::part() const
 {
-    return true;
+    return m_part;
 }
 
 void PartTreeItem::listenVisibilityChanged()
 {
-    connect(this, &AbstractInstrumentsPanelTreeItem::isVisibleChanged, this, [this](bool isVisible) {
+    connect(this, &AbstractLayoutPanelTreeItem::isVisibleChanged, this, [this](bool isVisible) {
         if (!m_isInited) {
             return;
         }
@@ -106,7 +107,7 @@ size_t PartTreeItem::resolveNewPartIndex(const ID& partId) const
     bool partFound = false;
     ID firstVisiblePartId;
 
-    for (const AbstractInstrumentsPanelTreeItem* item : parentItem()->childItems()) {
+    for (const AbstractLayoutPanelTreeItem* item : parentItem()->childItems()) {
         if (item->id() == partId) {
             partFound = true;
             continue;
@@ -133,12 +134,7 @@ size_t PartTreeItem::resolveNewPartIndex(const ID& partId) const
     return parts.size();
 }
 
-QString PartTreeItem::instrumentId() const
-{
-    return m_instrumentId;
-}
-
-MoveParams PartTreeItem::buildMoveParams(int sourceRow, int count, AbstractInstrumentsPanelTreeItem* destinationParent,
+MoveParams PartTreeItem::buildMoveParams(int sourceRow, int count, AbstractLayoutPanelTreeItem* destinationParent,
                                          int destinationRow) const
 {
     MoveParams moveParams;
@@ -149,7 +145,7 @@ MoveParams PartTreeItem::buildMoveParams(int sourceRow, int count, AbstractInstr
         stavesIds.push_back(childAtRow(i)->id());
     }
 
-    moveParams.childIdListToMove = stavesIds;
+    moveParams.objectIdListToMove = stavesIds;
 
     int destinationRowLast = destinationRow;
     INotationParts::InsertMode moveMode = INotationParts::InsertMode::Before;
@@ -160,22 +156,29 @@ MoveParams PartTreeItem::buildMoveParams(int sourceRow, int count, AbstractInstr
         moveMode = INotationParts::InsertMode::After;
     }
 
-    AbstractInstrumentsPanelTreeItem* destinationStaffItem = destinationParent->childAtRow(destinationRowLast);
+    AbstractLayoutPanelTreeItem* destinationStaffItem = destinationParent->childAtRow(destinationRowLast);
 
-    moveParams.destinationParentId = destinationStaffItem->id();
+    moveParams.destinationObjectId = destinationStaffItem->id();
     moveParams.insertMode = moveMode;
+    moveParams.objectsType = LayoutPanelItemType::STAFF;
 
     return moveParams;
 }
 
-void PartTreeItem::moveChildren(int sourceRow, int count, AbstractInstrumentsPanelTreeItem* destinationParent,
+void PartTreeItem::moveChildren(int sourceRow, int count, AbstractLayoutPanelTreeItem* destinationParent,
                                 int destinationRow, bool updateNotation)
 {
     if (updateNotation) {
         MoveParams moveParams = buildMoveParams(sourceRow, count, destinationParent, destinationRow);
-        notation()->parts()->moveStaves(moveParams.childIdListToMove, moveParams.destinationParentId, moveParams.insertMode);
+        moveChildrenOnScore(moveParams);
     }
-    AbstractInstrumentsPanelTreeItem::moveChildren(sourceRow, count, destinationParent, destinationRow, updateNotation);
+
+    AbstractLayoutPanelTreeItem::moveChildren(sourceRow, count, destinationParent, destinationRow, updateNotation);
+}
+
+void PartTreeItem::moveChildrenOnScore(const MoveParams& params)
+{
+    notation()->parts()->moveStaves(params.objectIdListToMove, params.destinationObjectId, params.insertMode);
 }
 
 void PartTreeItem::removeChildren(int row, int count, bool deleteChild)
@@ -186,9 +189,68 @@ void PartTreeItem::removeChildren(int row, int count, bool deleteChild)
         stavesIds.push_back(childAtRow(i)->id());
     }
 
+    // Remove the children first, then remove the staves
+    // so we don't try to remove them twice when notified by removeStaves()
+    AbstractLayoutPanelTreeItem::removeChildren(row, count, deleteChild);
+
     if (deleteChild) {
         masterNotation()->parts()->removeStaves(stavesIds);
     }
+}
 
-    AbstractInstrumentsPanelTreeItem::removeChildren(row, count, deleteChild);
+bool PartTreeItem::canAcceptDrop(const QVariant& obj) const
+{
+    if (auto item = dynamic_cast<const AbstractLayoutPanelTreeItem*>(obj.value<QObject*>())) {
+        if (item->type() == LayoutPanelItemType::SYSTEM_OBJECTS_LAYER) {
+            return true;
+        }
+    }
+
+    return AbstractLayoutPanelTreeItem::canAcceptDrop(obj);
+}
+
+QString PartTreeItem::instrumentId() const
+{
+    return m_part ? m_part->instrumentId().toQString() : QString();
+}
+
+void PartTreeItem::replaceInstrument()
+{
+    InstrumentKey instrumentKey;
+    instrumentKey.partId = id();
+    instrumentKey.instrumentId = instrumentId();
+    instrumentKey.tick = Part::MAIN_INSTRUMENT_TICK;
+
+    RetVal<InstrumentTemplate> templ = selectInstrumentsScenario()->selectInstrument(instrumentKey);
+    if (!templ.ret) {
+        LOGE() << templ.ret.toString();
+        return;
+    }
+
+    Instrument instrument = Instrument::fromTemplate(&templ.val);
+
+    const StaffType* staffType = templ.val.staffTypePreset;
+    if (!staffType) {
+        staffType = StaffType::getDefaultPreset(templ.val.staffGroup);
+    }
+
+    masterNotation()->parts()->replaceInstrument(instrumentKey, instrument, staffType);
+}
+
+void PartTreeItem::resetAllFormatting()
+{
+    std::string title = muse::trc("layoutpanel", "Are you sure you want to reset all formatting?");
+    std::string body = muse::trc("layoutpanel", "This action can not be undone");
+
+    IInteractive::Button button = interactive()->question(title, body, {
+        IInteractive::Button::No,
+        IInteractive::Button::Yes
+    }).standardButton();
+
+    if (button != IInteractive::Button::Yes) {
+        return;
+    }
+
+    const Part* masterPart = masterNotation()->parts()->part(id());
+    notation()->parts()->replacePart(id(), masterPart->clone());
 }

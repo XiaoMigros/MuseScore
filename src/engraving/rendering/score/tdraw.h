@@ -19,8 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_ENGRAVING_TDRAW_DEV_H
-#define MU_ENGRAVING_TDRAW_DEV_H
+#pragma once
 
 #include "dom/engravingitem.h"
 
@@ -82,6 +81,7 @@ class Jump;
 
 class KeySig;
 
+class LaissezVib;
 class LayoutBreak;
 class LedgerLine;
 class LetRing;
@@ -101,6 +101,7 @@ class MMRestRange;
 
 class Note;
 class NoteDot;
+class NoteLineSegment;
 
 class Ornament;
 
@@ -109,6 +110,7 @@ class OttavaSegment;
 
 class PalmMute;
 class PalmMuteSegment;
+class Parenthesis;
 class Pedal;
 class PedalSegment;
 class PickScrapeSegment;
@@ -139,6 +141,7 @@ class FSymbol;
 
 class SystemDivider;
 class SystemText;
+class SystemLockIndicator;
 class SoundFlag;
 
 class TabDurationSymbol;
@@ -235,6 +238,7 @@ private:
 
     static void draw(const KeySig* item, muse::draw::Painter* painter);
 
+    static void draw(const LaissezVibSegment* item, muse::draw::Painter* painter);
     static void draw(const Lasso* item, muse::draw::Painter* painter);
     static void draw(const LayoutBreak* item, muse::draw::Painter* painter);
     static void draw(const LedgerLine* item, muse::draw::Painter* painter);
@@ -251,11 +255,14 @@ private:
     static void draw(const Note* item, muse::draw::Painter* painter);
     static void draw(const NoteDot* item, muse::draw::Painter* painter);
     static void draw(const NoteHead* item, muse::draw::Painter* painter);
+    static void draw(const NoteLineSegment* item, muse::draw::Painter* painter);
 
     static void draw(const Ornament* item, muse::draw::Painter* painter);
     static void draw(const OttavaSegment* item, muse::draw::Painter* painter);
 
     static void draw(const Page* item, muse::draw::Painter* painter);
+    static void draw(const Parenthesis* item, muse::draw::Painter* painter);
+    static void draw(const PartialTieSegment* item, muse::draw::Painter* painter);
     static void draw(const PalmMuteSegment* item, muse::draw::Painter* painter);
     static void draw(const PedalSegment* item, muse::draw::Painter* painter);
     static void draw(const PickScrapeSegment* item, muse::draw::Painter* painter);
@@ -281,6 +288,7 @@ private:
     static void draw(const FSymbol* item, muse::draw::Painter* painter);
     static void draw(const SystemDivider* item, muse::draw::Painter* painter);
     static void draw(const SystemText* item, muse::draw::Painter* painter);
+    static void draw(const SystemLockIndicator* item, muse::draw::Painter* painter);
     static void draw(const SoundFlag* item, muse::draw::Painter* painter);
 
     static void draw(const TabDurationSymbol* item, muse::draw::Painter* painter);
@@ -310,7 +318,7 @@ private:
     static void draw(const Measure* item, muse::draw::Painter* painter);
     static void draw(const Segment* item, muse::draw::Painter* painter);
     static void draw(const Chord* item, muse::draw::Painter* painter);
+
+    static void setMask(const EngravingItem* item, muse::draw::Painter* painter);
 };
 }
-
-#endif // MU_ENGRAVING_TDRAW_DEV_H

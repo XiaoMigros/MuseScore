@@ -50,6 +50,11 @@ Uri::Uri(const std::string& str)
     m_path = str.substr(pathPos, pathN);
 }
 
+Uri::Uri(const String& str)
+    : Uri(str.toStdString())
+{
+}
+
 bool Uri::isValid() const
 {
     if (m_scheme.empty()) {
@@ -68,6 +73,11 @@ Uri::Scheme Uri::scheme() const
     return m_scheme;
 }
 
+void Uri::setScheme(const Scheme& scheme)
+{
+    m_scheme = scheme;
+}
+
 std::string Uri::path() const
 {
     return m_path;
@@ -84,6 +94,11 @@ UriQuery::UriQuery(const std::string& str)
     : m_uri(str)
 {
     parseParams(str, m_params);
+}
+
+UriQuery::UriQuery(const String& str)
+    : UriQuery(str.toStdString())
+{
 }
 
 UriQuery::UriQuery(const Uri& uri)
@@ -181,14 +196,19 @@ std::string UriQuery::toString() const
     return str;
 }
 
+bool UriQuery::isValid() const
+{
+    return m_uri.isValid();
+}
+
 const Uri& UriQuery::uri() const
 {
     return m_uri;
 }
 
-bool UriQuery::isValid() const
+void UriQuery::setScheme(const Uri::Scheme& scheme)
 {
-    return m_uri.isValid();
+    m_uri.setScheme(scheme);
 }
 
 const UriQuery::Params& UriQuery::params() const

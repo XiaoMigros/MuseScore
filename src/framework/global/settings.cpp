@@ -90,11 +90,18 @@ void Settings::load()
     m_items = readItems();
 }
 
-void Settings::reset(bool keepDefaultSettings, bool notifyAboutChanges)
+void Settings::reset(bool keepDefaultSettings, bool notifyAboutChanges, bool notifyOtherInstances)
 {
     m_settings->clear();
 
     m_isTransactionStarted = false;
+
+    std::vector<Settings::Key> locallyAddedKeys;
+    for (auto it = m_localSettings.begin(); it != m_localSettings.end(); ++it) {
+        if (m_items.count(it->first) == 0) {
+            locallyAddedKeys.push_back(it->first);
+        }
+    }
     m_localSettings.clear();
 
     if (!keepDefaultSettings) {
@@ -107,11 +114,26 @@ void Settings::reset(bool keepDefaultSettings, bool notifyAboutChanges)
     }
 
     for (auto it = m_items.begin(); it != m_items.end(); ++it) {
+        if (it->second.value == it->second.defaultValue) {
+            continue;
+        }
+
         it->second.value = it->second.defaultValue;
 
         Channel<Val>& channel = findChannel(it->first);
         channel.send(it->second.value);
     }
+    for (auto it = locallyAddedKeys.cbegin(); it != locallyAddedKeys.cend(); ++it) {
+        Channel<Val>& channel = findChannel(*it);
+        channel.send(Val());
+    }
+
+    UNUSED(notifyOtherInstances);
+#ifdef MUSE_MODULE_MULTIINSTANCES
+    if (notifyOtherInstances && multiInstancesProvider()) {
+        multiInstancesProvider()->settingsReset();
+    }
+#endif
 }
 
 static Val compat_QVariantToVal(const QVariant& var)

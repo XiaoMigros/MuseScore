@@ -139,6 +139,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/widgetstatestore.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/widgetstatestore.h
     ${CMAKE_CURRENT_LIST_DIR}/view/widgetutils.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/qmldataformatter.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/qmldataformatter.h
 
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/errordetailsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/errordetailsmodel.h
@@ -159,6 +161,10 @@ if (OS_IS_MAC)
     find_library(AppKit NAMES AppKit)
     set(MODULE_LINK ${MODULE_LINK} ${AppKit})
 endif()
+
+set(MODULE_LINK ${MODULE_LINK}
+    muse::tours
+)
 
 setup_module()
 

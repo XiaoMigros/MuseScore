@@ -36,13 +36,17 @@
 #include "arpeggio.h"
 #include "articulation.h"
 #include "beam.h"
+#include "breath.h"
 #include "chord.h"
 #include "dynamic.h"
 #include "engravingitem.h"
+#include "expression.h"
 #include "figuredbass.h"
+#include "fingering.h"
 #include "hairpin.h"
 #include "harppedaldiagram.h"
 #include "hook.h"
+#include "laissezvib.h"
 #include "linkedobjects.h"
 #include "lyrics.h"
 #include "measure.h"
@@ -50,6 +54,7 @@
 #include "note.h"
 #include "notedot.h"
 #include "part.h"
+#include "partialtie.h"
 #include "rest.h"
 #include "score.h"
 #include "segment.h"
@@ -61,6 +66,7 @@
 #include "stemslash.h"
 #include "sticking.h"
 #include "stringtunings.h"
+#include "text.h"
 #include "tie.h"
 #include "guitarbend.h"
 #include "fret.h"
@@ -114,66 +120,70 @@ void SelectionFilter::setFiltered(SelectionFilterType type, bool filtered)
 
 bool SelectionFilter::canSelect(const EngravingItem* e) const
 {
-    if (e->isDynamic()) {
+    switch (e->type()) {
+    case ElementType::DYNAMIC:
         return isFiltered(SelectionFilterType::DYNAMIC);
-    }
-    if (e->isHairpin()) {
+    case ElementType::HAIRPIN:
+    case ElementType::HAIRPIN_SEGMENT:
         return isFiltered(SelectionFilterType::HAIRPIN);
-    }
-    if ((e->isArticulationFamily() && !toArticulation(e)->isOrnament()) || e->isVibrato() || e->isFermata()) {
+    case ElementType::ARTICULATION:
+    case ElementType::VIBRATO:
+    case ElementType::VIBRATO_SEGMENT:
+    case ElementType::FERMATA:
         return isFiltered(SelectionFilterType::ARTICULATION);
-    }
-    if ((e->isArticulationFamily() && toArticulation(e)->isOrnament()) || e->isTrill()) {
+    case ElementType::ORNAMENT:
+    case ElementType::TRILL:
+    case ElementType::TRILL_SEGMENT:
         return isFiltered(SelectionFilterType::ORNAMENT);
-    }
-    if (e->type() == ElementType::LYRICS) {
+    case ElementType::LYRICS:
+    case ElementType::LYRICSLINE:
+    case ElementType::LYRICSLINE_SEGMENT:
+    case ElementType::PARTIAL_LYRICSLINE:
+    case ElementType::PARTIAL_LYRICSLINE_SEGMENT:
         return isFiltered(SelectionFilterType::LYRICS);
-    }
-    if (e->type() == ElementType::FINGERING) {
+    case ElementType::FINGERING:
         return isFiltered(SelectionFilterType::FINGERING);
-    }
-    if (e->type() == ElementType::HARMONY) {
+    case ElementType::HARMONY:
         return isFiltered(SelectionFilterType::CHORD_SYMBOL);
-    }
-    if (e->type() == ElementType::SLUR) {
+    case ElementType::SLUR:
+    case ElementType::SLUR_SEGMENT:
         return isFiltered(SelectionFilterType::SLUR);
-    }
-    if (e->type() == ElementType::FIGURED_BASS) {
+    case ElementType::FIGURED_BASS:
         return isFiltered(SelectionFilterType::FIGURED_BASS);
-    }
-    if (e->type() == ElementType::OTTAVA) {
+    case ElementType::OTTAVA:
+    case ElementType::OTTAVA_SEGMENT:
         return isFiltered(SelectionFilterType::OTTAVA);
-    }
-    if (e->type() == ElementType::PEDAL) {
+    case ElementType::PEDAL:
+    case ElementType::PEDAL_SEGMENT:
         return isFiltered(SelectionFilterType::PEDAL_LINE);
-    }
-    if (e->type() == ElementType::ARPEGGIO) {
+    case ElementType::ARPEGGIO:
         return isFiltered(SelectionFilterType::ARPEGGIO);
-    }
-    if (e->type() == ElementType::GLISSANDO) {
+    case ElementType::GLISSANDO:
+    case ElementType::GLISSANDO_SEGMENT:
         return isFiltered(SelectionFilterType::GLISSANDO);
-    }
-    if (e->type() == ElementType::FRET_DIAGRAM) {
+    case ElementType::FRET_DIAGRAM:
         return isFiltered(SelectionFilterType::FRET_DIAGRAM);
-    }
-    if (e->type() == ElementType::BREATH) {
+    case ElementType::BREATH:
         return isFiltered(SelectionFilterType::BREATH);
+    case ElementType::TREMOLO_SINGLECHORD:
+    case ElementType::TREMOLO_TWOCHORD:
+        return isFiltered(SelectionFilterType::TREMOLO);
+    default: break;
     }
+
+    // Special cases...
     if (e->isTextBase()) { // only TEXT, INSTRCHANGE and STAFFTEXT are caught here, rest are system thus not in selection
         return isFiltered(SelectionFilterType::OTHER_TEXT);
     }
-    if (e->isSLine()) { // Volta
+
+    if (e->isSLine()) { // NoteLine, Volta
         return isFiltered(SelectionFilterType::OTHER_LINE);
     }
-    if (e->type() == ElementType::TREMOLO_TWOCHORD) {
-        return isFiltered(SelectionFilterType::TREMOLO);
-    }
-    if (e->type() == ElementType::TREMOLO_SINGLECHORD) {
-        return isFiltered(SelectionFilterType::TREMOLO);
-    }
+
     if (e->isChord() && toChord(e)->isGrace()) {
         return isFiltered(SelectionFilterType::GRACE_NOTE);
     }
+
     return true;
 }
 
@@ -405,6 +415,77 @@ Measure* Selection::findMeasure() const
     return m;
 }
 
+MeasureBase* Selection::startMeasureBase() const
+{
+    EngravingItem* selectionElement = element();
+    if (selectionElement) {
+        if (selectionElement->isHBox()) {
+            return toMeasureBase(selectionElement);
+        }
+        MeasureBase* mb = selectionElement->findMeasureBase();
+        if (mb) {
+            return mb;
+        }
+    }
+
+    if (tickStart().negative()) { // Tick is not set
+        return nullptr;
+    }
+
+    bool mmrests = m_score->style().styleB(Sid::createMultiMeasureRests);
+    Fraction refTick = tickStart();
+
+    return mmrests ? m_score->tick2measureMM(refTick) : m_score->tick2measure(refTick);
+}
+
+MeasureBase* Selection::endMeasureBase() const
+{
+    EngravingItem* selectionElement = element();
+    if (selectionElement) {
+        if (selectionElement->isHBox()) {
+            return toMeasureBase(selectionElement);
+        }
+        MeasureBase* mb = selectionElement->findMeasureBase();
+        if (mb) {
+            return mb;
+        }
+    }
+
+    if (tickEnd().negative()) { // Tick is not set
+        return nullptr;
+    }
+
+    bool mmrests = m_score->style().styleB(Sid::createMultiMeasureRests);
+    Fraction refTick = tickEnd() - Fraction::eps();
+
+    return mmrests ? m_score->tick2measureMM(refTick) : m_score->tick2measure(refTick);
+}
+
+std::vector<System*> Selection::selectedSystems() const
+{
+    EngravingItem* el = element();
+    if (el && el->isSystemLockIndicator()) {
+        return { const_cast<System*>(toSystemLockIndicator(el)->system()) };
+    }
+
+    const MeasureBase* startMB = startMeasureBase();
+    const MeasureBase* endMB = endMeasureBase();
+    if (!startMB || !endMB) {
+        return {};
+    }
+
+    bool mmrests = score()->style().styleB(Sid::createMultiMeasureRests);
+    std::vector<System*> systems;
+    for (const MeasureBase* mb = startMB; mb && mb->isBeforeOrEqual(endMB); mb = mmrests ? mb->nextMM() : mb->next()) {
+        System* sys = mb->system();
+        if ((mb->isMeasure() || mb->isHBox()) && (systems.empty() || sys != systems.back())) {
+            systems.push_back(sys);
+        }
+    }
+
+    return systems;
+}
+
 void Selection::deselectAll()
 {
     if (m_state == SelState::RANGE) {
@@ -541,6 +622,17 @@ void Selection::appendChord(Chord* chord)
                     m_el.push_back(sp);
                 }
             }
+        }
+        if (note->laissezVib()) {
+            appendFiltered(note->laissezVib()->frontSegment());
+        }
+
+        if (note->incomingPartialTie()) {
+            appendFiltered(note->incomingPartialTie()->frontSegment());
+        }
+
+        if (note->outgoingPartialTie()) {
+            appendFiltered(note->outgoingPartialTie()->frontSegment());
         }
     }
 }
@@ -716,19 +808,21 @@ void Selection::updateSelectedElements()
         if (sp->isVolta()) {
             continue;
         }
-        if (sp->isSlur() || sp->isHairpin()) {
+        if (sp->isSlur() || sp->isHairpin() || sp->isOttava() || sp->isPedal() || sp->isTrill() || sp->isTextLine() || sp->isLetRing()
+            || sp->isPalmMute()) {
             // ignore if start & end elements not calculated yet
             if (!sp->startElement() || !sp->endElement()) {
                 continue;
             }
-            if ((sp->tick() >= stick && sp->tick() < etick) || (sp->tick2() >= stick && sp->tick2() < etick)) {
+            if ((sp->tick() >= stick && sp->tick() < etick) || (sp->tick2() >= stick && sp->tick2() <= etick)) {
                 EngravingItem* startCR = sp->startCR();
                 EngravingItem* endCR = sp->endCR();
-                const bool canSelectStart = (sp->startElement()->isTimeTickAnchor() || canSelect(startCR));
-                const bool canSelectEnd = (sp->endElement()->isTimeTickAnchor() || canSelect(endCR));
+                const bool canSelectStart
+                    = (sp->startElement()->isTimeTickAnchor() || sp->startElement()->isSegment() || canSelect(startCR));
+                const bool canSelectEnd = (sp->endElement()->isTimeTickAnchor() || sp->endElement()->isSegment() || canSelect(endCR));
                 if (canSelectStart && canSelectEnd) {
                     for (auto seg : sp->spannerSegments()) {
-                        appendFiltered(seg);               // slur with start or end in range selection
+                        appendFiltered(seg);               // spanner with start or end in range selection
                     }
                 }
             }
@@ -746,10 +840,11 @@ void Selection::setRange(Segment* startSegment, Segment* endSegment, staff_idx_t
     assert(!(endSegment && !startSegment));
 
     m_startSegment  = startSegment;
-    m_endSegment    = endSegment;
+    m_endSegment = endSegment;
     m_activeSegment = endSegment;
-    m_staffStart    = staffStart;
-    m_staffEnd      = staffEnd;
+    m_staffStart = staffStart;
+    m_staffEnd = staffEnd;
+    m_activeTrack = staff2track(staffStart);
 
     if (m_state == SelState::RANGE) {
         m_score->setSelectionChanged(true);
@@ -773,8 +868,9 @@ void Selection::setRangeTicks(const Fraction& tick1, const Fraction& tick2, staf
     m_plannedTick1 = tick1;
     m_plannedTick2 = tick2;
     m_startSegment = m_endSegment = m_activeSegment = nullptr;
-    m_staffStart    = staffStart;
-    m_staffEnd      = staffEnd;
+    m_staffStart = staffStart;
+    m_staffEnd = staffEnd;
+    m_activeTrack = staff2track(staffStart);
 
     if (m_state == SelState::RANGE) {
         m_score->setSelectionChanged(true);
@@ -991,123 +1087,49 @@ muse::ByteArray Selection::symbolListMimeData() const
     track_idx_t bottomTrack = 0;
     Segment* firstSeg    = 0;
     Fraction firstTick   = Fraction(0x7FFFFFFF, 1);
-    MapData mapData;
     Segment* seg         = 0;
     std::multimap<int64_t, MapData> map;
 
     // scan selection element list, inserting relevant elements in a tick-sorted map
     for (EngravingItem* e : m_el) {
         switch (e->type()) {
-        /* All these element types are ignored:
-
-        Enabling copying of more element types requires enabling pasting in Score::pasteSymbols() in dom/paste.cpp
-
-                          case ElementType::SYMBOL:
-                          case ElementType::TEXT:
-                          case ElementType::INSTRUMENT_NAME:
-                          case ElementType::SLUR_SEGMENT:
-                          case ElementType::TIE_SEGMENT:
-                          case ElementType::STAFF_LINES:
-                          case ElementType::BAR_LINE:
-                          case ElementType::STEM_SLASH:
-                          case ElementType::LINE:
-                          case ElementType::BRACKET:
-                          case ElementType::ARPEGGIO:
-                          case ElementType::ACCIDENTAL:
-                          case ElementType::STEM:
-                          case ElementType::NOTE:
-                          case ElementType::CLEF:
-                          case ElementType::KEYSIG:
-                          case ElementType::TIMESIG:
-                          case ElementType::REST:
-                          case ElementType::MMREST:
-                          case ElementType::BREATH:
-                          case ElementType::GLISSANDO:
-                          case ElementType::MEASURE_REPEAT:
-                          case ElementType::IMAGE:
-                          case ElementType::TIE:
-                          case ElementType::CHORDLINE:
-                          case ElementType::BEAM:
-                          case ElementType::HOOK:
-                          case ElementType::MARKER:
-                          case ElementType::JUMP:
-                          case ElementType::FINGERING:
-                          case ElementType::TUPLET:
-                          case ElementType::TEMPO_TEXT:
-                          case ElementType::STAFF_TEXT:
-                          case ElementType::SYSTEM_TEXT:
-                          case ElementType::REHEARSAL_MARK:
-                          case ElementType::INSTRUMENT_CHANGE:
-                          case ElementType::BEND:
-                          case ElementType::TREMOLOBAR:
-                          case ElementType::VOLTA:
-                          case ElementType::OTTAVA_SEGMENT:
-                          case ElementType::TRILL_SEGMENT:
-                          case ElementType::VIBRATO_SEGMENT:
-                          case ElementType::TEXTLINE_SEGMENT:
-                          case ElementType::VOLTA_SEGMENT:
-                          case ElementType::PEDAL_SEGMENT:
-                          case ElementType::LAYOUT_BREAK:
-                          case ElementType::SPACER:
-                          case ElementType::STAFF_STATE:
-                          case ElementType::LEDGER_LINE:
-                          case ElementType::NOTEHEAD:
-                          case ElementType::NOTEDOT:
-                          case ElementType::TREMOLO:
-                          case ElementType::MEASURE:
-                          case ElementType::SELECTION:
-                          case ElementType::LASSO:
-                          case ElementType::SHADOW_NOTE:
-                          case ElementType::RUBBERBAND:
-                          case ElementType::TAB_DURATION_SYMBOL:
-                          case ElementType::FSYMBOL:
-                          case ElementType::PAGE:
-                          case ElementType::OTTAVA:
-                          case ElementType::PEDAL:
-                          case ElementType::TRILL:
-                          case ElementType::TEXTLINE:
-                          case ElementType::SEGMENT:
-                          case ElementType::SYSTEM:
-                          case ElementType::COMPOUND:
-                          case ElementType::CHORD:
-                          case ElementType::SLUR:
-                          case ElementType::ELEMENT:
-                          case ElementType::ELEMENT_LIST:
-                          case ElementType::STAFF_LIST:
-                          case ElementType::MEASURE_LIST:
-                          case ElementType::LAYOUT:
-                          case ElementType::HBOX:
-                          case ElementType::VBOX:
-                          case ElementType::TBOX:
-                          case ElementType::FBOX:
-                          case ElementType::ACTION_ICON:
-                          case ElementType::OSSIA:
-                          case ElementType::BAGPIPE_EMBELLISHMENT:
-                                continue;
-        */
         case ElementType::ARTICULATION:
-            // ignore articulations not attached to chords/rest
-            if (e->explicitParent()->isChord()) {
-                Chord* par = toChord(e->explicitParent());
-                seg = par->segment();
-                break;
-            } else if (e->explicitParent()->isRest()) {
-                Rest* par = toRest(e->explicitParent());
-                seg = par->segment();
-                break;
+        case ElementType::ORNAMENT:
+        case ElementType::ARPEGGIO:
+        case ElementType::TREMOLO_SINGLECHORD: {
+            // ignore articulations not attached to chords/rest or segment
+            if (!e->explicitParent()->isChordRest()) {
+                continue;
             }
-            continue;
+            ChordRest* cr = toChordRest(e->explicitParent());
+            seg = cr->segment();
+        } break;
+        case ElementType::FERMATA:
+            seg = toFermata(e)->segment();
+            break;
+        case ElementType::BREATH:
+            seg = toBreath(e)->segment();
+            break;
         case ElementType::PLAYTECH_ANNOTATION:
         case ElementType::CAPO:
         case ElementType::STRING_TUNINGS:
         case ElementType::STAFF_TEXT:
             seg = toStaffTextBase(e)->segment();
             break;
+        case ElementType::EXPRESSION:
+            seg = toExpression(e)->segment();
+            break;
         case ElementType::STICKING:
             seg = toSticking(e)->segment();
             break;
         case ElementType::FIGURED_BASS:
             seg = toFiguredBass(e)->segment();
+            break;
+        case ElementType::LYRICS:
+            seg = toLyrics(e)->segment();
+            break;
+        case ElementType::DYNAMIC:
+            seg = toDynamic(e)->segment();
             break;
         case ElementType::HARMONY:
         case ElementType::FRET_DIAGRAM:
@@ -1117,22 +1139,42 @@ muse::ByteArray Selection::symbolListMimeData() const
                 break;
             }
             continue;
-        case ElementType::LYRICS:
-            seg = toLyrics(e)->segment();
-            break;
-        case ElementType::DYNAMIC:
-            seg = toDynamic(e)->segment();
-            break;
-        case ElementType::HAIRPIN_SEGMENT:
-            e = toHairpinSegment(e)->hairpin();
-        // fall through
-        case ElementType::HAIRPIN:
-            seg = toHairpin(e)->startSegment();
-            break;
         case ElementType::HARP_DIAGRAM:
             seg = toHarpPedalDiagram(e)->segment();
             break;
+        case ElementType::SLUR_SEGMENT:
+        case ElementType::HAIRPIN_SEGMENT:
+        case ElementType::OTTAVA_SEGMENT:
+        case ElementType::TRILL_SEGMENT:
+        case ElementType::LET_RING_SEGMENT:
+        case ElementType::VIBRATO_SEGMENT:
+        case ElementType::PALM_MUTE_SEGMENT:
+        case ElementType::WHAMMY_BAR_SEGMENT:
+        case ElementType::RASGUEADO_SEGMENT:
+        case ElementType::HARMONIC_MARK_SEGMENT:
+        case ElementType::PICK_SCRAPE_SEGMENT:
+        case ElementType::TEXTLINE_SEGMENT:
+        case ElementType::PEDAL_SEGMENT:
+            e = toSpannerSegment(e)->spanner();
+            [[fallthrough]];
+        case ElementType::SLUR:
+        case ElementType::HAIRPIN:
+        case ElementType::OTTAVA:
+        case ElementType::TRILL:
+        case ElementType::LET_RING:
+        case ElementType::VIBRATO:
+        case ElementType::PALM_MUTE:
+        case ElementType::WHAMMY_BAR:
+        case ElementType::RASGUEADO:
+        case ElementType::HARMONIC_MARK:
+        case ElementType::PICK_SCRAPE:
+        case ElementType::TEXTLINE:
+        case ElementType::PEDAL:
+            seg = toSpanner(e)->startSegment();
+            break;
         default:
+            // Elements of other types are ignored. To allow copying them,
+            // add support for them here and in `Score::pasteSymbols`.
             continue;
         }
         track_idx_t track = e->track();
@@ -1146,8 +1188,7 @@ muse::ByteArray Selection::symbolListMimeData() const
             firstSeg  = seg;
             firstTick = seg->tick();
         }
-        mapData.e = e;
-        mapData.s = seg;
+        MapData mapData = { e, seg };
         map.insert(std::pair<int64_t, MapData>(((int64_t)track << 32) + seg->tick().ticks(), mapData));
     }
 
@@ -1508,7 +1549,7 @@ void Selection::extendRangeSelection(ChordRest* cr)
 
 void Selection::extendRangeSelection(Segment* seg, Segment* segAfter, staff_idx_t staffIdx, const Fraction& tick, const Fraction& etick)
 {
-    bool activeIsFirst = false;
+    bool activeSegmentIsStart = false;
     staff_idx_t activeStaff = m_activeTrack / VOICES;
 
     if (staffIdx < m_staffStart) {
@@ -1525,18 +1566,18 @@ void Selection::extendRangeSelection(Segment* seg, Segment* segAfter, staff_idx_
 
     if (tick < tickStart()) {
         m_startSegment = seg;
-        activeIsFirst = true;
-    } else if (etick >= tickEnd()) {
+        activeSegmentIsStart = true;
+    } else if (etick > tickEnd()) {
         m_endSegment = segAfter;
     } else {
         if (m_activeSegment == m_startSegment) {
             m_startSegment = seg;
-            activeIsFirst = true;
+            activeSegmentIsStart = true;
         } else {
             m_endSegment = segAfter;
         }
     }
-    activeIsFirst ? m_activeSegment = m_startSegment : m_activeSegment = m_endSegment;
+    m_activeSegment = activeSegmentIsStart ? m_startSegment : m_endSegment;
     m_score->setSelectionChanged(true);
     assert(!(m_endSegment && !m_startSegment));
 }

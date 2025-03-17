@@ -115,7 +115,7 @@ private:
                       ChangedTrackIdSet* trackChanges = nullptr);
 
     void processSegment(const int tickPositionOffset, const Segment* segment, const std::set<staff_idx_t>& staffIdxSet,
-                        bool isFirstSegmentOfMeasure, ChangedTrackIdSet* trackChanges);
+                        bool isFirstChordRestSegmentOfMeasure, ChangedTrackIdSet* trackChanges);
     void processMeasureRepeat(const int tickPositionOffset, const MeasureRepeat* measureRepeat, const Measure* currentMeasure,
                               const staff_idx_t staffIdx, ChangedTrackIdSet* trackChanges);
 
@@ -144,6 +144,9 @@ private:
     muse::mpe::ArticulationsProfilePtr defaultActiculationProfile(const InstrumentTrackId& trackId) const;
 
     PlaybackContextPtr playbackCtx(const InstrumentTrackId& trackId);
+
+    static void applyTiedNotesTickBoundaries(const Note* note, TickBoundaries& tickBoundaries);
+    static void applyTieTickBoundaries(const Tie* tie, TickBoundaries& tickBoundaries);
 
     Score* m_score = nullptr;
     bool m_expandRepeats = true;

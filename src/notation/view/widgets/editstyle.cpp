@@ -81,6 +81,7 @@ static const QStringList ALL_PAGE_CODES {
     "pedal",
     "trill",
     "vibrato",
+    "glissando-note-line",
     "bend",
     "text-line",
     "system-text-line",
@@ -143,6 +144,7 @@ static const QStringList ALL_TEXT_STYLE_SUBPAGE_CODES {
     "harp-pedal-diagram",
     "harp-pedal-text-diagram",
     "text-line",
+    "note-line",
     "volta",
     "ottava",
     "glissando",
@@ -255,10 +257,6 @@ EditStyle::EditStyle(QWidget* parent)
     tsbl->addButton(radioTimeSigCourtesyBarlineAlwaysDouble, int(CourtesyBarlineMode::ALWAYS_DOUBLE));
     tsbl->addButton(radioTimeSigCourtesyBarlineDoubleBeforeNewSystem, int(CourtesyBarlineMode::DOUBLE_BEFORE_COURTESY));
 
-    QButtonGroup* ctg = new QButtonGroup(this);
-    ctg->addButton(clefTab1, int(ClefType::TAB));
-    ctg->addButton(clefTab2, int(ClefType::TAB_SERIF));
-
     QButtonGroup* fbAlign = new QButtonGroup(this);
     fbAlign->addButton(radioFBTop, 0);
     fbAlign->addButton(radioFBBottom, 1);
@@ -276,6 +274,10 @@ EditStyle::EditStyle(QWidget* parent)
     articulationKeepTogether->addButton(radioArticKeepTogether, 1);
     articulationKeepTogether->addButton(radioArticAllowSeparate, 0);
 
+    QButtonGroup* trillAlwaysShowCueNote = new QButtonGroup(this);
+    trillAlwaysShowCueNote->addButton(ornamentShowCueNoteAlways, 1);
+    trillAlwaysShowCueNote->addButton(ornamentShowCueNoteOnlyNonSeconds, 0);
+
     QButtonGroup* tabShowTiedFrets = new QButtonGroup(this);
     tabShowTiedFrets->addButton(tabShowTiesAndFret, int(ShowTiedFret::TIE_AND_FRET));
     tabShowTiedFrets->addButton(tabShowTies, int(ShowTiedFret::TIE));
@@ -291,14 +293,6 @@ EditStyle::EditStyle(QWidget* parent)
         updateParenthesisIndicatingTiesGroupState();
     });
 
-    QButtonGroup* clefVisibility = new QButtonGroup(this);
-    clefVisibility->addButton(radioShowAllClefs, true);
-    clefVisibility->addButton(radioHideClefs, false);
-
-    QButtonGroup* keysigVisibility = new QButtonGroup(this);
-    keysigVisibility->addButton(radioShowAllKeys, true);
-    keysigVisibility->addButton(radioHideKeys, false);
-
     QButtonGroup* firstSysLabels = new QButtonGroup(this);
     firstSysLabels->addButton(firstLongBtn, int(InstrumentLabelVisibility::LONG));
     firstSysLabels->addButton(firstShortBtn, int(InstrumentLabelVisibility::SHORT));
@@ -308,6 +302,14 @@ EditStyle::EditStyle(QWidget* parent)
     subsSysLabels->addButton(subsLongBtn, int(InstrumentLabelVisibility::LONG));
     subsSysLabels->addButton(subsShortBtn, int(InstrumentLabelVisibility::SHORT));
     subsSysLabels->addButton(subsHideBtn, int(InstrumentLabelVisibility::HIDE));
+
+    QButtonGroup* singleMeasureMMRest = new QButtonGroup(this);
+    singleMeasureMMRest->addButton(mmRestSingleUseHBar, 0);
+    singleMeasureMMRest->addButton(mmRestSingleUseNormalRest, 1);
+
+    QButtonGroup* mmRestConstantWidth = new QButtonGroup(this);
+    mmRestConstantWidth->addButton(mmRestWidthProportional, 0);
+    mmRestConstantWidth->addButton(mmRestWidthConstant, 1);
 
     // ====================================================
     // Style widgets
@@ -320,7 +322,6 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::figuredBassFontSize,     false, doubleSpinFBSize,        0 },
         { StyleId::figuredBassYOffset,      false, doubleSpinFBVertPos,     0 },
         { StyleId::figuredBassLineHeight,   true,  spinFBLineHeight,        0 },
-        { StyleId::tabClef,                 false, ctg,                     0 },
         { StyleId::keySigNaturals,          false, ksng,                    0 },
         { StyleId::voltaLineStyle,          false, voltaLineStyle,          resetVoltaLineStyle },
         { StyleId::voltaDashLineLen,        false, voltaLineStyleDashSize,  resetVoltaLineStyleDashSize },
@@ -371,6 +372,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::lyricsMelismaMinLength,  false, minMelismaLength,     resetMinMelismaLength },
         { StyleId::lyricsMelismaForce,      false, lyricsMelismaForce,   resetLyricsMelismaForce },
         { StyleId::lyricsDashPosAtStartOfSystem, false, lyricsDashStartSystemPlacement, resetLyricsDashStartSystemPlacement },
+        { StyleId::lyricsAvoidBarlines, false, lyricsAvoidBarlines, resetLyricsAvoidBarlines },
 
         { StyleId::systemFrameDistance,     false, systemFrameDistance,     resetSystemFrameDistance },
         { StyleId::frameSystemDistance,     false, frameSystemDistance,     resetFrameSystemDistance },
@@ -409,8 +411,14 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::concertPitch,            false, concertPitch,            0 },
         { StyleId::createMultiMeasureRests, false, multiMeasureRests,       0 },
         { StyleId::minEmptyMeasures,        false, minEmptyMeasures,        0 },
+        { StyleId::singleMeasureMMRestUseNormalRest, false, singleMeasureMMRest, 0 },
+        { StyleId::singleMeasureMMRestShowNumber,    false, singleMMRestShowNumber, 0 },
+        { StyleId::mmRestConstantWidth,     false, mmRestConstantWidth, 0 },
+        { StyleId::mmRestReferenceWidth,    false, mmRestRefDuration, resetMMRestRefDuration },
+        { StyleId::mmRestMaxWidthIncrease,  false, mmRestMaxMeasures, mmRestMaxMeasuresReset },
         { StyleId::minMMRestWidth,          false, minMeasureWidth,         resetMinMMRestWidth },
         { StyleId::mmRestNumberPos,         false, mmRestNumberPos,         resetMMRestNumberPos },
+        { StyleId::mmRestBetweenStaves,     false, placeBetweenStaves,      resetPlaceBetweenStaves },
         { StyleId::mmRestNumberMaskHBar,    false, mmRestNumberMaskHBar,    resetMMRestNumberMaskHBar },
         { StyleId::mmRestHBarThickness,     false, mmRestHBarThickness,     resetMMRestHBarThickness },
         { StyleId::multiMeasureRestMargin,  false, multiMeasureRestMargin,  resetMultiMeasureRestMargin },
@@ -475,6 +483,11 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::tieDottedWidth,          false, tieDottedLineWidth,      resetTieDottedLineWidth },
         { StyleId::tieMinDistance,          false, tieMinDistance,          resetTieMinDistance },
         { StyleId::minTieLength,            false, minTieLength,            resetMinTieLength },
+        { StyleId::minHangingTieLength,     false, minHangingTieLength,     resetMinHangingTieLength },
+
+        { StyleId::minLaissezVibLength,            false, minLaissezVibLength,            resetMinLaissezVibLength },
+        { StyleId::laissezVibUseSmuflSym,          false, laissezVibUseSmufl,            0 },
+
         { StyleId::bracketWidth,            false, bracketWidth,            resetBracketThickness },
         { StyleId::bracketDistance,         false, bracketDistance,         resetBracketDistance },
         { StyleId::akkoladeWidth,           false, akkoladeWidth,           resetBraceThickness },
@@ -491,6 +504,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::propertyDistance,        false, articStaffDist,          resetArticStaffDist },
         { StyleId::articulationStemHAlign,  false, articulationStemSide,    0 },
         { StyleId::articulationKeepTogether, false, articulationKeepTogether, 0 },
+        { StyleId::trillAlwaysShowCueNote, false, trillAlwaysShowCueNote, 0 },
         { StyleId::voltaPosAbove,           false, voltaPosAbove,           resetVoltaPosAbove },
         { StyleId::voltaHook,               false, voltaHook,               resetVoltaHook },
         { StyleId::voltaLineWidth,          false, voltaLineWidth,          resetVoltaLineWidth },
@@ -541,6 +555,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::repeatBarTips,            false, showRepeatBarTips,            resetShowRepeatBarTips },
         { StyleId::startBarlineSingle,       false, showStartBarlineSingle,       resetShowStartBarlineSingle },
         { StyleId::startBarlineMultiple,     false, showStartBarlineMultiple,     resetShowStartBarlineMultiple },
+        { StyleId::maskBarlinesForText,      false, maskBarlines,                 resetMaskBarlines },
         { StyleId::dividerLeftSym,           false, dividerLeftSym,               0 },
         { StyleId::dividerRightSym,          false, dividerRightSym,              0 },
 
@@ -564,14 +579,9 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::graceNoteMag,             true,  graceNoteSize,                resetGraceNoteSize },
         { StyleId::smallStaffMag,            true,  smallStaffSize,               resetSmallStaffSize },
         { StyleId::smallNoteMag,             true,  smallNoteSize,                resetSmallNoteSize },
+        { StyleId::scaleRythmicSpacingForSmallNotes, true, reduceRythmicSpacing, 0 },
         { StyleId::smallClefMag,             true,  smallClefSize,                resetSmallClefSize },
         { StyleId::lastSystemFillLimit,      true,  lastSystemFillThreshold,      resetLastSystemFillThreshold },
-        { StyleId::hideTabClefAfterFirst,    false, hideTabClefs,                 0 },
-        { StyleId::genClef,                  false, clefVisibility,               0 },
-        { StyleId::genKeysig,                false, keysigVisibility,             0 },
-        { StyleId::genCourtesyTimesig,       false, genCourtesyTimesig,           0 },
-        { StyleId::genCourtesyKeysig,        false, genCourtesyKeysig,            0 },
-        { StyleId::genCourtesyClef,          false, genCourtesyClef,              0 },
         { StyleId::keySigCourtesyBarlineMode, false, ksbl,                        0 },
         { StyleId::timeSigCourtesyBarlineMode, false, tsbl,                       0 },
         { StyleId::swingRatio,               false, swingBox,                     0 },
@@ -832,12 +842,13 @@ EditStyle::EditStyle(QWidget* parent)
     groupBox_rests->layout()->addWidget(restOffsetSelector.widget);
 
     // ====================================================
-    // Measure repeats
+    // Measure repeats / (Multimeasure) rests
     // ====================================================
 
     // Define string here instead of in the .ui file to avoid MSVC compiler warning C4125, which would
     // be triggered by the decimal digit immediately following a non-ASCII character (curly quote).
     oneMeasureRepeatShow1->setText(muse::qtrc("EditStyleBase", "Show ‘1’ on 1-measure repeats"));
+    singleMMRestShowNumber->setText(muse::qtrc("EditStyleBase", "Show number ‘1’"));
 
     // ====================================================
     // BEAMS (QML)
@@ -866,7 +877,7 @@ EditStyle::EditStyle(QWidget* parent)
     auto tiePlacementSelector = createQmlWidget(
         groupBox_ties,
         QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/TiePlacementSelector.qml")));
-    tiePlacementSelector.widget->setMinimumSize(224, 120);
+    tiePlacementSelector.widget->setMinimumSize(224, 240);
     groupBox_ties->layout()->addWidget(tiePlacementSelector.widget);
 
     // ====================================================
@@ -886,9 +897,41 @@ EditStyle::EditStyle(QWidget* parent)
     auto fretboardsPage = createQmlWidget(
         fretboardsWidget,
         QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml")));
-    fretboardsPage.widget->setMinimumSize(224, 1000);
+    fretboardsPage.widget->setMinimumSize(224, 1006);
     connect(fretboardsPage.view->rootObject(), SIGNAL(goToTextStylePage(QString)), this, SLOT(goToTextStylePage(QString)));
     fretboardsWidget->layout()->addWidget(fretboardsPage.widget);
+
+    // ====================================================
+    // GLISSANDO STYLE SECTION (QML)
+    // ====================================================
+
+    auto glissandoSection = createQmlWidget(
+        groupBox_glissando,
+        QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/GlissandoSection.qml")));
+    glissandoSection.widget->setMinimumSize(224, 284);
+    connect(glissandoSection.view->rootObject(), SIGNAL(goToTextStylePage(QString)), this, SLOT(goToTextStylePage(QString)));
+    groupBox_glissando->layout()->addWidget(glissandoSection.widget);
+
+    // ====================================================
+    // NOTE LINE STYLE SECTION (QML)
+    // ====================================================
+
+    auto noteLineSection = createQmlWidget(
+        groupBox_noteline,
+        QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/NoteLineSection.qml")));
+    noteLineSection.widget->setMinimumSize(224, 200);
+    connect(noteLineSection.view->rootObject(), SIGNAL(goToTextStylePage(QString)), this, SLOT(goToTextStylePage(QString)));
+    groupBox_noteline->layout()->addWidget(noteLineSection.widget);
+
+    // ====================================================
+    // CLEF, KEY & TIME SIG PAGE (QML)
+    // ====================================================
+
+    auto clefKeyTimeSigPage = createQmlWidget(
+        clefTimeKeySigPage,
+        QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/ClefKeyTimeSigPage.qml")));
+    clefKeyTimeSigPage.widget->setMinimumSize(224, 400);
+    clefTimeKeySigPage->layout()->addWidget(clefKeyTimeSigPage.widget);
 
     // ====================================================
     // Figured Bass
@@ -955,9 +998,6 @@ EditStyle::EditStyle(QWidget* parent)
     connect(lyricsDashMaxLength, &QDoubleSpinBox::valueChanged, this, &EditStyle::lyricsDashMaxLengthValueChanged);
     connect(minSystemDistance,   &QDoubleSpinBox::valueChanged, this, &EditStyle::systemMinDistanceValueChanged);
     connect(maxSystemDistance,   &QDoubleSpinBox::valueChanged, this, &EditStyle::systemMaxDistanceValueChanged);
-
-    connect(radioShowAllClefs, &QRadioButton::toggled, this, &EditStyle::clefVisibilityChanged);
-    connect(radioHideClefs,    &QRadioButton::toggled, this, &EditStyle::clefVisibilityChanged);
 
     accidentalsGroup->setVisible(false);   // disable, not yet implemented
 
@@ -1205,7 +1245,7 @@ void EditStyle::showEvent(QShowEvent* ev)
 {
     setValues();
     pageList->setFocus();
-    globalContext()->currentNotation()->undoStack()->prepareChanges();
+    globalContext()->currentNotation()->undoStack()->prepareChanges(muse::TranslatableString("undoableAction", "Edit style"));
     buttonApplyToAllParts->setEnabled(globalContext()->currentNotation()->style()->canApplyToAllParts());
     QWidget::showEvent(ev);
 }
@@ -1526,6 +1566,10 @@ QString EditStyle::pageCodeForElement(const EngravingItem* element)
     case ElementType::SLUR_SEGMENT:
     case ElementType::TIE:
     case ElementType::TIE_SEGMENT:
+    case ElementType::LAISSEZ_VIB:
+    case ElementType::LAISSEZ_VIB_SEGMENT:
+    case ElementType::PARTIAL_TIE:
+    case ElementType::PARTIAL_TIE_SEGMENT:
         return "slurs-and-ties";
 
     case ElementType::HAIRPIN:
@@ -1564,6 +1608,12 @@ QString EditStyle::pageCodeForElement(const EngravingItem* element)
     case ElementType::TEXTLINE_SEGMENT:
         return "text-line";
 
+    case ElementType::GLISSANDO:
+    case ElementType::GLISSANDO_SEGMENT:
+    case ElementType::NOTELINE:
+    case ElementType::NOTELINE_SEGMENT:
+        return "glissando-note-line";
+
     case ElementType::ARTICULATION:
         return "articulations-and-ornaments";
 
@@ -1579,7 +1629,9 @@ QString EditStyle::pageCodeForElement(const EngravingItem* element)
 
     case ElementType::LYRICS:
     case ElementType::LYRICSLINE:
+    case ElementType::PARTIAL_LYRICSLINE:
     case ElementType::LYRICSLINE_SEGMENT:
+    case ElementType::PARTIAL_LYRICSLINE_SEGMENT:
         return "lyrics";
 
     case ElementType::EXPRESSION:
@@ -1743,6 +1795,9 @@ QString EditStyle::subPageCodeForElement(const EngravingItem* element)
 
         case TextStyleType::TEXTLINE:
             return "text-line";
+
+        case TextStyleType::NOTELINE:
+            return "note-line";
 
         case TextStyleType::VOLTA:
             return "volta";
@@ -1997,6 +2052,21 @@ void EditStyle::unhandledType(const StyleWidget sw)
                                sw.widget->metaObject()->className()));
 }
 
+bool EditStyle::isBoolStyleRepresentedByButtonGroup(StyleId id)
+{
+    switch (id) {
+    case StyleId::articulationKeepTogether:
+    case StyleId::trillAlwaysShowCueNote:
+    case StyleId::genClef:
+    case StyleId::genKeysig:
+    case StyleId::singleMeasureMMRestUseNormalRest:
+    case StyleId::mmRestConstantWidth:
+        return true;
+    default:
+        return false;
+    }
+}
+
 //---------------------------------------------------------
 //   getValue
 //    return current gui value
@@ -2028,7 +2098,7 @@ PropertyValue EditStyle::getValue(StyleId idx)
         if (sw.idx == StyleId::harmonyVoiceLiteral) { // special case for bool represented by a two-item combobox
             QComboBox* cb = qobject_cast<QComboBox*>(sw.widget);
             v = cb->currentIndex();
-        } else if (sw.idx == StyleId::articulationKeepTogether || sw.idx == StyleId::genClef || sw.idx == StyleId::genKeysig) { // special case for bool represented by a two-item buttonGroup
+        } else if (isBoolStyleRepresentedByButtonGroup(idx)) { // special case for bool represented by a two-item buttonGroup
             QButtonGroup* bg = qobject_cast<QButtonGroup*>(sw.widget);
             v = bool(bg->checkedId());
         } else if (sw.idx == StyleId::lyricsDashForce || sw.idx == StyleId::lyricsMelismaForce) { // special case where UI is presented with opposite wording
@@ -2046,6 +2116,9 @@ PropertyValue EditStyle::getValue(StyleId idx)
     case P_TYPE::PLACEMENT_H:
     case P_TYPE::PLACEMENT_V:
     case P_TYPE::LINE_TYPE:
+    case P_TYPE::TIMESIG_PLACEMENT:
+    case P_TYPE::TIMESIG_STYLE:
+    case P_TYPE::TIMESIG_MARGIN:
     case P_TYPE::INT: {
         if (qobject_cast<QComboBox*>(sw.widget)) {
             QComboBox* cb = qobject_cast<QComboBox*>(sw.widget);
@@ -2149,7 +2222,7 @@ void EditStyle::setValues()
             bool value = val.toBool();
             if (sw.idx == StyleId::harmonyVoiceLiteral) { // special case for bool represented by a two-item combobox
                 voicingSelectWidget->interpretBox->setCurrentIndex(value);
-            } else if (sw.idx == StyleId::articulationKeepTogether || sw.idx == StyleId::genClef || sw.idx == StyleId::genKeysig) { // special case for bool represented by a two-item buttonGroup
+            } else if (isBoolStyleRepresentedByButtonGroup(sw.idx)) { // special case for bool represented by a two-item buttonGroup
                 qobject_cast<QButtonGroup*>(sw.widget)->button(1)->setChecked(value);
                 qobject_cast<QButtonGroup*>(sw.widget)->button(0)->setChecked(!value);
             } else if (sw.idx == StyleId::lyricsDashForce || sw.idx == StyleId::lyricsMelismaForce) { // special case where UI is presented with opposite wording
@@ -2171,6 +2244,9 @@ void EditStyle::setValues()
         case P_TYPE::DYNAMIC_TYPE:
         case P_TYPE::ACCIDENTAL_ROLE:
         case P_TYPE::TIE_PLACEMENT:
+        case P_TYPE::TIMESIG_PLACEMENT:
+        case P_TYPE::TIMESIG_STYLE:
+        case P_TYPE::TIMESIG_MARGIN:
         case P_TYPE::INT: {
             int value = val.toInt();
             if (qobject_cast<QComboBox*>(sw.widget)) {
@@ -2328,6 +2404,11 @@ void EditStyle::setValues()
     for (const LineStyleSelect* lineStyleSelect : m_lineStyleSelects) {
         lineStyleSelect->update();
     }
+
+    singleMeasureMMRestOption->setEnabled(styleValue(StyleId::minEmptyMeasures).toInt() == 1);
+    singleMMRestShowNumber->setEnabled(styleValue(StyleId::singleMeasureMMRestUseNormalRest).toBool());
+    mmRestSingleUseHBar->setEnabled(!styleValue(StyleId::oldStyleMultiMeasureRests).toBool());
+    mmRestRefDuration->setEnabled(styleValue(StyleId::mmRestConstantWidth).toBool());
 
     updateParenthesisIndicatingTiesGroupState();
 }
@@ -2629,6 +2710,24 @@ void EditStyle::valueChanged(int i)
         || idx == StyleId::dynamicsHairpinsAboveForVocalStaves) {
         resetDynamicsAndHairpinPos->setEnabled(!dynamicsAndHairpinPosPropertiesHaveDefaultStyleValue());
     }
+
+    if (idx == StyleId::minEmptyMeasures) {
+        singleMeasureMMRestOption->setEnabled(styleValue(StyleId::minEmptyMeasures).toInt() == 1);
+    }
+    if (idx == StyleId::singleMeasureMMRestUseNormalRest) {
+        singleMMRestShowNumber->setEnabled(styleValue(StyleId::singleMeasureMMRestUseNormalRest).toBool());
+    }
+    if (idx == StyleId::mmRestConstantWidth) {
+        mmRestRefDuration->setEnabled(styleValue(StyleId::mmRestConstantWidth).toBool());
+    }
+    if (idx == StyleId::oldStyleMultiMeasureRests) {
+        bool useOldStyle = styleValue(StyleId::oldStyleMultiMeasureRests).toBool();
+        if (useOldStyle && !styleValue(StyleId::singleMeasureMMRestUseNormalRest).toBool()) {
+            setStyleValue(StyleId::singleMeasureMMRestUseNormalRest, true);
+            setValues();
+        }
+        mmRestSingleUseHBar->setEnabled(!useOldStyle);
+    }
 }
 
 //---------------------------------------------------------
@@ -2848,17 +2947,4 @@ void EditStyle::resetUserStyleName()
 void EditStyle::updateParenthesisIndicatingTiesGroupState()
 {
     tieParen->setEnabled(tabShowTies->isChecked() || tabShowNone->isChecked());
-}
-
-void EditStyle::clefVisibilityChanged(bool checked)
-{
-    if (!checked) {
-        return;
-    }
-    if (radioHideClefs->isChecked()) {
-        hideTabClefs->setChecked(true);
-        hideTabClefs->setEnabled(false);
-    } else {
-        hideTabClefs->setEnabled(true);
-    }
 }

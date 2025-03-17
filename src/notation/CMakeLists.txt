@@ -26,6 +26,19 @@ set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
 include(${CMAKE_CURRENT_LIST_DIR}/view/widgets/widgets.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/view/styledialog/styledialog.cmake)
 
+if (MUE_BUILD_ENGRAVING_PLAYBACK)
+    set(NOTATION_PLAYBACK_SRC_FILES
+        ${CMAKE_CURRENT_LIST_DIR}/internal/notationplayback.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/internal/notationplayback.h
+        )
+    set(MODULE_DEF ${MODULE_DEF} -DMUE_BUILD_ENGRAVING_PLAYBACK)
+else()
+    set(NOTATION_PLAYBACK_SRC_FILES
+        ${CMAKE_CURRENT_LIST_DIR}/internal/notationplaybackstub.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/internal/notationplaybackstub.h
+        )
+endif()
+
 set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/notationmodule.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notationmodule.h
@@ -92,8 +105,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/positionswriter.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscnotationwriter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscnotationwriter.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/notationplayback.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/notationplayback.h
+    ${NOTATION_PLAYBACK_SRC_FILES}
     ${CMAKE_CURRENT_LIST_DIR}/internal/midiinputoutputcontroller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/midiinputoutputcontroller.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/notationmidiinput.cpp
@@ -122,6 +134,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/playbackcursor.h
     ${CMAKE_CURRENT_LIST_DIR}/view/noteinputcursor.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/noteinputcursor.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/notationruler.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/notationruler.h
     ${CMAKE_CURRENT_LIST_DIR}/view/loopmarker.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/loopmarker.h
     ${CMAKE_CURRENT_LIST_DIR}/view/notationswitchlistmodel.cpp
@@ -144,20 +158,37 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/noteinputbarcustomiseitem.h
     ${CMAKE_CURRENT_LIST_DIR}/view/continuouspanel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/continuouspanel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/paintedengravingitem.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/paintedengravingitem.h
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractelementpopupmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractelementpopupmodel.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/view/internal/undoredomodel.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/view/internal/undoredomodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/undoredotoolbarmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/undoredotoolbarmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/undohistorymodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/undohistorymodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/harppedalpopupmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/harppedalpopupmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/caposettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/caposettingsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/stringtuningssettingsmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/internal/stringtuningssettingsmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/dynamicpopupmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/dynamicpopupmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/partialtiepopupmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/partialtiepopupmodel.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/shadownotepopupmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/shadownotepopupmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/percussionnotepopupcontentmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/internal/percussionnotepopupcontentmodel.h
+
     ${CMAKE_CURRENT_LIST_DIR}/view/selectionfiltermodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/selectionfiltermodel.h
     ${CMAKE_CURRENT_LIST_DIR}/view/editgridsizedialogmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/editgridsizedialogmodel.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/view/editpercussionshortcutmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/view/editpercussionshortcutmodel.h
 
     ${CMAKE_CURRENT_LIST_DIR}/view/percussionpanel/percussionpanelmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/percussionpanel/percussionpanelmodel.h
@@ -173,6 +204,13 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/pianokeyboard/pianokeyboardview.h
     ${CMAKE_CURRENT_LIST_DIR}/view/pianokeyboard/pianokeyboardpanelcontextmenumodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/pianokeyboard/pianokeyboardpanelcontextmenumodel.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/utilities/engravingitempreviewpainter.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/utilities/engravingitempreviewpainter.h
+    ${CMAKE_CURRENT_LIST_DIR}/utilities/percussionutilities.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/utilities/percussionutilities.h
+    ${CMAKE_CURRENT_LIST_DIR}/utilities/scorerangeutilities.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/utilities/scorerangeutilities.h
 
     ${WIDGETS_SRC}
     ${STYLEDIALOG_SRC}

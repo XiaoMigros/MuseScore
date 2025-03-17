@@ -84,8 +84,10 @@ public:
     void setTrackSoloMuteState(const engraving::InstrumentTrackId& trackId,
                                const notation::INotationSoloMuteState::SoloMuteState& state) override;
 
-    void playElements(const std::vector<const notation::EngravingItem*>& elements) override;
+    void playElements(const std::vector<const notation::EngravingItem*>& elements, bool isMidi = false) override;
+    void playNotes(const notation::NoteValList& notes, const notation::staff_idx_t staffIdx, const notation::Segment* segment) override;
     void playMetronome(int tick) override;
+
     void seekElement(const notation::EngravingItem* element) override;
     void seekBeat(int measureIndex, int beatIndex) override;
 
@@ -112,6 +114,7 @@ public:
     void setIsExportingAudio(bool exporting) override;
 
     bool canReceiveAction(const muse::actions::ActionCode& code) const override;
+
 private:
     muse::audio::IPlayerPtr currentPlayer() const;
 
@@ -144,6 +147,9 @@ private:
     void onAudioResourceChanged(const mu::engraving::InstrumentTrackId& trackId, const muse::audio::AudioResourceMeta& oldMeta,
                                 const muse::audio::AudioResourceMeta& newMeta);
 
+    bool shouldLoadDrumset(const engraving::InstrumentTrackId& trackId, const muse::audio::AudioResourceMeta& oldMeta,
+                           const muse::audio::AudioResourceMeta& newMeta) const;
+
     void addSoundFlagsIfNeed(const std::vector<engraving::EngravingItem*>& selection);
 
     void togglePlay();
@@ -166,6 +172,9 @@ private:
     void setMidiUseWrittenPitch(bool useWrittenPitch);
     void toggleCountIn();
     void toggleLoopPlayback();
+    void toggleHearPlaybackWhenEditing();
+
+    void reloadPlaybackCache();
 
     void openPlaybackSetupDialog();
 

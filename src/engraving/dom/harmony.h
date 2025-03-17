@@ -128,10 +128,10 @@ public:
     void textChanged();
 
     bool isEditable() const override { return true; }
-    void startEdit(EditData&) override;
-    bool isEditAllowed(EditData&) const override;
-    bool edit(EditData&) override;
-    void endEdit(EditData&) override;
+    void startEditTextual(EditData&) override;
+    bool isTextualEditAllowed(EditData&) const override;
+    bool editTextual(EditData&) override;
+    void endEditTextual(EditData&) override;
 
     bool isRealizable() const;
 
@@ -194,6 +194,9 @@ public:
     bool setProperty(Pid propertyId, const PropertyValue& v) override;
     PropertyValue propertyDefault(Pid id) const override;
 
+    double mag() const override;
+    void setUserMag(double m) { m_userMag = m; }
+
     //! HACK Temporary hack
     bool isDrawEditMode() const { return m_isDrawEditMode; }
     void setIsDrawEditMode(bool val) { m_isDrawEditMode = val; }
@@ -246,6 +249,8 @@ private:
     NoteCaseType m_baseRenderCase = NoteCaseType::AUTO;           // case to render
 
     bool m_isDrawEditMode = false;
+
+    std::optional<double> m_userMag;
 };
 } // namespace mu::engraving
 #endif

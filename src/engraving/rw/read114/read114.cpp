@@ -1152,6 +1152,11 @@ static void readVolta114(XmlReader& e, ReadContext& ctx, Volta* volta)
             e.unknown();
         }
     }
+    if (volta->anchor() != Volta::VOLTA_ANCHOR) {
+        // Volta strictly assumes that its anchor is measure, so don't let old scores override this.
+        LOGW("Correcting volta anchor type from %d to %d", int(volta->anchor()), int(Volta::VOLTA_ANCHOR));
+        volta->setAnchor(Volta::VOLTA_ANCHOR);
+    }
     volta->setOffset(PointF());          // ignore offsets
     volta->setAutoplace(true);
 }
@@ -1817,6 +1822,12 @@ static void readMeasure(Measure* m, int staffIdx, XmlReader& e, ReadContext& ctx
                 clef->setClefType(ClefType::G);
                 staff->clefList().erase(ctx.tick().ticks());
                 staff->clefList().insert(std::pair<int, ClefType>(ctx.tick().ticks(), ClefType::G));
+            }
+
+            // Clef segments are sorted on layout now.  Previously, clef barline position could be out of sync with segment placement.
+            if (ctx.tick() != Fraction(0, 1) && ctx.tick() == m->tick()
+                && !(m->prevMeasure() && m->prevMeasure()->repeatEnd()) && !header) {
+                clef->setClefToBarlinePosition(ClefToBarlinePosition::AFTER);
             }
 
             segment->add(clef);
@@ -2717,16 +2728,20 @@ static void readStyle(MStyle* style, XmlReader& e, ReadChordListHook& readChordL
 //    import old version <= 1.3 files
 //---------------------------------------------------------
 
-Err Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
+muse::Ret Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
 {
     IF_ASSERT_FAILED(score->isMaster()) {
-        return Err::FileUnknownError;
+        return make_ret(Err::FileUnknownError);
     }
 
     ReadContext ctx(score);
-    if (out && out->overriddenSpatium.has_value()) {
-        ctx.setSpatium(out->overriddenSpatium.value());
-        ctx.setOverrideSpatium(true);
+    if (out) {
+        if (out->overriddenSpatium.has_value()) {
+            ctx.setSpatium(out->overriddenSpatium.value());
+            ctx.setOverrideSpatium(true);
+        }
+
+        ctx.setPropertiesToSkip(out->propertiesToSkip);
     }
 
     DEFER {
@@ -2910,7 +2925,7 @@ Err Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
 
     if (e.error() != muse::XmlStreamReader::NoError) {
         LOGD() << e.lineNumber() << " " << e.columnNumber() << ": " << e.errorString();
-        return Err::FileBadFormat;
+        return make_ret(Err::FileBadFormat, e.errorString());
     }
 
     for (Staff* s : masterScore->staves()) {
@@ -3167,7 +3182,7 @@ Err Read114::readScore(Score* score, XmlReader& e, ReadInOutData* out)
         score->removeElement(invalidSpanner);
     }
 
-    return Err::NoError;
+    return muse::make_ok();
 }
 
 bool Read114::pasteStaff(XmlReader&, Segment*, staff_idx_t, Fraction)

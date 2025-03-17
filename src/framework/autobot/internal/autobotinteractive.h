@@ -35,40 +35,40 @@ public:
     void setRealInteractive(std::shared_ptr<IInteractive> real);
     std::shared_ptr<IInteractive> realInteractive() const;
 
-    Result question(const std::string& title, const std::string& text, const Buttons& buttons, const Button& def = Button::NoButton,
-                    const Options& options = {}) const override;
+    Result question(const std::string& contentTitle, const std::string& text, const Buttons& buttons, const Button& def = Button::NoButton,
+                    const Options& options = {}, const std::string& dialogTitle = "") const override;
 
-    Result question(const std::string& title, const Text& text, const ButtonDatas& buttons, int defBtn = int(Button::NoButton),
-                    const Options& options = {}) const override;
+    Result question(const std::string& contentTitle, const Text& text, const ButtonDatas& buttons, int defBtn = int(Button::NoButton),
+                    const Options& options = {}, const std::string& dialogTitle = "") const override;
 
     ButtonData buttonData(Button b) const override;
 
     // info
-    Result info(const std::string& title, const std::string& text, const Buttons& buttons = {}, int defBtn = int(Button::NoButton),
-                const Options& options = {}) const override;
+    Result info(const std::string& contentTitle, const std::string& text, const Buttons& buttons = {}, int defBtn = int(Button::NoButton),
+                const Options& options = {}, const std::string& dialogTitle = "") const override;
 
-    Result info(const std::string& title, const Text& text, const ButtonDatas& buttons, int defBtn = int(Button::NoButton),
-                const Options& options = {}) const override;
+    Result info(const std::string& contentTitle, const Text& text, const ButtonDatas& buttons, int defBtn = int(Button::NoButton),
+                const Options& options = {}, const std::string& dialogTitle = "") const override;
 
     // warning
-    Result warning(const std::string& title, const std::string& text, const Buttons& buttons = {}, const Button& def = Button::NoButton,
-                   const Options& options = {}) const override;
+    Result warning(const std::string& contentTitle, const std::string& text, const Buttons& buttons = {},
+                   const Button& def = Button::NoButton, const Options& options = {}, const std::string& dialogTitle = "") const override;
 
-    Result warning(const std::string& title, const Text& text, const ButtonDatas& buttons = {}, int defBtn = int(Button::NoButton),
-                   const Options& options = {}) const override;
+    Result warning(const std::string& contentTitle, const Text& text, const ButtonDatas& buttons = {}, int defBtn = int(Button::NoButton),
+                   const Options& options = {}, const std::string& dialogTitle = "") const override;
 
-    Result warning(const std::string& title, const Text& text, const std::string& detailedText, const ButtonDatas& buttons = {},
-                   int defBtn = int(Button::NoButton), const Options& options = {}) const override;
+    Result warning(const std::string& contentTitle, const Text& text, const std::string& detailedText, const ButtonDatas& buttons = {},
+                   int defBtn = int(Button::NoButton), const Options& options = {}, const std::string& dialogTitle = "") const override;
 
     // error
-    Result error(const std::string& title, const std::string& text, const Buttons& buttons = {}, const Button& def = Button::NoButton,
-                 const Options& options = {}) const override;
+    Result error(const std::string& contentTitle, const std::string& text, const Buttons& buttons = {},
+                 const Button& def = Button::NoButton, const Options& options = {}, const std::string& dialogTitle = "") const override;
 
-    Result error(const std::string& title, const Text& text, const ButtonDatas& buttons = {}, int defBtn = int(Button::NoButton),
-                 const Options& options = {}) const override;
+    Result error(const std::string& contentTitle, const Text& text, const ButtonDatas& buttons = {}, int defBtn = int(Button::NoButton),
+                 const Options& options = {}, const std::string& dialogTitle = "") const override;
 
-    Result error(const std::string& title, const Text& text, const std::string& detailedText, const ButtonDatas& buttons = {},
-                 int defBtn = int(Button::NoButton), const Options& options = {}) const override;
+    Result error(const std::string& contentTitle, const Text& text, const std::string& detailedText, const ButtonDatas& buttons = {},
+                 int defBtn = int(Button::NoButton), const Options& options = {}, const std::string& dialogTitle = "") const override;
 
     // progress
     Ret showProgress(const std::string& title, Progress* progress) const override;
@@ -103,6 +103,7 @@ public:
     void closeAllDialogs() override;
 
     ValCh<Uri> currentUri() const override;
+    RetVal<bool> isCurrentUriDialog() const override;
     std::vector<Uri> stack() const override;
 
     Ret openUrl(const std::string& url) const override;

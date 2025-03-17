@@ -81,6 +81,8 @@ public:
     int iconsFontSize(IconSizeType type) const override;
     async::Notification iconsFontChanged() const override;
 
+    io::path_t appIconPath() const override;
+
     std::string musicalFontFamily() const override;
     int musicalFontSize() const override;
     async::Notification musicalFontChanged() const override;
@@ -111,6 +113,10 @@ public:
     void setIsVisible(const QString& key, bool val) override;
     async::Notification isVisibleChanged(const QString& key) const override;
 
+    QString uiItemState(const QString& itemName) const override;
+    void setUiItemState(const QString& itemName, const QString& value) override;
+    async::Notification uiItemStateChanged(const QString& itemName) const override;
+
     ToolConfig toolConfig(const QString& toolName, const ToolConfig& defaultConfig) const override;
     void setToolConfig(const QString& toolName, const ToolConfig& config) override;
     async::Notification toolConfigChanged(const QString& toolName) const override;
@@ -121,7 +127,10 @@ public:
 
 private:
     void initThemes();
+    void correctUserFontIfNeeded();
+
     void notifyAboutCurrentThemeChanged();
+
     void updateCurrentTheme();
     void updateThemes();
 
@@ -152,6 +161,8 @@ private:
     ThemeList m_themes;
     size_t m_currentThemeIndex = 0;
     std::optional<double> m_customDPI;
+
+    Config m_config;
 };
 }
 

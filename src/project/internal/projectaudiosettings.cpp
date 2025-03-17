@@ -110,6 +110,7 @@ void ProjectAudioSettings::setTrackInputParams(const InstrumentTrackId& partId, 
     }
 
     m_trackInputParamsMap.insert_or_assign(partId, params);
+    m_trackInputParamsChanged.send(partId);
     m_settingsChanged.notify();
 }
 
@@ -119,8 +120,19 @@ void ProjectAudioSettings::clearTrackInputParams()
         return;
     }
 
-    m_trackInputParamsMap.clear();
+    auto it = m_trackInputParamsMap.begin();
+    while (it != m_trackInputParamsMap.end()) {
+        InstrumentTrackId id = it->first;
+        it = m_trackInputParamsMap.erase(it);
+        m_trackInputParamsChanged.send(id);
+    }
+
     m_settingsChanged.notify();
+}
+
+muse::async::Channel<mu::engraving::InstrumentTrackId> ProjectAudioSettings::trackInputParamsChanged() const
+{
+    return m_trackInputParamsChanged;
 }
 
 bool ProjectAudioSettings::trackHasExistingOutputParams(const InstrumentTrackId& partId) const
@@ -192,6 +204,7 @@ void ProjectAudioSettings::removeTrackParams(const InstrumentTrackId& partId)
     auto inSearch = m_trackInputParamsMap.find(partId);
     if (inSearch != m_trackInputParamsMap.end()) {
         m_trackInputParamsMap.erase(inSearch);
+        m_trackInputParamsChanged.send(partId);
         m_settingsChanged.notify();
     }
 
@@ -265,6 +278,8 @@ Ret ProjectAudioSettings::read(const engraving::MscReader& reader)
     m_activeSoundProfileName = rootObj.value("activeSoundProfile").toString();
     if (m_activeSoundProfileName.empty()) {
         m_activeSoundProfileName = playbackConfig()->defaultProfileForNewProjects();
+    } else if (m_activeSoundProfileName == playbackConfig()->compatMuseSoundsProfileName()) {
+        m_activeSoundProfileName = playbackConfig()->museSoundsProfileName();
     }
 
     return make_ret(Ret::Code::Ok);

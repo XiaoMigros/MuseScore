@@ -63,6 +63,7 @@ class Score;
 class Spanner;
 class SpannerMap;
 class System;
+class SystemLocks;
 class Staff;
 class Measure;
 class ChordRest;
@@ -166,8 +167,11 @@ public:
 
     size_t ntracks() const;
 
+    size_t nmeasures() const;
+
     const Measure* tick2measure(const Fraction& tick) const;
     const Measure* firstMeasure() const;
+    const Measure* lastMeasure() const;
 
     const SpannerMap& spannerMap() const;
 
@@ -175,12 +179,15 @@ public:
 
     const ChordRest* findCR(Fraction tick, track_idx_t track) const;
 
+    const SystemLocks* systemLocks() const;
+
     // Mutable access
     std::vector<Page*>& pages();
     std::vector<System*>& systems();
 
     MeasureBase* first();
     Measure* firstMeasure();
+    Measure* lastMeasure();
     Measure* tick2measure(const Fraction& tick);
 
     ChordRest* findCR(Fraction tick, track_idx_t track);
@@ -195,6 +202,7 @@ public:
     void undo(UndoCommand* cmd, EditData* ed = nullptr) const;
     void addElement(EngravingItem* item);
     void removeElement(EngravingItem* item);
+    void updateSystemLocksOnCreateMMRest(Measure* first, Measure* last);
 
     void addUnmanagedSpanner(Spanner* s);
     const std::set<Spanner*>& unmanagedSpanners() const;

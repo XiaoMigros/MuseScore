@@ -152,7 +152,7 @@ class Spanner : public EngravingItem
 {
     OBJECT_ALLOCATOR(engraving, Spanner)
 public:
-    enum class Anchor {
+    enum class Anchor : unsigned char {
         SEGMENT, MEASURE, CHORD, NOTE
     };
 
@@ -229,7 +229,7 @@ public:
     Measure* findEndMeasure() const;
 
     void setStartElement(EngravingItem* e);
-    void setEndElement(EngravingItem* e);
+    virtual void setEndElement(EngravingItem* e);
 
     ChordRest* startCR();
     ChordRest* endCR();

@@ -25,9 +25,11 @@
 #include "iengravingfont.h"
 #include "types/symnames.h"
 
+#include "anchors.h"
 #include "mscoreview.h"
 #include "navigate.h"
 #include "score.h"
+#include "dynamic.h"
 #include "lyrics.h"
 
 #include "log.h"
@@ -103,16 +105,16 @@ void TextBase::editInsertText(TextCursor* cursor, const String& s)
 //   startEdit
 //---------------------------------------------------------
 
-void TextBase::startEdit(EditData& ed)
+void TextBase::startEditTextual(EditData& ed)
 {
     std::shared_ptr<TextEditData> ted = std::make_shared<TextEditData>(this);
     ted->e = this;
     ted->cursor()->startEdit();
 
-    assert(!score()->undoStack()->active());        // make sure we are not in a Cmd
+    assert(!score()->undoStack()->hasActiveCommand()); // make sure we are not in a Cmd
 
     ted->oldXmlText = xmlText();
-    ted->startUndoIdx = score()->undoStack()->getCurIdx();
+    ted->startUndoIdx = score()->undoStack()->currentIndex();
 
     const LayoutData* ldata = this->ldata();
     if (!ldata || ldata->layoutInvalid) {
@@ -133,7 +135,7 @@ void TextBase::startEdit(EditData& ed)
 //   endEdit
 //---------------------------------------------------------
 
-void TextBase::endEdit(EditData& ed)
+void TextBase::endEditTextual(EditData& ed)
 {
     TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
     IF_ASSERT_FAILED(ted && ted->cursor()) {
@@ -157,7 +159,7 @@ void TextBase::endEdit(EditData& ed)
 
     //! NOTE: Current index can be less than the start index if the text element is newly added and immediately removed through
     //! undo (the "add element" command will have been popped from the stack before the calling of this method)...
-    const bool textWasEdited = undo->getCurIdx() > ted->startUndoIdx;
+    const bool textWasEdited = undo->currentIndex() > ted->startUndoIdx;
     if (textWasEdited) {
         undo->mergeCommands(ted->startUndoIdx);
         undo->last()->filterChildren(Filter::TextEdit, this);
@@ -204,9 +206,9 @@ void TextBase::endEdit(EditData& ed)
             Filter::Link,
         };
 
-        if (newlyAdded && !undo->current()->hasUnfilteredChildren(filters, this)) {
+        if (newlyAdded && !undo->activeCommand()->hasUnfilteredChildren(filters, this)) {
             for (Filter f : filters) {
-                undo->current()->filterChildren(f, this);
+                undo->activeCommand()->filterChildren(f, this);
             }
 
             ted->setDeleteText(true); // mark this text element for deletion
@@ -230,6 +232,10 @@ void TextBase::endEdit(EditData& ed)
 
         // change property to set text to actual value again - this also changes text of linked elements
         undoChangeProperty(Pid::TEXT, actualXmlText);
+
+        if (isDynamic()) {
+            undoChangeProperty(Pid::DYNAMIC_TYPE, actualXmlText);
+        }
 
         renderer()->layoutText1(this);
     }
@@ -279,7 +285,7 @@ void TextBase::insertText(EditData& ed, const String& s)
     score()->undo(new InsertText(cursor, s), &ed);
 }
 
-bool TextBase::isEditAllowed(EditData& ed) const
+bool TextBase::isTextualEditAllowed(EditData& ed) const
 {
     // Keep this method closely in sync with TextBase::edit()!
 
@@ -387,6 +393,13 @@ bool TextBase::isEditAllowed(EditData& ed) const
         if (ed.key == Key_Minus) {
             return true;
         }
+
+#if defined(Q_OS_WIN)
+        // Allow accented characters to be input with AltGr and Ctrl+Alt (both are treated the same in Windows)
+        if (ed.key >= Key_nobreakspace && ed.key <= Key_ydiaeresis) {
+            return true;
+        }
+#endif
     }
 
     // At least on non-macOS, sometimes ed.s is not empty even if Ctrl is pressed
@@ -397,7 +410,7 @@ bool TextBase::isEditAllowed(EditData& ed) const
 //   edit
 //---------------------------------------------------------
 
-bool TextBase::edit(EditData& ed)
+bool TextBase::editTextual(EditData& ed)
 {
     // Keep this method closely in sync with TextBase::isEditAllowed()!
 
@@ -711,10 +724,10 @@ bool TextBase::edit(EditData& ed)
         }
     }
     if (!s.isEmpty()) {
+        deleteSelectedText(ed);
         if (currentFormat->fontFamily() == u"ScoreText") {
             currentFormat->setFontFamily(propertyDefault(Pid::FONT_FACE).value<String>());
         }
-        deleteSelectedText(ed);
         score()->undo(new InsertText(m_cursor, s), &ed);
 
         int startPosition = cursor->currentPosition();
@@ -734,21 +747,6 @@ void TextBase::movePosition(EditData& ed, TextCursor::MoveOperation op)
     cursor->movePosition(op);
     score()->addRefresh(canvasBoundingRect());
     score()->update();
-}
-
-void TextBase::startEditNonTextual(EditData& ed)
-{
-    EngravingItem::startEdit(ed);
-}
-
-bool TextBase::editNonTextual(EditData& ed)
-{
-    return EngravingItem::edit(ed);
-}
-
-void TextBase::endEditNonTextual(EditData& ed)
-{
-    EngravingItem::endEdit(ed);
 }
 
 //---------------------------------------------------------
@@ -907,7 +905,7 @@ void TextBase::paste(EditData& ed, const String& txt)
     bool symState = false;
     CharFormat format = *static_cast<TextEditData*>(ed.getData(this).get())->cursor()->format();
 
-    score()->startCmd();
+    score()->startCmd(TranslatableString("undoableAction", "Paste text"));
     for (size_t i = 0; i < txt.size(); i++) {
         Char c = txt.at(i);
         if (state == 0) {

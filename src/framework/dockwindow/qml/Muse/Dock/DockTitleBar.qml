@@ -26,8 +26,6 @@ import QtQuick.Layouts 1.12
 import Muse.Ui 1.0
 import Muse.UiComponents 1.0
 
-import "qrc:/kddockwidgets/private/quick/qml/" as KDDW
-
 Item {
     id: root
 
@@ -35,15 +33,14 @@ Item {
 
     property Component titleBarItem: null
     property var contextMenuModel: null
-    property var heightWhenVisible: null
-    property var navigationPanel: null
-    property var navigationOrder: null
-    property bool isHorizontalPanel: false
+
+    property NavigationPanel navigationPanel: null
+    property int navigationOrder: 0
 
     signal handleContextMenuItemRequested(string itemId)
 
     width: parent.width
-    height: visible ? heightWhenVisible : 0
+    implicitHeight: titleBarLoader.implicitHeight
 
     visible: Boolean(titleBarCpp)
 
@@ -56,11 +53,10 @@ Item {
         sourceComponent: root.titleBarItem ?? defaultTitleBarComponent
 
         onLoaded: {
-            if (titleBarLoader.item) {
+            if (item) {
                 item.navigationPanel = Qt.binding(function() { return root.navigationPanel})
                 item.navigationOrder = Qt.binding(function() { return root.navigationOrder})
                 item.contextMenuModel = Qt.binding(function() { return root.contextMenuModel})
-                root.heightWhenVisible = Qt.binding(function() { return item.heightWhenVisible})
             }
         }
     }
@@ -68,71 +64,55 @@ Item {
     Component {
         id: defaultTitleBarComponent
 
-        KDDW.TitleBarBase {
+        Item {
             id: titleBar
 
             anchors.fill: parent
+            implicitWidth: rowLayout.implicitWidth
+            implicitHeight: rowLayout.implicitHeight + rowLayout.anchors.topMargin + rowLayout.anchors.bottomMargin
 
-            implicitHeight: titleBarContent.implicitHeight
-            heightWhenVisible: titleBarContent.implicitHeight
-            color: ui.theme.backgroundPrimaryColor
-
-            property var navigationPanel
-            property var navigationOrder
+            property NavigationPanel navigationPanel
+            property int navigationOrder
             property var contextMenuModel
 
-            visible: parent.visible
-
             MouseArea {
-                id: mouseArea
                 anchors.fill: parent
                 acceptedButtons: Qt.NoButton
                 cursorShape: Qt.SizeAllCursor
             }
 
-            Column {
-                id: titleBarContent
-
+            RowLayout {
+                id: rowLayout
                 anchors.fill: parent
+                anchors.topMargin: 2
+                anchors.bottomMargin: 2
                 anchors.leftMargin: 12
                 anchors.rightMargin: 12
 
-                spacing: 0
+                spacing: 4
 
-                RowLayout {
-                    width: parent.width
-                    height: 34
+                StyledTextLabel {
+                    id: titleLabel
+                    Layout.fillWidth: true
 
-                    StyledTextLabel {
-                        id: titleLabel
-                        Layout.fillWidth: true
-
-                        text: titleBar.title
-                        font: ui.theme.bodyBoldFont
-                        horizontalAlignment: Qt.AlignLeft
-                    }
-
-                    MenuButton {
-                        id: contextMenuButton
-
-                        width: 20
-                        height: width
-
-                        navigation.panel: root.navigationPanel
-                        navigation.order: root.navigationOrder
-                        menuModel: root.contextMenuModel
-
-                        onHandleMenuItem: function(itemId) {
-                            root.handleContextMenuItemRequested(itemId)
-                        }
-                    }
+                    text: root.titleBarCpp?.title ?? ""
+                    font: ui.theme.bodyBoldFont
+                    horizontalAlignment: Qt.AlignLeft
                 }
 
-                SeparatorLine {
-                    id: bottomSeparator
-                    orientation: Qt.Horizontal
-                    anchors.margins: -12
-                    visible: root.isHorizontalPanel
+                MenuButton {
+                    id: contextMenuButton
+
+                    width: 20
+                    height: width
+
+                    navigation.panel: root.navigationPanel
+                    navigation.order: root.navigationOrder
+                    menuModel: root.contextMenuModel
+
+                    onHandleMenuItem: function(itemId) {
+                        root.handleContextMenuItemRequested(itemId)
+                    }
                 }
             }
         }

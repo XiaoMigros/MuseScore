@@ -27,6 +27,7 @@
 #include "lyrics.h"
 #include "measure.h"
 #include "measurerepeat.h"
+#include "marker.h"
 #include "note.h"
 #include "rest.h"
 #include "score.h"
@@ -139,7 +140,7 @@ static EngravingItem* prevElementForSpannerSegment(const SpannerSegment* spanner
 //    return next Chord or Rest
 //---------------------------------------------------------
 
-ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRepeatRests)
+ChordRest* nextChordRest(const ChordRest* cr, const ChordRestNavigateOptions& options)
 {
     if (!cr) {
         return nullptr;
@@ -149,7 +150,7 @@ ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
         const Chord* c  = toChord(cr);
         Chord* pc = toChord(cr->explicitParent());
 
-        if (skipGrace) {
+        if (options.skipGrace) {
             cr = toChordRest(cr->explicitParent());
         } else if (cr->isGraceBefore()) {
             const GraceNotesGroup& group = pc->graceNotesBefore();
@@ -177,7 +178,7 @@ ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
             cr = pc;
         }
     } else { // cr is not a grace note
-        if (cr->isChord() && !skipGrace) {
+        if (cr->isChord() && !options.skipGrace) {
             const Chord* c = toChord(cr);
             if (!c->graceNotes().empty()) {
                 const GraceNotesGroup& group = c->graceNotesAfter();
@@ -190,14 +191,17 @@ ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
 
     track_idx_t track = cr->track();
     SegmentType st = SegmentType::ChordRest;
-
-    for (Segment* seg = cr->segment()->next1MM(st); seg; seg = seg->next1MM(st)) {
+    Segment* curSeg = cr->segment();
+    for (Segment* seg = curSeg->next1MM(st); seg; seg = seg->next1MM(st)) {
+        if (options.disableOverRepeats && !segmentsAreAdjacentInRepeatStructure(curSeg, seg)) {
+            return nullptr;
+        }
         ChordRest* e = toChordRest(seg->element(track));
         if (e) {
-            if (skipMeasureRepeatRests && e->isRest() && e->measure()->isMeasureRepeatGroup(track2staff(track))) {
+            if (options.skipMeasureRepeatRests && e->isRest() && e->measure()->isMeasureRepeatGroup(track2staff(track))) {
                 continue; // these rests are not shown, skip them
             }
-            if (e->isChord() && !skipGrace) {
+            if (e->isChord() && !options.skipGrace) {
                 Chord* c = toChord(e);
                 if (!c->graceNotes().empty()) {
                     const GraceNotesGroup& group = c->graceNotesBefore();
@@ -219,7 +223,7 @@ ChordRest* nextChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
 //    if grace is true, include grace notes
 //---------------------------------------------------------
 
-ChordRest* prevChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRepeatRests)
+ChordRest* prevChordRest(const ChordRest* cr, const ChordRestNavigateOptions& options)
 {
     if (!cr) {
         return nullptr;
@@ -229,7 +233,7 @@ ChordRest* prevChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
         const Chord* c  = toChord(cr);
         Chord* pc = toChord(cr->explicitParent());
 
-        if (skipGrace) {
+        if (options.skipGrace) {
             cr = toChordRest(cr->explicitParent());
         } else if (cr->isGraceBefore()) {
             const GraceNotesGroup& group = pc->graceNotesBefore();
@@ -257,7 +261,7 @@ ChordRest* prevChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
     } else {
         //
         // cr is not a grace note
-        if (cr->isChord() && !skipGrace) {
+        if (cr->isChord() && !options.skipGrace) {
             const Chord* c = toChord(cr);
             const GraceNotesGroup& group = c->graceNotesBefore();
             if (!group.empty()) {
@@ -268,13 +272,18 @@ ChordRest* prevChordRest(const ChordRest* cr, bool skipGrace, bool skipMeasureRe
 
     track_idx_t track = cr->track();
     SegmentType st = SegmentType::ChordRest;
+    Segment* curSeg = cr->segment();
     for (Segment* seg = cr->segment()->prev1MM(st); seg; seg = seg->prev1MM(st)) {
+        if (options.disableOverRepeats && !segmentsAreAdjacentInRepeatStructure(curSeg, seg)) {
+            return nullptr;
+        }
+
         ChordRest* e = toChordRest(seg->element(track));
         if (e) {
-            if (skipMeasureRepeatRests && e->isRest() && e->measure()->isMeasureRepeatGroup(track2staff(track))) {
+            if (options.skipMeasureRepeatRests && e->isRest() && e->measure()->isMeasureRepeatGroup(track2staff(track))) {
                 continue; // these rests are not shown, skip them
             }
-            if (e->isChord() && !skipGrace) {
+            if (e->isChord() && !options.skipGrace) {
                 const GraceNotesGroup& group = toChord(e)->graceNotesAfter();
                 if (!group.empty()) {
                     return group.back();
@@ -405,6 +414,10 @@ EngravingItem* Score::lastElement(bool frame)
     if (frame) {
         MeasureBase* mb = measures()->last();
         if (mb && mb->isBox()) {
+            auto boxChildren = toChildPairsSet(mb);
+            if (!boxChildren.empty()) {
+                return boxChildren.rbegin()->first;
+            }
             return mb;
         }
     }
@@ -795,6 +808,9 @@ EngravingItem* Score::nextElement()
             break;
         }
         case ElementType::GLISSANDO_SEGMENT:
+        case ElementType::NOTELINE_SEGMENT:
+        case ElementType::LAISSEZ_VIB_SEGMENT:
+        case ElementType::PARTIAL_TIE_SEGMENT:
         case ElementType::TIE_SEGMENT: {
             EngravingItem* next = nextElementForSpannerSegment(toSpannerSegment(e));
             if (next) {
@@ -805,14 +821,16 @@ EngravingItem* Score::nextElement()
         }
         case ElementType::VBOX:
         case ElementType::HBOX:
-        case ElementType::TBOX: {
+        case ElementType::TBOX:
+        case ElementType::FBOX: {
             auto boxChildren = toChildPairsSet(e);
 
             EngravingItem* selectedElement = getSelectedElement();
 
             if ((selectedElement->type() == ElementType::VBOX
                  || selectedElement->type() == ElementType::HBOX
-                 || selectedElement->type() == ElementType::TBOX) && !boxChildren.empty()) {
+                 || selectedElement->type() == ElementType::TBOX
+                 || selectedElement->type() == ElementType::FBOX) && !boxChildren.empty()) {
                 return boxChildren.begin()->first;
             }
 
@@ -842,6 +860,12 @@ EngravingItem* Score::nextElement()
         case ElementType::LAYOUT_BREAK: {
             staffId = 0;             // otherwise it will equal -1, which breaks the navigation
             break;
+        }
+        case ElementType::SYSTEM_LOCK_INDICATOR:
+        {
+            staffId = 0;
+            e = toSystemLockIndicator(e)->systemLock()->endMB();
+            continue;
         }
         case ElementType::SOUND_FLAG:
             if (EngravingItem* parent = toSoundFlag(e)->parentItem()) {
@@ -904,7 +928,8 @@ EngravingItem* Score::prevElement()
 
             if (previousElement->type() != ElementType::VBOX
                 && previousElement->type() != ElementType::HBOX
-                && previousElement->type() != ElementType::TBOX) {
+                && previousElement->type() != ElementType::TBOX
+                && previousElement->type() == ElementType::FBOX) {
                 return previousElement;
             }
 
@@ -985,6 +1010,9 @@ EngravingItem* Score::prevElement()
             return bend->startNote();
         }
         case ElementType::GLISSANDO_SEGMENT:
+        case ElementType::NOTELINE_SEGMENT:
+        case ElementType::LAISSEZ_VIB_SEGMENT:
+        case ElementType::PARTIAL_TIE_SEGMENT:
         case ElementType::TIE_SEGMENT: {
             EngravingItem* prev = prevElementForSpannerSegment(toSpannerSegment(e));
             if (prev) {
@@ -995,7 +1023,8 @@ EngravingItem* Score::prevElement()
         }
         case ElementType::VBOX:
         case ElementType::HBOX:
-        case ElementType::TBOX: {
+        case ElementType::TBOX:
+        case ElementType::FBOX: {
             auto boxChildren = toChildPairsSet(e);
 
             EngravingItem* selectedElement = getSelectedElement();
@@ -1031,6 +1060,12 @@ EngravingItem* Score::prevElement()
             staffId = 0;             // otherwise it will equal -1, which breaks the navigation
             break;
         }
+        case ElementType::SYSTEM_LOCK_INDICATOR:
+        {
+            staffId = 0;
+            e = toSystemLockIndicator(e)->systemLock()->endMB();
+            continue;
+        }
         default:
             break;
         }
@@ -1045,18 +1080,34 @@ EngravingItem* Score::prevElement()
 //    - currently used to determine the first lyric of a melisma
 //---------------------------------------------------------
 
+Lyrics* lastLyricsInMeasure(const Segment* seg, const staff_idx_t staffIdx, const int no, const PlacementV& placement)
+{
+    while (seg) {
+        const track_idx_t strack = staffIdx * VOICES;
+        const track_idx_t etrack = strack + VOICES;
+        for (track_idx_t track = strack; track < etrack; ++track) {
+            EngravingItem* el = seg->element(track);
+            Lyrics* prevLyrics = el && el->isChord() ? toChordRest(el)->lyrics(no, placement) : nullptr;
+            if (prevLyrics) {
+                return prevLyrics;
+            }
+        }
+        seg = seg->prev1(mu::engraving::SegmentType::ChordRest);
+    }
+    return nullptr;
+}
+
 Lyrics* prevLyrics(const Lyrics* lyrics)
 {
     Segment* seg = lyrics->explicitParent() ? lyrics->segment() : nullptr;
     if (!seg) {
         return nullptr;
     }
-    Segment* prevSegment = seg;
-    while ((prevSegment = prevSegment->prev1(mu::engraving::SegmentType::ChordRest))) {
+    while ((seg = seg->prev1(mu::engraving::SegmentType::ChordRest))) {
         const track_idx_t strack = lyrics->staffIdx() * VOICES;
         const track_idx_t etrack = strack + VOICES;
         for (track_idx_t track = strack; track < etrack; ++track) {
-            EngravingItem* el = prevSegment->element(track);
+            EngravingItem* el = seg->element(track);
             Lyrics* prevLyrics = el && el->isChord() ? toChordRest(el)->lyrics(lyrics->no(), lyrics->placement()) : nullptr;
             if (prevLyrics) {
                 return prevLyrics;

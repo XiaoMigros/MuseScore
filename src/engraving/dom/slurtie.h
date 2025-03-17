@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_SLURTIE_H
-#define MU_ENGRAVING_SLURTIE_H
+#pragma once
 
 #include "spanner.h"
 
@@ -126,6 +125,10 @@ public:
 
     virtual void drawEditMode(muse::draw::Painter* painter, EditData& editData, double currentViewScaling) override;
 
+    virtual double endWidth() const = 0;
+    virtual double midWidth() const = 0;
+    virtual double dottedWidth() const = 0;
+
     struct LayoutData : public SpannerSegment::LayoutData
     {
         ld_field<muse::draw::PainterPath> path = "path";
@@ -197,5 +200,3 @@ private:
     SlurStyleType m_styleType = SlurStyleType::Undefined;
 };
 }
-
-#endif

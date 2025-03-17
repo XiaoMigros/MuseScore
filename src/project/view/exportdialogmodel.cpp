@@ -406,6 +406,21 @@ void ExportDialogModel::setPdfResolution(const int& resolution)
     emit pdfResolutionChanged(resolution);
 }
 
+bool ExportDialogModel::pdfTransparentBackground() const
+{
+    return imageExportConfiguration()->exportPdfWithTransparentBackground();
+}
+
+void ExportDialogModel::setPdfTransparentBackground(const bool& transparent)
+{
+    if (transparent == pdfTransparentBackground()) {
+        return;
+    }
+
+    imageExportConfiguration()->setExportPdfWithTransparentBackground(transparent);
+    emit pdfTransparentBackgroundChanged(transparent);
+}
+
 int ExportDialogModel::pngResolution() const
 {
     return imageExportConfiguration()->exportPngDpiResolution();
@@ -449,6 +464,21 @@ void ExportDialogModel::setSvgTransparentBackground(const bool& transparent)
 
     imageExportConfiguration()->setExportSvgWithTransparentBackground(transparent);
     emit svgTransparentBackgroundChanged(transparent);
+}
+
+bool ExportDialogModel::svgIllustratorCompat() const
+{
+    return imageExportConfiguration()->exportSvgWithIllustratorCompat();
+}
+
+void ExportDialogModel::setSvgIllustratorCompat(bool compat)
+{
+    if (compat == svgIllustratorCompat()) {
+        return;
+    }
+
+    imageExportConfiguration()->setExportSvgWithIllustratorCompat(compat);
+    emit svgIllustratorCompatChanged(compat);
 }
 
 QList<int> ExportDialogModel::availableSampleRates() const
@@ -536,6 +566,21 @@ void ExportDialogModel::setMeiExportLayout(bool exportLayout)
 
     meiConfiguration()->setMeiExportLayout(exportLayout);
     emit meiExportLayoutChanged(exportLayout);
+}
+
+bool ExportDialogModel::meiUseMuseScoreIds() const
+{
+    return meiConfiguration()->meiUseMuseScoreIds();
+}
+
+void ExportDialogModel::setMeiUseMuseScoreIds(bool useMuseScoreIds)
+{
+    if (useMuseScoreIds == meiUseMuseScoreIds()) {
+        return;
+    }
+
+    meiConfiguration()->setMeiUseMuseScoreIds(useMuseScoreIds);
+    emit meiUseMuseScoreIdsChanged(useMuseScoreIds);
 }
 
 QVariantList ExportDialogModel::musicXmlLayoutTypes() const

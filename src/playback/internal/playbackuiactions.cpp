@@ -125,6 +125,14 @@ const UiActionList PlaybackUiActions::m_settingsActions = {
              IconCode::Code::CHORD_SYMBOL,
              Checkable::Yes
              ),
+    UiAction("toggle-hear-playback-when-editing",
+             mu::context::UiCtxAny,
+             mu::context::CTX_ANY,
+             TranslatableString("action", "Hear playback when editing"),
+             TranslatableString("action", "Toggle hear playback when editing"),
+             IconCode::Code::AUDIO,
+             Checkable::Yes
+             ),
     UiAction("pan",
              mu::context::UiCtxAny,
              mu::context::CTX_ANY,
@@ -160,6 +168,14 @@ const UiActionList PlaybackUiActions::m_loopBoundaryActions = {
              ),
 };
 
+const UiActionList PlaybackUiActions::m_diagnosticActions = {
+    UiAction("playback-reload-cache",
+             mu::context::UiCtxAny,
+             mu::context::CTX_ANY,
+             TranslatableString("action", "Reload playback cache")
+             )
+};
+
 PlaybackUiActions::PlaybackUiActions(std::shared_ptr<PlaybackController> controller)
     : m_controller(controller)
 {
@@ -191,6 +207,7 @@ const UiActionList& PlaybackUiActions::actionsList() const
         alist.insert(alist.end(), m_midiInputPitchActions.cbegin(), m_midiInputPitchActions.cend());
         alist.insert(alist.end(), m_settingsActions.cbegin(), m_settingsActions.cend());
         alist.insert(alist.end(), m_loopBoundaryActions.cbegin(), m_loopBoundaryActions.cend());
+        alist.insert(alist.end(), m_diagnosticActions.cbegin(), m_diagnosticActions.cend());
     }
     return alist;
 }

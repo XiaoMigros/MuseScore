@@ -101,6 +101,46 @@ MeasureBase::~MeasureBase()
     muse::DeleteAll(m_el);
 }
 
+System* MeasureBase::prevNonVBoxSystem() const
+{
+    bool mmRests = score()->style().styleB(Sid::createMultiMeasureRests);
+    System* curSystem = system();
+    IF_ASSERT_FAILED(curSystem) {
+        return nullptr;
+    }
+
+    System* prevSystem = curSystem;
+    for (const MeasureBase* mb = this; mb && prevSystem == curSystem; mb = mmRests ? mb->prevMM() : mb->prev()) {
+        if (mb->isMeasure() || mb->isHBox()) {
+            prevSystem = mb->system();
+        } else {
+            return nullptr;
+        }
+    }
+
+    return prevSystem != curSystem ? prevSystem : nullptr;
+}
+
+System* MeasureBase::nextNonVBoxSystem() const
+{
+    bool mmRests = score()->style().styleB(Sid::createMultiMeasureRests);
+    System* curSystem = system();
+    IF_ASSERT_FAILED(curSystem) {
+        return nullptr;
+    }
+
+    System* nextSystem = curSystem;
+    for (const MeasureBase* mb = this; mb && nextSystem == curSystem; mb = mmRests ? mb->nextMM() : mb->next()) {
+        if (mb->isMeasure() || mb->isHBox()) {
+            nextSystem = mb->system();
+        } else {
+            return nullptr;
+        }
+    }
+
+    return nextSystem != curSystem ? nextSystem : nullptr;
+}
+
 //---------------------------------------------------------
 //   add
 ///   Add new EngravingItem \a el to MeasureBase
@@ -527,7 +567,7 @@ void MeasureBase::undoSetBreak(bool v, LayoutBreakType type)
         MeasureBase* mb = (isMeasure() && toMeasure(this)->isMMRest()) ? toMeasure(this)->mmRestLast() : this;
         LayoutBreak* lb = Factory::createLayoutBreak(mb);
         lb->setLayoutBreakType(type);
-        lb->setTrack(muse::nidx);           // this are system elements
+        lb->setTrack(0);
         lb->setParent(mb);
         score()->undoAddElement(lb);
     }
@@ -652,6 +692,62 @@ int MeasureBase::measureIndex() const
         }
     }
     return -1;
+}
+
+bool MeasureBase::isBefore(const EngravingItem* other) const
+{
+    if (other->isMeasureBase()) {
+        const MeasureBase* otherMb = toMeasureBase(other);
+        return isBefore(otherMb);
+    }
+
+    return EngravingItem::isBefore(other);
+}
+
+bool MeasureBase::isBefore(const MeasureBase* other) const
+{
+    if (this == other) {
+        return false;
+    }
+
+    Fraction otherTick = other->tick();
+    if (otherTick != m_tick) {
+        return m_tick < otherTick;
+    }
+
+    if (this->isMeasure() && other->isMeasure()) {
+        // (this == other) has already been excluded, so this is only
+        // possible if one is the overlying mmRest starting on the other.
+        // Let's set by convention that the mmRest isBefore the underlying measure.
+        return toMeasure(this)->isMMRest();
+    }
+
+    bool otherIsMMRest = other->isMeasure() && toMeasure(other)->isMMRest();
+    for (const MeasureBase* mb = otherIsMMRest ? nextMM() : next(); mb && mb->tick() == m_tick;
+         mb = otherIsMMRest ? mb->nextMM() : mb->next()) {
+        if (mb == other) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+const SystemLock* MeasureBase::systemLock() const
+{
+    return score()->systemLocks()->lockContaining(this);
+}
+
+bool MeasureBase::isStartOfSystemLock() const
+{
+    const SystemLock* lock = score()->systemLocks()->lockStartingAt(this);
+    return lock != nullptr;
+}
+
+bool MeasureBase::isEndOfSystemLock() const
+{
+    const SystemLock* lock = systemLock();
+    return lock && lock->endMB() == this;
 }
 
 //---------------------------------------------------------

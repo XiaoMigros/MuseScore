@@ -45,6 +45,7 @@
 #include "notation/inotationconfiguration.h"
 #include "update/imusesoundscheckupdatescenario.h"
 #include "extensions/iextensionsprovider.h"
+#include "tours/itoursservice.h"
 
 #include "async/asyncable.h"
 
@@ -77,6 +78,7 @@ class ProjectActionsController : public IProjectFilesController, public muse::mi
     muse::Inject<muse::io::IFileSystem> fileSystem = { this };
     muse::Inject<muse::update::IMuseSoundsCheckUpdateScenario> museSoundsCheckUpdateScenario = { this };
     muse::Inject<muse::extensions::IExtensionsProvider> extensionsProvider = { this };
+    muse::Inject<muse::tours::IToursService> toursService = { this };
 
 public:
 
@@ -92,7 +94,8 @@ public:
     muse::Ret openProject(const ProjectFile& file) override;
     bool closeOpenedProject(bool quitApp = false) override;
     bool saveProject(const muse::io::path_t& path = muse::io::path_t()) override;
-    bool saveProjectLocally(const muse::io::path_t& path = muse::io::path_t(), SaveMode saveMode = SaveMode::Save) override;
+    bool saveProjectLocally(
+        const muse::io::path_t& path = muse::io::path_t(), SaveMode saveMode = SaveMode::Save, bool createBackup = true) override;
 
     // mi::IProjectProvider
     bool isProjectOpened(const muse::io::path_t& scorePath) const override;

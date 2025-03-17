@@ -326,11 +326,15 @@ void ApplicationActionController::revertToFactorySettings()
                                                  "The list of recent scores will also be cleared.\n\n"
                                                  "This action will not delete any of your scores.");
 
+    IInteractive::ButtonData cancelBtn = interactive()->buttonData(IInteractive::Button::Cancel);
+    cancelBtn.accent = true;
+
     int revertBtn = int(IInteractive::Button::Apply);
     IInteractive::Result result = interactive()->warning(title, question,
-                                                         { interactive()->buttonData(IInteractive::Button::Cancel),
-                                                           IInteractive::ButtonData(revertBtn, muse::trc("appshell", "Revert"), true) },
-                                                         revertBtn);
+                                                         { cancelBtn,
+                                                           IInteractive::ButtonData(revertBtn, muse::trc("appshell", "Revert")) },
+                                                         cancelBtn.btn, { muse::IInteractive::Option::WithIcon },
+                                                         muse::trc("appshell", "Revert to factory settings"));
 
     if (result.standardButton() == IInteractive::Button::Cancel) {
         return;
@@ -338,7 +342,8 @@ void ApplicationActionController::revertToFactorySettings()
 
     static constexpr bool KEEP_DEFAULT_SETTINGS = false;
     static constexpr bool NOTIFY_ABOUT_CHANGES = false;
-    configuration()->revertToFactorySettings(KEEP_DEFAULT_SETTINGS, NOTIFY_ABOUT_CHANGES);
+    static constexpr bool NOTIFY_OTHER_INSTANCES = false;
+    configuration()->revertToFactorySettings(KEEP_DEFAULT_SETTINGS, NOTIFY_ABOUT_CHANGES, NOTIFY_OTHER_INSTANCES);
 
     title = muse::trc("appshell", "Would you like to restart MuseScore Studio now?");
     question = muse::trc("appshell", "MuseScore Studio needs to be restarted for these changes to take effect.");

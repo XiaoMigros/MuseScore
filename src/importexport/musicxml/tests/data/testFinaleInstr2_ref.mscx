@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="4.40">
+<museScore version="4.50">
   <Score>
     <Division>480</Division>
     <Style>
@@ -85,6 +85,8 @@
       <repeatRightFontSize>8.8</repeatRightFontSize>
       <frameFontFace>Times</frameFontFace>
       <frameFontSize>8.8</frameFontSize>
+      <noteLineFontFace>Times</noteLineFontFace>
+      <noteLineFontSize>8.8</noteLineFontSize>
       <glissandoFontFace>Times</glissandoFontFace>
       <glissandoFontSize>8.8</glissandoFontSize>
       <bendFontFace>Times</bendFontFace>
@@ -141,6 +143,12 @@
     <metaTag name="translator"></metaTag>
     <metaTag name="workNumber"></metaTag>
     <metaTag name="workTitle"></metaTag>
+    <SystemObjects>
+      <Instance staffId="1" barNumbers="false"/>
+      <Instance staffId="3" barNumbers="false"/>
+      <Instance staffId="5" barNumbers="false"/>
+      <Instance staffId="8" barNumbers="false"/>
+      </SystemObjects>
     <Part id="1">
       <Staff id="1">
         <StaffType group="pitched">

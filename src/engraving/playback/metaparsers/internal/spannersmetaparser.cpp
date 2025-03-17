@@ -58,7 +58,6 @@ void SpannersMetaParser::doParse(const EngravingItem* item, const RenderingConte
     }
 
     const Spanner* spanner = toSpanner(item);
-
     if (!spanner->playSpanner()) {
         return;
     }
@@ -79,7 +78,7 @@ void SpannersMetaParser::doParse(const EngravingItem* item, const RenderingConte
         break;
     }
     case ElementType::LET_RING:
-        type = mpe::ArticulationType::LaissezVibrer;
+        type = mpe::ArticulationType::LetRing;
         break;
     case ElementType::PALM_MUTE: {
         type = mpe::ArticulationType::PalmMute;
@@ -154,7 +153,7 @@ void SpannersMetaParser::doParse(const EngravingItem* item, const RenderingConte
     articulationMeta.timestamp = spannerCtx.nominalTimestamp;
     articulationMeta.overallPitchChangesRange = overallPitchRange;
     articulationMeta.overallDynamicChangesRange = overallDynamicRange;
-    articulationMeta.overallDuration = spannerDuration(spanner->score(),
+    articulationMeta.overallDuration = spannerDuration(spannerCtx.score,
                                                        spannerCtx.nominalPositionStartTick,
                                                        overallDurationTicks);
 

@@ -34,6 +34,9 @@ set(MODULE_SRC
     rtf_tools.h
     )
 
+set(MODULE_USE_COVERAGE OFF)
+
 setup_module()
 
 target_no_warning(${MODULE} -Wno-conversion)
+target_no_warning(${MODULE} -Wno-deprecated-declarations)

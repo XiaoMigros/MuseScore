@@ -81,6 +81,10 @@ if (MUSE_MODULE_SHORTCUTS)
     add_subdirectory(shortcuts)
 endif()
 
+if (MUSE_MODULE_TOURS)
+    add_subdirectory(tours)
+endif()
+
 if (MUSE_MODULE_MULTIINSTANCES)
     add_subdirectory(multiinstances)
 endif()
@@ -116,6 +120,7 @@ if (MUSE_ENABLE_UNIT_TESTS)
         FULL_DOCS "List XML files outputted by google test."
     )
 
+    set(INSTALL_GTEST OFF)
     add_subdirectory(testing/thirdparty/googletest)
 endif()
 

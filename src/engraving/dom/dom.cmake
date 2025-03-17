@@ -160,6 +160,9 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/keylist.h
     ${CMAKE_CURRENT_LIST_DIR}/keysig.cpp
     ${CMAKE_CURRENT_LIST_DIR}/keysig.h
+    ${CMAKE_CURRENT_LIST_DIR}/laissezvib.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/laissezvib.h
+    ${CMAKE_CURRENT_LIST_DIR}/lasso.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lasso.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lasso.h
     ${CMAKE_CURRENT_LIST_DIR}/layoutbreak.cpp
@@ -206,11 +209,14 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/navigate.h
     ${CMAKE_CURRENT_LIST_DIR}/note.cpp
     ${CMAKE_CURRENT_LIST_DIR}/note.h
+    ${CMAKE_CURRENT_LIST_DIR}/noteval.h
     ${CMAKE_CURRENT_LIST_DIR}/notedot.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notedot.h
     ${CMAKE_CURRENT_LIST_DIR}/noteentry.cpp
     ${CMAKE_CURRENT_LIST_DIR}/noteevent.cpp
     ${CMAKE_CURRENT_LIST_DIR}/noteevent.h
+    ${CMAKE_CURRENT_LIST_DIR}/noteline.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/noteline.h
     ${CMAKE_CURRENT_LIST_DIR}/notifier.h
     ${CMAKE_CURRENT_LIST_DIR}/ornament.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ornament.h
@@ -218,6 +224,10 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ottava.h
     ${CMAKE_CURRENT_LIST_DIR}/page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/page.h
+    ${CMAKE_CURRENT_LIST_DIR}/parenthesis.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/parenthesis.h
+    ${CMAKE_CURRENT_LIST_DIR}/partialtie.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/partialtie.h
     ${CMAKE_CURRENT_LIST_DIR}/palmmute.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palmmute.h
     ${CMAKE_CURRENT_LIST_DIR}/part.cpp
@@ -312,6 +322,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/symbol.h
     ${CMAKE_CURRENT_LIST_DIR}/synthesizerstate.cpp
     ${CMAKE_CURRENT_LIST_DIR}/synthesizerstate.h
+    ${CMAKE_CURRENT_LIST_DIR}/systemlock.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/systemlock.h
     ${CMAKE_CURRENT_LIST_DIR}/system.cpp
     ${CMAKE_CURRENT_LIST_DIR}/system.h
     ${CMAKE_CURRENT_LIST_DIR}/systemdivider.cpp
@@ -334,6 +346,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/textlinebase.h
     ${CMAKE_CURRENT_LIST_DIR}/tie.cpp
     ${CMAKE_CURRENT_LIST_DIR}/tie.h
+    ${CMAKE_CURRENT_LIST_DIR}/tiejumppointlist.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/tiejumppointlist.h
     ${CMAKE_CURRENT_LIST_DIR}/tiemap.h
     ${CMAKE_CURRENT_LIST_DIR}/timesig.cpp
     ${CMAKE_CURRENT_LIST_DIR}/timesig.h

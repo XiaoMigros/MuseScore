@@ -24,6 +24,7 @@
 #include "log.h"
 
 #include <memory>
+#include <limits>
 #include <QRectF>
 #include <QPainter>
 #include <QClipboard>
@@ -43,13 +44,16 @@
 #include "draw/types/pen.h"
 #include "engraving/internal/qmimedataadapter.h"
 
+#include "engraving/dom/accidental.h"
 #include "engraving/dom/actionicon.h"
+#include "engraving/dom/anchors.h"
 #include "engraving/dom/articulation.h"
 #include "engraving/dom/barline.h"
 #include "engraving/dom/box.h"
 #include "engraving/dom/bracket.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/drumset.h"
+#include "engraving/dom/dynamic.h"
 #include "engraving/dom/elementgroup.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/figuredbass.h"
@@ -62,6 +66,7 @@
 #include "engraving/dom/layoutbreak.h"
 #include "engraving/dom/linkedobjects.h"
 #include "engraving/dom/lyrics.h"
+#include "engraving/dom/marker.h"
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/mscore.h"
@@ -79,7 +84,9 @@
 #include "engraving/dom/textedit.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/undo.h"
+#include "engraving/dom/utils.h"
 #include "engraving/compat/dummyelement.h"
+#include "engraving/dom/utils.h"
 
 #include "engraving/rw/xmlreader.h"
 #include "engraving/rw/rwregister.h"
@@ -90,6 +97,8 @@
 #include "notationnoteinput.h"
 #include "notationselection.h"
 #include "scorecallbacks.h"
+
+#include "utilities/scorerangeutilities.h"
 
 using namespace mu::notation;
 using namespace mu::engraving;
@@ -154,6 +163,32 @@ static PointF bindCursorPosToText(const PointF& cursorPos, const EngravingItem* 
     return boundPos;
 }
 
+static AccidentalType accidentalType(const InputState& is, const NoteVal& nval, int line)
+{
+    if (is.rest()) {
+        return AccidentalType::NONE;
+    }
+
+    if (is.accidentalType() != AccidentalType::NONE) {
+        return is.accidentalType();
+    }
+
+    bool error = false;
+    const AccidentalVal accVal = mu::engraving::noteValToAccidentalVal(nval, is.staff(), is.tick());
+    const AccidentalVal existingAccVal = is.segment()->measure()->findAccidental(is.segment(), is.staffIdx(), line, error);
+
+    if (!error && accVal != existingAccVal) {
+        AccidentalType type = Accidental::value2subtype(accVal);
+        if (type == AccidentalType::NONE) {
+            type = AccidentalType::NATURAL;
+        }
+
+        return type;
+    }
+
+    return AccidentalType::NONE;
+}
+
 inline QString extractSyllable(const QString& text)
 {
     QString _text = text;
@@ -192,25 +227,25 @@ NotationInteraction::NotationInteraction(Notation* notation, INotationUndoStackP
         }
     });
 
-    m_undoStack->undoNotification().onNotify(this, [this]() {
-        endEditElement();
-    });
-
-    m_undoStack->redoNotification().onNotify(this, [this]() {
+    m_undoStack->undoRedoNotification().onNotify(this, [this]() {
         endEditElement();
     });
 
     m_undoStack->stackChanged().onNotify(this, [this]() {
         notifyAboutSelectionChangedIfNeed();
+        notifyAboutNoteInputStateChanged();
     });
 
     m_dragData.ed = mu::engraving::EditData(&m_scoreCallbacks);
-    m_dropData.ed = mu::engraving::EditData(&m_scoreCallbacks);
 
     m_scoreCallbacks.setNotationInteraction(this);
 
     m_notation->scoreInited().onNotify(this, [this]() {
         onScoreInited();
+    });
+
+    m_notation->viewModeChanged().onNotify(this, [this]() {
+        onViewModeChanged();
     });
 }
 
@@ -232,11 +267,34 @@ void NotationInteraction::onScoreInited()
     });
 }
 
-void NotationInteraction::startEdit()
+void NotationInteraction::onViewModeChanged()
+{
+    if (!score()) {
+        return;
+    }
+
+    if (!score()->isLayoutMode(LayoutMode::LINE) && !score()->isLayoutMode(LayoutMode::HORIZONTAL_FIXED)) {
+        return;
+    }
+
+    // VBoxes are not included in horizontal layouts - deselect them (and their contents) when switching to horizontal mode...
+    const std::vector<EngravingItem*> sel = selection()->elements();
+    for (EngravingItem* item : sel) {
+        if (!item->findAncestor(ElementType::VBOX)) {
+            continue;
+        }
+        score()->deselect(item);
+        if (item == m_editData.element) {
+            endEditElement();
+        }
+    }
+}
+
+void NotationInteraction::startEdit(const muse::TranslatableString& actionName)
 {
     m_notifyAboutDropChanged = false;
 
-    m_undoStack->prepareChanges();
+    m_undoStack->prepareChanges(actionName);
 }
 
 void NotationInteraction::apply()
@@ -307,20 +365,18 @@ void NotationInteraction::notifyAboutNoteInputStateChanged()
 
 void NotationInteraction::paint(Painter* painter)
 {
+    if (shouldDrawInputPreview()) {
+        drawInputPreview(painter);
+    }
+
     score()->renderer()->drawItem(score()->shadowNote(), painter);
 
     drawAnchorLines(painter);
     drawTextEditMode(painter);
     drawSelectionRange(painter);
     drawGripPoints(painter);
-
-    if (m_lasso && !m_lasso->isEmpty()) {
-        score()->renderer()->drawItem(m_lasso, painter);
-    }
-
-    if (m_dropData.dropRect.isValid()) {
-        painter->fillRect(m_dropData.dropRect, configuration()->dropRectColor());
-    }
+    drawLasso(painter);
+    drawDrop(painter);
 }
 
 INotationNoteInputPtr NotationInteraction::noteInput() const
@@ -328,19 +384,39 @@ INotationNoteInputPtr NotationInteraction::noteInput() const
     return m_noteInput;
 }
 
+mu::engraving::ShadowNote* NotationInteraction::shadowNote() const
+{
+    return score()->shadowNote();
+}
+
 bool NotationInteraction::showShadowNote(const PointF& pos)
 {
     const mu::engraving::InputState& inputState = score()->inputState();
     mu::engraving::ShadowNote& shadowNote = *score()->shadowNote();
 
-    mu::engraving::Position position;
-    if (!score()->getPosition(&position, pos, inputState.voice())) {
+    ShadowNoteParams params;
+    if (!score()->getPosition(&params.position, pos, inputState.voice())) {
         shadowNote.setVisible(false);
+        m_shadowNoteChanged.notify();
         return false;
     }
 
-    Staff* staff = score()->staff(position.staffIdx);
-    const mu::engraving::Instrument* instr = staff->part()->instrument();
+    params.duration = inputState.duration();
+    params.accidentalType = inputState.accidentalType();
+    params.articulationIds = inputState.articulationIds();
+
+    const bool show = showShadowNote(shadowNote, params);
+    m_shadowNoteChanged.notify();
+
+    return show;
+}
+
+bool NotationInteraction::showShadowNote(ShadowNote& shadowNote, ShadowNoteParams& params)
+{
+    Position& position = params.position;
+
+    const mu::engraving::InputState& inputState = score()->inputState();
+    const Staff* staff = score()->staff(position.staffIdx);
 
     mu::engraving::Segment* segment = position.segment;
     qreal segmentSkylineTopY = 0;
@@ -356,27 +432,41 @@ bool NotationInteraction::showShadowNote(const PointF& pos)
     Fraction tick = segment->tick();
     qreal mag = staff->staffMag(tick);
 
+    const mu::engraving::Instrument* instr = staff->part()->instrument(tick);
+
     // in any empty measure, pos will be right next to barline
     // so pad this by barNoteDistance
     qreal relX = position.pos.x() - position.segment->measure()->canvasPos().x();
     position.pos.rx() -= qMin(relX - score()->style().styleMM(mu::engraving::Sid::barNoteDistance) * mag, 0.0);
 
     mu::engraving::NoteHeadGroup noteheadGroup = mu::engraving::NoteHeadGroup::HEAD_NORMAL;
-    mu::engraving::NoteHeadType noteHead = inputState.duration().headType();
+    mu::engraving::NoteHeadType noteHead = params.duration.headType();
+
     int line = position.line;
+    voice_idx_t voice = 0;
+    int drumNotePitch = -1;
 
     if (instr->useDrumset()) {
-        const mu::engraving::Drumset* ds  = instr->drumset();
-        int pitch = inputState.drumNote();
-        if (pitch >= 0 && ds->isValid(pitch)) {
-            line = ds->line(pitch);
-            noteheadGroup = ds->noteHead(pitch);
-        }
-    }
+        const Drumset* ds = instr->drumset();
 
-    voice_idx_t voice = 0;
-    if (inputState.drumNote() != -1 && inputState.drumset() && inputState.drumset()->isValid(inputState.drumNote())) {
-        voice = inputState.drumset()->voice(inputState.drumNote());
+        const int noteInputPitch = inputState.drumNote();
+
+        if (ds->isValid(noteInputPitch) && ds->line(noteInputPitch) == line) {
+            noteheadGroup = ds->noteHead(noteInputPitch);
+            voice = ds->voice(noteInputPitch);
+            drumNotePitch = noteInputPitch;
+        } else {
+            const int pitch = ds->defaultPitchForLine(line);
+            if (ds->isValid(pitch)) {
+                noteheadGroup = ds->noteHead(pitch);
+                voice = ds->voice(pitch);
+                drumNotePitch = pitch;
+            }
+            if (drumNotePitch < 0) {
+                shadowNote.setVisible(false);
+                return false;
+            }
+        }
     } else {
         voice = inputState.voice();
     }
@@ -388,24 +478,32 @@ bool NotationInteraction::showShadowNote(const PointF& pos)
     shadowNote.setVoice(voice);
     shadowNote.setLineIndex(line);
 
+    Color color = configuration()->noteInputPreviewColor();
+
+    if (color.isValid() && color != configuration()->selectionColor()) {
+        shadowNote.setColor(color);
+    } else {
+        shadowNote.setColor(configuration()->selectionColor(voice));
+    }
+
     mu::engraving::SymId symNotehead;
-    mu::engraving::TDuration duration(inputState.duration());
 
     if (inputState.rest()) {
-        mu::engraving::Rest* rest = mu::engraving::Factory::createRest(mu::engraving::gpaletteScore->dummy()->segment(), duration.type());
-        rest->setTicks(duration.fraction());
-        symNotehead = rest->getSymbol(inputState.duration().type(), 0, staff->lines(position.segment->tick()));
-        shadowNote.setState(symNotehead, duration, true, segmentSkylineTopY, segmentSkylineBottomY);
+        mu::engraving::Rest* rest = mu::engraving::Factory::createRest(
+            mu::engraving::gpaletteScore->dummy()->segment(), params.duration.type());
+        rest->setTicks(params.duration.fraction());
+        symNotehead = rest->getSymbol(params.duration.type(), 0, staff->lines(position.segment->tick()));
+        shadowNote.setState(symNotehead, params.duration, true, segmentSkylineTopY, segmentSkylineBottomY);
         delete rest;
     } else {
         if (mu::engraving::NoteHeadGroup::HEAD_CUSTOM == noteheadGroup) {
-            symNotehead = instr->drumset()->noteHeads(inputState.drumNote(), noteHead);
+            symNotehead = instr->drumset()->noteHeads(drumNotePitch, noteHead);
         } else {
             symNotehead = Note::noteHead(0, noteheadGroup, noteHead);
         }
 
-        shadowNote.setState(symNotehead, duration, false, segmentSkylineTopY, segmentSkylineBottomY,
-                            inputState.accidentalType(), inputState.articulationIds());
+        shadowNote.setState(symNotehead, params.duration, false, segmentSkylineTopY, segmentSkylineBottomY,
+                            params.accidentalType, params.articulationIds);
     }
 
     score()->renderer()->layoutItem(&shadowNote);
@@ -441,9 +539,14 @@ RectF NotationInteraction::shadowNoteRect() const
     return rect;
 }
 
+muse::async::Notification NotationInteraction::shadowNoteChanged() const
+{
+    return m_shadowNoteChanged;
+}
+
 void NotationInteraction::toggleVisible()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Toggle visible"));
     score()->cmdToggleVisible();
     apply();
 }
@@ -547,12 +650,10 @@ std::vector<EngravingItem*> NotationInteraction::hitElements(const PointF& pos, 
             return false;
         }
 
-        if (!element->isInteractionAvailable()) {
-            return false;
-        }
-
         if (element->isSoundFlag()) {
             return !toSoundFlag(element)->shouldHide();
+        } else if (!element->isInteractionAvailable()) {
+            return false;
         }
 
         return true;
@@ -840,12 +941,12 @@ void NotationInteraction::selectAndStartEditIfNeeded(EngravingItem* element)
 {
     if (element->isSpanner() && !toSpanner(element)->segmentsEmpty()) {
         SpannerSegment* frontSeg = toSpanner(element)->frontSegment();
-        select({ frontSeg });
+        doSelect({ frontSeg }, SelectType::SINGLE);
         if (frontSeg->needStartEditingAfterSelecting()) {
             startEditElement(frontSeg, false);
         }
     } else {
-        select({ element });
+        doSelect({ element }, SelectType::SINGLE);
         if (element->needStartEditingAfterSelecting()) {
             startEditElement(element, false);
         }
@@ -986,7 +1087,7 @@ void NotationInteraction::startDrag(const std::vector<EngravingItem*>& elems,
         }
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Drag element"));
 
     qreal scaling = m_notation->viewState()->matrix().m11();
     qreal proximity = configuration()->selectionProximity() * 0.5f / scaling;
@@ -1084,6 +1185,14 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
         m_dragData.ed.moveDelta = m_dragData.ed.delta - m_dragData.elementOffset;
         m_dragData.ed.addData(m_editData.getData(m_editData.element));
         m_editData.element->editDrag(m_dragData.ed);
+
+        if (m_editData.element->isDynamic()) {
+            // When the dynamic has no left grip, the right grip will have index zero, a.k.a. Grip::LEFT.
+            // TODO: refactor all code that works with Grips, so that this is not necessary
+            Dynamic* dynamic = toDynamic(m_editData.element);
+            bool isLeftGrip = dynamic->hasLeftGrip() ? m_editData.curGrip == Grip::LEFT : false;
+            addHairpinOnGripDrag(toDynamic(m_editData.element), isLeftGrip);
+        }
     } else {
         if (m_editData.element) {
             m_editData.element->editDrag(m_dragData.ed);
@@ -1096,7 +1205,11 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
     score()->update();
 
     if (isGripEditStarted()) {
-        updateGripAnchorLines();
+        if (m_editData.element->isDynamic() && !m_editData.isStartEndGrip()) {
+            updateDragAnchorLines();
+        } else {
+            updateGripAnchorLines();
+        }
     } else {
         updateDragAnchorLines();
     }
@@ -1123,7 +1236,12 @@ void NotationInteraction::doEndDrag()
     }
 
     m_dragData.reset();
-    setDropTarget(nullptr, false);
+
+    if (m_dropData.elementDropData.has_value()) {
+        setDropTarget(nullptr, false);
+    } else {
+        resetAnchorLines();
+    }
 }
 
 void NotationInteraction::endDrag()
@@ -1146,12 +1264,7 @@ muse::async::Notification NotationInteraction::dragChanged() const
     return m_dragChanged;
 }
 
-bool NotationInteraction::isDragCopyStarted() const
-{
-    return m_drag != nullptr;
-}
-
-bool NotationInteraction::dragCopyAllowed(const EngravingItem* element) const
+bool NotationInteraction::isOutgoingDragElementAllowed(const EngravingItem* element) const
 {
     if (!element) {
         return false;
@@ -1176,24 +1289,25 @@ bool NotationInteraction::dragCopyAllowed(const EngravingItem* element) const
 }
 
 //! NOTE: Copied from ScoreView::cloneElement
-void NotationInteraction::startDragCopy(const EngravingItem* element, QObject* dragSource)
+void NotationInteraction::startOutgoingDragElement(const EngravingItem* element, QObject* dragSource)
 {
     if (isDragStarted()) {
-        endDragCopy();
-    }
-
-    if (element->isSpannerSegment()) {
-        element = toSpannerSegment(element)->spanner();
+        endOutgoingDrag();
     }
 
     QMimeData* mimeData = new QMimeData();
-    mimeData->setData(mu::engraving::mimeSymbolFormat, element->mimeData().toQByteArray());
+    if (element->isSpannerSegment()) {
+        Spanner* s = toSpannerSegment(element)->spanner();
+        mimeData->setData(mu::engraving::mimeSymbolFormat, s->mimeData().toQByteArray());
+    } else {
+        mimeData->setData(mu::engraving::mimeSymbolFormat, element->mimeData().toQByteArray());
+    }
 
-    m_drag = new QDrag(dragSource);
-    m_drag->setMimeData(mimeData);
+    m_outgoingDrag = new QDrag(dragSource);
+    m_outgoingDrag->setMimeData(mimeData);
 
-    QObject::connect(m_drag, &QDrag::destroyed, [this]() {
-        m_drag = nullptr;
+    QObject::connect(m_outgoingDrag, &QDrag::destroyed, [this]() {
+        m_outgoingDrag = nullptr;
     });
 
     const qreal adjustedRatio = 0.4;
@@ -1208,7 +1322,7 @@ void NotationInteraction::startDragCopy(const EngravingItem* element, QObject* d
     QPainter qp(&pixmap);
     const qreal dpi = qp.device()->logicalDpiX();
 
-    Painter p(&qp, "startDragCopy");
+    Painter p(&qp, "prepareDragCopyElement");
     p.setAntialiasing(true);
 
     mu::engraving::MScore::pixelRatio = mu::engraving::DPI / dpi;
@@ -1216,27 +1330,66 @@ void NotationInteraction::startDragCopy(const EngravingItem* element, QObject* d
     p.scale(adjustedRatio, adjustedRatio);
     engravingRenderer()->drawItem(element, &p);
 
-    m_drag->setPixmap(pixmap);
-    m_drag->exec(Qt::CopyAction);
+    m_outgoingDrag->setPixmap(pixmap);
+
+    m_outgoingDrag->exec(Qt::CopyAction);
 }
 
-void NotationInteraction::endDragCopy()
+void NotationInteraction::startOutgoingDragRange(QObject* dragSource)
 {
-    if (m_drag) {
-        delete m_drag;
-        m_drag = nullptr;
+    if (isDragStarted()) {
+        endOutgoingDrag();
+    }
+
+    if (!selection()->isRange() || !selection()->canCopy()) {
+        return;
+    }
+
+    QMimeData* mimeData = selection()->mimeData();
+    if (!mimeData) {
+        return;
+    }
+
+    m_outgoingDrag = new QDrag(dragSource);
+    m_outgoingDrag->setMimeData(mimeData);
+
+    QObject::connect(m_outgoingDrag, &QDrag::destroyed, [this]() {
+        m_outgoingDrag = nullptr;
+    });
+
+    QPixmap pixmap(1, 1);
+    pixmap.fill(Qt::transparent);
+    m_outgoingDrag->setPixmap(pixmap);
+
+    m_outgoingDrag->exec(Qt::MoveAction | Qt::CopyAction);
+}
+
+bool NotationInteraction::isOutgoingDragStarted() const
+{
+    return m_outgoingDrag != nullptr;
+}
+
+void NotationInteraction::endOutgoingDrag()
+{
+    if (m_outgoingDrag) {
+        delete m_outgoingDrag;
+        m_outgoingDrag = nullptr;
     }
 }
 
 //! NOTE Copied from ScoreView::dragEnterEvent
-void NotationInteraction::startDrop(const QByteArray& edata)
+bool NotationInteraction::startDropSingle(const QByteArray& edata)
 {
-    resetDropElement();
+    resetDropData();
+
+    m_dropData.elementDropData = ElementDropData();
+    ElementDropData& edd = m_dropData.elementDropData.value();
+    edd.ed = mu::engraving::EditData(&m_scoreCallbacks);
 
     mu::engraving::XmlReader e(edata);
-    m_dropData.ed.dragOffset = QPointF();
+    edd.ed.dragOffset = QPointF();
     Fraction duration;      // dummy
-    ElementType type = EngravingItem::readType(e, &m_dropData.ed.dragOffset, &duration);
+    ElementType type = EngravingItem::readType(e, &edd.ed.dragOffset, &duration);
 
     EngravingItem* el = engraving::Factory::createItem(type, score()->dummy());
     if (el) {
@@ -1244,15 +1397,45 @@ void NotationInteraction::startDrop(const QByteArray& edata)
             double spatium = score()->style().spatium();
             el->setHeight(spatium * 5);
         }
-        m_dropData.ed.dropElement = el;
+        edd.ed.dropElement = el;
 
-        rw::RWRegister::reader()->readItem(m_dropData.ed.dropElement, e);
+        rw::RWRegister::reader()->readItem(edd.ed.dropElement, e);
 
-        engravingRenderer()->layoutItem(m_dropData.ed.dropElement);
+        engravingRenderer()->layoutItem(edd.ed.dropElement);
+        return true;
     }
+
+    resetDropData();
+    return false;
 }
 
-bool NotationInteraction::startDrop(const QUrl& url)
+bool NotationInteraction::startDropRange(const QByteArray& data)
+{
+    resetDropData();
+
+    m_dropData.rangeDropData = RangeDropData();
+    RangeDropData& rdd = m_dropData.rangeDropData.value();
+
+    mu::engraving::XmlReader reader(data);
+    while (reader.readNextStartElement()) {
+        if (reader.name() == "StaffList") {
+            rdd.sourceTick = Fraction::fromString(reader.attribute("tick"));
+            rdd.tickLength = Fraction::fromString(reader.attribute("len"));
+            rdd.sourceStaffIdx = static_cast<staff_idx_t>(reader.intAttribute("staff", -1));
+            rdd.numStaves = reader.intAttribute("staves", 0);
+            break;
+        }
+    }
+
+    if (rdd.tickLength.isZero() || rdd.numStaves == 0) {
+        resetDropData();
+        return false;
+    }
+
+    return true;
+}
+
+bool NotationInteraction::startDropImage(const QUrl& url)
 {
     if (url.scheme() != "file") {
         return false;
@@ -1263,21 +1446,31 @@ bool NotationInteraction::startDrop(const QUrl& url)
         return false;
     }
 
-    resetDropElement();
+    resetDropData();
 
-    m_dropData.ed.dropElement = image;
-    m_dropData.ed.dragOffset = QPointF();
-    m_dropData.ed.dropElement->setParent(nullptr);
+    m_dropData.elementDropData = ElementDropData();
+    ElementDropData& edd = m_dropData.elementDropData.value();
+    edd.ed = mu::engraving::EditData(&m_scoreCallbacks);
 
-    engravingRenderer()->layoutItem(m_dropData.ed.dropElement);
+    edd.ed.dropElement = image;
+    edd.ed.dragOffset = QPointF();
+    edd.ed.dropElement->setParent(nullptr);
+
+    engravingRenderer()->layoutItem(edd.ed.dropElement);
 
     return true;
 }
 
 //! NOTE Copied from ScoreView::dragMoveEvent
-bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifiers modifiers)
+bool NotationInteraction::isDropSingleAccepted(const PointF& pos, Qt::KeyboardModifiers modifiers)
 {
-    EngravingItem* dropElem = m_dropData.ed.dropElement;
+    if (!m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    EngravingItem* dropElem = edd.ed.dropElement;
     if (!dropElem) {
         return false;
     }
@@ -1296,8 +1489,8 @@ bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifier
     case ElementType::STAFFTYPE_CHANGE:
     case ElementType::STRING_TUNINGS:
     case ElementType::VOLTA: {
-        m_dropData.ed.modifiers = keyboardModifier(modifiers);
-        return dragMeasureAnchorElement(pos);
+        edd.ed.modifiers = keyboardModifier(modifiers);
+        return prepareDropMeasureAnchorElement(pos);
     }
     case ElementType::PEDAL:
     case ElementType::LET_RING:
@@ -1307,8 +1500,8 @@ bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifier
     case ElementType::TRILL:
     case ElementType::HAIRPIN:
     case ElementType::TEXTLINE: {
-        m_dropData.ed.modifiers = keyboardModifier(modifiers);
-        return dragTimeAnchorElement(pos);
+        edd.ed.modifiers = keyboardModifier(modifiers);
+        return prepareDropTimeAnchorElement(pos);
     }
     case ElementType::IMAGE:
     case ElementType::SYMBOL:
@@ -1350,7 +1543,7 @@ bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifier
     case ElementType::LYRICS:
     case ElementType::FRET_DIAGRAM:
     case ElementType::HARP_DIAGRAM: {
-        return dragStandardElement(pos, modifiers);
+        return prepareDropStandardElement(pos, modifiers);
     }
     //! NOTE: See Measure::acceptDrop
     case ElementType::ACTION_ICON: {
@@ -1360,12 +1553,13 @@ bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifier
         case ActionIconType::TFRAME:
         case ActionIconType::FFRAME:
         case ActionIconType::MEASURE:
+        case ActionIconType::SYSTEM_LOCK:
         case ActionIconType::STAFF_TYPE_CHANGE: {
-            m_dropData.ed.modifiers = keyboardModifier(modifiers);
-            return dragMeasureAnchorElement(pos);
+            edd.ed.modifiers = keyboardModifier(modifiers);
+            return prepareDropMeasureAnchorElement(pos);
         }
         // Other action icons (e.g parenthesis) can be dragged normally
-        default: return dragStandardElement(pos, modifiers);
+        default: return prepareDropStandardElement(pos, modifiers);
         }
     }
     default:
@@ -1375,42 +1569,178 @@ bool NotationInteraction::isDropAccepted(const PointF& pos, Qt::KeyboardModifier
     return false;
 }
 
-//! NOTE Copied from ScoreView::dropEvent
-bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifiers)
+static void dropRangePosition(Score* score, const PointF& pos, Fraction tickLength, staff_idx_t numStaves, staff_idx_t* staffIdx,
+                              Segment** segment)
 {
-    if (!m_dropData.ed.dropElement) {
+    IF_ASSERT_FAILED(score && staffIdx && segment) {
+        return;
+    }
+
+    static constexpr double spacingFactor = 0.5;
+    static constexpr bool useTimeAnchors = true;
+
+    // First, get an approximate location
+    score->dragPosition(pos, staffIdx, segment, spacingFactor, useTimeAnchors);
+    if (*staffIdx == muse::nidx || !*segment) {
+        return;
+    }
+
+    // Determine the measures range
+    Fraction startTick = (*segment)->tick();
+    Fraction endTick = startTick + tickLength;
+
+    Measure* startMeasure = (*segment)->measure();
+    if (!startMeasure) {
+        return;
+    }
+
+    Measure* endMeasure = score->tick2measure(endTick);
+    if (!endMeasure) {
+        endMeasure = score->lastMeasure();
+
+        if (!endMeasure) {
+            return;
+        }
+    }
+
+    IF_ASSERT_FAILED(startMeasure == endMeasure || startMeasure->isBefore(endMeasure)) {
+        return;
+    }
+
+    const staff_idx_t endStaffIdx = std::min(*staffIdx + numStaves, score->nstaves());
+
+    // Add time tick anchors throughout these measures
+    for (MeasureBase* mb = startMeasure; mb && mb->tick() <= endMeasure->tick(); mb = mb->next()) {
+        if (!mb->isMeasure()) {
+            continue;
+        }
+        for (staff_idx_t i = 0; i < endStaffIdx; ++i) {
+            EditTimeTickAnchors::updateAnchors(toMeasure(mb), i);
+        }
+    }
+
+    // Get precise location using the newly created time tick anchors
+    score->dragPosition(pos, staffIdx, segment, spacingFactor, useTimeAnchors);
+    if (*staffIdx == muse::nidx || !*segment) {
+        return;
+    }
+
+    startTick = (*segment)->tick();
+    endTick = startTick + tickLength;
+
+    score->setShowAnchors(ShowAnchors(0, *staffIdx, *staffIdx + numStaves, startTick, endTick,
+                                      startMeasure->tick(), endMeasure->endTick()));
+
+    // Invalidate BSP tree of affected pages
+    System* lastSeenSystem = nullptr;
+    Page* lastSeenPage = nullptr;
+    for (MeasureBase* mb = startMeasure; mb && mb->tick() <= endMeasure->tick(); mb = mb->next()) {
+        System* s = mb->system();
+        if (!s || s == lastSeenSystem) {
+            continue;
+        }
+
+        lastSeenSystem = s;
+
+        Page* p = s->page();
+        if (!p || p == lastSeenPage) {
+            continue;
+        }
+
+        lastSeenPage = p;
+
+        p->invalidateBspTree();
+    }
+}
+
+bool NotationInteraction::isDropRangeAccepted(const PointF& pos)
+{
+    IF_ASSERT_FAILED(m_dropData.rangeDropData.has_value()) {
         return false;
     }
 
-    IF_ASSERT_FAILED(m_dropData.ed.dropElement->score() == score()) {
+    RangeDropData& rdd = m_dropData.rangeDropData.value();
+
+    staff_idx_t staffIdx = muse::nidx;
+    Segment* segment = nullptr;
+
+    dropRangePosition(score(), pos, rdd.tickLength, rdd.numStaves, &staffIdx, &segment);
+    if (staffIdx == muse::nidx || !segment) {
+        return false;
+    }
+
+    rdd.targetSegment = segment;
+    rdd.targetStaffIdx = staffIdx;
+
+    const Segment* endSegment = score()->tick2rightSegment(segment->tick() + rdd.tickLength,
+                                                           true,
+                                                           Segment::CHORD_REST_OR_TIME_TICK_TYPE);
+
+    if (endSegment && !endSegment->enabled()) {
+        endSegment = endSegment->next1MMenabled();
+    }
+
+    if (!endSegment) {
+        endSegment = score()->lastSegmentMM();
+    }
+
+    if (!endSegment) {
+        return false;
+    }
+
+    const staff_idx_t endStaffIdx = std::min(staffIdx + rdd.numStaves, score()->nstaves());
+
+    rdd.dropRects = ScoreRangeUtilities::boundingArea(score(),
+                                                      segment, endSegment,
+                                                      staffIdx, endStaffIdx);
+
+    notifyAboutDragChanged();
+
+    return true;
+}
+
+//! NOTE Copied from ScoreView::dropEvent
+bool NotationInteraction::dropSingle(const PointF& pos, Qt::KeyboardModifiers modifiers)
+{
+    if (!m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    if (!edd.ed.dropElement) {
+        return false;
+    }
+
+    IF_ASSERT_FAILED(edd.ed.dropElement->score() == score()) {
         return false;
     }
 
     bool accepted = false;
 
     // If the drop position hasn't been set already through isDropAccepted's helper methods, use the mouse position
-    if (m_dropData.ed.pos.isNull()) {
-        m_dropData.ed.pos = pos;
+    if (edd.ed.pos.isNull()) {
+        edd.ed.pos = pos;
     }
 
-    m_dropData.ed.modifiers = keyboardModifier(modifiers);
-    m_dropData.ed.dropElement->styleChanged();
+    edd.ed.modifiers = keyboardModifier(modifiers);
+    edd.ed.dropElement->styleChanged();
 
     bool systemStavesOnly = false;
     bool applyUserOffset = false;
 
-    startEdit();
-    score()->addRefresh(m_dropData.ed.dropElement->canvasBoundingRect());
-    ElementType et = m_dropData.ed.dropElement->type();
+    startEdit(TranslatableString("undoableAction", "Drop element"));
+    score()->addRefresh(edd.ed.dropElement->canvasBoundingRect());
+    ElementType et = edd.ed.dropElement->type();
     switch (et) {
     case ElementType::TEXTLINE:
-        systemStavesOnly = m_dropData.ed.dropElement->systemFlag();
-    // fall-thru
+        systemStavesOnly = edd.ed.dropElement->systemFlag();
+        [[fallthrough]];
     case ElementType::VOLTA:
     case ElementType::GRADUAL_TEMPO_CHANGE:
         // voltas drop to system staves by default, or closest staff if Control is held
-        systemStavesOnly = systemStavesOnly || !(m_dropData.ed.modifiers & Qt::ControlModifier);
-    // fall-thru
+        systemStavesOnly = systemStavesOnly || !(edd.ed.modifiers & Qt::ControlModifier);
+        [[fallthrough]];
     case ElementType::OTTAVA:
     case ElementType::TRILL:
     case ElementType::PEDAL:
@@ -1419,7 +1749,7 @@ bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifier
     case ElementType::PALM_MUTE:
     case ElementType::HAIRPIN:
     {
-        mu::engraving::Spanner* spanner = ptr::checked_cast<mu::engraving::Spanner>(m_dropData.ed.dropElement);
+        mu::engraving::Spanner* spanner = ptr::checked_cast<mu::engraving::Spanner>(edd.ed.dropElement);
         score()->cmdAddSpanner(spanner, pos, systemStavesOnly);
         score()->setUpdateAll();
         accepted = true;
@@ -1429,7 +1759,7 @@ bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifier
     case ElementType::FSYMBOL:
     case ElementType::IMAGE:
         applyUserOffset = true;
-    // fall-thru
+        [[fallthrough]];
     case ElementType::DYNAMIC:
     case ElementType::FRET_DIAGRAM:
     case ElementType::HARMONY:
@@ -1485,21 +1815,21 @@ bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifier
         accepted = doDropStandard();
         break;
     case ElementType::STAFFTYPE_CHANGE: {
-        EngravingItem* el = dropTarget(m_dropData.ed);
+        EngravingItem* el = dropTarget(edd.ed);
         if (el->isMeasure()) {
             Measure* m = toMeasure(el);
             System* s = m->system();
             double y = pos.y() - s->canvasPos().y();
             staff_idx_t staffIndex = s->searchStaff(y);
-            StaffTypeChange* stc = toStaffTypeChange(m_dropData.ed.dropElement);
+            StaffTypeChange* stc = toStaffTypeChange(edd.ed.dropElement);
             score()->cmdAddStaffTypeChange(toMeasure(el), staffIndex, stc);
         }
     }
     break;
     case ElementType::SLUR:
     {
-        EngravingItem* el = dropTarget(m_dropData.ed);
-        mu::engraving::Slur* dropElement = toSlur(m_dropData.ed.dropElement);
+        EngravingItem* el = dropTarget(edd.ed);
+        mu::engraving::Slur* dropElement = toSlur(edd.ed.dropElement);
         if (toNote(el)->chord()) {
             doAddSlur(toNote(el)->chord(), nullptr, dropElement);
             accepted = true;
@@ -1507,18 +1837,17 @@ bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifier
     }
     break;
     default:
-        resetDropElement();
+        resetDropData();
         break;
     }
-    m_dropData.ed.dropElement = nullptr;
-    m_dropData.ed.pos = PointF();
-    m_dropData.ed.modifiers = {};
-    setDropTarget(nullptr);         // this also resets dropRectangle and dropAnchor
+
+    edd.ed.dropElement = nullptr;
+    edd.ed.pos = PointF();
+    edd.ed.modifiers = {};
+
+    setDropTarget(nullptr); // this also resets dropRectangle and dropAnchor
     apply();
-    // update input cursor position (must be done after layout)
-//    if (noteEntryMode()) {
-//        moveCursor();
-//    }
+
     if (accepted) {
         notifyAboutDropChanged();
     }
@@ -1531,25 +1860,31 @@ bool NotationInteraction::drop(const PointF& pos, Qt::KeyboardModifiers modifier
 //! NOTE: Helper method for NotationInteraction::drop. Handles drop logic for majority of elements (returns "accepted")
 bool NotationInteraction::doDropStandard()
 {
-    EngravingItem* el = m_dropData.dropTarget ? m_dropData.dropTarget : dropTarget(m_dropData.ed);
+    if (!m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    EngravingItem* el = edd.dropTarget ? edd.dropTarget : dropTarget(edd.ed);
     if (!el) {
-        if (!dropCanvas(m_dropData.ed.dropElement)) {
-            LOGD("cannot drop %s(%p) to canvas", m_dropData.ed.dropElement->typeName(), m_dropData.ed.dropElement);
-            resetDropElement();
+        if (!dropCanvas(edd.ed.dropElement)) {
+            LOGD("cannot drop %s(%p) to canvas", edd.ed.dropElement->typeName(), edd.ed.dropElement);
+            resetDropData();
         }
         return false;
     }
     score()->addRefresh(el->canvasBoundingRect());
 
     // TODO: HACK ALERT!
-    if (el->isMeasure() && m_dropData.ed.dropElement->isLayoutBreak()) {
+    if (el->isMeasure() && edd.ed.dropElement->isLayoutBreak()) {
         Measure* m = toMeasure(el);
         if (m->isMMRest()) {
             el = m->mmRestLast();
         }
     }
 
-    EngravingItem* dropElement = el->drop(m_dropData.ed);
+    EngravingItem* dropElement = el->drop(edd.ed);
 
     if (dropElement && dropElement->isInstrumentChange()) {
         if (!selectInstrument(toInstrumentChange(dropElement))) {
@@ -1561,7 +1896,7 @@ bool NotationInteraction::doDropStandard()
     score()->addRefresh(el->canvasBoundingRect());
     if (dropElement) {
         if (!score()->noteEntryMode()) {
-            doSelect({ dropElement }, SelectType::SINGLE);
+            selectAndStartEditIfNeeded(dropElement);
         }
         score()->addRefresh(dropElement->canvasBoundingRect());
     }
@@ -1571,41 +1906,119 @@ bool NotationInteraction::doDropStandard()
 //! NOTE: Helper method for NotationInteraction::drop. Handles drop logic for text base items & symbols (returns "accepted")
 bool NotationInteraction::doDropTextBaseAndSymbols(const PointF& pos, bool applyUserOffset)
 {
-    EngravingItem* el = m_dropData.dropTarget ? m_dropData.dropTarget : elementAt(pos);
+    IF_ASSERT_FAILED(m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    EngravingItem* el = edd.dropTarget ? edd.dropTarget : elementAt(pos);
     if (el == 0 || el->type() == ElementType::STAFF_LINES) {
         mu::engraving::staff_idx_t staffIdx;
         mu::engraving::Segment* seg;
         PointF offset;
         el = score()->pos2measure(pos, &staffIdx, 0, &seg, &offset);
         if (el && el->isMeasure()) {
-            m_dropData.ed.dropElement->setTrack(staffIdx * mu::engraving::VOICES);
-            m_dropData.ed.dropElement->setParent(seg);
+            edd.ed.dropElement->setTrack(staffIdx * mu::engraving::VOICES);
+            edd.ed.dropElement->setParent(seg);
 
             if (applyUserOffset) {
-                m_dropData.ed.dropElement->setOffset(offset);
+                edd.ed.dropElement->setOffset(offset);
             }
 
-            score()->undoAddElement(m_dropData.ed.dropElement);
+            score()->undoAddElement(edd.ed.dropElement);
         } else {
             LOGD("cannot drop here");
-            resetDropElement();
+            resetDropData();
         }
     } else {
         score()->addRefresh(el->canvasBoundingRect());
-        score()->addRefresh(m_dropData.ed.dropElement->canvasBoundingRect());
+        score()->addRefresh(edd.ed.dropElement->canvasBoundingRect());
 
-        if (!el->acceptDrop(m_dropData.ed)) {
-            LOGD("drop %s onto %s not accepted", m_dropData.ed.dropElement->typeName(), el->typeName());
+        if (!el->acceptDrop(edd.ed)) {
+            LOGD("drop %s onto %s not accepted", edd.ed.dropElement->typeName(), el->typeName());
             return false;
         }
-        m_dropData.ed.pos = pos;
-        EngravingItem* dropElement = el->drop(m_dropData.ed);
+        edd.ed.pos = pos;
+        EngravingItem* dropElement = el->drop(edd.ed);
         score()->addRefresh(el->canvasBoundingRect());
         if (dropElement) {
-            doSelect({ dropElement }, SelectType::SINGLE);
+            selectAndStartEditIfNeeded(dropElement);
             score()->addRefresh(dropElement->canvasBoundingRect());
         }
     }
+
+    return true;
+}
+
+bool NotationInteraction::dropRange(const QByteArray& data, const PointF& pos, bool deleteSourceMaterial)
+{
+    IF_ASSERT_FAILED(m_dropData.rangeDropData.has_value()) {
+        return false;
+    }
+
+    RangeDropData& rdd = m_dropData.rangeDropData.value();
+
+    if (rdd.tickLength.isZero() || rdd.numStaves == 0) {
+        return false;
+    }
+
+    staff_idx_t staffIdx = muse::nidx;
+    Segment* segment = nullptr;
+
+    dropRangePosition(score(), pos, rdd.tickLength, rdd.numStaves, &staffIdx, &segment);
+    if (staffIdx == muse::nidx || !segment) {
+        return false;
+    }
+
+    if (segment->isInsideTuplet()) {
+        endDrop();
+        notifyAboutDropChanged();
+        //MScore::setError(MsError::DEST_TUPLET);
+        //MScoreErrorsController(iocContext()).checkAndShowMScoreError();
+        // NOTE: if we show the error popup here it seems that the mouse-release event is missed
+        // so the dragged region stays sticked to the mouse and move around. Don't know how to fix it. [M.S.]
+        return false;
+    }
+
+    rdd.targetSegment = segment;
+    rdd.targetStaffIdx = staffIdx;
+
+    startEdit(deleteSourceMaterial
+              ? TranslatableString("undoableAction", "Move range")
+              : TranslatableString("undoableAction", "Copy range"));
+
+    if (deleteSourceMaterial && rdd.sourceStaffIdx != muse::nidx) {
+        Segment* sourceStartSegment = score()->tick2leftSegmentMM(rdd.sourceTick);
+        if (sourceStartSegment && !sourceStartSegment->enabled()) {
+            sourceStartSegment = sourceStartSegment->next1MMenabled();
+        }
+
+        Segment* sourceEndSegment = score()->tick2rightSegment(rdd.sourceTick + rdd.tickLength,
+                                                               true,
+                                                               Segment::CHORD_REST_OR_TIME_TICK_TYPE);
+        if (sourceEndSegment && !sourceEndSegment->enabled()) {
+            sourceEndSegment = sourceEndSegment->next1MMenabled();
+        }
+        if (!sourceEndSegment) {
+            sourceEndSegment = score()->lastSegmentMM();
+        }
+
+        if (sourceStartSegment && sourceEndSegment) {
+            score()->deleteRange(sourceStartSegment, sourceEndSegment,
+                                 engraving::staff2track(rdd.sourceStaffIdx),
+                                 engraving::staff2track(rdd.sourceStaffIdx + rdd.numStaves),
+                                 score()->selectionFilter());
+        }
+    }
+
+    XmlReader e(data);
+    score()->pasteStaff(e, segment, staffIdx);
+
+    endDrop();
+    apply();
+
+    MScoreErrorsController(iocContext()).checkAndShowMScoreError();
 
     return true;
 }
@@ -1616,15 +2029,45 @@ bool NotationInteraction::selectInstrument(mu::engraving::InstrumentChange* inst
         return false;
     }
 
-    RetVal<Instrument> selectedInstrument = selectInstrumentScenario()->selectInstrument();
-    if (!selectedInstrument.ret) {
+    RetVal<InstrumentTemplate> templ = selectInstrumentScenario()->selectInstrument();
+    if (!templ.ret) {
         return false;
     }
 
+    Instrument newInstrument = Instrument::fromTemplate(&templ.val);
     instrumentChange->setInit(true);
-    instrumentChange->setupInstrument(&selectedInstrument.val);
+    instrumentChange->setupInstrument(&newInstrument);
+
+    if (newInstrument.useDrumset()) {
+        cleanupDrumsetChanges(instrumentChange);
+    }
 
     return true;
+}
+
+void NotationInteraction::cleanupDrumsetChanges(mu::engraving::InstrumentChange* instrumentChange) const
+{
+    Part* part = instrumentChange ? instrumentChange->part() : nullptr;
+    Instrument* newInstrument = instrumentChange ? instrumentChange->instrument() : nullptr;
+    if (!part || !newInstrument) {
+        return;
+    }
+
+    for (auto pair : part->instruments()) {
+        const Instrument* otherInst = pair.second;
+        if (!otherInst || otherInst == newInstrument) {
+            continue;
+        }
+
+        // If the following conditional is true, it means that we're trying to change to a drumset that already exists for this part. Due to the fact
+        // that we don't create new tracks for identical instruments in a given part, the knock-on effect is that the new drumset won't have a chance
+        // to load a MuseSampler patch (see usage of shouldLoadDrumset in PlaybackController). The following logic resolves this by copying the patch
+        // from the existing drumset into the new one...
+        if (otherInst->drumset() && newInstrument->id() == otherInst->id()) {
+            score()->undo(new engraving::ChangeDrumset(newInstrument, *otherInst->drumset(), part));
+            return;
+        }
+    }
 }
 
 //! NOTE Copied from Palette::applyPaletteElement
@@ -1645,7 +2088,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
         return false;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Apply palette element"));
 
     const bool isMeasureAnchoredElement = element->type() == ElementType::MARKER
                                           || element->type() == ElementType::JUMP
@@ -1653,15 +2096,16 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                                           || element->type() == ElementType::VBOX
                                           || element->type() == ElementType::HBOX
                                           || element->type() == ElementType::TBOX
+                                          || element->type() == ElementType::FBOX
                                           || element->type() == ElementType::MEASURE
                                           || element->type() == ElementType::BRACKET
                                           || (element->type() == ElementType::ACTION_ICON
                                               && (toActionIcon(element)->actionType() == mu::engraving::ActionIconType::VFRAME
                                                   || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::HFRAME
                                                   || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::TFRAME
+                                                  || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::FFRAME
                                                   || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::STAFF_TYPE_CHANGE
-                                                  || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::MEASURE
-                                                  || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::BRACKETS));
+                                                  || toActionIcon(element)->actionType() == mu::engraving::ActionIconType::MEASURE));
 
     if (sel.isList()) {
         ChordRest* cr1 = sel.firstChordRest();
@@ -1685,7 +2129,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
         };
 
         bool elementIsStandardBend = element->isActionIcon() && toActionIcon(element)->actionType() == ActionIconType::STANDARD_BEND;
-        bool isLineNoteToNote = (element->isGlissando() || elementIsStandardBend)
+        bool elementIsNoteLine = element->isActionIcon() && toActionIcon(element)->actionType() == ActionIconType::NOTE_ANCHORED_LINE;
+        bool isLineNoteToNote = (element->isGlissando() || elementIsStandardBend || elementIsNoteLine)
                                 && sel.isList() && sel.elements().size() == 2
                                 && sel.elements()[0]->isNote() && sel.elements()[1]->isNote()
                                 && sel.elements()[1]->tick() != sel.elements()[0]->tick();
@@ -1737,6 +2182,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
         } else if (element->isLayoutBreak()) {
             mu::engraving::LayoutBreak* breakElement = toLayoutBreak(element);
             score->cmdToggleLayoutBreak(breakElement->layoutBreakType());
+        } else if (element->isActionIcon() && toActionIcon(element)->actionType() == ActionIconType::SYSTEM_LOCK) {
+            score->cmdApplyLockToSelection();
         } else if (element->isSlur() && addSingle) {
             doAddSlur(toSlur(element));
         } else if (element->isSLine() && !element->isGlissando() && !element->isGuitarBend() && addSingle) {
@@ -1808,7 +2255,9 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                     continue;
                 }
                 measuresWithSelectedContent.push_back(m);
-                applyDropPaletteElement(score, m, element, modifiers);
+                const RectF r = m->staffPageBoundingRect(e->staff()->idx());
+                const PointF pt = r.center() + m->system()->page()->pos();
+                applyDropPaletteElement(score, m, element, modifiers, pt);
                 if (element->type() == ElementType::BRACKET) {
                     break;
                 }
@@ -1822,7 +2271,9 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
         if (element->type() == ElementType::BAR_LINE || isMeasureAnchoredElement) {
             Measure* last = sel.endSegment() ? sel.endSegment()->measure() : nullptr;
             for (Measure* m = sel.startSegment()->measure(); m; m = m->nextMeasureMM()) {
-                applyDropPaletteElement(score, m, element, modifiers);
+                const RectF r = m->staffPageBoundingRect(sel.staffStart());
+                const PointF pt = r.center() + m->system()->page()->pos();
+                applyDropPaletteElement(score, m, element, modifiers, pt);
                 if ((m == last) || (element->type() == ElementType::BRACKET)) {
                     break;
                 }
@@ -1990,6 +2441,8 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
                     }
                 }
             }
+        } else if (element->isActionIcon() && toActionIcon(element)->actionType() == ActionIconType::SYSTEM_LOCK) {
+            score->cmdApplyLockToSelection();
         } else {
             track_idx_t track1 = sel.staffStart() * mu::engraving::VOICES;
             track_idx_t track2 = sel.staffEnd() * mu::engraving::VOICES;
@@ -2122,6 +2575,8 @@ void NotationInteraction::applyLineNoteToNote(Score* score, Note* note1, Note* n
 
     if (line->isActionIcon() && toActionIcon(line)->actionType() == ActionIconType::STANDARD_BEND) {
         score->addGuitarBend(GuitarBendType::BEND, note1, note2);
+    } else if (line->isActionIcon() && toActionIcon(line)->actionType() == ActionIconType::NOTE_ANCHORED_LINE) {
+        score->addNoteLine();
     } else if (line->isSLine()) {
         SLine* dropLine = ((SLine*)line->clone());
         dropData->dropElement = dropLine;
@@ -2142,23 +2597,23 @@ void NotationInteraction::applyLineNoteToNote(Score* score, Note* note1, Note* n
 }
 
 //! NOTE Copied from ScoreView::cmdAddSlur
-void NotationInteraction::doAddSlur(const mu::engraving::Slur* slurTemplate)
+void NotationInteraction::doAddSlur(const Slur* slurTemplate)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add slur"));
     m_notifyAboutDropChanged = true;
 
-    mu::engraving::ChordRest* firstChordRest = nullptr;
-    mu::engraving::ChordRest* secondChordRest = nullptr;
+    ChordRest* firstChordRest = nullptr;
+    ChordRest* secondChordRest = nullptr;
     const auto& sel = score()->selection();
     auto el = sel.uniqueElements();
 
     if (sel.isRange()) {
-        mu::engraving::track_idx_t startTrack = sel.staffStart() * mu::engraving::VOICES;
-        mu::engraving::track_idx_t endTrack = sel.staffEnd() * mu::engraving::VOICES;
-        for (mu::engraving::track_idx_t track = startTrack; track < endTrack; ++track) {
+        track_idx_t startTrack = sel.staffStart() * VOICES;
+        track_idx_t endTrack = sel.staffEnd() * VOICES;
+        for (track_idx_t track = startTrack; track < endTrack; ++track) {
             firstChordRest = nullptr;
             secondChordRest = nullptr;
-            for (mu::engraving::EngravingItem* e : el) {
+            for (EngravingItem* e : el) {
                 if (e->track() != track) {
                     continue;
                 }
@@ -2168,7 +2623,7 @@ void NotationInteraction::doAddSlur(const mu::engraving::Slur* slurTemplate)
                 if (!e->isChord()) {
                     continue;
                 }
-                mu::engraving::ChordRest* cr = mu::engraving::toChordRest(e);
+                ChordRest* cr = toChordRest(e);
                 if (!firstChordRest || firstChordRest->tick() > cr->tick()) {
                     firstChordRest = cr;
                 }
@@ -2190,50 +2645,99 @@ void NotationInteraction::doAddSlur(const mu::engraving::Slur* slurTemplate)
             doAddSlur(toNote(sel.element())->chord(), nullptr, slurTemplate);
         }
     } else {
-        for (mu::engraving::EngravingItem* e : el) {
+        EngravingItem* firstItem = nullptr;
+        EngravingItem* secondItem = nullptr;
+        for (EngravingItem* e : el) {
             if (e->isNote()) {
-                e = mu::engraving::toNote(e)->chord();
+                e = toNote(e)->chord();
             }
-            if (!e->isChord()) {
+            if (!e->isChord() && !e->isBarLine()) {
                 continue;
             }
-            mu::engraving::ChordRest* cr = mu::engraving::toChordRest(e);
-            if (!firstChordRest || cr->isBefore(firstChordRest)) {
-                firstChordRest = cr;
+
+            if (!firstItem || e->isBefore(firstItem)) {
+                firstItem = e;
             }
-            if (!secondChordRest || secondChordRest->isBefore(cr)) {
-                secondChordRest = cr;
+            if (!secondItem || secondItem->isBefore(e)) {
+                secondItem = e;
             }
         }
 
-        if (firstChordRest == secondChordRest) {
-            secondChordRest = mu::engraving::nextChordRest(firstChordRest);
+        if (firstChordRest == secondItem && (!firstItem || firstItem->isChordRest())) {
+            ChordRestNavigateOptions options;
+            options.disableOverRepeats = true;
+            secondItem = nextChordRest(toChordRest(firstItem), options);
         }
 
-        bool firstCrTrill = firstChordRest && firstChordRest->isChord() && toChord(firstChordRest)->isTrillCueNote();
-        bool secondCrTrill = secondChordRest && secondChordRest->isChord() && toChord(secondChordRest)->isTrillCueNote();
+        bool firstCrTrill = firstItem && firstItem->isChord() && toChord(firstItem)->isTrillCueNote();
+        bool secondCrTrill = secondItem && secondItem->isChord() && toChord(secondItem)->isTrillCueNote();
 
-        if (firstChordRest && !(firstCrTrill || secondCrTrill)) {
-            doAddSlur(firstChordRest, secondChordRest, slurTemplate);
+        if (firstItem && !(firstCrTrill || secondCrTrill)) {
+            doAddSlur(firstItem, secondItem, slurTemplate);
         }
     }
 
     apply();
 }
 
-void NotationInteraction::doAddSlur(ChordRest* firstChordRest, ChordRest* secondChordRest, const mu::engraving::Slur* slurTemplate)
+void NotationInteraction::doAddSlur(EngravingItem* firstItem, EngravingItem* secondItem, const Slur* slurTemplate)
 {
-    mu::engraving::Slur* slur = firstChordRest->slur(secondChordRest);
-    if (!slur || slur->slurDirection() != mu::engraving::DirectionV::AUTO) {
+    ChordRest* firstChordRest = nullptr;
+    ChordRest* secondChordRest = nullptr;
+
+    if (firstItem && secondItem && (firstItem->isBarLine() != secondItem->isBarLine())) {
+        const bool outgoing = firstItem->isChordRest();
+        const BarLine* bl = outgoing ? toBarLine(secondItem) : toBarLine(firstItem);
+        const ChordRest* cr = outgoing ? toChordRest(firstItem) : toChordRest(secondItem);
+
+        // Check the barline is the start of a repeat section
+        const Segment* adjacentCrSeg
+            = outgoing ? bl->segment()->prev1(SegmentType::ChordRest) : bl->segment()->next1(SegmentType::ChordRest);
+        EngravingItem* adjacentItem = adjacentCrSeg->element(cr->track());
+        ChordRest* adjacentCr = adjacentItem ? toChordRest(adjacentItem) : nullptr;
+
+        if (!adjacentCr) {
+            for (track_idx_t track = cr->vStaffIdx() * VOICES; track < (cr->vStaffIdx() + 1) * VOICES; track++) {
+                adjacentItem = adjacentCrSeg->element(track);
+                if (!adjacentItem || !adjacentItem->isChordRest()) {
+                    continue;
+                }
+                adjacentCr = toChordRest(adjacentItem);
+                break;
+            }
+        }
+
+        if (!adjacentCr || (outgoing && !adjacentCr->hasFollowingJumpItem()) || (!outgoing && !adjacentCr->hasPrecedingJumpItem())) {
+            return;
+        }
+
+        Slur* partialSlur = slurTemplate ? slurTemplate->clone() : Factory::createSlur(score()->dummy());
+        if (outgoing) {
+            partialSlur->undoSetOutgoing(true);
+            firstChordRest = toChordRest(firstItem);
+            secondChordRest = toChordRest(adjacentCr);
+        } else {
+            partialSlur->undoSetIncoming(true);
+            firstChordRest = toChordRest(adjacentCr);
+            secondChordRest = toChordRest(secondItem);
+        }
+        slurTemplate = partialSlur;
+    } else {
+        firstChordRest = toChordRest(firstItem);
+        secondChordRest = toChordRest(secondItem);
+    }
+
+    Slur* slur = firstChordRest->slur(secondChordRest);
+    if (!slur || slur->slurDirection() != DirectionV::AUTO) {
         slur = score()->addSlur(firstChordRest, secondChordRest, slurTemplate);
     }
 
     if (m_noteInput->isNoteInputMode()) {
         m_noteInput->addSlur(slur);
-    } else if (!secondChordRest) {
-        mu::engraving::SlurSegment* segment = slur->frontSegment();
+    } else if (!secondItem) {
+        SlurSegment* segment = slur->frontSegment();
         select({ segment }, SelectType::SINGLE);
-        startEditGrip(segment, mu::engraving::Grip::END);
+        startEditGrip(segment, Grip::END);
     }
 }
 
@@ -2268,13 +2772,11 @@ bool NotationInteraction::notesHaveActiculation(const std::vector<Note*>& notes,
 //! NOTE Copied from ScoreView::dragLeaveEvent
 void NotationInteraction::endDrop()
 {
-    if (m_dropData.ed.dropElement) {
-        score()->setUpdateAll();
-        resetDropElement();
-        score()->update();
-    }
-    m_dropData.ed.pos = PointF();
+    score()->hideAnchors();
+    score()->setUpdateAll();
     setDropTarget(nullptr);
+    resetDropData();
+    score()->update();
 }
 
 muse::async::Notification NotationInteraction::dropChanged() const
@@ -2287,8 +2789,8 @@ bool NotationInteraction::dropCanvas(EngravingItem* e)
 {
     if (e->isActionIcon()) {
         switch (mu::engraving::toActionIcon(e)->actionType()) {
-        case mu::engraving::ActionIconType::VFRAME:
-            score()->insertBox(ElementType::VBOX);
+        case mu::engraving::ActionIconType::VFRAME
+            : score()->insertBox(ElementType::VBOX);
             break;
         case mu::engraving::ActionIconType::HFRAME:
             score()->insertBox(ElementType::HBOX);
@@ -2331,17 +2833,23 @@ EngravingItem* NotationInteraction::dropTarget(mu::engraving::EditData& ed) cons
     return nullptr;
 }
 
-bool NotationInteraction::dragStandardElement(const PointF& pos, Qt::KeyboardModifiers modifiers)
+bool NotationInteraction::prepareDropStandardElement(const PointF& pos, Qt::KeyboardModifiers modifiers)
 {
+    IF_ASSERT_FAILED(m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
     Page* page = point2page(pos, true);
     if (!page) {
         return false;
     }
 
     // Update the tree when starting a new drag (ed.pos hasn't been set yet), if the modifier changed, or when crossing a page
-    if (m_dropData.ed.pos.isNull() || m_dropData.ed.modifiers != modifiers || page != m_currentDropPage) {
+    if (edd.ed.pos.isNull() || edd.ed.modifiers != modifiers || page != m_currentDropPage) {
         m_currentDropPage = page;
-        m_dropData.ed.modifiers = keyboardModifier(modifiers);
+        edd.ed.modifiers = keyboardModifier(modifiers);
 
         // Where "m" is the number of page elements and "n" is the number of elements accepting a drop...
         // O(log m) operation
@@ -2349,7 +2857,7 @@ bool NotationInteraction::dragStandardElement(const PointF& pos, Qt::KeyboardMod
 
         // O(m log n) operation
         for (EngravingItem* elem : page->elements()) {
-            if (elem->acceptDrop(m_dropData.ed)) {
+            if (elem->acceptDrop(edd.ed)) {
                 m_droppableTree.insert(elem);
             }
         }
@@ -2358,7 +2866,7 @@ bool NotationInteraction::dragStandardElement(const PointF& pos, Qt::KeyboardMod
     PointF posInPage(pos.x() - page->pos().x(), pos.y() - page->pos().y());
     // O(log n) operation
     EngravingItem* targetElem = m_droppableTree.nearestNeighbor(posInPage);
-    EngravingItem* dropElem = m_dropData.ed.dropElement;
+    EngravingItem* dropElem = edd.ed.dropElement;
 
     if (!targetElem || !dropElem) {
         return false;
@@ -2374,24 +2882,30 @@ bool NotationInteraction::dragStandardElement(const PointF& pos, Qt::KeyboardMod
 
             RectF measureRect = targetMeasure->staffPageBoundingRect(targetElem->staffIdx());
             measureRect.adjust(page->x(), page->y(), page->x(), page->y());
-            m_dropData.ed.pos = measureRect.center();
+            edd.ed.pos = measureRect.center();
             setAnchorLines({ LineF(pos, measureRect.topLeft()) });
 
-            return targetMeasure->acceptDrop(m_dropData.ed);
+            return targetMeasure->acceptDrop(edd.ed);
         }
     }
 
     setDropTarget(targetElem, true);
-    m_dropData.ed.pos = targetElem->canvasBoundingRect().center();
+    edd.ed.pos = targetElem->canvasBoundingRect().center();
     setAnchorLines({ LineF(pos, targetElem->canvasBoundingRect().center()) });
 
     return true;
 }
 
 //! NOTE Copied from ScoreView::dragMeasureAnchorElement
-bool NotationInteraction::dragMeasureAnchorElement(const PointF& pos)
+bool NotationInteraction::prepareDropMeasureAnchorElement(const PointF& pos)
 {
-    EngravingItem* dropElem = m_dropData.ed.dropElement;
+    IF_ASSERT_FAILED(m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    EngravingItem* dropElem = edd.ed.dropElement;
     Page* page = point2page(pos);
     if (!dropElem || !page) {
         return false;
@@ -2408,7 +2922,7 @@ bool NotationInteraction::dragMeasureAnchorElement(const PointF& pos)
     case ElementType::KEYSIG:
     case ElementType::TIMESIG: {
         // If ctrl is pressed, break and target a specific staff
-        if (m_dropData.ed.modifiers & Qt::ControlModifier) {
+        if (edd.ed.modifiers & Qt::ControlModifier) {
             break;
         }
     }
@@ -2416,9 +2930,7 @@ bool NotationInteraction::dragMeasureAnchorElement(const PointF& pos)
     case ElementType::JUMP:
     case ElementType::LAYOUT_BREAK:
     case ElementType::MARKER:
-    case ElementType::MEASURE_LIST:
     case ElementType::MEASURE_NUMBER:
-    case ElementType::STAFF_LIST:
         // Target all staves
         staffIdx = 0;
     // fall through
@@ -2436,10 +2948,14 @@ bool NotationInteraction::dragMeasureAnchorElement(const PointF& pos)
 
         RectF measureRect = targetMeasure->staffPageBoundingRect(staffIdx);
         measureRect.adjust(page->x(), page->y(), page->x(), page->y());
-        m_dropData.ed.pos = measureRect.center();
-        setAnchorLines({ LineF(pos, measureRect.topLeft()) });
+        edd.ed.pos = measureRect.center();
 
-        return targetMeasure->acceptDrop(m_dropData.ed);
+        const bool dropAccepted = targetMeasure->acceptDrop(edd.ed);
+        if (dropAccepted) {
+            setAnchorLines({ LineF(pos, measureRect.topLeft()) });
+        }
+
+        return dropAccepted;
     }
     dropElem->score()->addRefresh(dropElem->canvasBoundingRect());
     setDropTarget(nullptr);
@@ -2447,8 +2963,14 @@ bool NotationInteraction::dragMeasureAnchorElement(const PointF& pos)
 }
 
 //! NOTE Copied from ScoreView::dragTimeAnchorElement
-bool NotationInteraction::dragTimeAnchorElement(const PointF& pos)
+bool NotationInteraction::prepareDropTimeAnchorElement(const PointF& pos)
 {
+    IF_ASSERT_FAILED(m_dropData.elementDropData.has_value()) {
+        return false;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
     mu::engraving::staff_idx_t staffIdx = 0;
     mu::engraving::Segment* seg = nullptr;
     mu::engraving::MeasureBase* mb = score()->pos2measure(pos, &staffIdx, 0, &seg, 0);
@@ -2460,14 +2982,14 @@ bool NotationInteraction::dragTimeAnchorElement(const PointF& pos)
         qreal y    = s->staff(staffIdx)->y() + s->pos().y() + s->page()->pos().y();
         PointF anchor(seg->canvasBoundingRect().x(), y);
         setAnchorLines({ LineF(pos, anchor) });
-        m_dropData.ed.dropElement->score()->addRefresh(m_dropData.ed.dropElement->canvasBoundingRect());
-        m_dropData.ed.dropElement->setTrack(track);
-        m_dropData.ed.dropElement->score()->addRefresh(m_dropData.ed.dropElement->canvasBoundingRect());
+        edd.ed.dropElement->score()->addRefresh(edd.ed.dropElement->canvasBoundingRect());
+        edd.ed.dropElement->setTrack(track);
+        edd.ed.dropElement->score()->addRefresh(edd.ed.dropElement->canvasBoundingRect());
         notifyAboutDragChanged();
         return true;
     }
 
-    m_dropData.ed.dropElement->score()->addRefresh(m_dropData.ed.dropElement->canvasBoundingRect());
+    edd.ed.dropElement->score()->addRefresh(edd.ed.dropElement->canvasBoundingRect());
     setDropTarget(nullptr);
 
     return false;
@@ -2476,22 +2998,28 @@ bool NotationInteraction::dragTimeAnchorElement(const PointF& pos)
 //! NOTE Copied from ScoreView::setDropTarget
 void NotationInteraction::setDropTarget(EngravingItem* item, bool notify)
 {
-    if (m_dropData.dropTarget != item) {
-        if (m_dropData.dropTarget) {
-            m_dropData.dropTarget->setDropTarget(false);
-            m_dropData.dropTarget = nullptr;
+    if (!m_dropData.elementDropData.has_value()) {
+        return;
+    }
+
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    if (edd.dropTarget != item) {
+        if (edd.dropTarget) {
+            edd.dropTarget->setDropTarget(false);
+            edd.dropTarget = nullptr;
         }
 
-        m_dropData.dropTarget = item;
-        if (m_dropData.dropTarget) {
-            m_dropData.dropTarget->setDropTarget(true);
+        edd.dropTarget = item;
+        if (edd.dropTarget) {
+            edd.dropTarget->setDropTarget(true);
         }
     }
 
     resetAnchorLines();
 
-    if (m_dropData.dropRect.isValid()) {
-        m_dropData.dropRect = RectF();
+    if (edd.dropRect.isValid()) {
+        edd.dropRect = RectF();
     }
 
     if (notify) {
@@ -2502,20 +3030,26 @@ void NotationInteraction::setDropTarget(EngravingItem* item, bool notify)
 //! NOTE: Copied from ScoreView::setDropRectangle
 void NotationInteraction::setDropRect(const RectF& rect)
 {
-    if (m_dropData.dropRect == rect) {
+    if (!m_dropData.elementDropData.has_value()) {
         return;
     }
 
-    m_dropData.dropRect = rect;
+    ElementDropData& edd = m_dropData.elementDropData.value();
+
+    if (edd.dropRect == rect) {
+        return;
+    }
+
+    edd.dropRect = rect;
 
     if (rect.isValid()) {
         score()->addRefresh(rect);
     }
 
-    if (m_dropData.dropTarget) {
-        m_dropData.dropTarget->setDropTarget(false);
-        score()->addRefresh(m_dropData.dropTarget->canvasBoundingRect());
-        m_dropData.dropTarget = nullptr;
+    if (edd.dropTarget) {
+        edd.dropTarget->setDropTarget(false);
+        score()->addRefresh(edd.dropTarget->canvasBoundingRect());
+        edd.dropTarget = nullptr;
     } else if (!m_anchorLines.empty()) {
         RectF rf;
         rf.setTopLeft(m_anchorLines.front().p1());
@@ -2527,12 +3061,13 @@ void NotationInteraction::setDropRect(const RectF& rect)
     notifyAboutDragChanged();
 }
 
-void NotationInteraction::resetDropElement()
+void NotationInteraction::resetDropData()
 {
-    if (m_dropData.ed.dropElement) {
-        delete m_dropData.ed.dropElement;
-        m_dropData.ed.dropElement = nullptr;
+    if (m_dropData.elementDropData.has_value()) {
+        delete m_dropData.elementDropData->ed.dropElement;
     }
+
+    m_dropData = {};
 }
 
 void NotationInteraction::setAnchorLines(const std::vector<LineF>& anchorList)
@@ -2551,13 +3086,137 @@ double NotationInteraction::currentScaling(Painter* painter) const
     return painter->worldTransform().m11() / guiScaling;
 }
 
+std::vector<NotationInteraction::ShadowNoteParams> NotationInteraction::previewNotes() const
+{
+    std::vector<ShadowNoteParams> result;
+
+    const InputState& is = score()->inputState();
+    if (!is.isValid()) {
+        return result;
+    }
+
+    Segment* segment = is.segment();
+    const staff_idx_t staffIdx = is.staffIdx();
+    const Staff* staff = score()->staff(staffIdx);
+    const System* system = segment->system();
+    const SysStaff* sysStaff = system ? system->staff(staffIdx) : nullptr;
+    const Measure* measure = segment->measure();
+
+    if (!staff || !sysStaff || !measure) {
+        return result;
+    }
+
+    const Fraction tick = is.tick();
+    const PointF measurePos = measure->canvasPos();
+    const double lineDist = staff->staffType(tick)->lineDistance().val()
+                            * (staff->isTabStaff(tick) ? 1 : .5)
+                            * staff->staffMag(tick)
+                            * score()->style().spatium();
+
+    NoteValList nvals;
+    if (is.rest()) {
+        nvals.push_back(NoteVal());
+    } else {
+        nvals = is.notes();
+    }
+
+    ShadowNoteParams params;
+    params.duration = is.rest() ? is.duration() : TDuration();
+    params.position.segment = segment;
+    params.position.staffIdx = staffIdx;
+
+    for (const NoteVal& nval : nvals) {
+        const int line = mu::engraving::noteValToLine(nval, staff, tick);
+        const double y = sysStaff->y() + line * lineDist;
+
+        params.accidentalType = accidentalType(is, nval, line);
+        params.position.line = line;
+        params.position.pos = PointF(segment->x(), y) + measurePos;
+
+        result.push_back(params);
+    }
+
+    std::sort(result.begin(), result.end(), [](const ShadowNoteParams& p1, const ShadowNoteParams& p2) {
+        return p1.position.line < p2.position.line;
+    });
+
+    return result;
+}
+
+bool NotationInteraction::shouldDrawInputPreview() const
+{
+    return m_noteInput->isNoteInputMode() && m_noteInput->usingNoteInputMethod(NoteInputMethod::BY_DURATION);
+}
+
+void NotationInteraction::drawInputPreview(Painter* painter)
+{
+    std::vector<ShadowNoteParams> paramsList = previewNotes();
+    if (paramsList.empty()) {
+        return;
+    }
+
+    std::vector<ShadowNote*> previewList;
+    previewList.reserve(paramsList.size());
+
+    const InputState& is = score()->inputState();
+
+    for (ShadowNoteParams& params : paramsList) {
+        ShadowNote* preview = new ShadowNote(score());
+        showShadowNote(*preview, params);
+        previewList.push_back(preview);
+    }
+
+    const bool isUp = !is.rest() && previewList.front()->computeUp();
+    bool isLeft = isUp;
+    int prevLine = INT_MAX;
+
+    auto correctNotePositionIfNeed = [&](ShadowNote* note) {
+        if (paramsList.size() == 1) {
+            return;
+        }
+
+        const bool conflict = std::abs(prevLine - note->lineIndex()) < 2;
+        prevLine = note->lineIndex();
+
+        if (conflict || (isUp != isLeft)) {
+            isLeft = !isLeft;
+        }
+
+        if (isUp == isLeft) {
+            return;
+        }
+
+        const RectF noteheadBbox = note->symBbox(note->noteheadSymbol());
+
+        if (isLeft) {
+            note->move(PointF(-noteheadBbox.width(), 0.));
+        } else {
+            note->move(PointF(noteheadBbox.width(), 0.));
+        }
+    };
+
+    if (isUp) {
+        for (auto it = previewList.rbegin(); it != previewList.rend(); ++it) {
+            correctNotePositionIfNeed(*it);
+            score()->renderer()->drawItem(*it, painter);
+        }
+    } else {
+        for (auto it = previewList.begin(); it != previewList.end(); ++it) {
+            correctNotePositionIfNeed(*it);
+            score()->renderer()->drawItem(*it, painter);
+        }
+    }
+
+    DeleteAll(previewList);
+}
+
 void NotationInteraction::drawAnchorLines(Painter* painter)
 {
     if (m_anchorLines.empty()) {
         return;
     }
 
-    const auto dropAnchorColor = configuration()->anchorColor();
+    const auto dropAnchorColor = score()->configuration()->formattingColor();
     Pen pen(dropAnchorColor, 2.0 / currentScaling(painter), PenStyle::DotLine);
 
     for (const LineF& anchor : m_anchorLines) {
@@ -2594,7 +3253,7 @@ void NotationInteraction::drawSelectionRange(muse::draw::Painter* painter)
 
     painter->setBrush(BrushStyle::NoBrush);
 
-    QColor selectionColor = configuration()->selectionColor();
+    Color selectionColor = configuration()->selectionColor();
     double penWidth = 3.0 / currentScaling(painter);
     double minPenWidth = 0.20 * m_selection->range()->measureRange().startMeasure->spatium();
     penWidth = std::max(penWidth, minPenWidth);
@@ -2610,7 +3269,7 @@ void NotationInteraction::drawSelectionRange(muse::draw::Painter* painter)
         PainterPath path;
         path.addRoundedRect(rect, 4, 4);
 
-        QColor fillColor = selectionColor;
+        Color fillColor = selectionColor;
         fillColor.setAlpha(10);
         painter->fillPath(path, fillColor);
         painter->drawPath(path);
@@ -2624,6 +3283,11 @@ void NotationInteraction::drawGripPoints(muse::draw::Painter* painter)
     }
 
     mu::engraving::EngravingItem* editedElement = m_editData.element;
+
+    if (editedElement && editedElement->isDynamic()) {
+        toDynamic(editedElement)->findAdjacentHairpins();
+    }
+
     int gripsCount = editedElement ? editedElement->gripsCount() : 0;
 
     if (gripsCount == 0) {
@@ -2647,6 +3311,51 @@ void NotationInteraction::drawGripPoints(muse::draw::Painter* painter)
 
     editedElement->updateGrips(m_editData);
     editedElement->drawEditMode(painter, m_editData, scaling);
+}
+
+void NotationInteraction::drawLasso(muse::draw::Painter* painter)
+{
+    if (!m_lasso || m_lasso->isEmpty()) {
+        return;
+    }
+
+    score()->renderer()->drawItem(m_lasso, painter);
+}
+
+void NotationInteraction::drawDrop(muse::draw::Painter* painter)
+{
+    if (m_dropData.elementDropData.has_value()) {
+        const ElementDropData& edd = m_dropData.elementDropData.value();
+
+        if (edd.dropRect.isValid()) {
+            painter->fillRect(edd.dropRect, configuration()->dropRectColor());
+        }
+    }
+
+    if (m_dropData.rangeDropData.has_value()) {
+        const RangeDropData& rdd = m_dropData.rangeDropData.value();
+
+        Color selectionColor = configuration()->selectionColor();
+        double penWidth = 3.0 / currentScaling(painter);
+        double minPenWidth = 0.20 * score()->style().spatium();
+        penWidth = std::max(penWidth, minPenWidth);
+
+        Pen pen;
+        pen.setColor(selectionColor);
+        pen.setWidthF(penWidth);
+        pen.setStyle(PenStyle::SolidLine);
+        painter->setPen(pen);
+
+        for (const RectF& rect: rdd.dropRects) {
+            PainterPath path;
+            path.addRoundedRect(rect, 4, 4);
+
+            Color fillColor = selectionColor;
+            fillColor.setAlpha(10);
+            painter->fillPath(path, fillColor);
+            painter->drawPath(path);
+        }
+    }
 }
 
 ChordRest* activeCr(mu::engraving::Score* score)
@@ -2712,13 +3421,16 @@ void NotationInteraction::addToSelection(MoveDirection d, MoveSelectionType type
     }
     ChordRest* el = 0;
     switch (type) {
-    case MoveSelectionType::Chord:
+    case MoveSelectionType::Chord: {
+        ChordRestNavigateOptions options;
+        options.skipGrace = true;
         if (d == MoveDirection::Right) {
-            el = mu::engraving::nextChordRest(cr, true);
+            el = mu::engraving::nextChordRest(cr, options);
         } else {
-            el = mu::engraving::prevChordRest(cr, true);
+            el = mu::engraving::prevChordRest(cr, options);
         }
         break;
+    }
     case MoveSelectionType::Measure:
         if (d == MoveDirection::Right) {
             el = score()->nextMeasure(cr, true, true);
@@ -2753,11 +3465,22 @@ bool NotationInteraction::moveSelectionAvailable(MoveSelectionType type) const
         return !isElementEditStarted();
     }
 
+    EngravingItem* el = score()->selection().element();
+    const std::set<ElementType> allowedTextEditTypes = {
+        ElementType::STAFF_TEXT,
+        ElementType::SYSTEM_TEXT,
+        ElementType::EXPRESSION,
+        ElementType::REHEARSAL_MARK
+    };
+    if (isTextEditingStarted() && el && allowedTextEditTypes.find(el->type()) != allowedTextEditTypes.end()) {
+        return true;
+    }
+
     if (isGripEditStarted()) {
         return true;
     }
 
-    return !isElementEditStarted();
+    return m_editData.element && m_editData.element->isTextBase() ? !isTextEditingStarted() : !isElementEditStarted();
 }
 
 void NotationInteraction::moveSelection(MoveDirection d, MoveSelectionType type)
@@ -2869,7 +3592,7 @@ static ChordRest* asChordRest(EngravingItem* e)
 
 void NotationInteraction::moveChordRestToStaff(MoveDirection dir)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Move chord/rest to staff"));
 
     for (EngravingItem* e: score()->selection().uniqueElements()) {
         ChordRest* cr = asChordRest(e);
@@ -2899,7 +3622,7 @@ void NotationInteraction::swapChordRest(MoveDirection direction)
     } else {
         crl.append(cr);
     }
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Move chord/rest"));
     for (ChordRest* cr1 : crl) {
         if (cr1->type() == ElementType::REST) {
             Measure* m = toRest(cr1)->measure();
@@ -2949,7 +3672,7 @@ void NotationInteraction::toggleSnapToPrevious()
     }
 
     // Do toggle...
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Toggle snap to previous"));
     for (Hairpin* h : hairpins) {
         if (h->snapToItemBefore() == newSnapValue) {
             continue;
@@ -2990,7 +3713,7 @@ void NotationInteraction::toggleSnapToNext()
     }
 
     // Do toggle...
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Toggle snap to next"));
     for (Hairpin* h : hairpins) {
         if (h->snapToItemAfter() == newSnapValue) {
             continue;
@@ -3013,11 +3736,35 @@ void NotationInteraction::moveElementSelection(MoveDirection d)
         el = score()->selection().elements().back();
     }
 
-    bool isLeftDirection = MoveDirection::Left == d;
+    if (isTextEditingStarted() && el && el->isTextBase()) {
+        navigateToNearText(d);
+        return;
+    }
+
+    const bool isLeftDirection = MoveDirection::Left == d;
+    const bool isHorizontalLayout = score()->isLayoutMode(LayoutMode::LINE) || score()->isLayoutMode(LayoutMode::HORIZONTAL_FIXED);
+
+    // VBoxes are not included in horizontal layouts - skip over them (and their contents) when moving selections...
+    const auto nextNonVBox = [this, isLeftDirection](EngravingItem* currElem) -> EngravingItem* {
+        while (const EngravingItem* vBox = currElem->findAncestor(ElementType::VBOX)) {
+            currElem = isLeftDirection ? toVBox(vBox)->prevMM() : toVBox(vBox)->nextMM();
+            if (currElem && currElem->isMeasure()) {
+                const ChordRest* cr = score()->selection().currentCR();
+                const staff_idx_t si = cr ? cr->staffIdx() : 0;
+                Measure* mb = toMeasure(currElem);
+                currElem = isLeftDirection ? mb->prevElementStaff(si, currElem) : mb->nextElementStaff(si, currElem);
+            }
+        }
+        return currElem;
+    };
+
     EngravingItem* toEl = nullptr;
 
     if (el) {
         toEl = isLeftDirection ? score()->prevElement() : score()->nextElement();
+        if (isHorizontalLayout) {
+            toEl = nextNonVBox(toEl);
+        }
     } else {
         // Nothing currently selected (e.g. because user pressed Esc or clicked on
         // an empty region of the page). Try to restore previous selection.
@@ -3028,6 +3775,9 @@ void NotationInteraction::moveElementSelection(MoveDirection d)
             toEl = el; // Restoring previous selection.
         } else {
             toEl = isLeftDirection ? score()->lastElement() : score()->firstElement();
+            if (isHorizontalLayout) {
+                toEl = nextNonVBox(toEl);
+            }
         }
     }
 
@@ -3093,7 +3843,7 @@ void NotationInteraction::movePitch(MoveDirection d, PitchMode mode)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Change pitch"));
 
     if (score()->selection().element() && score()->selection().element()->isRest()) {
         score()->cmdMoveRest(toRest(score()->selection().element()), toDirection(d));
@@ -3110,7 +3860,7 @@ void NotationInteraction::moveLyrics(MoveDirection d)
     IF_ASSERT_FAILED(el && el->isLyrics()) {
         return;
     }
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Move lyrics"));
     score()->cmdMoveLyrics(toLyrics(el), toDirection(d));
     apply();
 }
@@ -3122,7 +3872,7 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Nudge element"));
 
     qreal step = quickly ? mu::engraving::MScore::nudgeStep10 : mu::engraving::MScore::nudgeStep;
     step = step * el->spatium();
@@ -3150,6 +3900,49 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
     apply();
 
     notifyAboutDragChanged();
+}
+
+void NotationInteraction::nudgeAnchors(MoveDirection d)
+{
+    IF_ASSERT_FAILED(m_editData.element) {
+        return;
+    }
+
+    startEdit(TranslatableString("undoableAction", "Nudge"));
+    qreal vRaster = mu::engraving::MScore::vRaster();
+    qreal hRaster = mu::engraving::MScore::hRaster();
+
+    switch (d) {
+    case MoveDirection::Left:
+        m_editData.delta = QPointF(-nudgeDistance(m_editData, hRaster), 0);
+        break;
+    case MoveDirection::Right:
+        m_editData.delta = QPointF(nudgeDistance(m_editData, hRaster), 0);
+        break;
+    case MoveDirection::Up:
+        m_editData.delta = QPointF(0, -nudgeDistance(m_editData, vRaster));
+        break;
+    case MoveDirection::Down:
+        m_editData.delta = QPointF(0, nudgeDistance(m_editData, vRaster));
+        break;
+    default:
+        rollback();
+        return;
+    }
+
+    m_editData.evtDelta = m_editData.moveDelta = m_editData.delta;
+    m_editData.hRaster = hRaster;
+    m_editData.vRaster = vRaster;
+
+    if (m_editData.curGrip != mu::engraving::Grip::NO_GRIP && int(m_editData.curGrip) < m_editData.grips) {
+        m_editData.pos = m_editData.grip[int(m_editData.curGrip)].center() + m_editData.delta;
+    }
+
+    m_editData.element->startEditDrag(m_editData);
+    m_editData.element->editDrag(m_editData);
+    m_editData.element->endEditDrag(m_editData);
+
+    apply();
 }
 
 bool NotationInteraction::isTextSelected() const
@@ -3221,7 +4014,7 @@ void NotationInteraction::editText(QInputMethodEvent* event)
     }
 
     if (!event->commitString().isEmpty()) {
-        score()->startCmd();
+        score()->startCmd(TranslatableString("undoableAction", "Edit text"));
         text->insertText(m_editData, event->commitString());
         score()->endCmd();
         preeditString.clear();
@@ -3328,13 +4121,14 @@ void NotationInteraction::endEditText()
         return;
     }
 
-    doEndEditElement(false /*clearEditData*/);
+    EngravingItem* editedElement = m_editData.element;
+    doEndEditElement();
 
-    if (m_editData.element) {
-        notifyAboutTextEditingEnded(toTextBase(m_editData.element));
+    if (editedElement) {
+        notifyAboutTextEditingEnded(toTextBase(editedElement));
+        // When textual edit is finished, non-textual edit can still happen, so we need to start the non-textual edit mode here
+        startEditElement(editedElement, false);
     }
-
-    m_editData.clear();
 
     notifyAboutTextEditingChanged();
     notifyAboutSelectionChangedIfNeed();
@@ -3386,6 +4180,11 @@ void NotationInteraction::undo()
 void NotationInteraction::redo()
 {
     m_undoStack->redo(&m_editData);
+}
+
+void NotationInteraction::undoRedoToIndex(size_t idx)
+{
+    m_undoStack->undoRedoToIndex(idx, &m_editData);
 }
 
 muse::async::Notification NotationInteraction::textEditingStarted() const
@@ -3449,6 +4248,7 @@ void NotationInteraction::startEditGrip(EngravingItem* element, mu::engraving::G
 
     m_editData.element = element;
     m_editData.curGrip = grip;
+    m_editData.editTextualProperties = false;
 
     updateGripAnchorLines();
     m_editData.element->startEdit(m_editData);
@@ -3624,7 +4424,8 @@ void NotationInteraction::editElement(QKeyEvent* event)
         }
     }
 
-    startEdit();
+    //: Means: an editing operation triggered by a keystroke
+    startEdit(TranslatableString("undoableAction", "Keystroke edit"));
 
     if (needStartEditGrip(event)) {
         m_editData.curGrip = m_editData.element->defaultGrip();
@@ -3648,7 +4449,11 @@ void NotationInteraction::editElement(QKeyEvent* event)
 
         if (!isShiftRelease) {
             if (isGripEditStarted()) {
-                updateGripAnchorLines();
+                if (m_editData.element->isDynamic() && !m_editData.isStartEndGrip()) {
+                    updateDragAnchorLines();
+                } else {
+                    updateGripAnchorLines();
+                }
             } else if (isElementEditStarted() && !m_editData.editTextualProperties) {
                 updateDragAnchorLines();
             }
@@ -3684,15 +4489,12 @@ void NotationInteraction::endEditElement()
     notifyAboutNotationChanged();
 }
 
-void NotationInteraction::doEndEditElement(bool clearEditData)
+void NotationInteraction::doEndEditElement()
 {
     if (m_editData.element) {
         m_editData.element->endEdit(m_editData);
     }
-
-    if (clearEditData) {
-        m_editData.clear();
-    }
+    m_editData.clear();
 }
 
 void NotationInteraction::onElementDestroyed(EngravingItem* element)
@@ -3724,7 +4526,7 @@ void NotationInteraction::splitSelectedMeasure()
 
     ChordRest* chordRest = dynamic_cast<ChordRest*>(selectedElement);
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Split measure"));
     score()->cmdSplitMeasure(chordRest);
     apply();
 
@@ -3739,7 +4541,7 @@ void NotationInteraction::joinSelectedMeasures()
 
     INotationSelectionRange::MeasureRange measureRange = m_selection->range()->measureRange();
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Join measures"));
     score()->cmdJoinMeasure(measureRange.startMeasure, measureRange.endMeasure);
     apply();
 
@@ -3877,6 +4679,7 @@ void NotationInteraction::addBoxes(BoxType boxType, int count, int beforeBoxInde
         case BoxType::Horizontal: return mu::engraving::ElementType::HBOX;
         case BoxType::Vertical: return mu::engraving::ElementType::VBOX;
         case BoxType::Text: return mu::engraving::ElementType::TBOX;
+        case BoxType::Fret: return mu::engraving::ElementType::FBOX;
         case BoxType::Measure: return mu::engraving::ElementType::MEASURE;
         case BoxType::Unknown: return mu::engraving::ElementType::INVALID;
         }
@@ -3889,9 +4692,22 @@ void NotationInteraction::addBoxes(BoxType boxType, int count, int beforeBoxInde
         return;
     }
 
-    mu::engraving::MeasureBase* beforeBox = beforeBoxIndex >= 0 ? score()->measure(beforeBoxIndex) : nullptr;
+    auto boxTypeDescription = [count](BoxType boxType) -> TranslatableString {
+        switch (boxType) {
+        case BoxType::Horizontal: return TranslatableString("undoableAction", "Add horizontal frame");
+        case BoxType::Vertical: return TranslatableString("undoableAction", "Add vertical frame");
+        case BoxType::Text: return TranslatableString("undoableAction", "Add text frame");
+        case BoxType::Fret: return TranslatableString("undoableAction", "Add fretboard diagram legend");
+        case BoxType::Measure: return TranslatableString("undoableAction", "Add %n measure(s)", nullptr, count);
+        case BoxType::Unknown: break;
+        }
 
-    startEdit();
+        return {};
+    };
+
+    startEdit(boxTypeDescription(boxType));
+
+    mu::engraving::MeasureBase* beforeBox = beforeBoxIndex >= 0 ? score()->measure(beforeBoxIndex) : nullptr;
 
     mu::engraving::Score::InsertMeasureOptions options;
     options.createEmptyMeasures = false;
@@ -3947,7 +4763,7 @@ Ret NotationInteraction::repeatSelection()
     if (score()->noteEntryMode() && selection.isSingle()) {
         EngravingItem* el = selection.element();
         if (el && el->type() == ElementType::NOTE && !score()->inputState().endOfScore()) {
-            startEdit();
+            startEdit(TranslatableString("undoableAction", "Repeat selection"));
             Chord* c = toNote(el)->chord();
             for (Note* note : c->notes()) {
                 mu::engraving::NoteVal nval = note->noteVal();
@@ -3981,7 +4797,7 @@ Ret NotationInteraction::repeatSelection()
     if (endSegment && endSegment->element(dStaff * mu::engraving::VOICES)) {
         EngravingItem* e = endSegment->element(dStaff * mu::engraving::VOICES);
         if (e) {
-            startEdit();
+            startEdit(TranslatableString("undoableAction", "Repeat selection"));
             ChordRest* cr = toChordRest(e);
             score()->pasteStaff(xml, cr->segment(), cr->staffIdx());
             apply();
@@ -4001,7 +4817,9 @@ void NotationInteraction::copyLyrics()
 
 void NotationInteraction::pasteSelection(const Fraction& scale)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Paste"));
+
+    EngravingItem* pastedElement = nullptr;
 
     if (isTextEditingStarted()) {
         const QMimeData* mimeData = QApplication::clipboard()->mimeData();
@@ -4033,13 +4851,21 @@ void NotationInteraction::pasteSelection(const Fraction& scale)
     } else {
         const QMimeData* mimeData = QApplication::clipboard()->mimeData();
         QMimeDataAdapter ma(mimeData);
-        score()->cmdPaste(&ma, nullptr, scale);
+
+        std::vector<EngravingItem*> pastedElements = score()->cmdPaste(&ma, nullptr, scale);
+        if (!pastedElements.empty()) {
+            pastedElement = pastedElements.back();
+        }
     }
 
     apply();
 
-    if (EngravingItem* element = selection()->element()) {
-        selectAndStartEditIfNeeded(element);
+    if (pastedElement == nullptr) {
+        pastedElement = selection()->element();
+    }
+
+    if (pastedElement) {
+        selectAndStartEditIfNeeded(pastedElement);
     }
 
     MScoreErrorsController(iocContext()).checkAndShowMScoreError();
@@ -4098,7 +4924,7 @@ void NotationInteraction::deleteSelection()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Delete"));
 
     if (isTextEditingStarted()) {
         mu::engraving::TextBase* textBase = toTextBase(m_editData.element);
@@ -4124,23 +4950,48 @@ void NotationInteraction::flipSelection()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Flip direction"));
     score()->cmdFlip();
+    apply();
+}
+
+void NotationInteraction::flipSelectionHorizontally()
+{
+    if (selection()->isNone()) {
+        return;
+    }
+
+    startEdit(TranslatableString("undoableAction", "Flip horizontally"));
+    score()->cmdFlipHorizontally();
     apply();
 }
 
 void NotationInteraction::addTieToSelection()
 {
-    startEdit();
-    score()->cmdToggleTie();
-    apply();
+    // Calls `startEdit` internally
+    Tie* newTie = score()->cmdToggleTie();
+
+    notifyAboutNotationChanged();
+
+    if (newTie && newTie->tieJumpPoints() && newTie->tieJumpPoints()->size() > 1) {
+        selectAndStartEditIfNeeded(newTie);
+    }
+}
+
+void NotationInteraction::addLaissezVibToSelection()
+{
+    // Calls `startEdit` internally
+    score()->cmdToggleLaissezVib();
+
+    notifyAboutNotationChanged();
 }
 
 void NotationInteraction::addTiedNoteToChord()
 {
-    startEdit();
+    // Calls `startEdit` internally
     score()->cmdAddTie(true);
-    apply();
+
+    notifyAboutNotationChanged();
 }
 
 void NotationInteraction::addSlurToSelection()
@@ -4149,9 +5000,8 @@ void NotationInteraction::addSlurToSelection()
         return;
     }
 
-    startEdit();
+    // Calls `startEdit` internally
     doAddSlur();
-    apply();
 }
 
 void NotationInteraction::addOttavaToSelection(OttavaType type)
@@ -4160,9 +5010,41 @@ void NotationInteraction::addOttavaToSelection(OttavaType type)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add ottava"));
     score()->cmdAddOttava(type);
     apply();
+}
+
+void NotationInteraction::addHairpinOnGripDrag(Dynamic* dynamic, bool isLeftGrip)
+{
+    startEdit(TranslatableString("undoableAction", "Add hairpin"));
+
+    const PointF pos = m_dragData.ed.pos;
+    Hairpin* hairpin = score()->addHairpinToDynamicOnGripDrag(dynamic, isLeftGrip, pos);
+
+    if (!hairpin) {
+        rollback();
+        return;
+    }
+
+    apply();
+
+    // Reset grip offset to zero after drawing the hairpin
+    dynamic->resetRightDragOffset();
+
+    IF_ASSERT_FAILED(!hairpin->segmentsEmpty()) {
+        return;
+    }
+
+    if (isLeftGrip) {
+        LineSegment* segment = hairpin->frontSegment();
+        select({ segment });
+        startEditGrip(segment, Grip::START);
+    } else {
+        LineSegment* segment = hairpin->backSegment();
+        select({ segment });
+        startEditGrip(segment, Grip::END);
+    }
 }
 
 void NotationInteraction::addHairpinsToSelection(HairpinType type)
@@ -4171,7 +5053,7 @@ void NotationInteraction::addHairpinsToSelection(HairpinType type)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add hairpin"));
     std::vector<mu::engraving::Hairpin*> hairpins = score()->addHairpins(type);
     apply();
 
@@ -4182,19 +5064,6 @@ void NotationInteraction::addHairpinsToSelection(HairpinType type)
     }
 }
 
-void NotationInteraction::addAccidentalToSelection(AccidentalType type)
-{
-    if (selection()->isNone()) {
-        return;
-    }
-
-    mu::engraving::EditData editData(&m_scoreCallbacks);
-
-    startEdit();
-    score()->toggleAccidental(type, editData);
-    apply();
-}
-
 void NotationInteraction::putRestToSelection()
 {
     mu::engraving::InputState& is = score()->inputState();
@@ -4203,11 +5072,23 @@ void NotationInteraction::putRestToSelection()
     }
 
     if (!m_noteInput->isNoteInputMode()) {
-        m_noteInput->startNoteInput();
+        m_noteInput->startNoteInput(configuration()->defaultNoteInputMethod());
     }
 
-    if (is.usingNoteEntryMethod(NoteEntryMethod::RHYTHM)) {
+    if (is.usingNoteEntryMethod(NoteEntryMethod::BY_DURATION) || is.usingNoteEntryMethod(NoteEntryMethod::RHYTHM)) {
         m_noteInput->padNote(Pad::REST);
+    } else if (is.usingNoteEntryMethod(NoteEntryMethod::REPITCH)) {
+        ChordRest* cr = is.cr();
+        if (cr) {
+            TDuration duration = cr->durationType();
+            if (duration.isValid() && !duration.isZero()) {
+                if (duration.isMeasure()) {
+                    is.moveToNextInputPos();
+                } else {
+                    putRest(duration);
+                }
+            }
+        }
     } else {
         putRest(is.duration());
     }
@@ -4219,9 +5100,10 @@ void NotationInteraction::putRest(Duration duration)
         return;
     }
 
-    startEdit();
+    // Calls `startEdit` internally
     score()->cmdEnterRest(duration);
-    apply();
+
+    notifyAboutNotationChanged();
 }
 
 void NotationInteraction::addBracketsToSelection(BracketsType type)
@@ -4230,24 +5112,57 @@ void NotationInteraction::addBracketsToSelection(BracketsType type)
         return;
     }
 
-    startEdit();
-
     switch (type) {
     case BracketsType::Brackets:
+        startEdit(TranslatableString("undoableAction", "Add brackets"));
         score()->cmdAddBracket();
+        apply();
         break;
     case BracketsType::Braces:
+        startEdit(TranslatableString("undoableAction", "Add braces"));
         score()->cmdAddBraces();
+        apply();
         break;
     case BracketsType::Parentheses:
+        startEdit(TranslatableString("undoableAction", "Add parentheses"));
         score()->cmdAddParentheses();
+        apply();
         break;
+    }
+}
+
+void NotationInteraction::toggleAccidentalForSelection(AccidentalType type)
+{
+    if (selection()->isNone()) {
+        return;
+    }
+
+    bool accidentalAlreadyAdded = false;
+    for (const EngravingItem* item : score()->selection().elements()) {
+        if (!item->isNote()) {
+            continue;
+        }
+
+        if (toNote(item)->accidentalType() != type) {
+            accidentalAlreadyAdded = false;
+            break;
+        }
+
+        accidentalAlreadyAdded = true;
+    }
+
+    startEdit(TranslatableString("undoableAction", "Toggle accidental"));
+
+    if (accidentalAlreadyAdded) {
+        score()->changeAccidental(AccidentalType::NONE);
+    } else {
+        score()->changeAccidental(type);
     }
 
     apply();
 }
 
-void NotationInteraction::changeSelectedNotesArticulation(SymbolId articulationSymbolId)
+void NotationInteraction::toggleArticulationForSelection(SymbolId articulationSymbolId)
 {
     if (selection()->isNone()) {
         return;
@@ -4279,10 +5194,25 @@ void NotationInteraction::changeSelectedNotesArticulation(SymbolId articulationS
         }
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Toggle articulation"));
     for (Chord* chord: chords) {
         chord->updateArticulations({ articulationSymbolId }, updateMode);
     }
+    apply();
+}
+
+void NotationInteraction::toggleDotsForSelection(Pad dots)
+{
+    IF_ASSERT_FAILED(dots >= Pad::DOT && dots <= Pad::DOT4) {
+        return;
+    }
+
+    if (selection()->isNone()) {
+        return;
+    }
+
+    startEdit(TranslatableString("undoableAction", "Toggle augmentation dots"));
+    score()->padToggle(dots, true /*toggleForSelectionOnly*/);
     apply();
 }
 
@@ -4315,7 +5245,7 @@ void NotationInteraction::addGraceNotesToSelectedNotes(GraceNoteType type)
         break;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add grace note"));
     score()->cmdAddGrace(type, mu::engraving::Constants::DIVISION / denominator);
     apply();
 }
@@ -4342,7 +5272,7 @@ void NotationInteraction::addTupletToSelectedChordRests(const TupletOptions& opt
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add tuplet"));
 
     for (ChordRest* chordRest : score()->getSelectedChordRests()) {
         if (!chordRest->isGrace() && !(chordRest->isChord() && toChord(chordRest)->isTrillCueNote())) {
@@ -4363,7 +5293,7 @@ void NotationInteraction::addBeamToSelectedChordRests(BeamMode mode)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Set beam type"));
     score()->cmdSetBeamMode(mode);
     apply();
 }
@@ -4374,9 +5304,112 @@ void NotationInteraction::increaseDecreaseDuration(int steps, bool stepByDots)
         return;
     }
 
-    startEdit();
+    startEdit(steps >= 0
+              ? TranslatableString("undoableAction", "Increase duration")
+              : TranslatableString("undoableAction", "Decrease duration"));
     score()->cmdIncDecDuration(steps, stepByDots);
     apply();
+}
+
+void NotationInteraction::autoFlipHairpinsType(Dynamic* selDyn)
+{
+    if (!selDyn) {
+        return;
+    }
+
+    if (selDyn->dynamicType() == DynamicType::OTHER || selDyn->dynamicType() >= DynamicType::FP) {
+        return;
+    }
+
+    selDyn->findAdjacentHairpins();
+
+    startEdit(TranslatableString("undoableAction", "Change hairpin type"));
+
+    if (Hairpin* leftHp = selDyn->leftHairpin()) {
+        const Dynamic* startDyn = leftHp->dynamicSnappedBefore();
+        if (startDyn
+            && !(startDyn->dynamicType() == DynamicType::OTHER || startDyn->dynamicType() >= DynamicType::FP)
+            && !leftHp->isLineType()) {
+            if (int(startDyn->dynamicType()) > int(selDyn->dynamicType())) {
+                leftHp->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::DECRESC_HAIRPIN));
+            } else {
+                leftHp->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::CRESC_HAIRPIN));
+            }
+        }
+    }
+
+    if (Hairpin* rightHp = selDyn->rightHairpin()) {
+        const Dynamic* endDyn = rightHp->dynamicSnappedAfter();
+        if (endDyn
+            && !(endDyn->dynamicType() == DynamicType::OTHER || endDyn->dynamicType() >= DynamicType::FP)
+            && !rightHp->isLineType()) {
+            if (int(endDyn->dynamicType()) > int(selDyn->dynamicType())) {
+                rightHp->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::CRESC_HAIRPIN));
+            } else {
+                rightHp->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::DECRESC_HAIRPIN));
+            }
+        }
+    }
+
+    apply();
+}
+
+void NotationInteraction::toggleDynamicPopup()
+{
+    EngravingItem* el = selection()->element();
+    if (!el) {
+        return;
+    }
+
+    if (el->isHairpinSegment()) {
+        HairpinSegment* hairpinSeg = toHairpinSegment(el);
+        Hairpin* hairpin = hairpinSeg->hairpin();
+
+        auto addDynamic = [this](Fraction tick, track_idx_t track, VoiceAssignment voiceAssignment) {
+            startEdit(TranslatableString("undoableAction", "Add dynamic"));
+            Measure* measure = score()->tick2measure(tick);
+            Segment* segment = measure->undoGetChordRestOrTimeTickSegment(tick);
+            Dynamic* dynamic = Factory::createDynamic(segment);
+            dynamic->setParent(segment);
+            dynamic->setTrack(track);
+            dynamic->setVoiceAssignment(voiceAssignment);
+            score()->undoAddElement(dynamic);
+            apply();
+            startEditText(dynamic);
+        };
+
+        switch (m_editData.curGrip) {
+        case Grip::START:
+            if (EngravingItem* startDynOrExp = hairpinSeg->findElementToSnapBefore()) {
+                // If there is already a dynamic, select it instead of opening an empty popup
+                select({ startDynOrExp });
+                if (startDynOrExp->isDynamic()) {
+                    startEditElement(startDynOrExp, false);
+                    autoFlipHairpinsType(toDynamic(startDynOrExp));
+                }
+            } else {
+                addDynamic(hairpin->tick(), hairpin->track(), hairpin->voiceAssignment());
+            }
+            break;
+        case Grip::END:
+            if (EngravingItem* endDynOrExp = hairpinSeg->findElementToSnapAfter()) {
+                // If there is already a dynamic, select it instead of opening an empty popup
+                select({ endDynOrExp });
+                if (endDynOrExp->isDynamic()) {
+                    startEditElement(endDynOrExp, false);
+                    autoFlipHairpinsType(toDynamic(endDynOrExp));
+                }
+            } else {
+                addDynamic(hairpin->tick2(), hairpin->track2(), hairpin->voiceAssignment());
+            }
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
+    addTextToItem(TextStyleType::DYNAMICS, el);
 }
 
 bool NotationInteraction::toggleLayoutBreakAvailable() const
@@ -4386,24 +5419,66 @@ bool NotationInteraction::toggleLayoutBreakAvailable() const
 
 void NotationInteraction::toggleLayoutBreak(LayoutBreakType breakType)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Toggle layout break"));
     score()->cmdToggleLayoutBreak(breakType);
     apply();
 }
 
-void NotationInteraction::setBreaksSpawnInterval(BreaksSpawnIntervalType intervalType, int interval)
+void NotationInteraction::moveMeasureToPrevSystem()
 {
-    interval = intervalType == BreaksSpawnIntervalType::MeasuresInterval ? interval : 0;
-    bool afterEachSystem = intervalType == BreaksSpawnIntervalType::AfterEachSystem;
+    startEdit(TranslatableString("undoableAction", "Move measure to previous system"));
+    score()->cmdMoveMeasureToPrevSystem();
+    apply();
+}
 
-    startEdit();
-    score()->addRemoveBreaks(interval, afterEachSystem);
+void NotationInteraction::moveMeasureToNextSystem()
+{
+    startEdit(TranslatableString("undoableAction", "Move measure to next system"));
+    score()->cmdMoveMeasureToNextSystem();
+    apply();
+}
+
+void NotationInteraction::toggleSystemLock()
+{
+    startEdit(TranslatableString("undoableAction", "Lock/unlock selected system(s)"));
+    score()->cmdToggleSystemLock();
+    apply();
+}
+
+void NotationInteraction::toggleScoreLock()
+{
+    startEdit(TranslatableString("undoableAction", "Lock/unlock all systems"));
+    score()->cmdToggleScoreLock();
+    apply();
+}
+
+void NotationInteraction::makeIntoSystem()
+{
+    startEdit(TranslatableString("undoableAction", "Create system from selection"));
+    score()->cmdMakeIntoSystem();
+    apply();
+}
+
+void NotationInteraction::applySystemLock()
+{
+    startEdit(TranslatableString("undoableAction", "Apply system lock to selection"));
+    score()->cmdApplyLockToSelection();
+    apply();
+}
+
+void NotationInteraction::addRemoveSystemLocks(AddRemoveSystemLockType intervalType, int interval)
+{
+    interval = intervalType == AddRemoveSystemLockType::MeasuresInterval ? interval : 0;
+    bool afterEachSystem = intervalType == AddRemoveSystemLockType::AfterEachSystem;
+
+    startEdit(TranslatableString("undoableAction", "Measures per system"));
+    score()->addRemoveSystemLocks(interval, afterEachSystem);
     apply();
 }
 
 bool NotationInteraction::transpose(const TransposeOptions& options)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Transposition"));
 
     bool ok = score()->transpose(options.mode, options.direction, options.key, options.interval,
                                  options.needTransposeKeys, options.needTransposeChordNames, options.needTransposeDoubleSharpsFlats);
@@ -4427,7 +5502,7 @@ void NotationInteraction::swapVoices(voice_idx_t voiceIndex1, voice_idx_t voiceI
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Swap voices"));
     score()->cmdExchangeVoice(voiceIndex1, voiceIndex2);
     apply();
 }
@@ -4458,14 +5533,14 @@ void NotationInteraction::addIntervalToSelectedNotes(int interval)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add interval"));
     score()->addInterval(interval, notes);
     apply();
 }
 
 void NotationInteraction::addFret(int fretIndex)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Enter note at fret %1").arg(fretIndex));
     score()->cmdAddFret(fretIndex);
     apply();
 }
@@ -4480,7 +5555,7 @@ void NotationInteraction::changeSelectedElementsVoice(voice_idx_t voiceIndex)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Change voice"));
     score()->changeSelectedElementsVoice(voiceIndex);
     apply();
 }
@@ -4491,7 +5566,7 @@ void NotationInteraction::changeSelectedElementsVoiceAssignment(VoiceAssignment 
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Change voice assignment"));
     score()->changeSelectedElementsVoiceAssignment(voiceAssignment);
     apply();
 }
@@ -4502,7 +5577,7 @@ void NotationInteraction::addAnchoredLineToSelectedNotes()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add note-anchored line"));
     score()->addNoteLine();
     apply();
 }
@@ -4525,6 +5600,7 @@ Ret NotationInteraction::canAddTextToItem(TextStyleType type, const EngravingIte
     static const std::set<TextStyleType> needSelectNoteOrRestTypes {
         TextStyleType::SYSTEM,
         TextStyleType::STAFF,
+        TextStyleType::DYNAMICS,
         TextStyleType::EXPRESSION,
         TextStyleType::REHEARSAL_MARK,
         TextStyleType::INSTRUMENT_CHANGE,
@@ -4572,7 +5648,7 @@ void NotationInteraction::addText(TextStyleType type, EngravingItem* item)
         m_noteInput->endNoteInput();
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add text"));
     mu::engraving::TextBase* text = score()->addText(type, item);
 
     if (!text) {
@@ -4587,11 +5663,19 @@ void NotationInteraction::addText(TextStyleType type, EngravingItem* item)
         }
     }
 
+    if (text->hasVoiceAssignmentProperties()) {
+        text->setInitialTrackAndVoiceAssignment(item->track(), false);
+    }
+
     apply();
     showItem(text);
 
     if (!text->isInstrumentChange()) {
         startEditText(text);
+    }
+
+    if (text->isRehearsalMark() || text->isTempoText()) {
+        text->cursor()->selectWord();
     }
 }
 
@@ -4632,7 +5716,7 @@ void NotationInteraction::addImageToItem(const muse::io::path_t& imagePath, Engr
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add image"));
     score()->undoAddElement(image);
     apply();
 }
@@ -4651,7 +5735,7 @@ Ret NotationInteraction::canAddFiguredBass() const
 
 void NotationInteraction::addFiguredBass()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add figured bass"));
     mu::engraving::FiguredBass* figuredBass = score()->addFiguredBass();
 
     if (figuredBass) {
@@ -4665,7 +5749,9 @@ void NotationInteraction::addFiguredBass()
 
 void NotationInteraction::addStretch(qreal value)
 {
-    startEdit();
+    startEdit(value >= 0
+              ? TranslatableString("undoableAction", "Increase layout stretch")
+              : TranslatableString("undoableAction", "Decrease layout stretch"));
     score()->cmdAddStretch(value);
     apply();
 }
@@ -4688,7 +5774,7 @@ Measure* NotationInteraction::selectedMeasure() const
 
 void NotationInteraction::addTimeSignature(Measure* measure, staff_idx_t staffIndex, TimeSignature* timeSignature)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Add time signature"));
     score()->cmdAddTimeSig(measure, staffIndex, timeSignature, true);
     apply();
 }
@@ -4699,7 +5785,7 @@ void NotationInteraction::explodeSelectedStaff()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Explode"));
     score()->cmdExplode();
     apply();
 }
@@ -4710,7 +5796,7 @@ void NotationInteraction::implodeSelectedStaff()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Implode"));
     score()->cmdImplode();
     apply();
 }
@@ -4721,7 +5807,7 @@ void NotationInteraction::realizeSelectedChordSymbols(bool literal, Voicing voic
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Realize chord symbols"));
     score()->cmdRealizeChordSymbols(literal, voicing, durationType);
     apply();
 }
@@ -4758,10 +5844,16 @@ void NotationInteraction::removeSelectedMeasures()
         }
     }
 
+    IF_ASSERT_FAILED(firstMeasure && lastMeasure) {
+        return;
+    }
+
     doSelect({ firstMeasure }, SelectType::REPLACE);
     doSelect({ lastMeasure }, SelectType::RANGE);
 
-    startEdit();
+    int numDeletedMeasures = 1 + lastMeasure->measureIndex() - firstMeasure->measureIndex();
+
+    startEdit(TranslatableString("undoableAction", "Delete %n measure(s)", nullptr, numDeletedMeasures));
     score()->cmdTimeDelete();
     apply();
 }
@@ -4772,14 +5864,14 @@ void NotationInteraction::removeSelectedRange()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Delete range"));
     score()->cmdTimeDelete();
     apply();
 }
 
 void NotationInteraction::removeEmptyTrailingMeasures()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Remove empty trailing measures"));
     score()->cmdRemoveEmptyTrailingMeasures();
     apply();
 }
@@ -4790,7 +5882,7 @@ void NotationInteraction::fillSelectionWithSlashes()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Fill with slashes"));
     score()->cmdSlashFill();
     apply();
 }
@@ -4801,56 +5893,56 @@ void NotationInteraction::replaceSelectedNotesWithSlashes()
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Toggle rhythmic slash notation"));
     score()->cmdSlashRhythm();
     apply();
 }
 
 void NotationInteraction::changeEnharmonicSpelling(bool both)
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Change enharmonic spelling"));
     score()->changeEnharmonicSpelling(both);
     apply();
 }
 
 void NotationInteraction::spellPitches()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Respell pitches"));
     score()->spell();
     apply();
 }
 
 void NotationInteraction::regroupNotesAndRests()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Regroup rhythms"));
     score()->cmdResetNoteAndRestGroupings();
     apply();
 }
 
 void NotationInteraction::resequenceRehearsalMarks()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Resequence rehearsal marks"));
     score()->cmdResequenceRehearsalMarks();
     apply();
 }
 
 void NotationInteraction::resetStretch()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Reset layout stretch"));
     score()->resetUserStretch();
     apply();
 }
 
 void NotationInteraction::resetTextStyleOverrides()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Reset text style overrides"));
     score()->cmdResetTextStyleOverrides();
     apply();
 }
 
 void NotationInteraction::resetBeamMode()
 {
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Reset beams"));
     score()->cmdResetBeamMode();
     apply();
 }
@@ -4867,7 +5959,7 @@ void NotationInteraction::resetShapesAndPosition()
         }
     };
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Reset shapes and positions"));
 
     DEFER {
         apply();
@@ -4887,7 +5979,7 @@ void NotationInteraction::resetToDefaultLayout()
 {
     TRACEFUNC;
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Reset to default layout"));
     score()->cmdResetToDefaultLayout();
     apply();
 }
@@ -4911,7 +6003,9 @@ void NotationInteraction::setScoreConfig(const ScoreConfig& config)
         return;
     }
 
-    startEdit();
+    // TODO: refactor together with `NotationActionController::toggleScoreConfig`
+    // to be able to give a more precise name
+    startEdit(TranslatableString("undoableAction", "Set score view settings"));
     score()->setShowInvisible(config.isShowInvisibleElements);
     score()->setShowUnprintable(config.isShowUnprintableElements);
     score()->setShowFrames(config.isShowFrames);
@@ -5012,16 +6106,32 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         // search prev chord
         while ((nextSegment = nextSegment->prev1(mu::engraving::SegmentType::ChordRest))) {
             EngravingItem* el = nextSegment->element(track);
-            if (el && el->isChord()) {
+            if (!el) {
+                continue;
+            }
+            if (el->isChord()) {
                 break;
+            } else if (el->isRest()) {
+                mu::engraving::Lyrics* nextLyrics = toChordRest(el)->lyrics(verse, placement);
+                if (nextLyrics) {
+                    break;
+                }
             }
         }
     } else {
         // search next chord
         while ((nextSegment = nextSegment->next1(mu::engraving::SegmentType::ChordRest))) {
             EngravingItem* el = nextSegment->element(track);
-            if (el && el->isChord()) {
+            if (!el) {
+                continue;
+            }
+            if (el->isChord()) {
                 break;
+            } else if (el->isRest()) {
+                mu::engraving::Lyrics* nextLyrics = toChordRest(el)->lyrics(verse, placement);
+                if (nextLyrics) {
+                    break;
+                }
             }
         }
     }
@@ -5073,7 +6183,7 @@ void NotationInteraction::navigateToLyrics(bool back, bool moveOnly, bool end)
         newLyrics = true;
     }
 
-    score()->startCmd();
+    score()->startCmd(TranslatableString("undoableAction", "Navigate to lyrics"));
     if (fromLyrics && !moveOnly) {
         switch (nextLyrics->syllabic()) {
         // as we arrived at nextLyrics by a [Space], it can be the beginning
@@ -5139,19 +6249,22 @@ void NotationInteraction::navigateToNextSyllable()
         LOGW("nextSyllable called with invalid current element");
         return;
     }
-    mu::engraving::Lyrics* lyrics = toLyrics(m_editData.element);
+    Lyrics* lyrics = toLyrics(m_editData.element);
+    ChordRest* initialCR = lyrics->chordRest();
+    const bool hasPrecedingRepeat = initialCR->hasPrecedingJumpItem();
+    const bool hasFollowingRepeat = initialCR->hasFollowingJumpItem();
     track_idx_t track = lyrics->track();
     track_idx_t toLyricTrack = track;
-    mu::engraving::Segment* segment = lyrics->segment();
+    Segment* segment = lyrics->segment();
     int verse = lyrics->no();
-    mu::engraving::PlacementV placement = lyrics->placement();
-    mu::engraving::PropertyFlags pFlags = lyrics->propertyFlags(mu::engraving::Pid::PLACEMENT);
-    mu::engraving::FontStyle fStyle = lyrics->fontStyle();
-    mu::engraving::PropertyFlags fFlags = lyrics->propertyFlags(mu::engraving::Pid::FONT_STYLE);
+    PlacementV placement = lyrics->placement();
+    PropertyFlags pFlags = lyrics->propertyFlags(Pid::PLACEMENT);
+    FontStyle fStyle = lyrics->fontStyle();
+    PropertyFlags fFlags = lyrics->propertyFlags(Pid::FONT_STYLE);
 
     // search next chord
-    mu::engraving::Segment* nextSegment = segment;
-    while ((nextSegment = nextSegment->next1(mu::engraving::SegmentType::ChordRest))) {
+    Segment* nextSegment = segment;
+    while ((nextSegment = nextSegment->next1(SegmentType::ChordRest))) {
         EngravingItem* el = nextSegment->element(track);
         if (!el || !el->isChord()) {
             const track_idx_t strack = track2staff(track) * VOICES;
@@ -5169,7 +6282,12 @@ void NotationInteraction::navigateToNextSyllable()
             break;
         }
     }
-    if (nextSegment == 0) {
+
+    if (!segmentsAreAdjacentInRepeatStructure(segment, nextSegment)) {
+        nextSegment = nullptr;
+    }
+
+    if (!nextSegment && !hasFollowingRepeat && !hasPrecedingRepeat) {
         return;
     }
 
@@ -5177,23 +6295,91 @@ void NotationInteraction::navigateToNextSyllable()
 
     // look for the lyrics we are moving from; may be the current lyrics or a previous one
     // we are extending with several dashes
-    mu::engraving::Lyrics* fromLyrics = 0;
-    while (segment) {
+    Lyrics* fromLyrics = nullptr;
+    Segment* curSeg = segment;
+    while (segment && segmentsAreAdjacentInRepeatStructure(segment, curSeg)) {
         ChordRest* cr = toChordRest(segment->element(track));
         if (!cr) {
-            segment = segment->prev1(mu::engraving::SegmentType::ChordRest);
+            segment = segment->prev1(SegmentType::ChordRest);
             continue;
         }
         fromLyrics = cr->lyrics(verse, placement);
         if (fromLyrics) {
             break;
         }
-        segment = segment->prev1(mu::engraving::SegmentType::ChordRest);
+        segment = segment->prev1(SegmentType::ChordRest);
     }
 
-    score()->startCmd();
-    ChordRest* cr = toChordRest(nextSegment->element(toLyricTrack));
-    mu::engraving::Lyrics* toLyrics = cr->lyrics(verse, placement);
+    if (!nextSegment) {
+        score()->startCmd(TranslatableString("undoableAction", "Navigate to next syllable"));
+        if (fromLyrics && hasFollowingRepeat) {
+            // Allow dash with no end syllable if there is a repeat
+            switch (fromLyrics->syllabic()) {
+            case LyricsSyllabic::BEGIN:
+            case LyricsSyllabic::MIDDLE:
+                break;
+            case LyricsSyllabic::SINGLE:
+                fromLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::BEGIN));
+                break;
+            case LyricsSyllabic::END:
+                fromLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::MIDDLE));
+                break;
+            }
+            fromLyrics->undoChangeProperty(Pid::LYRIC_TICKS, Fraction(0, 1));
+            score()->setLayoutAll();
+            score()->endCmd();
+            return;
+        }
+
+        if (hasPrecedingRepeat) {
+            score()->endCmd();
+            // No from lyrics - create incoming partial dash
+            PartialLyricsLine* dash = Factory::createPartialLyricsLine(score()->dummy());
+            dash->setIsEndMelisma(false);
+            dash->setNo(verse);
+            dash->setPlacement(placement);
+            dash->setTick(initialCR->tick());
+            dash->setTicks(Fraction(0, 1));
+            dash->setTrack(initialCR->track());
+            dash->setTrack2(initialCR->track());
+
+            score()->undoAddElement(dash);
+
+            // Don't advance cursor
+
+            Lyrics* toLyrics = Factory::createLyrics(initialCR);
+            toLyrics->setTrack(track);
+            toLyrics->setParent(initialCR);
+
+            toLyrics->setNo(verse);
+            const TextStyleType styleType(toLyrics->isEven() ? TextStyleType::LYRICS_EVEN : TextStyleType::LYRICS_ODD);
+            toLyrics->setTextStyleType(styleType);
+
+            toLyrics->setPlacement(placement);
+            toLyrics->setPropertyFlags(Pid::PLACEMENT, pFlags);
+            toLyrics->setSyllabic(LyricsSyllabic::END);
+            toLyrics->setFontStyle(fStyle);
+            toLyrics->setPropertyFlags(Pid::FONT_STYLE, fFlags);
+
+            score()->undoAddElement(toLyrics);
+            score()->endCmd();
+            score()->select(toLyrics, SelectType::SINGLE, 0);
+            score()->setLayoutAll();
+            startEditText(toLyrics, PointF());
+            toLyrics->selectAll(toLyrics->cursor());
+            showItem(toLyrics);
+
+            return;
+        }
+    }
+
+    score()->startCmd(TranslatableString("undoableAction", "Navigate to next syllable"));
+    ChordRest* cr = nextSegment ? toChordRest(nextSegment->element(toLyricTrack)) : nullptr;
+    Lyrics* toLyrics = cr ? cr->lyrics(verse, placement) : nullptr;
+
+    if (!toLyrics && !cr) {
+        return;
+    }
 
     // If no lyrics in current track, check others
     if (!toLyrics) {
@@ -5213,30 +6399,66 @@ void NotationInteraction::navigateToNextSyllable()
         }
     }
 
+    // This will be a partial dash at the start of a measure after a repeat
+    // We don't want toLyrics
+    toLyrics = hasPrecedingRepeat && !fromLyrics ? nullptr : toLyrics;
+
     // Make sure we end up with either the cr of toLyrics or cr on correct track
     cr = !toLyrics ? toChordRest(nextSegment->element(track)) : cr;
 
+    // Disallow dashes between non-adjacent repeat sections eg. 1st volta -> 2nd volta
+    // Instead, try to add partial dashes
+    if (cr && fromLyrics) {
+        Measure* toLyricsMeasure = cr->measure();
+        Measure* fromLyricsMeasure = fromLyrics->measure();
+
+        if (toLyricsMeasure != fromLyricsMeasure && fromLyricsMeasure->lastChordRest(track)->hasFollowingJumpItem()) {
+            const std::vector<Measure*> previousRepeats = findPreviousRepeatMeasures(toLyricsMeasure);
+            const bool inPrecedingRepeatSeg = muse::contains(previousRepeats, fromLyricsMeasure);
+            if (!previousRepeats.empty() && !inPrecedingRepeatSeg) {
+                fromLyrics = nullptr;
+            }
+        }
+    }
+
+    PartialLyricsLine* prevPartialLyricsLine = nullptr;
+
+    for (auto sp : score()->spannerMap().findOverlapping(initialCR->tick().ticks(), initialCR->tick().ticks())) {
+        if (!sp.value->isPartialLyricsLine() || sp.value->track() != track) {
+            continue;
+        }
+        PartialLyricsLine* partialLine = toPartialLyricsLine(sp.value);
+        if (partialLine->isEndMelisma() || partialLine->no() != lyrics->no() || partialLine->placement() != lyrics->placement()) {
+            continue;
+        }
+        prevPartialLyricsLine = partialLine;
+        break;
+    }
+
     bool newLyrics = (toLyrics == 0);
-    if (!toLyrics) {
-        toLyrics = Factory::createLyrics(cr);
+    if (!toLyrics || hasPrecedingRepeat) {
+        // Don't advance cursor if we are after a repeat, there is no partial dash present and we are inputting a dash
+        ChordRest* toLyricsChord = hasPrecedingRepeat && !prevPartialLyricsLine && lyrics->xmlText().empty() ? initialCR : cr;
+
+        toLyrics = Factory::createLyrics(toLyricsChord);
         toLyrics->setTrack(track);
-        toLyrics->setParent(cr);
+        toLyrics->setParent(toLyricsChord);
 
         toLyrics->setNo(verse);
-        const mu::engraving::TextStyleType styleType(toLyrics->isEven() ? TextStyleType::LYRICS_EVEN : TextStyleType::LYRICS_ODD);
+        const TextStyleType styleType(toLyrics->isEven() ? TextStyleType::LYRICS_EVEN : TextStyleType::LYRICS_ODD);
         toLyrics->setTextStyleType(styleType);
 
         toLyrics->setPlacement(placement);
-        toLyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, pFlags);
-        toLyrics->setSyllabic(mu::engraving::LyricsSyllabic::END);
+        toLyrics->setPropertyFlags(Pid::PLACEMENT, pFlags);
+        toLyrics->setSyllabic(LyricsSyllabic::END);
         toLyrics->setFontStyle(fStyle);
-        toLyrics->setPropertyFlags(mu::engraving::Pid::FONT_STYLE, fFlags);
+        toLyrics->setPropertyFlags(Pid::FONT_STYLE, fFlags);
     } else {
         // as we arrived at toLyrics by a dash, it cannot be initial or isolated
-        if (toLyrics->syllabic() == mu::engraving::LyricsSyllabic::BEGIN) {
-            toLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::MIDDLE));
-        } else if (toLyrics->syllabic() == mu::engraving::LyricsSyllabic::SINGLE) {
-            toLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::END));
+        if (toLyrics->syllabic() == LyricsSyllabic::BEGIN) {
+            toLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::MIDDLE));
+        } else if (toLyrics->syllabic() == LyricsSyllabic::SINGLE) {
+            toLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::END));
         }
     }
 
@@ -5244,18 +6466,34 @@ void NotationInteraction::navigateToNextSyllable()
         // as we moved away from fromLyrics by a dash,
         // it can have syll. dashes before and after but cannot be isolated or terminal
         switch (fromLyrics->syllabic()) {
-        case mu::engraving::LyricsSyllabic::BEGIN:
-        case mu::engraving::LyricsSyllabic::MIDDLE:
+        case LyricsSyllabic::BEGIN:
+        case LyricsSyllabic::MIDDLE:
             break;
-        case mu::engraving::LyricsSyllabic::SINGLE:
-            fromLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::BEGIN));
+        case LyricsSyllabic::SINGLE:
+            fromLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::BEGIN));
             break;
-        case mu::engraving::LyricsSyllabic::END:
-            fromLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::MIDDLE));
+        case LyricsSyllabic::END:
+            fromLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::MIDDLE));
             break;
         }
         // for the same reason, it cannot have a melisma
-        fromLyrics->undoChangeProperty(mu::engraving::Pid::LYRIC_TICKS, Fraction(0, 1));
+        fromLyrics->undoChangeProperty(Pid::LYRIC_TICKS, Fraction(0, 1));
+    } else if (hasPrecedingRepeat && !prevPartialLyricsLine) {
+        // No from lyrics - create incoming partial dash
+        PartialLyricsLine* dash = Factory::createPartialLyricsLine(score()->dummy());
+        dash->setIsEndMelisma(false);
+        dash->setNo(verse);
+        dash->setPlacement(lyrics->placement());
+        dash->setTick(initialCR->tick());
+        dash->setTicks(hasPrecedingRepeat ? Fraction(0, 1) : initialCR->ticks());
+        dash->setTrack(initialCR->track());
+        dash->setTrack2(initialCR->track());
+
+        score()->undoAddElement(dash);
+    } else if (prevPartialLyricsLine) {
+        const Fraction tickDiff = cr->tick() - prevPartialLyricsLine->tick2();
+        prevPartialLyricsLine->undoMoveEnd(tickDiff);
+        prevPartialLyricsLine->triggerLayout();
     }
 
     if (newLyrics) {
@@ -5317,7 +6555,7 @@ void NotationInteraction::navigateToLyricsVerse(MoveDirection direction)
         lyrics->setFontStyle(fStyle);
         lyrics->setPropertyFlags(mu::engraving::Pid::FONT_STYLE, fFlags);
 
-        score()->startCmd();
+        score()->startCmd(TranslatableString("undoableAction", "Navigate to verse"));
         score()->undoAddElement(lyrics);
         score()->endCmd();
     }
@@ -5386,7 +6624,7 @@ void NotationInteraction::navigateToNearHarmony(MoveDirection direction, bool ne
                 }
             }
 
-            segment = Factory::createSegment(measure, mu::engraving::SegmentType::ChordRest, newTick - measure->tick());
+            segment = Factory::createSegment(measure, mu::engraving::SegmentType::TimeTick, newTick - measure->tick());
             if (!segment) {
                 LOGD("no prev segment");
                 return;
@@ -5408,7 +6646,7 @@ void NotationInteraction::navigateToNearHarmony(MoveDirection direction, bool ne
         }
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Navigate to next chord symbol"));
 
     if (needAddSegment) {
         score()->undoAddElement(segment);
@@ -5462,7 +6700,7 @@ void NotationInteraction::navigateToHarmonyInNearMeasure(MoveDirection direction
     if (!nextHarmony) {
         nextHarmony = createHarmony(segment, track, harmony->harmonyType());
 
-        startEdit();
+        startEdit(TranslatableString("undoableAction", "Navigate to next chord symbol"));
         score()->undoAddElement(nextHarmony);
         apply();
     }
@@ -5499,11 +6737,10 @@ void NotationInteraction::navigateToHarmony(const Fraction& ticks)
         segment = segment->next1(mu::engraving::SegmentType::ChordRest);
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Navigate to chord symbol"));
 
     if (!segment || segment->tick() > newTick) {      // no ChordRest segment at this tick
-        segment = Factory::createSegment(measure, mu::engraving::SegmentType::ChordRest, newTick - measure->tick());
-        score()->undoAddElement(segment);
+        segment = EditTimeTickAnchors::createTimeTickAnchor(measure, newTick - measure->tick(), harmony->staffIdx())->segment();
     }
 
     engraving::track_idx_t track = harmony->track();
@@ -5555,7 +6792,7 @@ void NotationInteraction::navigateToNearFiguredBass(MoveDirection direction)
     // add a (new) FB element, using chord duration as default duration
     mu::engraving::FiguredBass* fbNew = mu::engraving::FiguredBass::addFiguredBassToSegment(nextSegm, track, Fraction(0, 1), &bNew);
     if (bNew) {
-        startEdit();
+        startEdit(TranslatableString("undoableAction", "Navigate to next figured bass"));
         score()->undoAddElement(fbNew);
         apply();
     }
@@ -5599,7 +6836,7 @@ void NotationInteraction::navigateToFiguredBassInNearMeasure(MoveDirection direc
     // add a (new) FB element, using chord duration as default duration
     mu::engraving::FiguredBass* fbNew = mu::engraving::FiguredBass::addFiguredBassToSegment(nextSegm, fb->track(), Fraction(0, 1), &bNew);
     if (bNew) {
-        startEdit();
+        startEdit(TranslatableString("undoableAction", "Navigate to next figured bass"));
         score()->undoAddElement(fbNew);
         apply();
     }
@@ -5639,22 +6876,15 @@ void NotationInteraction::navigateToFiguredBass(const Fraction& ticks)
         nextSegm = nextSegm->next1(mu::engraving::SegmentType::ChordRest);
     }
 
-    bool needAddSegment = false;
-
     if (!nextSegm || nextSegm->tick() > nextSegTick) {      // no ChordRest segm at this tick
-        nextSegm = Factory::createSegment(measure, mu::engraving::SegmentType::ChordRest, nextSegTick - measure->tick());
+        nextSegm = EditTimeTickAnchors::createTimeTickAnchor(measure, nextSegTick - measure->tick(), fb->staffIdx())->segment();
         if (!nextSegm) {
             LOGD("figuredBassTicksTab: no next segment");
             return;
         }
-        needAddSegment = true;
     }
 
-    startEdit();
-
-    if (needAddSegment) {
-        score()->undoAddElement(nextSegm);
-    }
+    startEdit(TranslatableString("undoableAction", "Navigate to figured bass"));
 
     bool bNew = false;
     mu::engraving::FiguredBass* fbNew = mu::engraving::FiguredBass::addFiguredBassToSegment(nextSegm, track, ticks, &bNew);
@@ -5677,6 +6907,7 @@ void NotationInteraction::navigateToNearText(MoveDirection direction)
 
     mu::engraving::EngravingItem* op = dynamic_cast<mu::engraving::EngravingItem*>(oe->parent());
     if (!op || !(op->isSegment() || op->isNote())) {
+        LOGD("navigateToNearText: parent not note or segment.");
         return;
     }
 
@@ -5685,94 +6916,183 @@ void NotationInteraction::navigateToNearText(MoveDirection direction)
     ElementType type = ot->type();
     mu::engraving::staff_idx_t staffIdx = ot->staffIdx();
     bool back = direction == MoveDirection::Left;
+    int curTrack = static_cast<int>(oe->track());
+    int minTrack = (curTrack / mu::engraving::VOICES) * mu::engraving::VOICES;
+    int maxTrack = minTrack + mu::engraving::VOICES - 1;
 
-    // get prev/next element now, as current element may be deleted if empty
-    mu::engraving::EngravingItem* el = back ? score()->prevElement() : score()->nextElement();
+    mu::engraving::EngravingItem* el = nullptr;
 
-    // find new note to add text to
-    bool here = false;      // prevent infinite loop (relevant if navigation is allowed to wrap around end of score)
-    while (el) {
-        if (el->isNote()) {
-            Note* n = mu::engraving::toNote(el);
-            if (op->isNote() && n != op) {
-                break;
-            } else if (op->isSegment() && n->chord()->segment() != op) {
-                break;
-            } else if (here) {
+    if (op->isNote()) {
+        // go to next/prev note in same chord, or go to next/prev chord, which may be in another voice
+        Note* origNote = toNote(op);
+        Chord* ch = origNote->chord();
+        const std::vector<Note*>& notes = ch->notes();
+
+        // first, try going to prev/next note in the current chord
+        if (origNote != (back ? notes.back() : notes.front())) {
+            auto it = std::find(notes.begin(), notes.end(), origNote);
+            if (it != notes.end()) {
+                el = back ? *std::next(it) : *std::prev(it);
+            }
+        }
+
+        // next, try going to next/prev grace note chord in the same group as the current
+        const std::vector<Chord*> chordList = ch->allGraceChordsOfMainChord();
+
+        if (!el && ch != (back ? chordList.front() : chordList.back())) {
+            auto it = std::find(chordList.begin(), chordList.end(), ch);
+            if (it != chordList.end()) {
+                if (back) {
+                    const Chord* targetChord = *std::prev(it);
+                    el = targetChord->notes().front();
+                } else {
+                    const Chord* targetChord = *std::next(it);
+                    el = targetChord->notes().back();
+                }
+            }
+        }
+
+        // next, try going to prev/next chord in another voice
+        if (!el) {
+            Segment* seg = ch->segment();
+            if (!seg) {
+                LOGD("navigateToNearText: no segment");
+                return;
+            }
+            int sTrack = back ? curTrack - 1 : curTrack + 1;
+            int eTrack = back ? minTrack : maxTrack;
+            int inc = back ? -1 : 1;
+            for (int track = sTrack; back ? (track >= eTrack) : (track <= eTrack); track += inc) {
+                EngravingItem* e = seg->element(track);
+                if (e && e->isChord()) {
+                    const std::vector<Chord*> targetChordList = toChord(e)->allGraceChordsOfMainChord();
+                    if (back) {
+                        Chord* targetChord = targetChordList.back();
+                        el = targetChord->notes().front();
+                    } else {
+                        Chord* targetChord = targetChordList.front();
+                        el = targetChord->notes().back();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // finally, try going to chord in prev/next segments
+        if (!el) {
+            Segment* seg = ch->segment();
+            seg = back ? seg->prev1(SegmentType::ChordRest) : seg->next1(SegmentType::ChordRest);
+            int sTrack = back ? maxTrack : minTrack;
+            int eTrack = back ? minTrack : maxTrack;
+            int inc = back ? -1 : 1;
+            while (seg) {
+                for (int track = sTrack; back ? (track >= eTrack) : (track <= eTrack); track += inc) {
+                    EngravingItem* e = seg->element(track);
+                    if (e && e->isChord()) {
+                        const std::vector<Chord*> targetChordList = toChord(e)->allGraceChordsOfMainChord();
+                        if (back) {
+                            Chord* targetChord = targetChordList.back();
+                            el = targetChord->notes().front();
+                        } else {
+                            Chord* targetChord = targetChordList.front();
+                            el = targetChord->notes().back();
+                        }
+                        break;
+                    }
+                }
+
+                if (el) {
+                    break;
+                }
+
+                seg = back ? seg->prev1(SegmentType::ChordRest) : seg->next1(SegmentType::ChordRest);
+            }
+        }
+    } else if (op->isSegment()) {
+        Segment* seg = toSegment(op);
+        seg = back ? seg->prev1(SegmentType::ChordRest) : seg->next1(SegmentType::ChordRest);
+
+        // go to first segment with a chord or an existing text
+        while (seg) {
+            for (int track = minTrack; track <= maxTrack; ++track) {
+                EngravingItem* e = seg->element(track);
+                if (e && e->isChord()) {
+                    el = e;
+                    break;
+                }
+            }
+            if (el) {
                 break;
             }
-            here = true;
-        } else if (el->isRest() && op->isSegment()) {
-            // skip rests, but still check for infinite loop
-            Rest* r = mu::engraving::toRest(el);
-            if (r->segment() != op) {
-            } else if (here) {
+
+            // this segment only contains rests, check for existing text
+            for (EngravingItem* e : seg->annotations()) {
+                if (e->staffIdx() != staffIdx || e->type() != type) {
+                    continue;
+                }
+                TextBase* nt = mu::engraving::toTextBase(e);
+                if (nt->textStyleType() == textStyleType) {
+                    el = seg->firstElement(staffIdx);
+                    break;
+                }
+            }
+            if (el) {
                 break;
             }
-            here = true;
+
+            seg = back ? seg->prev1(SegmentType::ChordRest) : seg->next1(SegmentType::ChordRest);
         }
-        // get prev/next note
-        score()->select(el);
-        mu::engraving::EngravingItem* el2 = back ? score()->prevElement() : score()->nextElement();
-        // start/end of score reached
-        if (el2 == el) {
-            break;
-        }
-        el = el2;
     }
 
-    if (!el || !el->isNote()) {
-        // nothing found, exit cleanly
-        if (op->selectable()) {
-            select({ op });
-        } else {
-            clearSelection();
-        }
+    if (!el) {
         return;
     }
 
-    Note* nn = mu::engraving::toNote(el);
-
-    // go to note
-    if (nn) {
-        score()->select(nn, SelectType::SINGLE);
-    }
-
     // get existing text to edit
-    el = nullptr;
+    EngravingItem* textEl = nullptr;
     if (op->isNote()) {
+        if (!el->isNote()) {
+            LOGD("navigateToNearText: new element is not Note.");
+            return;
+        }
         // check element list of new note
-        for (mu::engraving::EngravingItem* e : nn->el()) {
+        for (mu::engraving::EngravingItem* e : toNote(el)->el()) {
             if (e->type() != type) {
                 continue;
             }
             TextBase* nt = mu::engraving::toTextBase(e);
             if (nt->textStyleType() == textStyleType) {
-                el = e;
+                textEl = e;
                 break;
             }
         }
     } else if (op->isSegment()) {
+        if (!el->isChordRest()) {
+            LOGD("navigateToNearText: new element is not ChordRest.");
+            return;
+        }
         // check annotation list of new segment
-        mu::engraving::Segment* ns = nn->chord()->segment();
+        mu::engraving::Segment* ns = toChordRest(el)->segment();
         for (mu::engraving::EngravingItem* e : ns->annotations()) {
             if (e->staffIdx() != staffIdx || e->type() != type) {
                 continue;
             }
             TextBase* nt = mu::engraving::toTextBase(e);
             if (nt->textStyleType() == textStyleType) {
-                el = e;
+                textEl = e;
                 break;
             }
         }
     }
 
-    if (el) {
+    if (textEl) {
         // edit existing text
-        TextBase* text = dynamic_cast<TextBase*>(el);
+        TextBase* text = dynamic_cast<TextBase*>(textEl);
 
         if (text) {
             startEditText(text);
+            text->selectAll(text->cursor());
+            showItem(text);
         }
     } else {
         // add new text if no existing element to edit
@@ -5780,7 +7100,7 @@ void NotationInteraction::navigateToNearText(MoveDirection direction)
         // but it pre-fills the text
         // would be better to create empty tempo element
         if (type != ElementType::TEMPO_TEXT) {
-            addTextToItem(textStyleType, selection()->element());
+            addTextToItem(textStyleType, el);
         }
     }
 }
@@ -5792,39 +7112,64 @@ void NotationInteraction::addMelisma()
         LOGW("addMelisma called with invalid current element");
         return;
     }
-    mu::engraving::Lyrics* lyrics = toLyrics(m_editData.element);
+    Lyrics* lyrics = toLyrics(m_editData.element);
+    ChordRest* initialCR = lyrics->chordRest();
+    const bool hasPrecedingRepeat = initialCR->hasPrecedingJumpItem();
     track_idx_t track = lyrics->track();
-    mu::engraving::Segment* segment = lyrics->segment();
+    Segment* segment = lyrics->segment();
     int verse = lyrics->no();
-    mu::engraving::PlacementV placement = lyrics->placement();
-    mu::engraving::PropertyFlags pFlags = lyrics->propertyFlags(mu::engraving::Pid::PLACEMENT);
-    mu::engraving::FontStyle fStyle = lyrics->fontStyle();
-    mu::engraving::PropertyFlags fFlags = lyrics->propertyFlags(mu::engraving::Pid::FONT_STYLE);
+    PlacementV placement = lyrics->placement();
+    PropertyFlags pFlags = lyrics->propertyFlags(Pid::PLACEMENT);
+    FontStyle fStyle = lyrics->fontStyle();
+    PropertyFlags fFlags = lyrics->propertyFlags(Pid::FONT_STYLE);
     Fraction endTick = segment->tick(); // a previous melisma cannot extend beyond this point
-
     endEditText();
 
     // search next chord
-    mu::engraving::Segment* nextSegment = segment;
-    while ((nextSegment = nextSegment->next1(mu::engraving::SegmentType::ChordRest))) {
+    Segment* nextSegment = segment;
+    while ((nextSegment = nextSegment->next1(SegmentType::ChordRest))) {
         EngravingItem* el = nextSegment->element(track);
         if (el && el->isChord()) {
             break;
         }
     }
 
+    if (!segmentsAreAdjacentInRepeatStructure(segment, nextSegment)) {
+        nextSegment = nullptr;
+    }
+
     // look for the lyrics we are moving from; may be the current lyrics or a previous one
     // we are extending with several underscores
-    mu::engraving::Lyrics* fromLyrics = 0;
-    while (segment) {
+    Segment* curSeg = segment;
+    Lyrics* fromLyrics = nullptr;
+    PartialLyricsLine* prevPartialLyricsLine = nullptr;
+    while (segment && segmentsAreAdjacentInRepeatStructure(segment, curSeg)) {
         ChordRest* cr = toChordRest(segment->element(track));
         if (cr) {
             fromLyrics = cr->lyrics(verse, placement);
             if (fromLyrics) {
                 break;
             }
+            // Check if there is a partial melisma to extend
+            auto spanners = score()->spannerMap().findOverlapping(cr->tick().ticks(), cr->endTick().ticks());
+            for (auto& spanner : spanners) {
+                if (!spanner.value->isPartialLyricsLine() || spanner.value->staffIdx() != cr->staffIdx()) {
+                    continue;
+                }
+                PartialLyricsLine* lyricsLine = toPartialLyricsLine(spanner.value);
+                if (lyricsLine->no() != verse || lyricsLine->placement() != placement || !lyricsLine->isEndMelisma()) {
+                    continue;
+                }
+
+                prevPartialLyricsLine = lyricsLine;
+                break;
+            }
+
+            if (prevPartialLyricsLine) {
+                break;
+            }
         }
-        segment = segment->prev1(mu::engraving::SegmentType::ChordRest);
+        segment = segment->prev1(SegmentType::ChordRest);
         // if the segment has a rest in this track, stop going back
         EngravingItem* e = segment ? segment->element(track) : 0;
         if (e && !e->isChord()) {
@@ -5836,26 +7181,45 @@ void NotationInteraction::addMelisma()
     // if still at melisma initial chord and there is a valid next chord (if not,
     // there will be no melisma anyway), set a temporary melisma duration
     if (fromLyrics == lyrics && nextSegment) {
-        score()->startCmd();
-        lyrics->undoChangeProperty(mu::engraving::Pid::LYRIC_TICKS, mu::engraving::Lyrics::TEMP_MELISMA_TICKS);
+        score()->startCmd(TranslatableString("undoableAction", "Enter lyrics extension line"));
+        lyrics->undoChangeProperty(Pid::LYRIC_TICKS, Lyrics::TEMP_MELISMA_TICKS);
         score()->setLayoutAll();
         score()->endCmd();
     }
 
     if (nextSegment == 0) {
-        score()->startCmd();
+        score()->startCmd(TranslatableString("undoableAction", "Enter lyrics extension line"));
         if (fromLyrics) {
             switch (fromLyrics->syllabic()) {
-            case mu::engraving::LyricsSyllabic::SINGLE:
-            case mu::engraving::LyricsSyllabic::END:
+            case LyricsSyllabic::SINGLE:
+            case LyricsSyllabic::END:
                 break;
             default:
-                fromLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::END));
+                fromLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::END));
                 break;
             }
-            if (fromLyrics->segment()->tick() < endTick) {
-                fromLyrics->undoChangeProperty(mu::engraving::Pid::LYRIC_TICKS, endTick - fromLyrics->segment()->tick());
+            if (fromLyrics->segment()->tick() < endTick
+                || (endTick + initialCR->actualTicks() == segment->measure()->endTick() && initialCR->hasFollowingJumpItem())) {
+                Fraction ticks = std::max(endTick - fromLyrics->segment()->tick(), Lyrics::TEMP_MELISMA_TICKS);
+                fromLyrics->undoChangeProperty(Pid::LYRIC_TICKS, ticks);
             }
+        }
+
+        if (hasPrecedingRepeat && !prevPartialLyricsLine) {
+            // No from lyrics - create incoming partial melisma
+            PartialLyricsLine* melisma = Factory::createPartialLyricsLine(score()->dummy());
+            melisma->setIsEndMelisma(true);
+            melisma->setNo(verse);
+            melisma->setPlacement(lyrics->placement());
+            melisma->setTick(initialCR->tick());
+            melisma->setTicks(initialCR->ticks());
+            melisma->setTrack(initialCR->track());
+            melisma->setTrack2(initialCR->track());
+
+            score()->undoAddElement(melisma);
+        } else if (prevPartialLyricsLine) {
+            const Fraction tickDiff = (segment->tick() + segment->ticks()) - prevPartialLyricsLine->tick2();
+            prevPartialLyricsLine->undoMoveEnd(tickDiff);
         }
 
         if (fromLyrics) {
@@ -5867,47 +7231,80 @@ void NotationInteraction::addMelisma()
     }
 
     // if a place for a new lyrics has been found, create a lyrics there
+    ChordRest* nextCR = toChordRest(nextSegment->element(track));
 
-    score()->startCmd();
-    ChordRest* cr = toChordRest(nextSegment->element(track));
-    mu::engraving::Lyrics* toLyrics = cr->lyrics(verse, placement);
-    bool newLyrics = (toLyrics == 0);
+    // Disallow melisma lines between non-adjacent repeat sections eg. 1st volta -> 2nd volta
+    // Instead, try to add partial melisma line
+    if (nextCR && fromLyrics) {
+        Measure* toLyricsMeasure = nextCR->measure();
+        Measure* fromLyricsMeasure = fromLyrics->measure();
+
+        if (toLyricsMeasure != fromLyricsMeasure && fromLyricsMeasure->lastChordRest(track)->hasFollowingJumpItem()) {
+            const std::vector<Measure*> previousRepeats = findPreviousRepeatMeasures(toLyricsMeasure);
+            const bool inPrecedingRepeatSeg = muse::contains(previousRepeats, fromLyricsMeasure);
+            if (!previousRepeats.empty() && !inPrecedingRepeatSeg) {
+                fromLyrics = nullptr;
+            }
+        }
+    }
+
+    score()->startCmd(TranslatableString("undoableAction", "Enter lyrics extension line"));
+    Lyrics* toLyrics = nextCR->lyrics(verse, placement);
+    bool newLyrics = (toLyrics == nullptr);
     if (!toLyrics) {
-        toLyrics = Factory::createLyrics(cr);
+        toLyrics = Factory::createLyrics(nextCR);
         toLyrics->setTrack(track);
-        toLyrics->setParent(cr);
+        toLyrics->setParent(nextCR);
 
         toLyrics->setNo(verse);
-        const mu::engraving::TextStyleType styleType(toLyrics->isEven() ? TextStyleType::LYRICS_EVEN : TextStyleType::LYRICS_ODD);
+        const TextStyleType styleType(toLyrics->isEven() ? TextStyleType::LYRICS_EVEN : TextStyleType::LYRICS_ODD);
         toLyrics->setTextStyleType(styleType);
 
         toLyrics->setPlacement(placement);
-        toLyrics->setPropertyFlags(mu::engraving::Pid::PLACEMENT, pFlags);
-        toLyrics->setSyllabic(mu::engraving::LyricsSyllabic::SINGLE);
+        toLyrics->setPropertyFlags(Pid::PLACEMENT, pFlags);
+        toLyrics->setSyllabic(LyricsSyllabic::SINGLE);
         toLyrics->setFontStyle(fStyle);
-        toLyrics->setPropertyFlags(mu::engraving::Pid::FONT_STYLE, fFlags);
+        toLyrics->setPropertyFlags(Pid::FONT_STYLE, fFlags);
     }
     // as we arrived at toLyrics by an underscore, it cannot have syllabic dashes before
-    else if (toLyrics->syllabic() == mu::engraving::LyricsSyllabic::MIDDLE) {
-        toLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::BEGIN));
-    } else if (toLyrics->syllabic() == mu::engraving::LyricsSyllabic::END) {
-        toLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::SINGLE));
+    else if (toLyrics->syllabic() == LyricsSyllabic::MIDDLE) {
+        toLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::BEGIN));
+    } else if (toLyrics->syllabic() == LyricsSyllabic::END) {
+        toLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::SINGLE));
     }
+
     if (fromLyrics) {
         // as we moved away from fromLyrics by an underscore,
         // it can be isolated or terminal but cannot have dashes after
         switch (fromLyrics->syllabic()) {
-        case mu::engraving::LyricsSyllabic::SINGLE:
-        case mu::engraving::LyricsSyllabic::END:
+        case LyricsSyllabic::SINGLE:
+        case LyricsSyllabic::END:
             break;
         default:
-            fromLyrics->undoChangeProperty(mu::engraving::Pid::SYLLABIC, int(mu::engraving::LyricsSyllabic::END));
+            fromLyrics->undoChangeProperty(Pid::SYLLABIC, int(LyricsSyllabic::END));
             break;
         }
         // for the same reason, if it has a melisma, this cannot extend beyond toLyrics
         if (fromLyrics->segment()->tick() < endTick) {
-            fromLyrics->undoChangeProperty(mu::engraving::Pid::LYRIC_TICKS, endTick - fromLyrics->segment()->tick());
+            fromLyrics->undoChangeProperty(Pid::LYRIC_TICKS, endTick - fromLyrics->segment()->tick());
         }
+    } else if (hasPrecedingRepeat && !prevPartialLyricsLine) {
+        // No from lyrics - create incoming partial melisma
+        PartialLyricsLine* melisma = Factory::createPartialLyricsLine(score()->dummy());
+        melisma->setIsEndMelisma(true);
+        melisma->setNo(verse);
+        melisma->setPlacement(lyrics->placement());
+        melisma->setTick(initialCR->tick());
+        melisma->setTicks(initialCR->ticks());
+        melisma->setTrack(initialCR->track());
+        melisma->setTrack2(initialCR->track());
+
+        score()->undoAddElement(melisma);
+    } else if (prevPartialLyricsLine) {
+        const Fraction segEndTick = segment->tick() + segment->ticks();
+        const Fraction tickDiff = segEndTick - prevPartialLyricsLine->tick2();
+        prevPartialLyricsLine->undoMoveEnd(tickDiff);
+        prevPartialLyricsLine->triggerLayout();
     }
     if (newLyrics) {
         score()->undoAddElement(toLyrics);
@@ -5933,7 +7330,7 @@ void NotationInteraction::addLyricsVerse()
 
     endEditText();
 
-    score()->startCmd();
+    score()->startCmd(TranslatableString("undoableAction", "Add lyrics verse"));
     int newVerse = oldLyrics->no() + 1;
 
     mu::engraving::Lyrics* lyrics = Factory::createLyrics(oldLyrics->chordRest());
@@ -5981,7 +7378,7 @@ void NotationInteraction::addGuitarBend(GuitarBendType bendType)
         return;
     }
 
-    startEdit();
+    startEdit(TranslatableString("undoableAction", "Enter guitar bend"));
 
     Note* startNote = nullptr;
     Note* endNote = nullptr;
@@ -6091,7 +7488,7 @@ void NotationInteraction::toggleFontStyle(mu::engraving::FontStyle style)
     }
     mu::engraving::TextBase* text = toTextBase(m_editData.element);
     int currentStyle = text->getProperty(mu::engraving::Pid::FONT_STYLE).toInt();
-    score()->startCmd();
+    score()->startCmd(TranslatableString("undoableAction", "Format text"));
     text->undoChangeProperty(mu::engraving::Pid::FONT_STYLE, PropertyValue::fromValue(
                                  currentStyle ^ static_cast<int>(style)), mu::engraving::PropertyFlags::UNSTYLED);
     score()->endCmd();
@@ -6107,7 +7504,19 @@ void NotationInteraction::toggleVerticalAlignment(VerticalAlignment align)
     mu::engraving::TextBase* text = toTextBase(m_editData.element);
     int ialign = static_cast<int>(align);
     int currentAlign = text->getProperty(mu::engraving::Pid::TEXT_SCRIPT_ALIGN).toInt();
-    score()->startCmd();
+
+    TranslatableString actionName = [align]() {
+        switch (align) {
+        case VerticalAlignment::AlignSubScript:
+            return TranslatableString("undoableAction", "Toggle subscript");
+        case VerticalAlignment::AlignSuperScript:
+            return TranslatableString("undoableAction", "Toggle superscript");
+        default:
+            return TranslatableString("undoableAction", "Toggle subscript/superscript");
+        }
+    }();
+
+    score()->startCmd(actionName);
     text->undoChangeProperty(mu::engraving::Pid::TEXT_SCRIPT_ALIGN, PropertyValue::fromValue(
                                  (currentAlign == ialign) ? static_cast<int>(VerticalAlignment::AlignNormal) : ialign),
                              mu::engraving::PropertyFlags::UNSTYLED);
@@ -6146,26 +7555,26 @@ void NotationInteraction::toggleSuperScript()
 }
 
 template<typename P>
-void NotationInteraction::execute(void (mu::engraving::Score::* function)(P), P param)
+void NotationInteraction::execute(void (mu::engraving::Score::* function)(P), P param, const TranslatableString& actionName)
 {
-    startEdit();
+    startEdit(actionName);
     (score()->*function)(param);
     apply();
 }
 
 void NotationInteraction::toggleArticulation(mu::engraving::SymId symId)
 {
-    execute(&mu::engraving::Score::toggleArticulation, symId);
+    execute(&mu::engraving::Score::toggleArticulation, symId, TranslatableString("undoableAction", "Toggle articulation"));
 }
 
 void NotationInteraction::toggleOrnament(mu::engraving::SymId symId)
 {
-    execute(&mu::engraving::Score::toggleOrnament, symId);
+    execute(&mu::engraving::Score::toggleOrnament, symId, TranslatableString("undoableAction", "Toggle ornament"));
 }
 
 void NotationInteraction::toggleAutoplace(bool all)
 {
-    execute(&mu::engraving::Score::cmdToggleAutoplace, all);
+    execute(&mu::engraving::Score::cmdToggleAutoplace, all, TranslatableString("undoableAction", "Toggle automatic placement"));
 }
 
 bool NotationInteraction::canInsertClef(ClefType type) const
@@ -6176,22 +7585,23 @@ bool NotationInteraction::canInsertClef(ClefType type) const
 
 void NotationInteraction::insertClef(ClefType type)
 {
-    execute(&mu::engraving::Score::cmdInsertClef, type);
+    execute(&mu::engraving::Score::cmdInsertClef, type, TranslatableString("undoableAction", "Add clef"));
 }
 
 void NotationInteraction::changeAccidental(mu::engraving::AccidentalType accidental)
 {
-    execute(&mu::engraving::Score::changeAccidental, accidental);
+    execute(&mu::engraving::Score::changeAccidental, accidental, TranslatableString("undoableAction", "Add accidental"));
 }
 
 void NotationInteraction::transposeSemitone(int steps)
 {
-    execute(&mu::engraving::Score::transposeSemitone, steps);
+    execute(&mu::engraving::Score::transposeSemitone, steps, TranslatableString("undoableAction", "Transpose semitone"));
 }
 
 void NotationInteraction::transposeDiatonicAlterations(mu::engraving::TransposeDirection direction)
 {
-    execute(&mu::engraving::Score::transposeDiatonicAlterations, direction);
+    execute(&mu::engraving::Score::transposeDiatonicAlterations, direction,
+            TranslatableString("undoableAction", "Transpose diatonically"));
 }
 
 void NotationInteraction::getLocation()
@@ -6216,9 +7626,9 @@ void NotationInteraction::getLocation()
     }
 }
 
-void NotationInteraction::execute(void (mu::engraving::Score::* function)())
+void NotationInteraction::execute(void (mu::engraving::Score::* function)(), const TranslatableString& actionName)
 {
-    startEdit();
+    startEdit(actionName);
     (score()->*function)();
     apply();
 }
@@ -6323,7 +7733,16 @@ void NotationInteraction::setGetViewRectFunc(const std::function<RectF()>& func)
 namespace mu::notation {
 EngravingItem* contextItem(INotationInteractionPtr interaction)
 {
-    EngravingItem* item = interaction->selection()->element();
+    EngravingItem* item = nullptr;
+    const INotationSelectionPtr sel = interaction->selection();
+
+    if (sel->isRange()) {
+        const INotationSelectionRangePtr range = sel->range();
+        item = range->rangeStartSegment()->firstElementForNavigation(range->startStaffIndex());
+    } else {
+        item = sel->element();
+    }
+
     if (item == nullptr) {
         return interaction->hitElementContext().element;
     }

@@ -586,9 +586,9 @@ LineSegment* LineSegment::rebaseAnchor(Grip grip, Segment* newSeg)
     const Segment* newTickSeg = left ? l->startSegment() : l->endSegment();
     const System* newSpannerSystem = newTickSeg->measure()->system();
 
-    if (newSeg->system() != oldLineSegSystem || oldSpannerSystem != newSpannerSystem) {
+    if ((oldLineSegSystem && newSeg->system() != oldLineSegSystem) || oldSpannerSystem != newSpannerSystem) {
         renderer()->layoutItem(l);
-        return left ? l->frontSegment() : l->backSegment();
+        return l->segmentsEmpty() ? nullptr : left ? l->frontSegment() : l->backSegment();
     } else if (anchorChanged) {
         rebaseOffsetsOnAnchorChanged(grip, oldPos, oldLineSegSystem);
     }
@@ -890,9 +890,9 @@ void LineSegment::undoMoveStartEndAndSnappedItems(bool moveStart, bool moveEnd, 
     if (moveStart) {
         Fraction tickDiff = s1->tick() - thisLine->tick();
         if (EngravingItem* itemSnappedBefore = ldata()->itemSnappedBefore()) {
-            if (itemSnappedBefore->isDynamic()) {
-                // Let the dynamic manage the move
-                toDynamic(itemSnappedBefore)->undoMoveSegment(s1, tickDiff);
+            if (itemSnappedBefore->isTextBase()) {
+                // Let the TextBase manage the move
+                toTextBase(itemSnappedBefore)->undoMoveSegment(s1, tickDiff);
             } else if (itemSnappedBefore->isLineSegment()) {
                 toLineSegment(itemSnappedBefore)->line()->undoMoveEnd(tickDiff);
                 thisLine->undoMoveStart(tickDiff);
@@ -904,9 +904,9 @@ void LineSegment::undoMoveStartEndAndSnappedItems(bool moveStart, bool moveEnd, 
     if (moveEnd) {
         Fraction tickDiff = s2->tick() - thisLine->tick2();
         if (EngravingItem* itemSnappedAfter = thisLine->backSegment()->ldata()->itemSnappedAfter()) {
-            if (itemSnappedAfter->isDynamic()) {
-                // Let the dynamic manage the move
-                toDynamic(itemSnappedAfter)->undoMoveSegment(s2, tickDiff);
+            if (itemSnappedAfter->isTextBase()) {
+                // Let the TextBase manage the move
+                toTextBase(itemSnappedAfter)->undoMoveSegment(s2, tickDiff);
             } else if (itemSnappedAfter->isLineSegment()) {
                 toLineSegment(itemSnappedAfter)->line()->undoMoveStart(tickDiff);
                 thisLine->undoMoveEnd(tickDiff);
@@ -1129,5 +1129,81 @@ void SLine::undoMoveEnd(Fraction tickDiff)
             undoChangeProperty(Pid::SPANNER_TICK, tick() + tickDiff);
         }
     }
+}
+
+Note* SLine::guessFinalNote(Note* startNote)
+{
+    Chord* chord = startNote->chord();
+    if (chord->isGraceBefore()) {
+        Chord* parentChord = toChord(chord->parent());
+        GraceNotesGroup& gracesBefore = parentChord->graceNotesBefore();
+        auto positionOfThis = std::find(gracesBefore.begin(), gracesBefore.end(), chord);
+        if (positionOfThis != gracesBefore.end()) {
+            auto nextPosition = ++positionOfThis;
+            if (nextPosition != gracesBefore.end()) {
+                return (*nextPosition)->upNote();
+            }
+        }
+        return parentChord->upNote();
+    } else if (chord->isGraceAfter()) {
+        Chord* parentChord = toChord(chord->parent());
+        GraceNotesGroup& gracesAfter = parentChord->graceNotesAfter();
+        auto positionOfThis = std::find(gracesAfter.begin(), gracesAfter.end(), chord);
+        if (positionOfThis != gracesAfter.end()) {
+            auto nextPosition = ++positionOfThis;
+            if (nextPosition != gracesAfter.end()) {
+                return (*nextPosition)->upNote();
+            }
+        }
+        chord = toChord(chord->parent());
+    } else {
+        std::vector<Chord*> graces = chord->graceNotesAfter();
+        if (graces.size() > 0) {
+            return graces.front()->upNote();
+        }
+    }
+
+    if (!chord->explicitParent()->isSegment()) {
+        return 0;
+    }
+
+    Segment* segm = chord->score()->tick2rightSegment(chord->tick() + chord->actualTicks());
+    while (segm && !segm->isChordRestType()) {
+        segm = segm->next1();
+    }
+
+    if (!segm) {
+        return nullptr;
+    }
+
+    track_idx_t chordTrack = chord->track();
+    Part* part = chord->part();
+
+    Chord* target = nullptr;
+    if (segm->element(chordTrack) && segm->element(chordTrack)->isChord()) {
+        target = toChord(segm->element(chordTrack));
+    } else {
+        for (EngravingItem* currChord : segm->elist()) {
+            if (currChord && currChord->isChord() && toChord(currChord)->part() == part) {
+                target = toChord(currChord);
+                break;
+            }
+        }
+    }
+
+    if (target && target->notes().size() > 0) {
+        const std::vector<Chord*>& graces = target->graceNotesBefore();
+        if (graces.size() > 0) {
+            return graces.front()->upNote();
+        }
+        // normal case: try to return the note in the next chord that is in the
+        // same position as the start note relative to the end chord
+        size_t startNoteIdx = muse::indexOf(chord->notes(), startNote);
+        size_t endNoteIdx = std::min(startNoteIdx, target->notes().size() - 1);
+        return target->notes().at(endNoteIdx);
+    }
+
+    LOGD("no second note for note anchored line found");
+    return nullptr;
 }
 }

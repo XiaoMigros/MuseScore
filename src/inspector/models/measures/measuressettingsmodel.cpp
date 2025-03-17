@@ -21,17 +21,47 @@
  */
 #include "measuressettingsmodel.h"
 
+#include "dom/score.h"
+
 #include "translation.h"
 
 using namespace mu::inspector;
 using namespace mu::notation;
 using namespace muse::actions;
+using namespace mu::engraving;
 
 MeasuresSettingsModel::MeasuresSettingsModel(QObject* parent, IElementRepositoryService* repository)
     : AbstractInspectorModel(parent, repository)
 {
     setSectionType(InspectorSectionType::SECTION_MEASURES);
-    setTitle(muse::qtrc("inspector", "Measure"));
+    setTitle(muse::qtrc("inspector", "Measures"));
+}
+
+void MeasuresSettingsModel::loadProperties()
+{
+    updateAllSystemsAreLocked();
+    updateScoreIsInPageView();
+    updateIsMakeIntoSystemAvailable();
+    updateSystemCount();
+}
+
+void MeasuresSettingsModel::onCurrentNotationChanged()
+{
+    INotationPtr notation = currentNotation();
+    if (!notation) {
+        return;
+    }
+
+    notation->undoStack()->changesChannel().onReceive(this, [this](const ChangesRange&) {
+        onNotationChanged({}, {});
+    });
+
+    AbstractInspectorModel::onCurrentNotationChanged();
+}
+
+void MeasuresSettingsModel::onNotationChanged(const engraving::PropertyIdSet&, const engraving::StyleIdSet&)
+{
+    loadProperties();
 }
 
 bool MeasuresSettingsModel::isEmpty() const
@@ -67,4 +97,139 @@ void MeasuresSettingsModel::deleteSelectedMeasures()
     }
 
     currentNotation()->interaction()->removeSelectedMeasures();
+}
+
+void MeasuresSettingsModel::moveMeasureUp()
+{
+    if (!currentNotation()) {
+        return;
+    }
+
+    currentNotation()->interaction()->moveMeasureToPrevSystem();
+}
+
+QString MeasuresSettingsModel::shortcutMoveMeasureUp() const
+{
+    return shortcutsForActionCode("move-measure-to-prev-system");
+}
+
+void MeasuresSettingsModel::moveMeasureDown()
+{
+    if (!currentNotation()) {
+        return;
+    }
+
+    currentNotation()->interaction()->moveMeasureToNextSystem();
+}
+
+QString MeasuresSettingsModel::shortcutMoveMeasureDown() const
+{
+    return shortcutsForActionCode("move-measure-to-next-system");
+}
+
+void MeasuresSettingsModel::toggleSystemLock()
+{
+    if (!currentNotation()) {
+        return;
+    }
+
+    currentNotation()->interaction()->toggleSystemLock();
+    updateAllSystemsAreLocked();
+}
+
+QString MeasuresSettingsModel::shortcutToggleSystemLock() const
+{
+    return shortcutsForActionCode("toggle-system-lock");
+}
+
+bool MeasuresSettingsModel::allSystemsAreLocked() const
+{
+    return m_allSystemsAreLocked;
+}
+
+void MeasuresSettingsModel::updateAllSystemsAreLocked()
+{
+    std::vector<System*> systems = currentNotation()->elements()->msScore()->selection().selectedSystems();
+
+    bool allLocked = true;
+    for (System* system : systems) {
+        if (!system->isLocked()) {
+            allLocked = false;
+            break;
+        }
+    }
+
+    if (m_allSystemsAreLocked != allLocked) {
+        m_allSystemsAreLocked = allLocked;
+        emit allSystemsAreLockedChanged(m_allSystemsAreLocked);
+    }
+}
+
+bool MeasuresSettingsModel::scoreIsInPageView() const
+{
+    return m_scoreIsInPageView;
+}
+
+bool MeasuresSettingsModel::isMakeIntoSystemAvailable() const
+{
+    return m_isMakeIntoSystemAvailable;
+}
+
+size_t MeasuresSettingsModel::systemCount() const
+{
+    return m_systemCount;
+}
+
+void MeasuresSettingsModel::updateScoreIsInPageView()
+{
+    const Score* score = currentNotation()->elements()->msScore();
+    bool isInPageView = score->layoutMode() != LayoutMode::LINE;
+
+    if (m_scoreIsInPageView != isInPageView) {
+        m_scoreIsInPageView = isInPageView;
+        emit scoreIsInPageViewChanged(m_scoreIsInPageView);
+    }
+}
+
+void MeasuresSettingsModel::updateIsMakeIntoSystemAvailable()
+{
+    const Selection& selection = currentNotation()->elements()->msScore()->selection();
+    const MeasureBase* startMB = selection.startMeasureBase();
+    const MeasureBase* endMB = selection.endMeasureBase();
+    if (!startMB || !endMB) {
+        return;
+    }
+
+    bool available = true;
+    if (startMB->isStartOfSystemLock() && endMB->isEndOfSystemLock() && startMB->systemLock() == endMB->systemLock()) {
+        available = false;
+    }
+
+    if (m_isMakeIntoSystemAvailable != available) {
+        m_isMakeIntoSystemAvailable = available;
+        emit isMakeIntoSystemAvailableChanged(m_isMakeIntoSystemAvailable);
+    }
+}
+
+void MeasuresSettingsModel::updateSystemCount()
+{
+    size_t count = currentNotation()->elements()->msScore()->selection().selectedSystems().size();
+    if (count != m_systemCount) {
+        m_systemCount = count;
+        emit systemCountChanged(count);
+    }
+}
+
+void MeasuresSettingsModel::makeIntoSystem()
+{
+    if (!currentNotation()) {
+        return;
+    }
+
+    currentNotation()->interaction()->makeIntoSystem();
+}
+
+QString MeasuresSettingsModel::shortcutMakeIntoSystem() const
+{
+    return shortcutsForActionCode("make-into-system");
 }

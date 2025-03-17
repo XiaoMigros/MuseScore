@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_PROPERTY_H
-#define MU_ENGRAVING_PROPERTY_H
+#pragma once
 
 #include "global/types/string.h"
 
@@ -94,6 +93,7 @@ enum class Pid {
     ARTICULATION_ANCHOR,
 
     DIRECTION,
+    HORIZONTAL_DIRECTION,
     STEM_DIRECTION,
     NO_STEM,
     SLUR_DIRECTION,
@@ -143,6 +143,13 @@ enum class Pid {
     IMAGE_WIDTH,
     IMAGE_FRAMED,
 
+    FRET_FRAME_TEXT_SCALE,
+    FRET_FRAME_DIAGRAM_SCALE,
+    FRET_FRAME_COLUMN_GAP,
+    FRET_FRAME_ROW_GAP,
+    FRET_FRAME_CHORDS_PER_ROW,
+    FRET_FRAME_H_ALIGN,
+
     SCALE,
     LOCK_ASPECT_RATIO,
     SIZE_IS_SPATIUM,
@@ -187,7 +194,7 @@ enum class Pid {
     VELO_CHANGE_METHOD,
     VELO_CHANGE_SPEED,
     DYNAMIC_TYPE,
-//100
+
     SINGLE_NOTE_DYNAMICS,
     CHANGE_METHOD,
     PLACEMENT,                // Goes with P_TYPE::PLACEMENT
@@ -222,6 +229,7 @@ enum class Pid {
     INTERVAL_ABOVE,
     INTERVAL_BELOW,
     ORNAMENT_SHOW_ACCIDENTAL,
+    ORNAMENT_SHOW_CUE_NOTE,
     START_ON_UPPER_NOTE,
 
     TIMESIG,
@@ -234,6 +242,7 @@ enum class Pid {
     OFFSET2,
     BREAK_MMR,
     MMREST_NUMBER_POS,
+    MMREST_NUMBER_OFFSET,
     MMREST_NUMBER_VISIBLE,
     MEASURE_REPEAT_NUMBER_POS,
     REPEAT_COUNT,
@@ -309,7 +318,7 @@ enum class Pid {
 
     BRACKET_COLUMN,
     INAME_LAYOUT_POSITION,
-//200
+
     TEXT_STYLE,
 
     FONT_FACE,
@@ -359,6 +368,8 @@ enum class Pid {
     END_FONT_SIZE,
     END_FONT_STYLE,
     END_TEXT_OFFSET,
+
+    NOTELINE_PLACEMENT,
 
     AVOID_BARLINES, // meant for Dynamics
     DYNAMICS_SIZE,
@@ -434,6 +445,9 @@ enum class Pid {
     CAPO_GENERATE_TEXT,
 
     TIE_PLACEMENT,
+    MIN_LENGTH,
+
+    PARTIAL_SPANNER_DIRECTION,
 
     POSITION_LINKED_TO_MASTER,
     APPEARANCE_LINKED_TO_MASTER,
@@ -450,18 +464,20 @@ enum class Pid {
 
     APPLY_TO_ALL_STAVES,
 
+    IS_COURTESY,
+
     END
 };
 
 // Determines propagation of properties between score and parts
-enum class PropertyPropagation {
+enum class PropertyPropagation : unsigned char {
     NONE,
     PROPAGATE,
     UNLINK,
 };
 
 // Each group can be propagated differently between score and parts
-enum class PropertyGroup {
+enum class PropertyGroup : unsigned char {
     POSITION,
     TEXT,
     APPEARANCE,
@@ -479,5 +495,3 @@ extern PropertyGroup propertyGroup(Pid id);
 extern Pid propertyId(const muse::AsciiStringView& name);
 extern String propertyUserName(Pid);
 } // namespace mu::engraving
-
-#endif
