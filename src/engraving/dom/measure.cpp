@@ -1387,38 +1387,19 @@ bool Measure::acceptDrop(EditData& data) const
     }
 
     case ElementType::ACTION_ICON:
-        switch (toActionIcon(e)->actionType()) {
-        case ActionIconType::VFRAME:
-        case ActionIconType::HFRAME:
-        case ActionIconType::TFRAME:
-        case ActionIconType::FFRAME:
-        case ActionIconType::MEASURE:
-            viewer->setDropRectangle(canvasBoundingRect());
-            return true;
-        case ActionIconType::STAFF_TYPE_CHANGE:
+        if (toActionIcon(e)->actionType() == ActionIconType::STAFF_TYPE_CHANGE) {
             if (!canAddStaffTypeChange(staffIdx)) {
                 return false;
             }
             viewer->setDropRectangle(staffRect);
             return true;
-        case ActionIconType::SYSTEM_LOCK:
-        {
-            LayoutMode layoutMode = score()->layoutMode();
-            if (layoutMode == LayoutMode::PAGE || layoutMode == LayoutMode::SYSTEM) {
-                viewer->setDropRectangle(canvasBoundingRect().adjusted(-x(), 0.0, 0.0, 0.0));
-                return true;
-            }
-            return false;
-        }
-        default:
-            break;
         }
         break;
 
     default:
         break;
     }
-    return false;
+    return MeasureBase::acceptDrop(data);
 }
 
 //---------------------------------------------------------
@@ -1714,40 +1695,6 @@ EngravingItem* Measure::drop(EditData& data)
         score()->cmdAddMeasureRepeat(this, numMeasures, staffIdx);
         break;
     }
-    case ElementType::ACTION_ICON:
-        switch (toActionIcon(e)->actionType()) {
-        case ActionIconType::VFRAME:
-            score()->insertBox(ElementType::VBOX, this);
-            break;
-        case ActionIconType::HFRAME:
-            score()->insertBox(ElementType::HBOX, this);
-            break;
-        case ActionIconType::TFRAME:
-            score()->insertBox(ElementType::TBOX, this);
-            break;
-        case ActionIconType::FFRAME:
-            score()->insertBox(ElementType::FBOX, this);
-            break;
-        case ActionIconType::MEASURE:
-            score()->insertMeasure(ElementType::MEASURE, this);
-            break;
-        case ActionIconType::STAFF_TYPE_CHANGE: {
-            if (!canAddStaffTypeChange(staffIdx)) {
-                return nullptr;
-            }
-            EngravingItem* stc = Factory::createStaffTypeChange(this);
-            stc->setParent(this);
-            stc->setTrack(staffIdx * VOICES);
-            score()->undoAddElement(stc);
-            break;
-        }
-        case ActionIconType::SYSTEM_LOCK:
-            score()->makeIntoSystem(system()->first(), this);
-            break;
-        default:
-            break;
-        }
-        break;
 
     case ElementType::STAFFTYPE_CHANGE:
     {
@@ -1757,12 +1704,23 @@ EngravingItem* Measure::drop(EditData& data)
     }
     break;
 
+    case ElementType::ACTION_ICON:
+        if (toActionIcon(e)->actionType() == ActionIconType::STAFF_TYPE_CHANGE) {
+            if (!canAddStaffTypeChange(staffIdx)) {
+                return nullptr;
+            }
+            EngravingItem* stc = Factory::createStaffTypeChange(this);
+            stc->setParent(this);
+            stc->setTrack(staffIdx * VOICES);
+            score()->undoAddElement(stc);
+            break;
+        }
+    // fall through
+
     default:
-        LOGD("Measure: cannot drop %s here", e->typeName());
-        delete e;
-        break;
+        return MeasureBase::drop(data);
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------

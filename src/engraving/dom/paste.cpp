@@ -29,6 +29,8 @@
 #include "types/typesconv.h"
 
 #include "articulation.h"
+#include "actionicon.h"
+#include "barline.h"
 #include "beam.h"
 #include "breath.h"
 #include "chord.h"
@@ -46,6 +48,7 @@
 #include "part.h"
 #include "rest.h"
 #include "score.h"
+#include "segment.h"
 #include "sig.h"
 #include "staff.h"
 #include "tie.h"
@@ -446,15 +449,39 @@ std::vector<EngravingItem*> Score::cmdPaste(const IMimeData* ms, MuseScoreView* 
             return {};
         }
 
-        std::vector<EngravingItem*> targetElements;
-        switch (m_selection.state()) {
-        case SelState::NONE:
+        if (m_selection.state() == SelState::NONE) {
             UNREACHABLE;
             return {};
-        case SelState::LIST:
+        }
+        std::vector<EngravingItem*> targetElements;
+
+        EditData ddata(view);
+        ddata.dropElement = el.get();
+
+        const bool isMeasureAnchoredElement = ddata.dropElement->type() == ElementType::MARKER
+                                              || ddata.dropElement->type() == ElementType::JUMP
+                                              || ddata.dropElement->type() == ElementType::SPACER
+                                              || ddata.dropElement->type() == ElementType::VBOX
+                                              || ddata.dropElement->type() == ElementType::HBOX
+                                              || ddata.dropElement->type() == ElementType::TBOX
+                                              || ddata.dropElement->type() == ElementType::MEASURE
+                                              || ddata.dropElement->type() == ElementType::BRACKET
+                                              || (ddata.dropElement->type() == ElementType::ACTION_ICON
+                                                  && (toActionIcon(ddata.dropElement)->actionType()
+                                                      == mu::engraving::ActionIconType::VFRAME
+                                                      || toActionIcon(ddata.dropElement)->actionType()
+                                                      == mu::engraving::ActionIconType::HFRAME
+                                                      || toActionIcon(ddata.dropElement)->actionType()
+                                                      == mu::engraving::ActionIconType::TFRAME
+                                                      || toActionIcon(ddata.dropElement)->actionType()
+                                                      == mu::engraving::ActionIconType::STAFF_TYPE_CHANGE
+                                                      || toActionIcon(ddata.dropElement)->actionType()
+                                                      == mu::engraving::ActionIconType::MEASURE
+                                                      || toActionIcon(ddata.dropElement)->actionType()
+                                                      == mu::engraving::ActionIconType::BRACKETS));
+        if (isMeasureAnchoredElement || m_selection.state() == SelState::LIST) {
             targetElements = m_selection.elements();
-            break;
-        case SelState::RANGE:
+        } else if (m_selection.state() == SelState::RANGE) {
             // TODO: make this as smart as `NotationInteraction::applyPaletteElement`,
             // without duplicating logic. (Currently, for range selections, we only
             // paste onto the "top-left corner".
@@ -463,7 +490,6 @@ std::vector<EngravingItem*> Score::cmdPaste(const IMimeData* ms, MuseScoreView* 
 
             // The usage of `firstElementForNavigation` is inspired by `NotationInteraction::applyPaletteElement`.
             targetElements = { firstSegment->firstElementForNavigation(firstStaffIndex) };
-            break;
         }
 
         if (targetElements.empty()) {
@@ -472,20 +498,35 @@ std::vector<EngravingItem*> Score::cmdPaste(const IMimeData* ms, MuseScoreView* 
             return {};
         }
 
-        for (EngravingItem* target : targetElements) {
-            addRefresh(target->pageBoundingRect()); // layout() ?!
-            el->setTrack(target->track());
+        if (isMeasureAnchoredElement) {
+            // we add the following measure-based items to each measure containing selected items
+            std::vector<Measure*> measuresWithSelectedContent;
+            for (EngravingItem* e : targetElements) {
+                Measure* m = e->findMeasure();
+                if (!m) {
+                    continue;
+                }
+                if (ddata.dropElement->type() == ElementType::MARKER && e->isBarLine()
+                    && toBarLine(e)->segment()->segmentType() != SegmentType::BeginBarLine
+                    && toBarLine(e)->segment()->segmentType() != SegmentType::StartRepeatBarLine) {
+                    // exception: markers are anchored to the start of a measure,
+                    // so when the user selects an end barline we take the next measure
+                    m = m->nextMeasureMM() ? m->nextMeasureMM() : m;
+                }
+                if (muse::contains(measuresWithSelectedContent, m)) {
+                    continue;
+                }
+                measuresWithSelectedContent.push_back(m);
 
-            EditData ddata(view);
-            ddata.dropElement = el.get();
-            ddata.pos = target->pageBoundingRect().topLeft();
+                //addRefresh(m->pageBoundingRect()); // layout() ?!
+                el->setTrack(m->track());
+                ddata.pos = m->canvasBoundingRect().topLeft();
+                EditData* dropData = &ddata;
+                if (m->acceptDrop(*dropData)) {
+                    dropData->dropElement = el->clone();
 
-            if (target->acceptDrop(ddata)) {
-                if (!el->isNote() || (target = prepareTarget(target, toNote(el.get()), duration))) {
-                    ddata.dropElement = el->clone();
-
-                    if (ddata.dropElement->systemFlag()) {
-                        EngravingItem* newEl = pasteSystemObject(ddata, target);
+                    if (dropData->dropElement->systemFlag()) {
+                        EngravingItem* newEl = pasteSystemObject(*dropData, m);
                         if (newEl) {
                             droppedElements.emplace_back(newEl);
                         }
@@ -493,9 +534,46 @@ std::vector<EngravingItem*> Score::cmdPaste(const IMimeData* ms, MuseScoreView* 
                         continue;
                     }
 
-                    EngravingItem* dropped = target->drop(ddata);
+                    EngravingItem* dropped = m->drop(*dropData);
                     if (dropped) {
                         droppedElements.emplace_back(dropped);
+                    }
+                }
+
+                //needs fixing!! what applyDropPaletteElements it, score, modifiers applyDropPaletteElement(score, m, el, modifiers);
+                if (el->type() == ElementType::BRACKET) {
+                    break;
+                }
+            }
+            if (measuresWithSelectedContent.empty()) {
+                LOGE() << "No valid target elements in selection";
+                MScore::setError(MsError::NO_DEST);
+                return {};
+            }
+            return droppedElements;
+        } else {
+            for (EngravingItem* target : targetElements) {
+                addRefresh(target->pageBoundingRect()); // layout() ?!
+                el->setTrack(target->track());
+                ddata.pos = target->pageBoundingRect().topLeft();
+
+                if (target->acceptDrop(ddata)) {
+                    if (!el->isNote() || (target = prepareTarget(target, toNote(el.get()), duration))) {
+                        ddata.dropElement = el->clone();
+
+                        if (ddata.dropElement->systemFlag()) {
+                            EngravingItem* newEl = pasteSystemObject(ddata, target);
+                            if (newEl) {
+                                droppedElements.emplace_back(newEl);
+                            }
+
+                            continue;
+                        }
+
+                        EngravingItem* dropped = target->drop(ddata);
+                        if (dropped) {
+                            droppedElements.emplace_back(dropped);
+                        }
                     }
                 }
             }
