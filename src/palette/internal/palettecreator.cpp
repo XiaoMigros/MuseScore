@@ -418,8 +418,10 @@ PalettePtr PaletteCreator::newRepeatsPalette(bool defaultPalette)
     const std::vector<MarkerType> allMarkers = {
         MarkerType::SEGNO,
         MarkerType::VARSEGNO,
+        MarkerType::JPN_SEGNO,
         MarkerType::CODA,
         MarkerType::VARCODA,
+        MarkerType::JPN_CODA,
         MarkerType::CODETTA,
         MarkerType::FINE,
         MarkerType::TOCODA,
