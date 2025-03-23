@@ -61,6 +61,7 @@ class TextSettingsModel : public AbstractInspectorModel
         bool isSpecialCharactersInsertionAvailable READ isSpecialCharactersInsertionAvailable NOTIFY isSpecialCharactersInsertionAvailableChanged)
     Q_PROPERTY(bool isDynamicSpecificSettings READ isDynamicSpecificSettings NOTIFY isDynamicSpecificSettingsChanged)
     Q_PROPERTY(bool isHorizontalAlignmentAvailable READ isHorizontalAlignmentAvailable NOTIFY isHorizontalAlignmentAvailableChanged)
+    Q_PROPERTY(bool isAllSettingsVisible READ isAllSettingsVisible NOTIFY isAllSettingsVisibleChanged)
 
 public:
     explicit TextSettingsModel(QObject* parent, IElementRepositoryService* repository);
@@ -101,12 +102,14 @@ public:
     bool isSpecialCharactersInsertionAvailable() const;
     bool isDynamicSpecificSettings() const;
     bool isHorizontalAlignmentAvailable() const;
+    bool isAllSettingsVisible() const;
 
 public slots:
     void setAreStaffTextPropertiesAvailable(bool areStaffTextPropertiesAvailable);
     void setIsSpecialCharactersInsertionAvailable(bool isSpecialCharactersInsertionAvailable);
     void setIsDynamicSpecificSettings(bool isOnlyDynamics);
     void setIsHorizontalAlignmentAvailable(bool isHorizontalAlignmentAvailable);
+    void setIsAllSettingsVisible(bool isAllSettingsVisible);
 
 signals:
     void textStylesChanged();
@@ -115,6 +118,7 @@ signals:
     void isSpecialCharactersInsertionAvailableChanged(bool isSpecialCharactersInsertionAvailable);
     void isDynamicSpecificSettingsChanged(bool isDynamicSpecificSettings);
     void isHorizontalAlignmentAvailableChanged(bool isHorizontalAlignmentAvailable);
+    void isAllSettingsVisibleChanged(bool isAllSettingsVisible);
 
 private:
     bool isTextEditingStarted() const;
@@ -124,6 +128,7 @@ private:
     void updateStaffPropertiesAvailability();
     void updateIsDynamicSpecificSettings();
     void updateIsHorizontalAlignmentAvailable();
+    void updateIsAllSettingsVisible();
 
     void loadProperties(const mu::engraving::PropertyIdSet& propertyIdSet);
 
@@ -152,6 +157,7 @@ private:
     bool m_isSpecialCharactersInsertionAvailable = false;
     bool m_isDynamicSpecificSettings = false;
     bool m_isHorizontalAlignmentAvailable = true;
+    bool m_isAllSettingsVisible = true;
 };
 }
 

@@ -210,6 +210,7 @@ void TextSettingsModel::loadProperties(const PropertyIdSet& propertyIdSet)
     updateStaffPropertiesAvailability();
     updateIsDynamicSpecificSettings();
     updateIsHorizontalAlignmentAvailable();
+    updateIsAllSettingsVisible();
 }
 
 void TextSettingsModel::resetProperties()
@@ -390,6 +391,11 @@ bool TextSettingsModel::isHorizontalAlignmentAvailable() const
     return m_isHorizontalAlignmentAvailable;
 }
 
+bool TextSettingsModel::isAllSettingsVisible() const
+{
+    return m_isAllSettingsVisible;
+}
+
 void TextSettingsModel::setAreStaffTextPropertiesAvailable(bool areStaffTextPropertiesAvailable)
 {
     if (m_areStaffTextPropertiesAvailable == areStaffTextPropertiesAvailable) {
@@ -428,6 +434,16 @@ void TextSettingsModel::setIsHorizontalAlignmentAvailable(bool isHorizontalAlign
 
     m_isHorizontalAlignmentAvailable = isHorizontalAlignmentAvailable;
     emit isHorizontalAlignmentAvailableChanged(m_isHorizontalAlignmentAvailable);
+}
+
+void TextSettingsModel::setIsAllSettingsVisible(bool isAllSettingsVisible)
+{
+    if (isAllSettingsVisible == m_isAllSettingsVisible) {
+        return;
+    }
+
+    m_isAllSettingsVisible = isAllSettingsVisible;
+    emit isAllSettingsVisibleChanged(m_isAllSettingsVisible);
 }
 
 void TextSettingsModel::updateFramePropertiesAvailability()
@@ -474,6 +490,18 @@ void TextSettingsModel::updateIsHorizontalAlignmentAvailable()
         }
     }
     setIsHorizontalAlignmentAvailable(available);
+}
+
+void TextSettingsModel::updateIsAllSettingsVisible()
+{
+    bool available = false;
+    for (EngravingItem* item : m_elementList) {
+        if (!item->isTextLineBase() && !item->isTextLineBaseSegment()) {
+			available = true;
+			break;
+		}
+    }
+    setIsAllSettingsVisible(available);
 }
 
 bool TextSettingsModel::isTextEditingStarted() const

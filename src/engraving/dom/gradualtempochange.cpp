@@ -42,18 +42,22 @@ static const ElementStyle tempoStyle {
     { Sid::tempoChangeColor, Pid::COLOR },
     { Sid::tempoChangePosAbove, Pid::OFFSET },
 
+    { Sid::tempoChangeFontFace, Pid::FONT_FACE },
     { Sid::tempoChangeFontFace, Pid::BEGIN_FONT_FACE },
     { Sid::tempoChangeFontFace, Pid::CONTINUE_FONT_FACE },
     { Sid::tempoChangeFontFace, Pid::END_FONT_FACE },
 
+    { Sid::tempoChangeFontSize, Pid::FONT_SIZE },
     { Sid::tempoChangeFontSize, Pid::BEGIN_FONT_SIZE },
     { Sid::tempoChangeFontSize, Pid::CONTINUE_FONT_SIZE },
     { Sid::tempoChangeFontSize, Pid::END_FONT_SIZE },
 
+    { Sid::tempoChangeFontStyle, Pid::FONT_STYLE },
     { Sid::tempoChangeFontStyle, Pid::BEGIN_FONT_STYLE },
     { Sid::tempoChangeFontStyle, Pid::CONTINUE_FONT_STYLE },
     { Sid::tempoChangeFontStyle, Pid::END_FONT_STYLE },
 
+    { Sid::tempoChangeAlign, Pid::ALIGN },
     { Sid::tempoChangeAlign, Pid::BEGIN_TEXT_ALIGN },
     { Sid::tempoChangeAlign, Pid::CONTINUE_TEXT_ALIGN },
     { Sid::tempoChangeAlign, Pid::END_TEXT_ALIGN },

@@ -121,7 +121,7 @@ void TextLineBaseSegment::spatiumChanged(double ov, double nv)
     m_endText->spatiumChanged(ov, nv);
 }
 
-static constexpr std::array<Pid, 27> TextLineBasePropertyId = { {
+static constexpr std::array<Pid, 31> TextLineBasePropertyId = { {
     Pid::LINE_VISIBLE,
     Pid::BEGIN_HOOK_TYPE,
     Pid::BEGIN_HOOK_HEIGHT,
@@ -149,9 +149,25 @@ static constexpr std::array<Pid, 27> TextLineBasePropertyId = { {
     Pid::END_FONT_SIZE,
     Pid::END_FONT_STYLE,
     Pid::END_TEXT_OFFSET,
+    // Text (global)
+    //Pid::TEXT_STYLE,
+    Pid::FONT_FACE,
+    Pid::FONT_SIZE,
+    Pid::FONT_STYLE,
+    /*Pid::TEXT_LINE_SPACING,
+    /*Pid::FRAME_TYPE,
+    Pid::FRAME_WIDTH,
+    Pid::FRAME_PADDING,
+    Pid::FRAME_ROUND,
+    Pid::FRAME_FG_COLOR,
+    Pid::FRAME_BG_COLOR,*/
+    //Pid::TEXT,
+    Pid::ALIGN,
+    //Pid::TEXT_SCRIPT_ALIGN,
+    //Pid::TEXT_LINKED_TO_MASTER,
 } };
 
-const std::array<Pid, 27>& TextLineBase::textLineBasePropertyIds()
+const std::array<Pid, 31>& TextLineBase::textLineBasePropertyIds()
 {
     return TextLineBasePropertyId;
 }
@@ -218,6 +234,52 @@ void TextLineBase::spatiumChanged(double /*ov*/, double /*nv*/)
 PropertyValue TextLineBase::getProperty(Pid id) const
 {
     switch (id) {
+    // Text (global)
+    //case Pid::TEXT_STYLE:
+    case Pid::FONT_FACE: {
+		if (_beginFontFamily == _continueFontFamily && _beginFontFamily == _endFontFamily) {
+			return _beginFontFamily;
+		} else {
+			return PropertyValue();
+		}
+	}
+    case Pid::FONT_SIZE: {
+		if (_beginFontSize == _continueFontSize && _beginFontSize == _endFontSize) {
+			return _beginFontSize;
+		} else {
+			return PropertyValue();
+		}
+	}
+    case Pid::FONT_STYLE: {
+		if (int(_beginFontStyle) == int(_continueFontStyle) && int(_beginFontStyle) == int(_endFontStyle)) {
+			return int(_beginFontStyle);
+		} else {
+			return PropertyValue();
+		}
+	}
+    //case Pid::TEXT_LINE_SPACING:
+    /*case Pid::FRAME_TYPE:
+    case Pid::FRAME_WIDTH:
+    case Pid::FRAME_PADDING:
+    case Pid::FRAME_ROUND:
+    case Pid::FRAME_FG_COLOR:
+    case Pid::FRAME_BG_COLOR:*/
+    case Pid::ALIGN: {
+		if (beginTextAlign() == continueTextAlign() && beginTextAlign() == endTextAlign()) {
+			return PropertyValue::fromValue(beginTextAlign());
+		} else {
+			return PropertyValue();
+		}
+	}
+    //case Pid::TEXT_SCRIPT_ALIGN:
+    case Pid::TEXT: {
+		if (beginText() == continueText() && beginText() == endText()) {
+			return beginText();
+		} else {
+			return PropertyValue();
+		}
+	}
+    //case Pid::TEXT_LINKED_TO_MASTER:
     case Pid::BEGIN_TEXT:
         return beginText();
     case Pid::BEGIN_TEXT_ALIGN:
@@ -286,9 +348,69 @@ PropertyValue TextLineBase::getProperty(Pid id) const
 bool TextLineBase::setProperty(Pid id, const PropertyValue& v)
 {
     switch (id) {
-    case Pid::BEGIN_TEXT_PLACE:
-        _beginTextPlace = v.value<TextPlace>();
+    //  Text (global)
+    /*case Pid::TEXT_STYLE:
+        initTextStyleType(v.value<TextStyleType>());
+        break;*/
+    case Pid::FONT_FACE:
+        setProperty(Pid::BEGIN_FONT_FACE, v);
+        setProperty(Pid::CONTINUE_FONT_FACE, v);
+        setProperty(Pid::END_FONT_FACE, v);
         break;
+    case Pid::FONT_SIZE:
+        setProperty(Pid::BEGIN_FONT_SIZE, v);
+        setProperty(Pid::CONTINUE_FONT_SIZE, v);
+        setProperty(Pid::END_FONT_SIZE, v);
+        break;
+    case Pid::FONT_STYLE:
+        setProperty(Pid::BEGIN_FONT_STYLE, v);
+        setProperty(Pid::CONTINUE_FONT_STYLE, v);
+        setProperty(Pid::END_FONT_STYLE, v);
+        break;
+    /*case Pid::TEXT_LINE_SPACING:
+        setTextLineSpacing(v.toReal());
+        break;*/
+    /*case Pid::FRAME_TYPE:
+        setFrameType(FrameType(v.toInt()));
+        break;
+    case Pid::FRAME_WIDTH:
+        setFrameWidth(v.value<Spatium>());
+        break;
+    case Pid::FRAME_PADDING:
+        setPaddingWidth(v.value<Spatium>());
+        break;
+    case Pid::FRAME_ROUND:
+        setFrameRound(v.toInt());
+        break;
+    case Pid::FRAME_FG_COLOR:
+        setFrameColor(v.value<Color>());
+        break;
+    case Pid::FRAME_BG_COLOR:
+        setBgColor(v.value<Color>());
+        break;*/
+    /*case Pid::TEXT:
+        setBeginText(v.value<String>());
+        setContinueText(v.value<String>());
+        setEndText(v.value<String>());
+        break;*/
+    case Pid::ALIGN:
+        setProperty(Pid::BEGIN_TEXT_ALIGN, v);
+        setProperty(Pid::CONTINUE_TEXT_ALIGN, v);
+        setProperty(Pid::END_TEXT_ALIGN, v);
+        break;
+    /*case Pid::TEXT_SCRIPT_ALIGN:
+        m_cursor->setFormat(FormatId::Valign, v.toInt());
+        break;*/
+    /*case Pid::TEXT_LINKED_TO_MASTER:
+        if (isTextLinkedToMaster() == v.toBool()) {
+            break;
+        }
+        if (!isTextLinkedToMaster()) {
+            relinkPropertiesToMaster(PropertyGroup::TEXT);
+        }
+        setTextLinkedToMaster(v.toBool());
+        break;*/
+    //  Text (local)
     case Pid::BEGIN_TEXT_ALIGN:
         _beginTextAlign = v.value<Align>();
         break;
@@ -298,23 +420,14 @@ bool TextLineBase::setProperty(Pid id, const PropertyValue& v)
     case Pid::END_TEXT_ALIGN:
         _endTextAlign = v.value<Align>();
         break;
+    case Pid::BEGIN_TEXT_PLACE:
+        _beginTextPlace = v.value<TextPlace>();
+        break;
     case Pid::CONTINUE_TEXT_PLACE:
         _continueTextPlace = v.value<TextPlace>();
         break;
     case Pid::END_TEXT_PLACE:
         _endTextPlace = v.value<TextPlace>();
-        break;
-    case Pid::BEGIN_HOOK_HEIGHT:
-        _beginHookHeight = v.value<Spatium>();
-        break;
-    case Pid::END_HOOK_HEIGHT:
-        _endHookHeight = v.value<Spatium>();
-        break;
-    case Pid::BEGIN_HOOK_TYPE:
-        _beginHookType = v.value<HookType>();
-        break;
-    case Pid::END_HOOK_TYPE:
-        _endHookType = v.value<HookType>();
         break;
     case Pid::BEGIN_TEXT:
         setBeginText(v.value<String>());
@@ -322,8 +435,8 @@ bool TextLineBase::setProperty(Pid id, const PropertyValue& v)
     case Pid::BEGIN_TEXT_OFFSET:
         setBeginTextOffset(v.value<PointF>());
         break;
-    case Pid::GAP_BETWEEN_TEXT_AND_LINE:
-        _gapBetweenTextAndLine = v.value<Spatium>();
+    case Pid::CONTINUE_TEXT:
+        setContinueText(v.value<String>());
         break;
     case Pid::CONTINUE_TEXT_OFFSET:
         setContinueTextOffset(v.value<PointF>());
@@ -331,22 +444,13 @@ bool TextLineBase::setProperty(Pid id, const PropertyValue& v)
     case Pid::END_TEXT_OFFSET:
         setEndTextOffset(v.value<PointF>());
         break;
-    case Pid::CONTINUE_TEXT:
-        setContinueText(v.value<String>());
-        break;
     case Pid::END_TEXT:
         setEndText(v.value<String>());
-        break;
-    case Pid::LINE_VISIBLE:
-        setLineVisible(v.toBool());
         break;
     case Pid::BEGIN_FONT_FACE:
         setBeginFontFamily(v.value<String>());
         break;
     case Pid::BEGIN_FONT_SIZE:
-        if (v.toReal() <= 0) {
-            ASSERT_X(String(u"font size is %1").arg(v.toReal()));
-        }
         setBeginFontSize(v.toReal());
         break;
     case Pid::BEGIN_FONT_STYLE:
@@ -372,6 +476,25 @@ bool TextLineBase::setProperty(Pid id, const PropertyValue& v)
         break;
     case Pid::TEXT_SIZE_SPATIUM_DEPENDENT:
         setTextSizeSpatiumDependent(v.toBool());
+        break;
+    // Line
+    case Pid::BEGIN_HOOK_HEIGHT:
+        _beginHookHeight = v.value<Spatium>();
+        break;
+    case Pid::END_HOOK_HEIGHT:
+        _endHookHeight = v.value<Spatium>();
+        break;
+    case Pid::BEGIN_HOOK_TYPE:
+        _beginHookType = v.value<HookType>();
+        break;
+    case Pid::END_HOOK_TYPE:
+        _endHookType = v.value<HookType>();
+        break;
+    case Pid::GAP_BETWEEN_TEXT_AND_LINE:
+        _gapBetweenTextAndLine = v.value<Spatium>();
+        break;
+    case Pid::LINE_VISIBLE:
+        setLineVisible(v.toBool());
         break;
     default:
         return SLine::setProperty(id, v);

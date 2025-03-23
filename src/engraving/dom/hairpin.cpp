@@ -46,6 +46,10 @@ namespace mu::engraving {
 //---------------------------------------------------------
 
 static const ElementStyle hairpinStyle {
+    { Sid::hairpinFontFace,                    Pid::FONT_FACE },
+    { Sid::hairpinFontSize,                    Pid::FONT_SIZE },
+    { Sid::hairpinFontStyle,                   Pid::FONT_STYLE },
+    { Sid::hairpinTextAlign,                   Pid::ALIGN },
     { Sid::hairpinFontFace,                    Pid::BEGIN_FONT_FACE },
     { Sid::hairpinFontSize,                    Pid::BEGIN_FONT_SIZE },
     { Sid::hairpinFontStyle,                   Pid::BEGIN_FONT_STYLE },
