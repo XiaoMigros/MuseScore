@@ -510,6 +510,18 @@ PalettePtr PaletteCreator::newRepeatsPalette(bool defaultPalette)
     volta->setEndings(il);
     sp->appendElement(volta, QT_TRANSLATE_NOOP("palette", "Terza volta"));
 
+    if (!defaultPalette) {
+        auto vibrato = makeElement<Vibrato>(gpaletteScore);
+        vibrato->setVibratoType(VibratoType::VIBRATO_SAWTOOTH);
+        vibrato->setLen(w);
+        sp->appendElement(vibrato, TConv::userName(VibratoType::VIBRATO_SAWTOOTH));
+
+        vibrato = makeElement<Vibrato>(gpaletteScore);
+        vibrato->setVibratoType(VibratoType::VIBRATO_SAWTOOTH_WIDE);
+        vibrato->setLen(w);
+        sp->appendElement(vibrato, TConv::userName(VibratoType::VIBRATO_SAWTOOTH_WIDE));
+    }
+
     return sp;
 }
 

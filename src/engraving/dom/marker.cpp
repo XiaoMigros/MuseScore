@@ -116,7 +116,7 @@ void Marker::setMarkerType(MarkerType t)
         break;
 
     case MarkerType::TOCODASYM:
-        txt = "To <sym>coda</sym>";
+        txt = "To <font size=\"20\"/><sym>coda</sym>";
         initTextStyleType(TextStyleType::REPEAT_RIGHT, true);
         setLabel(u"coda");
         break;
