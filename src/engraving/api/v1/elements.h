@@ -159,6 +159,12 @@ class EngravingItem : public apiv1::ScoreElement
      */
     Q_PROPERTY(QRectF bbox READ bbox)
 
+    /**
+     * EID of this element.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QString eid READ eid WRITE setEID)
+
     API_PROPERTY(subtype,                 SUBTYPE)
     API_PROPERTY_READ_ONLY_T(bool, selected, SELECTED)
     API_PROPERTY_READ_ONLY_T(bool, generated, GENERATED)
@@ -409,6 +415,9 @@ class EngravingItem : public apiv1::ScoreElement
     Staff* staff() { return wrap<Staff>(element()->staff()); }
 
     QRectF bbox() const;
+
+    QString eid() const { return QString::fromStdString(element()->eid().toStdString()); }
+    void setEID(QString eid);
 
 public:
     /// \cond MS_INTERNAL
