@@ -36,10 +36,12 @@
 #include "engraving/dom/note.h"
 #include "engraving/dom/notedot.h"
 #include "engraving/dom/page.h"
+#include "engraving/dom/rest.h"
 #include "engraving/dom/segment.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stem.h"
 #include "engraving/dom/stemslash.h"
+#include "engraving/dom/system.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/accidental.h"
 #include "engraving/dom/undo.h"
@@ -53,10 +55,13 @@ Q_MOC_INCLUDE("engraving/api/v1/tie.h")
 namespace mu::engraving::apiv1 {
 class FractionWrapper;
 class EngravingItem;
+class Page;
 class Part;
 class Staff;
+class System;
 class Tie;
 class Tuplet;
+class Measure;
 
 extern Tie* tieWrap(mu::engraving::Tie* tie);
 
@@ -106,6 +111,16 @@ class EngravingItem : public apiv1::ScoreElement
      * \since 3.3
      */
     Q_PROPERTY(apiv1::EngravingItem * parent READ parent)
+    /**
+     * Children of this element. Does not include children of children.
+     * \since 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem>* children READ children)
+    /**
+     * Children of this element, including children of children.
+     * \since 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem>* allChildren READ allChildren)
     /**
      * Staff which this element belongs to.
      * \since MuseScore 3.5
@@ -700,6 +715,27 @@ class EngravingItem : public apiv1::ScoreElement
     apiv1::EngravingItem* parent() const { return wrap(element()->parentItem()); }
     Staff* staff() { return wrap<Staff>(element()->staff()); }
 
+    QQmlListProperty<apiv1::EngravingItem>* children() const
+    {
+        mu::engraving::EngravingItemList list = element()->childrenItems(false);
+        QQmlListProperty<apiv1::EngravingItem>* eList = nullptr;
+        for (size_t i = 0; i < list.size(); ++i) {
+            eList->append(eList, wrap(list.at(i)));
+        }
+        //return wrapContainerProperty<EngravingItem>(this, eList);
+        return eList;
+    }
+
+    QQmlListProperty<apiv1::EngravingItem>* allChildren() const
+    {
+        mu::engraving::EngravingItemList list = element()->childrenItems(true);
+        /*QQmlListProperty<apiv1::EngravingItem>* eList;
+        for (size_t i = 0; i < list.size(); ++i) {
+            eList->append(eList, wrap(list.at(i)));
+        }*/
+        return wrapContainerProperty<EngravingItem>(this, list);
+    }
+
     QRectF bbox() const;
 
     QString eid() const { return QString::fromStdString(element()->eid().toStdString()); }
@@ -803,6 +839,11 @@ class Note : public EngravingItem
     /** See PluginAPI::PluginAPI::NoteValueType */
     API_PROPERTY(veloType,                VELO_TYPE)
     API_PROPERTY_T(int, userVelocity,     USER_VELOCITY)
+    /**
+     * If the note is a trill cue note (used in ornaments and trills)
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(bool isTrillCueNote READ isTrillCueNote)
 
 public:
     /// \cond MS_INTERNAL
@@ -814,6 +855,8 @@ public:
 
     int tpc() const { return note()->tpc(); }
     void setTpc(int val);
+
+    bool isTrillCueNote() { return note()->isTrillCueNote(); }
 
     apiv1::Tie* tieBack()    const
     {
@@ -885,6 +928,18 @@ class DurationElement : public EngravingItem
     */
     Q_PROPERTY(apiv1::Tuplet * tuplet READ parentTuplet)
 
+    /**
+    * Outermost tuplet which this element belongs to. If there is no parent tuplet, returns null.
+    * \since MuseScore 4.6
+    */
+    Q_PROPERTY(apiv1::Tuplet * topTuplet READ topTuplet)
+
+    /**
+    * Measure which this element belongs to.
+    * \since MuseScore 4.6
+    */
+    Q_PROPERTY(apiv1::Measure * measure READ parentMeasure)
+
 public:
     /// \cond MS_INTERNAL
     DurationElement(mu::engraving::DurationElement* de = nullptr, Ownership own = Ownership::PLUGIN)
@@ -897,6 +952,9 @@ public:
     FractionWrapper* actualDuration() const;
 
     Tuplet* parentTuplet();
+    Tuplet* topTuplet() { return wrap<Tuplet>(durationElement()->topTuplet(), Ownership::SCORE); }
+
+    Measure* parentMeasure() { return wrap<Measure>(durationElement()->measure(), Ownership::SCORE); }
     /// \endcond
 };
 
@@ -959,6 +1017,11 @@ class ChordRest : public DurationElement
      * \since MuseScore 3.6
      */
     Q_PROPERTY(apiv1::EngravingItem * beam READ beam)
+    /**
+    * Whether this element is a full measure rest.
+    * \since MuseScore 4.6
+    */
+    Q_PROPERTY(bool isWholeRest READ isWholeRest)
 
 public:
     /// \cond MS_INTERNAL
@@ -969,6 +1032,8 @@ public:
 
     QQmlListProperty<EngravingItem> lyrics() { return wrapContainerProperty<EngravingItem>(this, chordRest()->lyrics()); }   // TODO: special type for Lyrics?
     EngravingItem* beam() { return wrap(chordRest()->beam()); }
+
+    bool isWholeRest() { return chordRest()->isRest() ? toRest(chordRest())->isWholeRest() : false; }
     /// \endcond
 };
 
@@ -997,6 +1062,9 @@ class Chord : public ChordRest
     /// The PlayEventType of the chord.
     /// \since MuseScore 3.3
     Q_PROPERTY(mu::engraving::PlayEventType playEventType READ playEventType WRITE setPlayEventType)
+    /// If the chord points upwards.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool up READ up)
 
 public:
     /// \cond MS_INTERNAL
@@ -1014,6 +1082,7 @@ public:
     mu::engraving::NoteType noteType() { return chord()->noteType(); }
     mu::engraving::PlayEventType playEventType() { return chord()->playEventType(); }
     void setPlayEventType(mu::engraving::PlayEventType v);
+    bool up() { return chord()->up(); }
 
     static void addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingItem* el);
     /// \endcond
@@ -1129,6 +1198,19 @@ class Measure : public EngravingItem
     /// \since MuseScore 3.6
     Q_PROPERTY(apiv1::Measure * prevMeasureMM READ prevMeasureMM)
 
+    /**
+     * \brief Measure number, counting from 1.
+     * Number of this measure in the score counting from 1, i.e.
+     * for the first measure its \p no value will be equal to 1.
+     * User-visible measure number can be calculated as
+     * \code
+     * measure.no + measure.noOffset
+     * \endcode
+     * where \p measure is the relevant \ref Measure object.
+     * \since MuseScore 4.6
+     * \see ScoreElement::noOffset
+     */
+    Q_PROPERTY(int no READ no)
     /// List of measure-related elements: layout breaks, jump/repeat markings etc.
     /// \since MuseScore 3.3
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
@@ -1150,7 +1232,35 @@ public:
     Measure* prevMeasureMM() { return wrap<Measure>(measure()->prevMeasureMM(), Ownership::SCORE); }
     Measure* nextMeasureMM() { return wrap<Measure>(measure()->nextMeasureMM(), Ownership::SCORE); }
 
+    int no() { return measure()->no(); }
+
     QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measure()->el()); }
+    /// \endcond
+};
+
+//---------------------------------------------------------
+//   System
+///    \since MuseScore 4.6
+//---------------------------------------------------------
+
+class System : public EngravingItem
+{
+    Q_OBJECT
+    /// The first measure of this system
+    Q_PROPERTY(apiv1::Measure * firstMeasure READ firstMeasure)
+    /// The last measure of this system
+    Q_PROPERTY(apiv1::Measure * lastMeasure READ lastMeasure)
+
+public:
+    /// \cond MS_INTERNAL
+    System(mu::engraving::System* sys = nullptr, Ownership own = Ownership::SCORE)
+        : EngravingItem(sys, own) {}
+
+    mu::engraving::System* system() { return toSystem(e); }
+    const mu::engraving::System* system() const { return toSystem(e); }
+
+    Measure* firstMeasure() { return wrap<Measure>(system()->firstMeasure(), Ownership::SCORE); }
+    Measure* lastMeasure() { return wrap<Measure>(system()->lastMeasure(), Ownership::SCORE); }
     /// \endcond
 };
 
@@ -1184,6 +1294,8 @@ public:
     const mu::engraving::Page* page() const { return toPage(e); }
 
     int pagenumber() const;
+
+    QQmlListProperty<System> systems() { return wrapContainerProperty<System>(this, page()->systems()); }
     /// \endcond
 };
 
@@ -1228,6 +1340,9 @@ class Staff : public ScoreElement
 
     /** Part which this staff belongs to. */
     Q_PROPERTY(apiv1::Part * part READ part);
+    /// List of bracket items for this staff.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> brackets READ brackets)
 
 public:
     /// \cond MS_INTERNAL
@@ -1236,6 +1351,8 @@ public:
 
     mu::engraving::Staff* staff() { return toStaff(e); }
     const mu::engraving::Staff* staff() const { return toStaff(e); }
+
+    QQmlListProperty<EngravingItem> brackets() { return wrapContainerProperty<EngravingItem>(this, staff()->brackets()); }
 
     Part* part();
     /// \endcond

@@ -100,6 +100,10 @@ public:
     Q_INVOKABLE QString userName() const;
     /// Checks whether two variables represent the same object. \since MuseScore 3.3
     Q_INVOKABLE bool is(apiv1::ScoreElement* other) { return other && element() == other->element(); }
+    /// Checks whether two variables represent the same object. \since MuseScore 4.6
+    Q_INVOKABLE bool operator ==(apiv1::ScoreElement* other) { return other && element() == other->element(); }
+    /// Checks whether two variables represent different objects. \since MuseScore 4.6
+    Q_INVOKABLE bool operator !=(apiv1::ScoreElement* other) { return !operator ==(other); }
 };
 
 //---------------------------------------------------------
