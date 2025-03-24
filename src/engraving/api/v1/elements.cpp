@@ -115,6 +115,7 @@ bool Note::isChildAllowed(mu::engraving::ElementType elementType)
     case ElementType::TIE:
     case ElementType::ACCIDENTAL:
     case ElementType::TEXTLINE:
+    case ElementType::NOTELINE:
     case ElementType::GLISSANDO:
         return true;
     default:

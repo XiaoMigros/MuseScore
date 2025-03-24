@@ -237,6 +237,7 @@ enum class ElementType {
     ACCIDENTAL            = int(mu::engraving::ElementType::ACCIDENTAL),
     LEDGER_LINE           = int(mu::engraving::ElementType::LEDGER_LINE),
     STEM                  = int(mu::engraving::ElementType::STEM),
+    HOOK                  = int(mu::engraving::ElementType::HOOK),
     NOTE                  = int(mu::engraving::ElementType::NOTE),
     CLEF                  = int(mu::engraving::ElementType::CLEF),
     KEYSIG                = int(mu::engraving::ElementType::KEYSIG),
@@ -244,17 +245,20 @@ enum class ElementType {
     TIMESIG               = int(mu::engraving::ElementType::TIMESIG),
     REST                  = int(mu::engraving::ElementType::REST),
     MMREST                = int(mu::engraving::ElementType::MMREST),
+    DEAD_SLAPPED          = int(mu::engraving::ElementType::DEAD_SLAPPED),
     BREATH                = int(mu::engraving::ElementType::BREATH),
     MEASURE_REPEAT        = int(mu::engraving::ElementType::MEASURE_REPEAT),
     TIE                   = int(mu::engraving::ElementType::TIE),
     ARTICULATION          = int(mu::engraving::ElementType::ARTICULATION),
+    ORNAMENT              = int(mu::engraving::ElementType::ORNAMENT),
     FERMATA               = int(mu::engraving::ElementType::FERMATA),
     CHORDLINE             = int(mu::engraving::ElementType::CHORDLINE),
     DYNAMIC               = int(mu::engraving::ElementType::DYNAMIC),
+    EXPRESSION            = int(mu::engraving::ElementType::EXPRESSION),
     BEAM                  = int(mu::engraving::ElementType::BEAM),
-    HOOK                  = int(mu::engraving::ElementType::HOOK),
     LYRICS                = int(mu::engraving::ElementType::LYRICS),
     FIGURED_BASS          = int(mu::engraving::ElementType::FIGURED_BASS),
+    FIGURED_BASS_ITEM     = int(mu::engraving::ElementType::FIGURED_BASS_ITEM),
     MARKER                = int(mu::engraving::ElementType::MARKER),
     JUMP                  = int(mu::engraving::ElementType::JUMP),
     FINGERING             = int(mu::engraving::ElementType::FINGERING),
@@ -262,13 +266,17 @@ enum class ElementType {
     TEMPO_TEXT            = int(mu::engraving::ElementType::TEMPO_TEXT),
     STAFF_TEXT            = int(mu::engraving::ElementType::STAFF_TEXT),
     SYSTEM_TEXT           = int(mu::engraving::ElementType::SYSTEM_TEXT),
+    SOUND_FLAG            = int(mu::engraving::ElementType::SOUND_FLAG),
     PLAYTECH_ANNOTATION   = int(mu::engraving::ElementType::PLAYTECH_ANNOTATION),
+    CAPO                  = int(mu::engraving::ElementType::CAPO),
+    STRING_TUNINGS        = int(mu::engraving::ElementType::STRING_TUNINGS),
     TRIPLET_FEEL          = int(mu::engraving::ElementType::TRIPLET_FEEL),
     REHEARSAL_MARK        = int(mu::engraving::ElementType::REHEARSAL_MARK),
     INSTRUMENT_CHANGE     = int(mu::engraving::ElementType::INSTRUMENT_CHANGE),
     STAFFTYPE_CHANGE      = int(mu::engraving::ElementType::STAFFTYPE_CHANGE),
     HARMONY               = int(mu::engraving::ElementType::HARMONY),
     FRET_DIAGRAM          = int(mu::engraving::ElementType::FRET_DIAGRAM),
+    HARP_DIAGRAM          = int(mu::engraving::ElementType::HARP_DIAGRAM),
     BEND                  = int(mu::engraving::ElementType::BEND),
     STRETCHED_BEND        = int(mu::engraving::ElementType::STRETCHED_BEND),
     TREMOLOBAR            = int(mu::engraving::ElementType::TREMOLOBAR),
@@ -283,6 +291,7 @@ enum class ElementType {
     WHAMMY_BAR_SEGMENT    = int(mu::engraving::ElementType::WHAMMY_BAR_SEGMENT),
     RASGUEADO_SEGMENT     = int(mu::engraving::ElementType::RASGUEADO_SEGMENT),
     HARMONIC_MARK_SEGMENT = int(mu::engraving::ElementType::HARMONIC_MARK_SEGMENT),
+    PICK_SCRAPE_SEGMENT   = int(mu::engraving::ElementType::PICK_SCRAPE_SEGMENT),
     TEXTLINE_SEGMENT      = int(mu::engraving::ElementType::TEXTLINE_SEGMENT),
     VOLTA_SEGMENT         = int(mu::engraving::ElementType::VOLTA_SEGMENT),
     PEDAL_SEGMENT         = int(mu::engraving::ElementType::PEDAL_SEGMENT),
@@ -335,6 +344,12 @@ enum class ElementType {
     BAGPIPE_EMBELLISHMENT = int(mu::engraving::ElementType::BAGPIPE_EMBELLISHMENT),
     STICKING              = int(mu::engraving::ElementType::STICKING),
     GRACE_NOTES_GROUP     = int(mu::engraving::ElementType::GRACE_NOTES_GROUP),
+    FRET_CIRCLE           = int(mu::engraving::ElementType::FRET_CIRCLE),
+    GUITAR_BEND           = int(mu::engraving::ElementType::GUITAR_BEND),
+    GUITAR_BEND_SEGMENT   = int(mu::engraving::ElementType::GUITAR_BEND_SEGMENT),
+    GUITAR_BEND_HOLD      = int(mu::engraving::ElementType::GUITAR_BEND_HOLD),
+    GUITAR_BEND_HOLD_SEGMENT = int(mu::engraving::ElementType::GUITAR_BEND_HOLD_SEGMENT),
+    GUITAR_BEND_TEXT      = int(mu::engraving::ElementType::GUITAR_BEND_TEXT),
 
     ROOT_ITEM             = int(mu::engraving::ElementType::ROOT_ITEM),
     DUMMY                 = int(mu::engraving::ElementType::DUMMY),
@@ -580,6 +595,39 @@ enum class Anchor {
     SEGMENT, MEASURE, CHORD, NOTE
 };
 Q_ENUM_NS(Anchor);
+
+enum class MMRestRangeBracketType {
+    BRACKETS    = int(mu::engraving::MMRestRangeBracketType::BRACKETS),
+    PARENTHESES = int(mu::engraving::MMRestRangeBracketType::PARENTHESES),
+    NONE        = int(mu::engraving::MMRestRangeBracketType::NONE),
+};
+Q_ENUM_NS(MMRestRangeBracketType);
+
+enum class TripletFeelType : char {
+    NONE,
+    TRIPLET_8TH,
+    TRIPLET_16TH,
+    DOTTED_8TH,
+    DOTTED_16TH,
+    SCOTTISH_8TH,
+    SCOTTISH_16TH
+};
+Q_ENUM_NS(TripletFeelType)
+
+enum class GuitarBendType {
+    BEND,
+    PRE_BEND,
+    GRACE_NOTE_BEND,
+    SLIGHT_BEND,
+};
+Q_ENUM_NS(GuitarBendType)
+
+enum class GuitarBendShowHoldLine {
+    AUTO,
+    SHOW,
+    HIDE,
+};
+Q_ENUM_NS(GuitarBendShowHoldLine)
 
 enum class SymId {
     noSym = int(mu::engraving::SymId::noSym),
@@ -3604,3 +3652,7 @@ Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::Tid);
 Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::Syllabic);
 Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::Anchor);
 Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::SymId);
+Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::MMRestRangeBracketType);
+Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::TripletFeelType);
+Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::GuitarBendType);
+Q_DECLARE_METATYPE(mu::engraving::apiv1::enums::GuitarBendShowHoldLine);
