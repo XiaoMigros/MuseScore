@@ -162,6 +162,11 @@ class EngravingItem : public apiv1::ScoreElement
      */
     Q_PROPERTY(int subtype READ subtype)
     /**
+     * EID of this element.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QString eid READ eid WRITE setEID)
+    /**
      * Unlike the name might suggest, this property no longer returns the subtype and is scarcely used.
      * Named 'subtype' prior to MuseScore 4.6
      */
@@ -713,6 +718,9 @@ class EngravingItem : public apiv1::ScoreElement
     QRectF bbox() const;
 
     int subtype() const { return element()->subtype(); }
+
+    QString eid() const { return QString::fromStdString(element()->eid().toStdString()); }
+    void setEID(QString eid);
 
 public:
     /// \cond MS_INTERNAL
