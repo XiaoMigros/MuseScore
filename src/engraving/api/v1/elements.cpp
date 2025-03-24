@@ -65,6 +65,12 @@ QRectF EngravingItem::bbox() const
     return QRectF(bbox.x() / spatium, bbox.y() / spatium, bbox.width() / spatium, bbox.height() / spatium);
 }
 
+void EngravingItem::setEID(QString eid)
+{
+    EID id = EID::fromStdString(eid.toStdString());
+    element()->setEID(id);
+}
+
 //---------------------------------------------------------
 //   Segment::elementAt
 //---------------------------------------------------------
