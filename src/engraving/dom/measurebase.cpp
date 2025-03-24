@@ -277,7 +277,7 @@ Measure* MeasureBase::prevMeasure() const
 }
 
 //---------------------------------------------------------
-//   prevMeasure
+//   prevMeasureMM
 //---------------------------------------------------------
 
 Measure* MeasureBase::prevMeasureMM() const
