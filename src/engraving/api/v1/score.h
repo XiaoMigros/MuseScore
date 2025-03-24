@@ -47,6 +47,7 @@ namespace mu::engraving::apiv1 {
 class Cursor;
 class Segment;
 class Measure;
+class Page;
 class System;
 class Selection;
 class Score;

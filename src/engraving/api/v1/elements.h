@@ -55,6 +55,7 @@ Q_MOC_INCLUDE("engraving/api/v1/tie.h")
 namespace mu::engraving::apiv1 {
 class FractionWrapper;
 class EngravingItem;
+class Page;
 class Part;
 class Staff;
 class Tie;
