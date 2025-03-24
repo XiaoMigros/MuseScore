@@ -47,6 +47,8 @@ namespace mu::engraving::apiv1 {
 class Cursor;
 class Segment;
 class Measure;
+class Page;
+class System;
 class Selection;
 class Score;
 class Staff;
@@ -137,6 +139,16 @@ class Score : public apiv1::ScoreElement, public muse::Injectable
      * \since MuseScore 3.6.3
      */
     Q_PROPERTY(QQmlListProperty<apiv1::Staff> staves READ staves)
+    /**
+     * List of pages in this score.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::Page> pages READ pages)
+    /**
+     * List of systems in this score.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::System> systems READ systems)
 
     muse::Inject<mu::context::IGlobalContext> context = { this };
 
@@ -260,6 +272,8 @@ public:
     }
 
     QQmlListProperty<apiv1::Staff> staves();
+    QQmlListProperty<apiv1::Page> pages();
+    QQmlListProperty<apiv1::System> systems();
 
     static const mu::engraving::InstrumentTemplate* instrTemplateFromName(const QString& name);   // used by PluginAPI::newScore()
     /// \endcond
