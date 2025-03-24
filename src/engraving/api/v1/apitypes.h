@@ -421,6 +421,13 @@ enum class LayoutBreakType {
 };
 Q_ENUM_NS(LayoutBreakType);
 
+/*enum class SpacerType {
+    UP = char(mu::engraving::SpacerType::UP),
+    DOWN = char(mu::engraving::SpacerType::DOWN),
+    FIXED = char(mu::engraving::SpacerType::FIXED),
+};
+Q_ENUM_NS(SpacerType);*/
+
 enum class VeloType {
     OFFSET_VAL = int(mu::engraving::VeloType::OFFSET_VAL),
     USER_VAL   = int(mu::engraving::VeloType::USER_VAL),

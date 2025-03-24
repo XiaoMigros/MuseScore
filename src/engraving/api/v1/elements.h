@@ -845,6 +845,7 @@ class Measure : public EngravingItem
 
     /// List of measure-related elements: layout breaks, jump/repeat markings etc.
     /// \since MuseScore 3.3
+    /// Spacers included \since MuseScore 4.6
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
 
 public:
