@@ -740,6 +740,11 @@ enum ChordStylePreset : unsigned char {
     CUSTOM
 };
 
+enum class SpacerType : char {
+    UP, DOWN, FIXED
+};
+
+
 //-------------------------------------------------------------------
 //   Tid
 ///   Enumerates the list of built-in text substyles

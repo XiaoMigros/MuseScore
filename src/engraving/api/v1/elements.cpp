@@ -23,6 +23,7 @@
 #include "elements.h"
 
 #include "engraving/dom/guitarbend.h"
+#include "engraving/dom/measure.h"
 #include "engraving/dom/property.h"
 #include "engraving/dom/slur.h"
 #include "engraving/dom/spacer.h"
@@ -306,6 +307,20 @@ void Chord::addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingIte
     }
     // Create undo op and add the element.
     chord->score()->undoAddElement(s);
+}
+
+EngravingItem* Measure::vspacerUp(int staffIdx)
+{
+    mu::engraving::MStaff* ms = muse::value(measure()->mstaves(), static_cast<staff_idx_t>(staffIdx));
+    mu::engraving::EngravingItem* el = ms ? ms->vspacerUp() : nullptr;
+    return el ? wrap(el, Ownership::SCORE) : nullptr;
+}
+
+EngravingItem* Measure::vspacerDown(int staffIdx)
+{
+    mu::engraving::MStaff* ms = muse::value(measure()->mstaves(), static_cast<staff_idx_t>(staffIdx));
+    mu::engraving::EngravingItem* el = ms ? ms->vspacerDown() : nullptr;
+    return el ? wrap(el, Ownership::SCORE) : nullptr;
 }
 
 //---------------------------------------------------------

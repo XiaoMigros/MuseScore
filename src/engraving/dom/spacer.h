@@ -29,14 +29,6 @@
 namespace mu::engraving {
 class Factory;
 
-//---------------------------------------------------------
-//   SpacerType
-//---------------------------------------------------------
-
-enum class SpacerType : char {
-    UP, DOWN, FIXED
-};
-
 //-------------------------------------------------------------------
 //   @@ Spacer
 ///    Vertical spacer element to adjust the distance of staves.

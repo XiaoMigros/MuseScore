@@ -1241,6 +1241,15 @@ class Measure : public EngravingItem
     /// \since MuseScore 3.3
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
 
+    /// Up spacer for a given staff.
+    /// \param staffIdx staff to retrieve the spacer from
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::EngravingItem* vspacerUp(int staffIdx);
+    /// Down spacer for a given staff.
+    /// \param staffIdx staff to retrieve the spacer from
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::EngravingItem* vspacerDown(int staffIdx);
+
 public:
     /// \cond MS_INTERNAL
     Measure(mu::engraving::Measure* m = nullptr, Ownership own = Ownership::SCORE)
