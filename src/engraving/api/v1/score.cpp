@@ -30,6 +30,7 @@
 #include "engraving/dom/score.h"
 #include "engraving/dom/segment.h"
 #include "engraving/dom/text.h"
+#include "engraving/types/typesconv.h"
 
 // api
 #include "cursor.h"
@@ -62,14 +63,10 @@ void Score::addText(const QString& type, const QString& txt)
         measure = score()->first();
     }
     mu::engraving::TextStyleType tid = mu::engraving::TextStyleType::DEFAULT;
-    if (type == "title") {
-        tid = mu::engraving::TextStyleType::TITLE;
-    } else if (type == "subtitle") {
-        tid = mu::engraving::TextStyleType::SUBTITLE;
-    } else if (type == "composer") {
-        tid = mu::engraving::TextStyleType::COMPOSER;
-    } else if (type == "lyricist") {
+    if (type == "lyricist") {
         tid = mu::engraving::TextStyleType::LYRICIST;
+    } else {
+        tid = TConv::fromXml(AsciiStringView(type.toStdString()), tid);
     }
 
     mu::engraving::Text* text = mu::engraving::Factory::createText(measure, tid);
@@ -231,6 +228,15 @@ void Score::createPlayEvents()
 QQmlListProperty<Staff> Score::staves()
 {
     return wrapContainerProperty<Staff>(this, score()->staves());
+}
+
+//---------------------------------------------------------
+//   Score::pages
+//---------------------------------------------------------
+
+QQmlListProperty<EngravingItem> Score::pages()
+{
+    return wrapContainerProperty<EngravingItem>(this, score()->pages());
 }
 
 //---------------------------------------------------------
