@@ -234,6 +234,15 @@ QQmlListProperty<Staff> Score::staves()
 }
 
 //---------------------------------------------------------
+//   Score::pages
+//---------------------------------------------------------
+
+QQmlListProperty<Page> Score::pages()
+{
+    return wrapContainerProperty<Page>(this, score()->pages());
+}
+
+//---------------------------------------------------------
 //   Score::startCmd
 //---------------------------------------------------------
 
