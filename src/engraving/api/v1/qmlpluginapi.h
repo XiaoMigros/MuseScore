@@ -31,6 +31,7 @@
 #include "actions/iactionsdispatcher.h"
 #include "context/iglobalcontext.h"
 #include "global/iapplication.h"
+#include "engraving/iengraving.h"
 
 #include "enums.h"
 #include "engraving/dom/score.h"
@@ -92,12 +93,6 @@ class PluginAPI : public QQuickItem, public muse::extensions::apiv1::IPluginApiV
 {
     Q_OBJECT
 
-    INJECT(muse::actions::IActionsDispatcher, actionsDispatcher)
-    INJECT(mu::context::IGlobalContext, context)
-    INJECT(mu::project::INotationWritersRegister, writers)
-    INJECT(mu::project::IExportProjectScenario, exportProjectScenario)
-    INJECT(mu::project::IProjectFilesController, projectFilesController)
-
     /** Path where the plugin is placed in menu */
     Q_PROPERTY(QString menuPath READ menuPath WRITE setMenuPath)
     /** Title of this plugin */
@@ -138,9 +133,9 @@ class PluginAPI : public QQuickItem, public muse::extensions::apiv1::IPluginApiV
     /** List of currently open scores (read only).\n \since MuseScore 3.2 */
     Q_PROPERTY(QQmlListProperty<mu::engraving::apiv1::Score> scores READ scores)
 
-    muse::Inject<mu::context::IGlobalContext> context = { this };
-
 public:
+    muse::Inject<muse::actions::IActionsDispatcher> actionsDispatcher = { this };
+    muse::Inject<mu::context::IGlobalContext> context = { this };
     muse::Inject<muse::IApplication> application = { this };
 
 public:
@@ -285,6 +280,9 @@ public:
     /// \cond MS_INTERNAL
     PluginAPI(QQuickItem* parent = 0);
 
+    explicit PluginAPI(IEngraving* engraving)
+        : engravingInterface(engraving) {}
+
     static void registerQmlTypes();
 
     void setup(QQmlEngine* e) override;
@@ -305,7 +303,8 @@ public:
     Q_INVOKABLE apiv1::MsProcess* newQProcess();
     Q_INVOKABLE bool writeScore(apiv1::Score*, const QString& name, const QString& ext);
     Q_INVOKABLE apiv1::Score* readScore(const QString& name, bool noninteractive = false);
-    Q_INVOKABLE void closeScore(apiv1::Score*);
+    Q_INVOKABLE void closeScore(apiv1::Score* score);
+    Q_INVOKABLE void closeScore();
 
     Q_INVOKABLE void log(const QString&);
     Q_INVOKABLE void logn(const QString&);
@@ -354,6 +353,8 @@ public:
 private:
     mu::engraving::Score* currentScore() const;
 
+    IEngraving* engravingInterface;
+
     QString m_pluginType;
     QString m_title;
     QString m_version;
@@ -362,7 +363,6 @@ private:
     QString m_thumbnailName;
     QString m_categoryCode;
     muse::async::Notification m_closeRequested;
-    std::optional<project::INotationWriter::UnitType> determineWriterUnitType(const std::string& ext) const;
 };
 
 #undef DECLARE_API_ENUM
