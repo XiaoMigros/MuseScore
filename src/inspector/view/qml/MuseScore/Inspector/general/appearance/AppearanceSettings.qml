@@ -70,6 +70,8 @@ Column {
 
         offset: root.model?.offset ?? null
         isSnappedToGrid: root.model?.isSnappedToGrid ?? false
+        horizontalGridSizeSpatium: root.model?.horizontalGridSizeSpatium ?? 0.0
+        verticalGridSizeSpatium: root.model?.verticalGridSizeSpatium ?? 0.0
         isVerticalOffsetAvailable: root.model?.isVerticalOffsetAvailable ?? false
 
         navigationPanel: root.navigationPanel
@@ -80,9 +82,15 @@ Column {
                 root.model.isSnappedToGrid = snap
             }
         }
-
-        onConfigureGridRequested: {
-            root.model?.configureGrid()
+        onHorizontalGridSizeSpatiumEdited: function(spatium) {
+            if (root.model) {
+                root.model.horizontalGridSizeSpatium = spatium
+            }
+        }
+        onVerticalGridSizeSpatiumEdited: function(spatium) {
+            if (root.model) {
+                root.model.verticalGridSizeSpatium = spatium
+            }
         }
     }
 
