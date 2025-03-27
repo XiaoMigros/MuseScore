@@ -49,6 +49,8 @@ class Spacer final : public EngravingItem
 
 public:
 
+    void setParent(Measure* parent);
+
     Spacer* clone() const override { return new Spacer(*this); }
     Measure* measure() const { return toMeasure(explicitParent()); }
 
