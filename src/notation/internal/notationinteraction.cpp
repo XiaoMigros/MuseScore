@@ -111,7 +111,7 @@ static mu::engraving::KeyboardModifier keyboardModifier(Qt::KeyboardModifiers km
     return mu::engraving::KeyboardModifier(int(km));
 }
 
-static qreal nudgeDistance(const mu::engraving::EditData& editData)
+static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster = 0)
 {
     qreal spatium = editData.element->spatium();
 
@@ -131,21 +131,21 @@ static qreal nudgeDistance(const mu::engraving::EditData& editData)
         return spatium * mu::engraving::MScore::nudgeStep50;
     }
 
-    return spatium * mu::engraving::MScore::nudgeStep;
+    return spatium * (raster > 0 ? raster : mu::engraving::MScore::nudgeStep);
 }
 
-static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster)
+/*static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster)
 {
     qreal distance = nudgeDistance(editData);
     if (raster > 0) {
-        raster = editData.element->spatium() / raster;
+        raster = editData.element->spatium() * raster;
         if (distance < raster) {
             distance = raster;
         }
     }
 
     return distance;
-}
+}*/
 
 static PointF bindCursorPosToText(const PointF& cursorPos, const EngravingItem* text)
 {
@@ -1162,7 +1162,8 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
     }
 
     m_dragData.ed.lastPos = m_dragData.ed.pos;
-
+    const bool hIsAllowedToRaster = true; // m_dragData.ed.hRaster; decide which elements can later
+    const bool vIsAllowedToRaster = true; // m_dragData.ed.vRaster;
     m_dragData.ed.hRaster = configuration()->isSnappedToGrid(muse::Orientation::Horizontal);
     m_dragData.ed.vRaster = configuration()->isSnappedToGrid(muse::Orientation::Vertical);
     m_dragData.ed.delta = delta;
@@ -1184,8 +1185,28 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
         m_dragData.ed.delta = evtDelta;
         m_dragData.ed.moveDelta = m_dragData.ed.delta - m_dragData.elementOffset;
         m_dragData.ed.addData(m_editData.getData(m_editData.element));
-        m_editData.element->editDrag(m_dragData.ed);
+    }
 
+    if (m_editData.element) {
+        double x = m_dragData.ed.moveDelta.x();
+        double y = m_dragData.ed.moveDelta.y();
+
+        double _spatium = m_editData.element->spatium();
+        if (hIsAllowedToRaster && m_dragData.ed.hRaster) {
+            double hRaster = _spatium * MScore::hRaster();
+            int n = lrint(x / hRaster);
+            x = hRaster * n;
+        }
+        if (vIsAllowedToRaster && m_dragData.ed.vRaster) {
+            double vRaster = _spatium * MScore::vRaster();
+            int n = lrint(y / vRaster);
+            y = vRaster * n;
+        }
+        m_dragData.ed.moveDelta = PointF(x, y);
+    }
+
+    if (isGripEditStarted()) {
+        m_editData.element->editDrag(m_dragData.ed);
         if (m_editData.element->isDynamic()) {
             // When the dynamic has no left grip, the right grip will have index zero, a.k.a. Grip::LEFT.
             // TODO: refactor all code that works with Grips, so that this is not necessary
@@ -3857,11 +3878,14 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
     IF_ASSERT_FAILED(el && (el->isTextBase() || el->isArticulationFamily())) {
         return;
     }
+    IF_ASSERT_FAILED(m_editData.element) {
+        return;
+    }
 
     startEdit(TranslatableString("undoableAction", "Nudge element"));
 
-    qreal step = quickly ? mu::engraving::MScore::nudgeStep10 : mu::engraving::MScore::nudgeStep;
-    step = step * el->spatium();
+    qreal step = el->spatium();
+    PointF addOffset = PointF();
 
     switch (d) {
     case MoveDirection::Undefined:
@@ -3870,18 +3894,18 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
         }
         break;
     case MoveDirection::Left:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() - PointF(step, 0.0), mu::engraving::PropertyFlags::UNSTYLED);
-        break;
     case MoveDirection::Right:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + PointF(step, 0.0), mu::engraving::PropertyFlags::UNSTYLED);
+        step *= quickly ? mu::engraving::MScore::nudgeStep10 : nudgeDistance(m_editData, mu::engraving::MScore::hRaster());
+        addOffset = PointF(step * (d == MoveDirection::Left ? -1.0 : 1.0), 0.0);
         break;
     case MoveDirection::Up:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() - PointF(0.0, step), mu::engraving::PropertyFlags::UNSTYLED);
-        break;
     case MoveDirection::Down:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + PointF(0.0, step), mu::engraving::PropertyFlags::UNSTYLED);
+        step *= quickly ? mu::engraving::MScore::nudgeStep10 : nudgeDistance(m_editData, mu::engraving::MScore::vRaster());
+        addOffset = PointF(step * (d == MoveDirection::Up ? -1.0 : 1.0), 0.0);
         break;
     }
+
+    el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + addOffset, mu::engraving::PropertyFlags::UNSTYLED);
 
     apply();
 
