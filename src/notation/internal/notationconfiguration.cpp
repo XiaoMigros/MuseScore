@@ -100,6 +100,8 @@ static const Settings::Key IS_SNAPPED_TO_VERTICAL_GRID_KEY(module_name,  "ui/app
 static const Settings::Key IS_SNAPPED_TO_HORIZONTAL_GRID_KEY(module_name,  "ui/application/raster/isSnappedToHorizontalGrid");
 static const Settings::Key HORIZONTAL_GRID_SIZE_KEY(module_name,  "ui/application/raster/horizontal");
 static const Settings::Key VERTICAL_GRID_SIZE_KEY(module_name,  "ui/application/raster/vertical");
+static const Settings::Key LARGE_NUDGE_STEP(module_name, "ui/application/raster/largeStep");
+static const Settings::Key SMALL_NUDGE_STEP(module_name, "ui/application/raster/smallStep");
 
 static const Settings::Key NEED_TO_SHOW_ADD_TEXT_ERROR_MESSAGE_KEY(module_name,  "ui/dialogs/needToShowAddTextErrorMessage");
 static const Settings::Key NEED_TO_SHOW_ADD_FIGURED_BASS_ERROR_MESSAGE_KEY(module_name,  "ui/dialogs/needToShowAddFiguredBassErrorMessage");
@@ -994,6 +996,38 @@ void NotationConfiguration::setNotePlayDurationMilliseconds(int durationMs)
 async::Channel<int> NotationConfiguration::notePlayDurationMillisecondsChanged() const
 {
     return m_notePlayDurationMillisecondsChanged;
+}
+
+double NotationConfiguration::largeNudgeStep() const
+{
+    return settings()->value(LARGE_NUDGE_STEP).toDouble();
+}
+
+void NotationConfiguration::setLargeNudgeStep(double step)
+{
+    mu::engraving::MScore::nudgeStep10 = step;
+    settings()->setSharedValue(LARGE_NUDGE_STEP, Val(step));
+}
+
+async::Channel<double> NotationConfiguration::largeNudgeStepChanged() const
+{
+    return m_largeNudgeStepChanged;
+}
+
+double NotationConfiguration::smallNudgeStep() const
+{
+    return settings()->value(SMALL_NUDGE_STEP).toDouble();
+}
+
+void NotationConfiguration::setSmallNudgeStep(double step)
+{
+    mu::engraving::MScore::nudgeStep50 = step;
+    settings()->setSharedValue(SMALL_NUDGE_STEP, Val(step));
+}
+
+async::Channel<double> NotationConfiguration::smallNudgeStepChanged() const
+{
+    return m_smallNudgeStepChanged;
 }
 
 void NotationConfiguration::setTemplateModeEnabled(std::optional<bool> enabled)
