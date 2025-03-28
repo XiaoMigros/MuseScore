@@ -4430,7 +4430,7 @@ void Score::cmdPitchUp()
     if (el && el->isLyrics()) {
         cmdMoveLyrics(toLyrics(el), DirectionV::UP);
     } else if (el && (el->isArticulationFamily() || el->isTextBase())) {
-        el->undoChangeProperty(Pid::OFFSET, el->offset() + PointF(0.0, -MScore::nudgeStep * el->spatium()), PropertyFlags::UNSTYLED);
+        el->undoChangeProperty(Pid::OFFSET, el->offset() + PointF(0.0, -MScore::hRaster() * el->spatium()), PropertyFlags::UNSTYLED);
     } else if (el && el->isRest()) {
         cmdMoveRest(toRest(el), DirectionV::UP);
     } else {
@@ -4448,7 +4448,7 @@ void Score::cmdPitchDown()
     if (el && el->isLyrics()) {
         cmdMoveLyrics(toLyrics(el), DirectionV::DOWN);
     } else if (el && (el->isArticulationFamily() || el->isTextBase())) {
-        el->undoChangeProperty(Pid::OFFSET, PropertyValue::fromValue(el->offset() + PointF(0.0, MScore::nudgeStep * el->spatium())),
+        el->undoChangeProperty(Pid::OFFSET, PropertyValue::fromValue(el->offset() + PointF(0.0, MScore::hRaster() * el->spatium())),
                                PropertyFlags::UNSTYLED);
     } else if (el && el->isRest()) {
         cmdMoveRest(toRest(el), DirectionV::DOWN);

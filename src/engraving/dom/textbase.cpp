@@ -3527,21 +3527,18 @@ void TextBase::editCopy(EditData& ed)
 
 bool TextBase::nudge(const EditData& ed)
 {
-    bool ctrlMod = ed.modifiers & ControlModifier;
-    double step = spatium() * (ctrlMod ? MScore::nudgeStep10 : MScore::nudgeStep);
+    double step = 0.0;
     PointF addOffset = PointF();
     switch (ed.key) {
     case Key_Up:
-        addOffset = PointF(0.0, -step);
-        break;
     case Key_Down:
-        addOffset = PointF(0.0, step);
+        step = spatium() * (ed.modifiers & ControlModifier ? MScore::nudgeStep10 : MScore::hRaster());
+        addOffset = PointF(0.0, step * (ed.key == Key_Up ? -1.0 : 1.0));
         break;
     case Key_Left:
-        addOffset = PointF(-step, 0.0);
-        break;
     case Key_Right:
-        addOffset = PointF(step, 0.0);
+        step = spatium() * (ed.modifiers & ControlModifier ? MScore::nudgeStep10 : MScore::vRaster());
+        addOffset = PointF(step * (ed.key == Key_Left ? -1.0 : 1.0), 0.0);
         break;
     default:
         return false;
