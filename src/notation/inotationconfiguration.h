@@ -196,6 +196,14 @@ public:
     virtual void setNotePlayDurationMilliseconds(int durationMs) = 0;
     virtual muse::async::Channel<int> notePlayDurationMillisecondsChanged() const = 0;
 
+    virtual double largeNudgeStep() const = 0;
+    virtual void setLargeNudgeStep(double step) = 0;
+    virtual muse::async::Channel<double> largeNudgeStepChanged() const = 0;
+
+    virtual double smallNudgeStep() const = 0;
+    virtual void setSmallNudgeStep(double step) = 0;
+    virtual muse::async::Channel<double> smallNudgeStepChanged() const = 0;
+
     virtual void setTemplateModeEnabled(std::optional<bool> enabled) = 0;
     virtual void setTestModeEnabled(std::optional<bool> enabled) = 0;
 

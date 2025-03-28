@@ -178,6 +178,14 @@ public:
     void setNotePlayDurationMilliseconds(int durationMs)  override;
     muse::async::Channel<int> notePlayDurationMillisecondsChanged() const override;
 
+    double largeNudgeStep() const override;
+    void setLargeNudgeStep(double step) override;
+    muse::async::Channel<double> largeNudgeStepChanged() const override;
+
+    double smallNudgeStep() const override;
+    void setSmallNudgeStep(double step) override;
+    muse::async::Channel<double> smallNudgeStepChanged() const override;
+
     void setTemplateModeEnabled(std::optional<bool> enabled) override;
     void setTestModeEnabled(std::optional<bool> enabled) override;
 
