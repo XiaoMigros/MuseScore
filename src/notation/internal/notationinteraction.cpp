@@ -116,7 +116,7 @@ static mu::engraving::KeyboardModifier keyboardModifier(Qt::KeyboardModifiers km
     return mu::engraving::KeyboardModifier(int(km));
 }
 
-static qreal nudgeDistance(const mu::engraving::EditData& editData)
+static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster = 0)
 {
     qreal spatium = editData.element->spatium();
 
@@ -136,20 +136,7 @@ static qreal nudgeDistance(const mu::engraving::EditData& editData)
         return spatium * mu::engraving::MScore::nudgeStep50;
     }
 
-    return spatium * mu::engraving::MScore::nudgeStep;
-}
-
-static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster)
-{
-    qreal distance = nudgeDistance(editData);
-    if (raster > 0) {
-        raster = editData.element->spatium() * raster;
-        if (distance < raster) {
-            distance = raster;
-        }
-    }
-
-    return distance;
+    return spatium * (raster > 0 ? raster : mu::engraving::MScore::nudgeStep);
 }
 
 static PointF bindCursorPosToText(const PointF& cursorPos, const EngravingItem* text)
@@ -1126,7 +1113,7 @@ INotationSelectionFilterPtr NotationInteraction::selectionFilter() const
 
 bool NotationInteraction::isDragStarted() const
 {
-    if (m_dragData.dragGroups.size() > 0) {
+    if (!m_dragData.dragGroups.empty()) {
         return true;
     }
 
@@ -1299,7 +1286,7 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
         updateDragAnchorLines();
     }
 
-    if (m_dragData.elements.size() == 0) {
+    if (m_dragData.elements.empty()) {
         doDragLasso(toPos);
     }
 
@@ -4135,8 +4122,8 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
 
     startEdit(TranslatableString("undoableAction", "Nudge element"));
 
-    qreal step = quickly ? mu::engraving::MScore::nudgeStep10 : mu::engraving::MScore::nudgeStep;
-    step = step * el->spatium();
+    qreal step = el->spatium();
+    PointF addOffset = PointF();
 
     switch (d) {
     case MoveDirection::Undefined:
@@ -4145,18 +4132,18 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
         }
         break;
     case MoveDirection::Left:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() - PointF(step, 0.0), mu::engraving::PropertyFlags::UNSTYLED);
-        break;
     case MoveDirection::Right:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + PointF(step, 0.0), mu::engraving::PropertyFlags::UNSTYLED);
+        step *= quickly ? mu::engraving::MScore::nudgeStep10 : nudgeDistance(m_editData, mu::engraving::MScore::hRaster());
+        addOffset = PointF(step * (d == MoveDirection::Left ? -1.0 : 1.0), 0.0);
         break;
     case MoveDirection::Up:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() - PointF(0.0, step), mu::engraving::PropertyFlags::UNSTYLED);
-        break;
     case MoveDirection::Down:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + PointF(0.0, step), mu::engraving::PropertyFlags::UNSTYLED);
+        step *= quickly ? mu::engraving::MScore::nudgeStep10 : nudgeDistance(m_editData, mu::engraving::MScore::vRaster());
+        addOffset = PointF(step * (d == MoveDirection::Up ? -1.0 : 1.0), 0.0);
         break;
     }
+
+    el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + addOffset, mu::engraving::PropertyFlags::UNSTYLED);
 
     apply();
 
