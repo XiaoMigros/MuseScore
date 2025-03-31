@@ -116,17 +116,14 @@ RectF Spacer::drag(EditData& ed)
     switch (spacerType()) {
     case SpacerType::DOWN:
     case SpacerType::FIXED:
-        m_gap = ed.gridSnapped(PointF(0.0, m_gap + s), spatium()).y();
+        m_gap = Spatium::fromMM(ed.gridSnapped(PointF(0.0, absoluteFromSpatium(m_gap) + s), spatium()).y(), spatium());
         break;
     case SpacerType::UP:
-        m_gap = ed.gridSnapped(PointF(0.0, m_gap - s), spatium()).y();
+        m_gap = Spatium::fromMM(ed.gridSnapped(PointF(0.0, absoluteFromSpatium(m_gap) - s), spatium()).y(), spatium());
         break;
     }
-    if (m_gap.val() < spatium() * 2.0) {
-        m_gap = Millimetre(spatium() * 2);
-    }
-    layout0();
-    triggerLayout();
+    m_gap = std::max(m_gap, Spatium(2.0));
+    renderer()->layoutItem(this);
     return canvasBoundingRect();
 }
 
