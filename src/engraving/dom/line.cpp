@@ -194,6 +194,7 @@ void LineSegment::startDrag(EditData& ed)
     if (!eed) {
         return;
     }
+    eed->initOffset = ed.curGrip == Grip::END ? userOff2() : offset();
     eed->pushProperty(Pid::OFFSET2);
 }
 
@@ -854,33 +855,36 @@ std::vector<LineF> LineSegment::dragAnchorLines() const
 
 RectF LineSegment::drag(EditData& ed)
 {
-    // Only for resizing according to the diagonal properties
-    const PointF deltaResize(ed.evtDelta.x(), line()->diagonal() ? ed.evtDelta.y() : 0.0);
+    const ElementEditDataPtr eed = ed.getData(this);
+    PointF deltaResize = ed.moveDelta + eed->initOffset;
+    if (!line()->diagonal() && !(ed.curGrip == Grip::MIDDLE)) {
+        deltaResize = PointF(deltaResize.x(), eed->initOffset.y());
+    }
+    deltaResize = ed.gridSnapped(deltaResize, spatium());
 
     switch (ed.curGrip) {
     case Grip::START:         // Resize the begin of element (left grip)
-        setOffset(ed.gridSnapped(offset() + deltaResize, spatium()));
-        m_offset2 = ed.gridSnapped(m_offset2 - deltaResize, spatium());
+        setOffset(deltaResize);
+        m_offset2 = m_offset2 - deltaResize;
 
         if (isStyled(Pid::OFFSET)) {
             setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
         }
 
-        rebaseAnchors(ed, ed.curGrip);
+        //rebaseAnchors(ed, ed.curGrip);
         break;
     case Grip::END:         // Resize the end of element (right grip)
-        m_offset2 = ed.gridSnapped(m_offset2 + deltaResize, spatium());
-        rebaseAnchors(ed, ed.curGrip);
+        m_offset2 = deltaResize;
+        //rebaseAnchors(ed, ed.curGrip);
         break;
     case Grip::MIDDLE: {         // Move the element (middle grip)
         // Only for moving, no y limitation
-        const PointF deltaMove(ed.evtDelta);
-        setOffset(ed.gridSnapped(offset() + deltaMove, spatium()));
+        setOffset(deltaResize);
         setOffsetChanged(true);
         if (isStyled(Pid::OFFSET)) {
             setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
         }
-        rebaseAnchors(ed, ed.curGrip);
+        //rebaseAnchors(ed, ed.curGrip);
     }
     break;
     default:
