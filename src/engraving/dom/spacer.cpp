@@ -54,6 +54,11 @@ Spacer::Spacer(const Spacer& s)
     m_spacerType = s.m_spacerType;
 }
 
+void Spacer::setParent(Measure* parent)
+{
+    EngravingItem::setParent(parent);
+}
+
 //---------------------------------------------------------
 //   layout0
 //---------------------------------------------------------

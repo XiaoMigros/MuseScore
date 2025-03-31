@@ -39,7 +39,7 @@
 using namespace mu::engraving::apiv1;
 
 Cursor::Cursor(mu::engraving::Score* s)
-    : QObject(0), _filter(mu::engraving::SegmentType::ChordRest)
+    : QObject(0), m_filter(mu::engraving::SegmentType::ChordRest)
 {
     setScore(s);
 }
@@ -50,7 +50,7 @@ Cursor::Cursor(mu::engraving::Score* s)
 
 Score* Cursor::score() const
 {
-    return wrap<Score>(_score, Ownership::SCORE);
+    return wrap<Score>(m_score, Ownership::SCORE);
 }
 
 //---------------------------------------------------------
@@ -59,13 +59,13 @@ Score* Cursor::score() const
 
 void Cursor::setScore(mu::engraving::Score* s)
 {
-    if (_score == s) {
+    if (m_score == s) {
         return;
     }
 
-    _score = s;
+    m_score = s;
 
-    switch (_inputStateMode) {
+    switch (m_inputStateMode) {
     case INPUT_STATE_INDEPENDENT:
         is.reset(new InputState);
         break;
@@ -81,7 +81,7 @@ void Cursor::setScore(Score* s)
 
 mu::engraving::InputState& Cursor::inputState()
 {
-    return is ? *is.get() : _score->inputState();
+    return is ? *is.get() : m_score->inputState();
 }
 
 //---------------------------------------------------------
@@ -96,7 +96,7 @@ void Cursor::setInputStateMode(InputStateMode val)
         is.reset(new InputState);
     }
 
-    _inputStateMode = val;
+    m_inputStateMode = val;
 }
 
 //---------------------------------------------------------
@@ -117,9 +117,9 @@ void Cursor::rewind(RewindMode mode)
     // rewind to start of score
     //
     if (mode == SCORE_START) {
-        mu::engraving::Measure* m = _score->firstMeasure();
+        mu::engraving::Measure* m = m_score->firstMeasure();
         if (m) {
-            setSegment(m->first(_filter));
+            setSegment(m->first(m_filter));
             nextInTrack();
         } else {
             setSegment(nullptr);
@@ -129,22 +129,22 @@ void Cursor::rewind(RewindMode mode)
     // rewind to start of selection
     //
     else if (mode == SELECTION_START) {
-        if (!_score->selection().isRange()) {
+        if (!m_score->selection().isRange()) {
             return;
         }
-        setSegment(_score->selection().startSegment());
-        setTrack(static_cast<int>(_score->selection().staffStart() * VOICES));
+        setSegment(m_score->selection().startSegment());
+        setTrack(static_cast<int>(m_score->selection().staffStart() * VOICES));
         nextInTrack();
     }
     //
     // rewind to end of selection
     //
     else if (mode == SELECTION_END) {
-        if (!_score->selection().isRange()) {
+        if (!m_score->selection().isRange()) {
             return;
         }
-        setSegment(_score->selection().endSegment());
-        setTrack(static_cast<int>((_score->selection().staffEnd() * VOICES) - 1));      // be sure _track exists
+        setSegment(m_score->selection().endSegment());
+        setTrack(static_cast<int>((m_score->selection().staffEnd() * VOICES) - 1));      // be sure m_track exists
     }
 }
 
@@ -162,10 +162,10 @@ void Cursor::rewindToTick(int tick)
     // integer ticks may contain numeric errors so it is
     // better to search not precisely if possible
     mu::engraving::Fraction fTick = mu::engraving::Fraction::fromTicks(tick + 1);
-    mu::engraving::Segment* seg = _score->tick2leftSegment(fTick);
-    if (!(seg->segmentType() & _filter)) {
+    mu::engraving::Segment* seg = m_score->tick2leftSegment(fTick);
+    if (!(seg->segmentType() & m_filter)) {
         // we need another segment type, search by known tick
-        seg = _score->tick2segment(seg->tick(), /* first */ true, _filter);
+        seg = m_score->tick2segment(seg->tick(), /* first */ true, m_filter);
     }
 
     setSegment(seg);
@@ -201,7 +201,7 @@ bool Cursor::next()
     if (!segment()) {
         return false;
     }
-    setSegment(segment()->next1(_filter));
+    setSegment(segment()->next1(m_filter));
     nextInTrack();
     return segment();
 }
@@ -220,11 +220,11 @@ bool Cursor::nextMeasure()
         return false;
     }
     mu::engraving::Measure* m = segment()->measure()->nextMeasure();
-    if (m == 0) {
+    if (!m) {
         setSegment(nullptr);
         return false;
     }
-    setSegment(m->first(_filter));
+    setSegment(m->first(m_filter));
     nextInTrack();
     return segment();
 }
@@ -248,12 +248,12 @@ void Cursor::add(EngravingItem* wrapped)
         return;            // Don't allow operation.
     }
 
-    const int _track = track();
+    const int m_track = track();
     mu::engraving::Segment* _segment = segment();
 
     wrapped->setOwnership(Ownership::SCORE);
-    s->setScore(_score);
-    s->setTrack(_track);
+    s->setScore(m_score);
+    s->setTrack(m_track);
     s->setParent(_segment);
 
     if (s->isChordRest()) {
@@ -261,13 +261,13 @@ void Cursor::add(EngravingItem* wrapped)
     } else if (s->type() == ElementType::KEYSIG) {
         mu::engraving::Segment* ns = _segment->measure()->undoGetSegment(SegmentType::KeySig, _segment->tick());
         s->setParent(ns);
-        _score->undoAddElement(s);
+        m_score->undoAddElement(s);
     } else if (s->type() == ElementType::TIMESIG) {
         mu::engraving::Measure* m = _segment->measure();
         Fraction tick = m->tick();
-        _score->cmdAddTimeSig(m, _track, toTimeSig(s), false);
-        m = _score->tick2measure(tick);
-        _segment = m->first(_filter);
+        m_score->cmdAddTimeSig(m, m_track, toTimeSig(s), false);
+        m = m_score->tick2measure(tick);
+        _segment = m->first(m_filter);
         nextInTrack();
     } else {
         switch (s->type()) {
@@ -281,7 +281,7 @@ void Cursor::add(EngravingItem* wrapped)
         case ElementType::LAYOUT_BREAK: {
             mu::engraving::Measure* m = _segment->measure();
             s->setParent(m);
-            _score->undoAddElement(s);
+            m_score->undoAddElement(s);
             break;
         }
 
@@ -306,7 +306,7 @@ void Cursor::add(EngravingItem* wrapped)
             mu::engraving::EngravingItem* curElement = currentElement();
             if (curElement->isChordRest()) {
                 s->setParent(curElement);
-                _score->undoAddElement(s);
+                m_score->undoAddElement(s);
             }
             break;
         }
@@ -316,7 +316,7 @@ void Cursor::add(EngravingItem* wrapped)
             mu::engraving::EngravingItem* curElement = currentElement();
             if (curElement->isRest()) {
                 s->setParent(curElement);
-                _score->undoAddElement(s);
+                m_score->undoAddElement(s);
             }
         } // FALLTHROUGH
         case ElementType::FINGERING:
@@ -358,14 +358,14 @@ void Cursor::add(EngravingItem* wrapped)
                     }
                 }
                 s->setParent(parent);
-                s->setTrack(_track);
-                _score->undoAddElement(s);
+                s->setTrack(m_track);
+                m_score->undoAddElement(s);
             }
             break;
         }
 
         default:           // All others will be added to the current segment
-            _score->undoAddElement(s);
+            m_score->undoAddElement(s);
             break;
         }
     }
@@ -396,7 +396,7 @@ void Cursor::addNote(int pitch, bool addToChord)
         setDuration(1, 4);
     }
     NoteVal nval(pitch);
-    _score->addPitch(nval, addToChord, is.get());
+    m_score->addPitch(nval, addToChord, is.get());
 }
 
 //---------------------------------------------------------
@@ -416,7 +416,7 @@ void Cursor::addRest()
     if (!inputState().duration().isValid()) {
         setDuration(1, 4);
     }
-    _score->enterRest(inputState().duration(), is.get());
+    m_score->enterRest(inputState().duration(), is.get());
 }
 
 //---------------------------------------------------------
@@ -488,13 +488,13 @@ void Cursor::addTuplet(FractionWrapper* ratio, FractionWrapper* duration)
         return;
     }
 
-    _score->expandVoice(inputState().segment(), inputState().track());
+    m_score->expandVoice(inputState().segment(), inputState().track());
     mu::engraving::ChordRest* cr = inputState().cr();
     if (!cr) { // shouldn't happen?
         return;
     }
 
-    _score->changeCRlen(cr, fDuration);
+    m_score->changeCRlen(cr, fDuration);
 
     mu::engraving::Tuplet* tuplet = new mu::engraving::Tuplet(tupletMeasure);
     tuplet->setParent(tupletMeasure);
@@ -504,7 +504,7 @@ void Cursor::addTuplet(FractionWrapper* ratio, FractionWrapper* duration)
     tuplet->setTicks(fDuration);
     tuplet->setBaseLen(baseLen);
 
-    _score->cmdCreateTuplet(cr, tuplet);
+    m_score->cmdCreateTuplet(cr, tuplet);
 
     inputState().setSegment(tupletMeasure->tick2segment(tupletTick));
     inputState().setDuration(baseLen);
@@ -544,7 +544,7 @@ int Cursor::tick()
 
 double Cursor::time()
 {
-    return _score->utick2utime(tick()) * 1000;
+    return m_score->utick2utime(tick()) * 1000;
 }
 
 //---------------------------------------------------------
@@ -553,7 +553,7 @@ double Cursor::time()
 
 qreal Cursor::tempo()
 {
-    return _score->tempo(Fraction::fromTicks(tick())).val;
+    return m_score->tempo(Fraction::fromTicks(tick())).val;
 }
 
 //---------------------------------------------------------
@@ -613,31 +613,26 @@ int Cursor::track() const
 //   setTrack
 //---------------------------------------------------------
 
-void Cursor::setTrack(int _track)
+void Cursor::setTrack(int track)
 {
-    int tracks = static_cast<int>(_score->nstaves() * VOICES);
-    if (_track < 0) {
-        _track = 0;
-    } else if (_track >= tracks) {
-        _track = tracks - 1;
+    track_idx_t m_track = track;
+    size_t tracks = m_score->nstaves() * VOICES;
+    if (m_track == muse::nidx) {
+        m_track = 0;
+    } else if (m_track >= tracks) {
+        m_track = tracks - 1;
     }
-    inputState().setTrack(_track);
+    inputState().setTrack(m_track);
+    m_staff = inputState().staff();
 }
 
 //---------------------------------------------------------
-//   setStaffIdx
+//   voice
 //---------------------------------------------------------
 
-void Cursor::setStaffIdx(int v)
+int Cursor::voice() const
 {
-    track_idx_t _track = v * VOICES + track() % VOICES;
-    size_t tracks = _score->nstaves() * VOICES;
-    if (_track == muse::nidx) {
-        _track = 0;
-    } else if (_track >= tracks) {
-        _track = tracks - 1;
-    }
-    inputState().setTrack(_track);
+    return track() % VOICES;
 }
 
 //---------------------------------------------------------
@@ -646,14 +641,81 @@ void Cursor::setStaffIdx(int v)
 
 void Cursor::setVoice(int v)
 {
-    track_idx_t _track = (track() / VOICES) * VOICES + v;
-    size_t tracks = _score->nstaves() * VOICES;
-    if (_track == muse::nidx) {
-        _track = 0;
-    } else if (_track >= tracks) {
-        _track = tracks - 1;
+    track_idx_t m_track = (track() / VOICES) * VOICES + v;
+    size_t tracks = m_score->nstaves() * VOICES;
+    if (m_track == muse::nidx) {
+        m_track = 0;
+    } else if (m_track >= tracks) {
+        m_track = tracks - 1;
     }
-    inputState().setTrack(_track);
+    inputState().setTrack(m_track);
+}
+
+//---------------------------------------------------------
+//   staffIdx
+//---------------------------------------------------------
+
+int Cursor::staffIdx() const
+{
+    return track() / VOICES;
+}
+
+//---------------------------------------------------------
+//   staff
+//---------------------------------------------------------
+
+Staff* Cursor::staff() const
+{
+    return wrap<Staff>(m_staff, Ownership::SCORE);
+}
+
+//---------------------------------------------------------
+//   setStaffIdx
+//---------------------------------------------------------
+
+void Cursor::setStaffIdx(int v)
+{
+    track_idx_t m_track = v * VOICES + track() % VOICES;
+    size_t tracks = m_score->nstaves() * VOICES;
+    if (m_track == muse::nidx) {
+        m_track = 0;
+    } else if (m_track >= tracks) {
+        m_track = tracks - 1;
+    }
+    inputState().setTrack(m_track);
+    m_staff = inputState().staff();
+}
+
+//---------------------------------------------------------
+//   setStaff
+///   \brief Positions the cursor on a specific \ref Staff.
+///   \details As opposed to \ref cursor.setStaffIdx, this
+///   method is used to set the position of the cursor to
+///   a specific \ref Staff object (as obtained e.g. through)
+///   \ref element.staff.
+///   \since MuseScore 4.6
+///   \see \ref Staff
+//---------------------------------------------------------
+
+void Cursor::setStaff(mu::engraving::Staff* s)
+{
+    if (!s || m_staff == s) {
+        return;
+    }
+    track_idx_t m_track = s->idx() + track() % VOICES;
+    size_t tracks = m_score->nstaves() * VOICES;
+    if (m_track == muse::nidx) {
+        m_track = 0;
+    } else if (m_track >= tracks) {
+        m_track = tracks - 1;
+    }
+    inputState().setTrack(m_track);
+    m_staff = s;
+}
+
+void Cursor::setStaff(Staff* s)
+{
+    setStaff(s ? s->staff() : nullptr);
 }
 
 //---------------------------------------------------------
@@ -675,26 +737,8 @@ void Cursor::setSegment(mu::engraving::Segment* seg)
 }
 
 //---------------------------------------------------------
-//   staffIdx
-//---------------------------------------------------------
-
-int Cursor::staffIdx() const
-{
-    return track() / VOICES;
-}
-
-//---------------------------------------------------------
-//   voice
-//---------------------------------------------------------
-
-int Cursor::voice() const
-{
-    return track() % VOICES;
-}
-
-//---------------------------------------------------------
 //   prevInTrack
-//    go to first segment before _segment which has notes / rests in _track
+//    go to first segment before _segment which has notes / rests in m_track
 //---------------------------------------------------------
 
 void Cursor::prevInTrack()
@@ -702,17 +746,17 @@ void Cursor::prevInTrack()
     const int t = track();
     mu::engraving::Segment* seg = segment();
     if (seg) {
-        seg = seg->prev1(_filter);
+        seg = seg->prev1(m_filter);
     }
     while (seg && !seg->element(t)) {
-        seg = seg->prev1(_filter);
+        seg = seg->prev1(m_filter);
     }
     setSegment(seg);
 }
 
 //---------------------------------------------------------
 //   nextInTrack
-//    go to first segment at or after _segment which has notes / rests in _track
+//    go to first segment at or after _segment which has notes / rests in m_track
 //---------------------------------------------------------
 
 void Cursor::nextInTrack()
@@ -720,7 +764,7 @@ void Cursor::nextInTrack()
     const int t = track();
     mu::engraving::Segment* seg = segment();
     while (seg && seg->element(t) == 0) {
-        seg = seg->next1(_filter);
+        seg = seg->next1(m_filter);
     }
     setSegment(seg);
 }
@@ -733,7 +777,7 @@ void Cursor::nextInTrack()
 
 int Cursor::qmlKeySignature()
 {
-    mu::engraving::Staff* staff = _score->staves()[staffIdx()];
+    mu::engraving::Staff* staff = m_score->staves()[staffIdx()];
     return static_cast<int>(staff->key(Fraction::fromTicks(tick())));
 }
 
@@ -744,12 +788,12 @@ int Cursor::qmlKeySignature()
 int Cursor::inputStateString() const
 {
     const InputState& istate = inputState();
-    return _score->staff(staffIdx())->staffType(istate.tick())->visualStringToPhys(istate.string());
+    return m_score->staff(staffIdx())->staffType(istate.tick())->visualStringToPhys(istate.string());
 }
 
 void Cursor::setInputStateString(int string)
 {
     InputState& istate = inputState();
-    const int visString = _score->staff(staffIdx())->staffType(istate.tick())->visualStringToPhys(string);
+    const int visString = m_score->staff(staffIdx())->staffType(istate.tick())->visualStringToPhys(string);
     istate.setString(visString);
 }

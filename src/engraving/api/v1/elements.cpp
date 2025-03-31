@@ -65,6 +65,12 @@ QRectF EngravingItem::bbox() const
     return QRectF(bbox.x() / spatium, bbox.y() / spatium, bbox.width() / spatium, bbox.height() / spatium);
 }
 
+void EngravingItem::setEID(QString eid)
+{
+    EID id = EID::fromStdString(eid.toStdString());
+    element()->setEID(id);
+}
+
 //---------------------------------------------------------
 //   Segment::elementAt
 //---------------------------------------------------------
@@ -115,6 +121,7 @@ bool Note::isChildAllowed(mu::engraving::ElementType elementType)
     case ElementType::TIE:
     case ElementType::ACCIDENTAL:
     case ElementType::TEXTLINE:
+    case ElementType::NOTELINE:
     case ElementType::GLISSANDO:
         return true;
     default:
