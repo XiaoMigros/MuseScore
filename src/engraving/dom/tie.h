@@ -51,6 +51,8 @@ public:
     bool isEdited() const;
     void editDrag(EditData&) override;
 
+    RectF drag(EditData& ed) override;
+
     Tie* tie() const { return (Tie*)spanner(); }
 
     void setStaffMove(int val) { m_staffMove = val; }
