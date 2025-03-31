@@ -97,7 +97,6 @@ void Stem::startEditDrag(EditData& ed)
 
 void Stem::startDrag(EditData& ed)
 {
-    EngravingItem::startEditDrag(ed);
     ElementEditDataPtr eed = ed.getData(this);
     eed->pushProperty(Pid::USER_LEN);
 }
@@ -115,10 +114,8 @@ void Stem::editDrag(EditData& ed)
 
 RectF Stem::drag(EditData& ed)
 {
-    double yDelta = up() ? -ed.delta.y() : ed.delta.y();
-    m_userLength = Spatium::fromMM(ed.gridSnapped(PointF(0.0, absoluteFromSpatium(m_userLength) + yDelta), spatium()).y(), spatium());
-    m_userLength += Spatium::fromMM(yDelta, spatium());
-    renderer()->layoutItem(this);
+    m_userLength = Spatium::fromMM(ed.gridSnapped(PointF(
+        0.0, absoluteFromSpatium(m_userLength) + (up() ? -ed.delta.y() : ed.delta.y())), spatium()).y(), spatium());
     Chord* c = chord();
     if (c->hook()) {
         c->hook()->move(ed.gridSnapped(PointF(0.0, ed.delta.y()), spatium()));

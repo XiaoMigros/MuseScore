@@ -331,44 +331,18 @@ RectF SlurSegment::drag(EditData& ed)
         return canvasBoundingRect();
     }
 
-    ups(g).off = ed.gridSnapped(ups(g).off + ed.delta, spatium());
-
-    PointF delta;
-
     switch (g) {
     case Grip::START:
     case Grip::END:
-        //
-        // move anchor for slurs/ties
-        //
-        if ((g == Grip::START && isSingleBeginType()) || (g == Grip::END && isSingleEndType())) {
-            Slur* slr = slur();
-            KeyboardModifiers km = ed.modifiers;
-            EngravingItem* e = ed.view()->elementNear(ed.pos);
-            if (e && e->isNote()) {
-                Note* note = toNote(e);
-                Fraction tick = note->chord()->tick();
-                if ((g == Grip::END && tick > slr->tick()) || (g == Grip::START && tick < slr->tick2())) {
-                    if (km != (ShiftModifier | ControlModifier)) {
-                        Chord* c = note->chord();
-                        ed.view()->setDropTarget(note);
-                        if (c->part() == slr->part() && c != slr->endCR()) {
-                            changeAnchor(ed, c);
-                        }
-                    }
-                }
-            } else {
-                ed.view()->setDropTarget(0);
-            }
-        }
-        break;
     case Grip::BEZIER1:
-        break;
     case Grip::BEZIER2:
+        ups(g).off = ed.gridSnapped(ups(g).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
         break;
     case Grip::SHOULDER:
-        ups(g).off = PointF();
-        delta = ed.gridSnapped(ed.delta, spatium());
+        ups(Grip::BEZIER1).off = ed.gridSnapped(ups(Grip::BEZIER1).off + ed.delta, spatium());
+        ups(Grip::BEZIER2).off = ed.gridSnapped(ups(Grip::BEZIER2).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
         break;
     case Grip::DRAG:
         ups(g).off = PointF();
@@ -378,9 +352,6 @@ RectF SlurSegment::drag(EditData& ed)
     case Grip::GRIPS:
         break;
     }
-
-    renderer()->computeBezier(this, delta);
-    triggerLayout();
 
     return canvasBoundingRect();
 }

@@ -211,13 +211,18 @@ void SlurTieSegment::startEditDrag(EditData& ed)
 //---------------------------------------------------------
 
 void SlurTieSegment::startDrag(EditData& ed)
-{
-    ElementEditDataPtr eed = ed.getData(this);
-    IF_ASSERT_FAILED(eed) {
+{   
+    if (!isMovable()) {
         return;
     }
-    for (auto i : { Pid::SLUR_UOFF1, Pid::SLUR_UOFF2, Pid::SLUR_UOFF3, Pid::SLUR_UOFF4, Pid::OFFSET }) {
+    std::shared_ptr<ElementEditData> eed = std::make_shared<ElementEditData>();
+    eed->e = this;
+    for (Pid i : { Pid::SLUR_UOFF1, Pid::SLUR_UOFF2, Pid::SLUR_UOFF3, Pid::SLUR_UOFF4, Pid::OFFSET, Pid::AUTOPLACE }) {
         eed->pushProperty(i);
+    }
+    ed.addData(eed);
+    if (ed.modifiers & AltModifier) {
+        setAutoplace(false);
     }
 }
 
