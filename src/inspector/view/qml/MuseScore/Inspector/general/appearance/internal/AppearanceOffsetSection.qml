@@ -33,14 +33,17 @@ Column {
     property alias offset: offsets.propertyItem
 
     property bool isSnappedToGrid: false
+    property real horizontalGridSizeSpatium: 0.0
+    property real verticalGridSizeSpatium: 0.0
     property alias isVerticalOffsetAvailable: offsets.isVerticalOffsetAvailable
 
     property NavigationPanel navigationPanel: null
     property int navigationRowStart: 0
-    property int navigationRowEnd: configureGridButton.navigation.row
+    property int navigationRowEnd: verticalGridSizeControl.navigation.row
 
     signal snapToGridToggled(var snap)
-    signal configureGridRequested()
+    signal horizontalGridSizeSpatiumEdited(var spatium)
+    signal verticalGridSizeSpatiumEdited(var spatium)
 
     height: implicitHeight
     width: parent.width
@@ -56,6 +59,7 @@ Column {
 
     CheckBox {
         id: snapToGridCheckbox
+
         width: parent.width
 
         navigation.name: "Snap to grid"
@@ -64,27 +68,67 @@ Column {
 
         text: qsTrc("inspector", "Snap to grid")
 
-        checked: isSnappedToGrid
+        checked: root.isSnappedToGrid
 
         onClicked: {
             root.snapToGridToggled(!checked)
         }
     }
 
-    FlatButton {
-        id: configureGridButton
+    StyledTextLabel {
+        text: qsTrc("notation", "Edit grid")
+    }
+
+    Row {
+        id: row
+
+        height: childrenRect.height
         width: parent.width
 
-        navigation.name: "Configure grid"
-        navigation.panel: root.navigationPanel
-        navigation.row: snapToGridCheckbox.navigation.row + 1
+        spacing: 8
 
-        text: qsTrc("inspector", "Configure grid")
+        IncrementalPropertyControl {
+            id: horizontalGridSizeControl
 
-        visible: snapToGridCheckbox.checked
+            width: parent.width / 2 - row.spacing / 2
 
-        onClicked: {
-            root.configureGridRequested()
+			navigation.name: "Horizontal grid size"
+			navigation.panel: root.navigationPanel
+			navigation.row: snapToGridCheckbox.navigationRowEnd + 1
+
+            currentValue: root.horizontalGridSizeSpatium
+            step: 0.05
+            decimals: 2
+            maxValue: 5
+            minValue: 0.01
+
+            icon: IconCode.HORIZONTAL
+
+            onValueEditingFinished: function(newValue) {
+                root.horizontalGridSizeSpatiumEdited(newValue)
+            }
+        }
+
+        IncrementalPropertyControl {
+            id: verticalGridSizeControl
+
+            width: parent.width / 2 - row.spacing / 2
+
+			navigation.name: "Vertical grid size"
+			navigation.panel: root.navigationPanel
+			navigation.row: horizontalGridSizeControl.navigationRowEnd + 1
+
+            currentValue: root.verticalGridSizeSpatium
+            step: 0.05
+            decimals: 2
+            maxValue: 5
+            minValue: 0.01
+
+            icon: IconCode.VERTICAL
+
+            onValueEditingFinished: function(newValue) {
+                root.verticalGridSizeSpatiumEdited(newValue)
+            }
         }
     }
 }

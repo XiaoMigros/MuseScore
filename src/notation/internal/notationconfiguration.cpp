@@ -117,7 +117,7 @@ static const Settings::Key PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS(module
 
 static const Settings::Key STYLE_FILE_IMPORT_PATH_KEY(module_name, "import/style/styleFile");
 
-static constexpr int DEFAULT_GRID_SIZE_SPATIUM = 2;
+static constexpr qreal DEFAULT_GRID_SIZE_SPATIUM = 0.25;
 
 static const std::string BY_NOTE_NAME_INPUT_METHOD("BY_NOTE_NAME");
 
@@ -1114,17 +1114,19 @@ void NotationConfiguration::setIsSnappedToGrid(muse::Orientation gridOrientation
     }
 }
 
-int NotationConfiguration::gridSizeSpatium(muse::Orientation gridOrientation) const
+qreal NotationConfiguration::gridSizeSpatium(muse::Orientation gridOrientation) const
 {
     switch (gridOrientation) {
-    case muse::Orientation::Horizontal: return settings()->value(HORIZONTAL_GRID_SIZE_KEY).toInt();
-    case muse::Orientation::Vertical: return settings()->value(VERTICAL_GRID_SIZE_KEY).toInt();
+    case muse::Orientation::Horizontal:
+        return static_cast<qreal>(settings()->value(HORIZONTAL_GRID_SIZE_KEY).toDouble());
+    case muse::Orientation::Vertical:
+        return static_cast<qreal>(settings()->value(VERTICAL_GRID_SIZE_KEY).toDouble());
     }
 
     return DEFAULT_GRID_SIZE_SPATIUM;
 }
 
-void NotationConfiguration::setGridSize(muse::Orientation gridOrientation, int sizeSpatium)
+void NotationConfiguration::setGridSize(muse::Orientation gridOrientation, qreal sizeSpatium)
 {
     switch (gridOrientation) {
     case muse::Orientation::Horizontal:

@@ -2129,12 +2129,12 @@ RectF EngravingItem::drag(EditData& ed)
 
     double _spatium = spatium();
     if (ed.hRaster) {
-        double hRaster = _spatium / MScore::hRaster();
+        double hRaster = _spatium * MScore::hRaster();
         int n = lrint(x / hRaster);
         x = hRaster * n;
     }
     if (ed.vRaster) {
-        double vRaster = _spatium / MScore::vRaster();
+        double vRaster = _spatium * MScore::vRaster();
         int n = lrint(y / vRaster);
         y = vRaster * n;
     }

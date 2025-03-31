@@ -143,7 +143,7 @@ static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster
 {
     qreal distance = nudgeDistance(editData);
     if (raster > 0) {
-        raster = editData.element->spatium() / raster;
+        raster = editData.element->spatium() * raster;
         if (distance < raster) {
             distance = raster;
         }

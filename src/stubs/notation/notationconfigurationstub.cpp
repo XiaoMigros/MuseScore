@@ -569,9 +569,9 @@ void NotationConfigurationStub::setIsSnappedToGrid(muse::Orientation, bool)
 {
 }
 
-int NotationConfigurationStub::gridSizeSpatium(muse::Orientation) const
+qreal NotationConfigurationStub::gridSizeSpatium(muse::Orientation) const
 {
-    return 20;
+    return 0.25;
 }
 
 void NotationConfigurationStub::setGridSize(muse::Orientation, int)

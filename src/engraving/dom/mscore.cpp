@@ -48,8 +48,8 @@ bool MScore::useFallbackFont     = true;
 bool MScore::saveTemplateMode = false;
 bool MScore::noGui = false;
 
-int MScore::_vRaster;
-int MScore::_hRaster;
+double MScore::_vRaster;
+double MScore::_hRaster;
 bool MScore::_verticalOrientation = false;
 double MScore::verticalPageGap = 5.0;
 double MScore::horizontalPageGapEven = 1.0;

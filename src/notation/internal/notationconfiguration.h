@@ -216,8 +216,8 @@ public:
     bool isSnappedToGrid(muse::Orientation gridOrientation) const override;
     void setIsSnappedToGrid(muse::Orientation gridOrientation, bool isSnapped) override;
 
-    int gridSizeSpatium(muse::Orientation gridOrientation) const override;
-    void setGridSize(muse::Orientation gridOrientation, int sizeSpatium) override;
+    qreal gridSizeSpatium(muse::Orientation gridOrientation) const override;
+    void setGridSize(muse::Orientation gridOrientation, qreal sizeSpatium) override;
 
     bool needToShowAddTextErrorMessage() const override;
     void setNeedToShowAddTextErrorMessage(bool show) override;

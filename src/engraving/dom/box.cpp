@@ -99,7 +99,7 @@ void Box::editDrag(EditData& ed)
     if (isVBox()) {
         m_boxHeight += Spatium(ed.delta.y() / sp);
         if (ed.vRaster) {
-            double vRaster = 1.0 / MScore::vRaster();
+            double vRaster = MScore::vRaster();
             int n = lrint(m_boxHeight.val() / vRaster);
             m_boxHeight = Spatium(vRaster * n);
         }
@@ -108,7 +108,7 @@ void Box::editDrag(EditData& ed)
     } else {
         m_boxWidth += Spatium(ed.delta.x() / sp);
         if (ed.hRaster) {
-            double hRaster = 1.0 / MScore::hRaster();
+            double hRaster = MScore::hRaster();
             int n = lrint(m_boxWidth.val() / hRaster);
             m_boxWidth = Spatium(hRaster * n);
         }

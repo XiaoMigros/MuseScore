@@ -212,8 +212,8 @@ public:
     virtual bool isSnappedToGrid(muse::Orientation gridOrientation) const = 0;
     virtual void setIsSnappedToGrid(muse::Orientation gridOrientation, bool isSnapped) = 0;
 
-    virtual int gridSizeSpatium(muse::Orientation gridOrientation) const = 0;
-    virtual void setGridSize(muse::Orientation gridOrientation, int sizeSpatium) = 0;
+    virtual qreal gridSizeSpatium(muse::Orientation gridOrientation) const = 0;
+    virtual void setGridSize(muse::Orientation gridOrientation, qreal sizeSpatium) = 0;
 
     virtual bool needToShowAddTextErrorMessage() const = 0;
     virtual void setNeedToShowAddTextErrorMessage(bool show) = 0;

@@ -202,8 +202,8 @@ public:
     MOCK_METHOD(bool, isSnappedToGrid, (muse::Orientation), (const, override));
     MOCK_METHOD(void, setIsSnappedToGrid, (muse::Orientation, bool), (override));
 
-    MOCK_METHOD(int, gridSizeSpatium, (muse::Orientation), (const, override));
-    MOCK_METHOD(void, setGridSize, (muse::Orientation, int), (override));
+    MOCK_METHOD(qreal, gridSizeSpatium, (muse::Orientation), (const, override));
+    MOCK_METHOD(void, setGridSize, (muse::Orientation, qreal), (override));
 
     MOCK_METHOD(bool, needToShowAddTextErrorMessage, (), (const, override));
     MOCK_METHOD(void, setNeedToShowAddTextErrorMessage, (bool), (override));
