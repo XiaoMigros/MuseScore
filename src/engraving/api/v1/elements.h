@@ -117,11 +117,6 @@ class EngravingItem : public apiv1::ScoreElement
      */
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> children READ children)
     /**
-     * Children of this element, including children of children.
-     * \since 4.6
-     */
-    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> allChildren READ allChildren)
-    /**
      * Staff which this element belongs to.
      * \since MuseScore 3.5
      */
@@ -431,16 +426,7 @@ class EngravingItem : public apiv1::ScoreElement
 
     QQmlListProperty<EngravingItem> children()
     {
-        mu::engraving::EngravingItemList list = element()->childrenItems(false);
-        std::vector<mu::engraving::EngravingItem*> l(list.begin(), list.end());
-        return wrapContainerProperty<apiv1::EngravingItem>(this, l);
-    }
-
-    QQmlListProperty<EngravingItem> allChildren()
-    {
-        mu::engraving::EngravingItemList list = element()->childrenItems(true);
-        std::vector<mu::engraving::EngravingItem*> l(list.begin(), list.end());
-        return wrapContainerProperty<apiv1::EngravingItem>(this, l);
+        return wrapContainerProperty<apiv1::EngravingItem>(this, element()->children());
     }
 
     QRectF bbox() const;
