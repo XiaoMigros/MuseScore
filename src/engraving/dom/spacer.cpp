@@ -96,6 +96,41 @@ void Spacer::editDrag(EditData& ed)
 }
 
 //---------------------------------------------------------
+//   startDrag
+//---------------------------------------------------------
+
+void Spacer::startDrag(EditData& ed)
+{
+    ElementEditDataPtr eed = ed.getData(this);
+    eed->pushProperty(Pid::SPACE);
+}
+
+//---------------------------------------------------------
+//   drag
+//---------------------------------------------------------
+
+RectF Spacer::drag(EditData& ed)
+{
+    double s = ed.delta.y();
+
+    switch (spacerType()) {
+    case SpacerType::DOWN:
+    case SpacerType::FIXED:
+        m_gap = ed.gridSnapped(PointF(0.0, m_gap + s), spatium()).y();
+        break;
+    case SpacerType::UP:
+        m_gap = ed.gridSnapped(PointF(0.0, m_gap - s), spatium()).y();
+        break;
+    }
+    if (m_gap.val() < spatium() * 2.0) {
+        m_gap = Millimetre(spatium() * 2);
+    }
+    layout0();
+    triggerLayout();
+    return canvasBoundingRect();
+}
+
+//---------------------------------------------------------
 //   gripsPositions
 //---------------------------------------------------------
 

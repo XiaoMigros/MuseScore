@@ -156,6 +156,54 @@ void TieSegment::editDrag(EditData& ed)
     }
 }
 
+RectF TieSegment::drag(EditData& ed)
+{
+    consolidateAdjustmentOffsetIntoUserOffset();
+    Grip g = ed.curGrip;
+    ups(g).off = ed.gridSnapped(ups(g).off + ed.delta, spatium());
+
+    if (g == Grip::START || g == Grip::END) {
+        renderer()->computeBezier(this);
+        //
+        // move anchor for slurs/ties
+        //
+        if (isPartialTieSegment()) {
+            return canvasBoundingRect();
+        }
+        if ((g == Grip::START && isSingleBeginType()) || (g == Grip::END && isSingleEndType())) {
+            Spanner* spanner = tie();
+            EngravingItem* e = ed.view()->elementNear(ed.pos);
+            Note* note = (e && e->isNote()) ? toNote(e) : nullptr;
+            if (note && ((g == Grip::END && note->tick() > tie()->tick()) || (g == Grip::START && note->tick() < tie()->tick2()))) {
+                if (g == Grip::END) {
+                    Tie* tie = toTie(spanner);
+                    if (tie->startNote()->pitch() == note->pitch()
+                        && tie->startNote()->chord()->tick() < note->chord()->tick()) {
+                        ed.view()->setDropTarget(note);
+                        if (note != tie->endNote()) {
+                            changeAnchor(ed, note);
+                            return canvasBoundingRect();
+                        }
+                    }
+                }
+            } else {
+                ed.view()->setDropTarget(0);
+            }
+        }
+    } else if (g == Grip::BEZIER1 || g == Grip::BEZIER2) {
+        renderer()->computeBezier(this);
+    } else if (g == Grip::SHOULDER) {
+        ups(g).off = PointF();
+        ups(Grip::BEZIER1).off = ed.gridSnapped(ups(Grip::BEZIER1).off + ed.delta, spatium());
+        ups(Grip::BEZIER2).off = ed.gridSnapped(ups(Grip::BEZIER2).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
+    } else if (g == Grip::DRAG) {
+        ups(Grip::DRAG).off = PointF();
+        roffset() = ed.gridSnapped(roffset() + ed.delta, spatium());
+    }
+    return canvasBoundingRect();
+}
+
 void TieSegment::consolidateAdjustmentOffsetIntoUserOffset()
 {
     for (size_t i = 0; i < m_adjustmentOffsets.size(); ++i) {

@@ -52,6 +52,8 @@ public:
     bool isEditAllowed(EditData&) const override;
     bool edit(EditData&) override;
 
+    RectF drag(EditData& ed) override;
+
     void editDrag(EditData& ed) override;
 
     Slur* slur() const { return toSlur(spanner()); }
