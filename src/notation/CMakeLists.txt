@@ -194,9 +194,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/selectionfilter/elementsselectionfiltermodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/selectionfilter/elementsselectionfiltermodel.h
 
-    ${CMAKE_CURRENT_LIST_DIR}/view/editgridsizedialogmodel.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/view/editgridsizedialogmodel.h
-
     ${CMAKE_CURRENT_LIST_DIR}/view/editpercussionshortcutmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/editpercussionshortcutmodel.h
 
