@@ -309,7 +309,6 @@ void NotationActionController::init()
     registerAction("staff-text-properties", &Controller::openStaffTextPropertiesDialog);
     registerAction("system-text-properties", &Controller::openStaffTextPropertiesDialog);
     registerAction("measure-properties", &Controller::openMeasurePropertiesDialog);
-    registerAction("config-raster", &Controller::openEditGridSizeDialog);
     registerAction("realize-chord-symbols", &Controller::openRealizeChordSymbolsDialog);
 
     registerAction("load-style", &Controller::loadStyle);
@@ -2080,11 +2079,6 @@ void NotationActionController::openMeasurePropertiesDialog()
     if (currentNotationInteraction()->selectedMeasure() != nullptr) {
         interactive()->open("musescore://notation/measureproperties?sync=false");
     }
-}
-
-void NotationActionController::openEditGridSizeDialog()
-{
-    interactive()->open("musescore://notation/editgridsize?sync=false");
 }
 
 void NotationActionController::openRealizeChordSymbolsDialog()
