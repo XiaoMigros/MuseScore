@@ -874,14 +874,65 @@ std::vector<LineF> LineSegment::dragAnchorLines() const
 
 RectF LineSegment::drag(EditData& ed)
 {
-    setOffset(offset() + ed.evtDelta);
-    setOffsetChanged(true);
+    // Only for resizing according to the diagonal properties
+    const PointF deltaResize(ed.evtDelta.x(), line()->diagonal() ? ed.evtDelta.y() : 0.0);
 
-    if (isStyled(Pid::OFFSET)) {
-        setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
+    switch (ed.curGrip) {
+    case Grip::START:         // Resize the begin of element (left grip)
+        setOffset(ed.gridSnapped(offset() + deltaResize, spatium()));
+        m_offset2 = ed.gridSnapped(m_offset2 - deltaResize, spatium());
+
+        if (isStyled(Pid::OFFSET)) {
+            setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
+        }
+
+        rebaseAnchors(ed, ed.curGrip);
+        break;
+    case Grip::END:         // Resize the end of element (right grip)
+        m_offset2 = ed.gridSnapped(m_offset2 + deltaResize, spatium());
+        rebaseAnchors(ed, ed.curGrip);
+        break;
+    case Grip::MIDDLE: {         // Move the element (middle grip)
+        // Only for moving, no y limitation
+        const PointF deltaMove(ed.evtDelta);
+        setOffset(ed.gridSnapped(offset() + deltaMove, spatium()));
+        setOffsetChanged(true);
+        if (isStyled(Pid::OFFSET)) {
+            setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
+        }
+        rebaseAnchors(ed, ed.curGrip);
+    }
+    break;
+    default:
+        break;
+    }
+    if (line()->anchor() == Spanner::Anchor::NOTE && ed.isStartEndGrip()) {
+        //
+        // if we touch a different note, change anchor
+        //
+        EngravingItem* e = ed.view()->elementNear(ed.pos);
+        if (e && e->isNote()) {
+            SLine* l = line();
+            if (ed.curGrip == Grip::END && e != line()->endElement()) {
+                LOGD("LineSegment: move end anchor");
+                Note* noteOld = toNote(l->endElement());
+                Note* noteNew = toNote(e);
+                Note* sNote   = toNote(l->startElement());
+                // do not change anchor if new note is before start note
+                if (sNote && sNote->chord() && noteNew->chord() && sNote->chord()->tick() < noteNew->chord()->tick()) {
+                    score()->undoChangeSpannerElements(l, sNote, noteNew); //no undo??
+
+                    m_offset2 += noteOld->canvasPos() - noteNew->canvasPos();
+                }
+            } else if (ed.curGrip == Grip::START && e != l->startElement()) {
+                LOGD("LineSegment: move start anchor (not impl.)");
+            }
+        }
     }
 
-    rebaseAnchors(ed, Grip::MIDDLE);
+    updateAnchors(ed);
+
+    triggerLayout();
 
     return canvasBoundingRect();
 }

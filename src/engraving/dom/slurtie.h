@@ -91,6 +91,9 @@ class SlurTieSegment : public SpannerSegment
 {
     OBJECT_ALLOCATOR(engraving, SlurTieSegment)
 
+protected:
+    void startDrag(EditData&) override;
+
 public:
 
     virtual void spatiumChanged(double, double) override;

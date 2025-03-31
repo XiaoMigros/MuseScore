@@ -47,6 +47,9 @@ public:
     void startEditDrag(EditData&) override;
     void editDrag(EditData&) override;
 
+    void startDrag(EditData&) override;
+    RectF drag(EditData&) override;
+
     bool acceptDrop(EditData&) const override;
     EngravingItem* drop(EditData&) override;
 

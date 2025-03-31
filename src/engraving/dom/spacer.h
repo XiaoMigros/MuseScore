@@ -62,6 +62,9 @@ public:
     void startEditDrag(EditData&) override;
     void editDrag(EditData&) override;
 
+    void startDrag(EditData&) override;
+    RectF drag(EditData&) override;
+
     void setGap(Spatium sp);
     Spatium gap() const { return m_gap; }
 
