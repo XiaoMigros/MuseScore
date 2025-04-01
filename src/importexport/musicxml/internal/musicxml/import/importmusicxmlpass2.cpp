@@ -1316,9 +1316,13 @@ static void addMordentToChord(const Notation& notation, ChordRest* cr)
 
 static void addTurnToChord(const Notation& notation, ChordRest* cr)
 {
-    const SymId turnSym = notation.symId();
+    SymId turnSym = notation.symId();
     const Color color = Color::fromString(notation.attribute(u"color"));
     const String place = notation.attribute(u"placement");
+    if (notation.attribute(u"slash") == "yes") {
+        // TODO: currently this is the only available SMuFL turn with a slash
+        turnSym = SymId::ornamentTurnSlash;
+    }
     Ornament* turn = Factory::createOrnament(cr);
     turn->setSymId(turnSym);
     if (place == u"above") {
@@ -1387,6 +1391,7 @@ static bool convertArticulationToSymId(const String& mxmlName, SymId& id)
         { u"vertical-turn",          SymId::ornamentTurnUp },
         { u"inverted-vertical-turn", SymId::ornamentTurnUpS },
         { u"turn",                   SymId::ornamentTurn },
+        { u"shake",                  SymId::ornamentTremblementCouperin },
         { u"schleifer",              SymId::ornamentPrecompSlide },
         { u"haydn",                  SymId::ornamentHaydn },
         // articulations
@@ -4923,10 +4928,13 @@ void MusicXmlParserDirection::bracket(const String& type, const int number,
 
             if (lineType == "solid") {
                 textLine->setLineStyle(LineType::SOLID);
+                textLine->setPropertyFlags(Pid::LINE_STYLE, PropertyFlags::UNSTYLED);
             } else if (lineType == "dashed") {
                 textLine->setLineStyle(LineType::DASHED);
+                textLine->setPropertyFlags(Pid::LINE_STYLE, PropertyFlags::UNSTYLED);
             } else if (lineType == "dotted") {
                 textLine->setLineStyle(LineType::DOTTED);
+                textLine->setPropertyFlags(Pid::LINE_STYLE, PropertyFlags::UNSTYLED);
             } else if (lineType != "wavy") {
                 m_logger->logError(String(u"unsupported line-type: %1").arg(String::fromAscii(lineType.ascii())), &m_e);
             }
