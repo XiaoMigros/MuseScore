@@ -996,7 +996,7 @@ TEST_F(MusicXml_Tests, numerals) {
     musicXmlIoTest("testNumerals");
 }
 TEST_F(MusicXml_Tests, ornaments) {
-    musicXmlImportTestRef("testOrnaments");
+    musicXmlIoTest("testOrnaments");
 }
 TEST_F(MusicXml_Tests, overlappingSpanners) {
     musicXmlIoTest("testOverlappingSpanners");
@@ -1098,7 +1098,7 @@ TEST_F(MusicXml_Tests, stringVoiceName) {
     musicXmlIoTestRef("testStringVoiceName");
 }
 TEST_F(MusicXml_Tests, swing) {
-    musicXmlMscxExportTestRef("testSwing");
+    musicXmlIoTest("testSwing");
 }
 TEST_F(MusicXml_Tests, systemBrackets1) {
     musicXmlIoTest("testSystemBrackets1");
