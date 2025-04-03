@@ -62,6 +62,8 @@ public:
     void startEditDrag(EditData&) override;
     void editDrag(EditData&) override;
     void spatiumChanged(double, double) override;
+    void startDrag(EditData&) override;
+    RectF drag(EditData&) override;
 
     void setGap(Millimetre sp);
     Millimetre gap() const { return m_gap; }

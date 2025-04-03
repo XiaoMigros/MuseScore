@@ -276,6 +276,7 @@ public:
     bool shift() const { return modifiers & ShiftModifier; }
     bool isStartEndGrip() const { return curGrip == Grip::START || curGrip == Grip::END; }
     bool hasCurrentGrip() const { return curGrip != Grip::NO_GRIP; }
+    PointF gridSnapped(PointF p, double spatium) const;
 
 private:
     std::list<std::shared_ptr<ElementEditData> > m_data;
