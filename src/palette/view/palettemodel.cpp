@@ -27,6 +27,9 @@
 #include "internal/palettetree.h"
 #include "internal/palettecelliconengine.h"
 
+#include "engraving/style/defaultstyle.h"
+#include "engraving/style/style.h"
+
 #include "engraving/dom/actionicon.h"
 #include "engraving/dom/beam.h"
 #include "engraving/dom/chordrest.h"
@@ -39,6 +42,10 @@
 using namespace mu;
 using namespace mu::palette;
 using namespace mu::engraving;
+
+namespace mu::engraving {
+extern MasterScore* gpaletteScore;
+}
 
 //---------------------------------------------------------
 //   PaletteTreeModel::PaletteTreeModel
@@ -56,6 +63,10 @@ PaletteTreeModel::PaletteTreeModel(PaletteTreePtr tree, QObject* parent)
 
     configuration()->colorsChanged().onNotify(this, [this]() {
         notifyAboutCellsChanged(Qt::DecorationRole);
+    });
+
+    configuration()->paletteUseScoreStyleChanged().onNotify(this, [this]() {
+        updatePaletteScoreStyle();
     });
 }
 
@@ -142,6 +153,20 @@ void PaletteTreeModel::notifyAboutCellsChanged(int changedRole)
         const QModelIndex last = index(palette->cellsCount() - 1, 0, parent);
         emit dataChanged(first, last, { changedRole });
     }
+}
+
+void PaletteTreeModel::updatePaletteScoreStyle()
+{
+    if (configuration()->paletteUseScoreStyle() && globalContext()->currentNotation()->elements()->msScore()) {
+        gpaletteScore->setStyle(globalContext()->currentNotation()->elements()->msScore()->style());
+    } else {
+        gpaletteScore->setStyle(DefaultStyle::baseStyle());
+    }
+    IEngravingFontPtr scoreFont = engravingfonts->fontByName(gpaletteScore->style().value(
+                                                                 Sid::musicalSymbolFont).value<String>().toStdString());
+    gpaletteScore->setEngravingFont(scoreFont);
+    gpaletteScore->setNoteHeadWidth(scoreFont->width(SymId::noteheadBlack, gpaletteScore->style().spatium()) / SPATIUM20);
+    notifyAboutCellsChanged(Qt::DecorationRole);
 }
 
 //---------------------------------------------------------

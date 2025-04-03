@@ -52,6 +52,10 @@ public:
     virtual muse::ValCh<bool> isPaletteDragEnabled() const = 0;
     virtual void setIsPaletteDragEnabled(bool enabled) = 0;
 
+    virtual muse::ValCh<bool> paletteUseScoreStyle() const = 0;
+    virtual void setPaletteUseScoreStyle(bool enabled) = 0;
+    virtual muse::async::Notification paletteUseScoreStyleChanged() const = 0;
+
     virtual QColor elementsBackgroundColor() const = 0;
     virtual QColor elementsColor() const = 0;
     virtual QColor gridColor() const = 0;

@@ -34,6 +34,7 @@ class PaletteConfiguration : public IPaletteConfiguration, public muse::async::A
 {
     INJECT(muse::ui::IUiConfiguration, uiConfiguration)
     INJECT(muse::IGlobalConfiguration, globalConfiguration)
+    INJECT(mu::context::IGlobalContext, globalContext)
 
 public:
     void init();
@@ -51,6 +52,10 @@ public:
 
     muse::ValCh<bool> isPaletteDragEnabled() const override;
     void setIsPaletteDragEnabled(bool enabled) override;
+
+    muse::ValCh<bool> paletteUseScoreStyle() const override;
+    void setPaletteUseScoreStyle(bool enabled) override;
+    muse::async::Notification paletteUseScoreStyleChanged() const override;
 
     QColor elementsBackgroundColor() const override;
     QColor elementsColor() const override;
@@ -76,6 +81,7 @@ private:
     muse::ValCh<bool> m_isSinglePalette;
     muse::ValCh<bool> m_isSingleClickToOpenPalette;
     muse::ValCh<bool> m_isPaletteDragEnabled;
+    muse::ValCh<bool> m_paletteUseScoreStyle;
 
     mutable QHash<QString, muse::ValCh<PaletteConfig> > m_paletteConfigs;
     mutable QHash<QString, muse::ValCh<PaletteCellConfig> > m_paletteCellsConfigs;

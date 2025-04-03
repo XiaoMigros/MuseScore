@@ -46,6 +46,9 @@ class PaletteCellFilter : public QObject
 {
     Q_OBJECT
 
+    INJECT(mu::context::IGlobalContext, globalContext)
+    INJECT(engraving::IEngravingFontsProvider, engravingFonts)
+
     PaletteCellFilter * chainedFilter = nullptr;
 
 signals:

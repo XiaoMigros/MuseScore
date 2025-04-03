@@ -37,6 +37,7 @@ static const Settings::Key PALETTE_SCALE(MODULE_NAME, "application/paletteScale"
 static const Settings::Key PALETTE_USE_SINGLE(MODULE_NAME, "application/useSinglePalette");
 static const Settings::Key IS_SINGLE_CLICK_TO_OPEN_PALETTE(MODULE_NAME, "application/singleClickToOpenPalette");
 static const Settings::Key IS_PALETTE_DRAG_ENABLED(MODULE_NAME, "application/paletteDragEnabled");
+static const Settings::Key PALETTE_USE_SCORE_STYLE(MODULE_NAME, "application/paletteUsesScoreStyle");
 
 void PaletteConfiguration::init()
 {
@@ -63,6 +64,22 @@ void PaletteConfiguration::init()
     m_isPaletteDragEnabled.val = settings()->value(IS_PALETTE_DRAG_ENABLED).toBool();
     settings()->valueChanged(IS_PALETTE_DRAG_ENABLED).onReceive(this, [this](const Val& newValue) {
         m_isPaletteDragEnabled.set(newValue.toBool());
+    });
+
+    settings()->setDefaultValue(PALETTE_USE_SCORE_STYLE, Val(false));
+
+    m_paletteUseScoreStyle.val = settings()->value(PALETTE_USE_SCORE_STYLE).toBool();
+    settings()->valueChanged(PALETTE_USE_SCORE_STYLE).onReceive(this, [this](const Val& newValue) {
+        m_paletteUseScoreStyle.set(newValue.toBool());
+        emit m_paletteUseScoreStyleChanged;
+    });
+
+    globalContext()->style()->styleChanged().onNotify(this, [this]() {
+        emit m_paletteUseScoreStyleChanged;
+    });
+
+    globalContext()->currentNotationChanged().onNotify(this, [this]() {
+        emit m_paletteUseScoreStyleChanged;
     });
 }
 
@@ -113,6 +130,16 @@ ValCh<bool> PaletteConfiguration::isPaletteDragEnabled() const
 void PaletteConfiguration::setIsPaletteDragEnabled(bool enabled)
 {
     settings()->setSharedValue(IS_PALETTE_DRAG_ENABLED, Val(enabled));
+}
+
+ValCh<bool> PaletteConfiguration::paletteUseScoreStyle() const
+{
+    return m_paletteUseScoreStyle;
+}
+
+void PaletteConfiguration::setPaletteUseScoreStyle(bool enabled)
+{
+    settings()->setSharedValue(PALETTE_USE_SCORE_STYLE, Val(enabled));
 }
 
 QColor PaletteConfiguration::elementsBackgroundColor() const
