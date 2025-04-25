@@ -107,12 +107,6 @@
 #include "framework/stubs/workspace/workspacestubmodule.h"
 #endif
 
-#ifdef MUSE_MODULE_EXTENSIONS
-#include "framework/extensions/extensionsmodule.h"
-#else
-#include "framework/stubs/extensions/extensionsstubmodule.h"
-#endif
-
 // Modules
 #include "appshell/appshellmodule.h"
 
@@ -142,9 +136,9 @@
 #include "importexport/bww/bwwmodule.h"
 #include "importexport/capella/capellamodule.h"
 #include "importexport/guitarpro/guitarpromodule.h"
-#include "importexport/finale/finalemodule.h"
 #include "importexport/midi/midimodule.h"
 #include "importexport/musedata/musedatamodule.h"
+#include "importexport/musx/musxmodule.h"
 #include "importexport/ove/ovemodule.h"
 #include "importexport/audioexport/audioexportmodule.h"
 #include "importexport/imagesexport/imagesexportmodule.h"
@@ -190,9 +184,11 @@
 #include "stubs/playback/playbackstubmodule.h"
 #endif
 
-#ifdef MUE_BUILD_PRINT_MODULE
-#include "print/printmodule.h"
+#ifdef MUSE_MODULE_EXTENSIONS
+#include "extensions/extensionsmodule.h"
 #endif
+
+#include "print/printmodule.h"
 
 #ifdef MUE_BUILD_PROJECT_MODULE
 #include "project/projectmodule.h"
@@ -293,7 +289,6 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const CmdOptions& opti
     app->addModule(new mu::iex::guitarpro::GuitarProModule());
     app->addModule(new mu::iex::midi::MidiModule());
     app->addModule(new mu::iex::musedata::MuseDataModule());
-    app->addModule(new mu::iex::finale::FinaleModule());
     app->addModule(new mu::iex::ove::OveModule());
     app->addModule(new mu::iex::audioexport::AudioExportModule());
     app->addModule(new mu::iex::imagesexport::ImagesExportModule());
@@ -316,11 +311,10 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const CmdOptions& opti
     app->addModule(new mu::notation::NotationModule());
     app->addModule(new mu::palette::PaletteModule());
     app->addModule(new mu::playback::PlaybackModule());
+#ifdef MUSE_MODULE_EXTENSIONS
     app->addModule(new muse::extensions::ExtensionsModule());
-
-#ifdef MUE_BUILD_PRINT_MODULE
-    app->addModule(new mu::print::PrintModule());
 #endif
+    app->addModule(new mu::print::PrintModule());
     app->addModule(new mu::project::ProjectModule());
     app->addModule(new muse::update::UpdateModule());
     app->addModule(new muse::workspace::WorkspaceModule());
@@ -411,7 +405,7 @@ std::shared_ptr<muse::IApplication> AppFactory::newConsoleApp(const CmdOptions& 
     app->addModule(new mu::iex::guitarpro::GuitarProModule());
     app->addModule(new mu::iex::midi::MidiModule());
     app->addModule(new mu::iex::musedata::MuseDataModule());
-    app->addModule(new mu::iex::finale::FinaleModule());
+    app->addModule(new mu::iex::musx::MusxModule());
     app->addModule(new mu::iex::ove::OveModule());
     app->addModule(new mu::iex::audioexport::AudioExportModule());
     app->addModule(new mu::iex::imagesexport::ImagesExportModule());
@@ -433,11 +427,10 @@ std::shared_ptr<muse::IApplication> AppFactory::newConsoleApp(const CmdOptions& 
     app->addModule(new mu::notation::NotationModule());
     app->addModule(new mu::palette::PaletteModule());
     app->addModule(new mu::playback::PlaybackModule());
+#ifdef MUSE_MODULE_EXTENSIONS
     app->addModule(new muse::extensions::ExtensionsModule());
-
-#ifdef MUE_BUILD_PRINT_MODULE
-    app->addModule(new mu::print::PrintModule());
 #endif
+    app->addModule(new mu::print::PrintModule());
     app->addModule(new mu::project::ProjectModule());
     app->addModule(new muse::update::UpdateModule());
     app->addModule(new muse::workspace::WorkspaceModule());
