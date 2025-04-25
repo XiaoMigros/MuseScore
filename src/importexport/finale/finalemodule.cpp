@@ -19,13 +19,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "musxmodule.h"
+#include "finalemodule.h"
 
-using namespace mu::iex::musx;
+#include "modularity/ioc.h"
 
-std::string MusxModule::moduleName() const
+#include "project/inotationreadersregister.h"
+#include "internal/notationfinalereader.h"
+
+using namespace muse::modularity;
+using namespace mu::iex::finale;
+using namespace mu::project;
+
+std::string FinaleModule::moduleName() const
 {
-    return "iex_musx";
+    return "iex_finale";
 }
 
-
+void FinaleModule::resolveImports()
+{
+    auto readers = ioc()->resolve<INotationReadersRegister>(moduleName());
+    if (readers) {
+        readers->reg({ "musx", "enigmaxml" }, std::make_shared<NotationFinaleReader>());
+    }
+}
