@@ -21,14 +21,15 @@
  */
 #pragma once
 
-#include "modularity/imodulesetup.h"
+#include "engraving/engravingerrors.h"
 
-namespace mu::iex::musx {
-class MusxModule : public muse::modularity::IModuleSetup
-{
-public:
+namespace mu::engraving {
+class MasterScore;
+class Score;
+}
 
-    std::string moduleName() const override;
-};
-
-} // namespace mu::iex::musx
+namespace mu::iex::finale {
+    engraving::Err importEnigmaXmlfromBuffer(engraving::Score* score, const muse::ByteArray& data);
+    engraving::Err importEnigmaXml(engraving::MasterScore* score, const QString& name);
+    engraving::Err importMusx(engraving::MasterScore* score, const QString& name);
+}
