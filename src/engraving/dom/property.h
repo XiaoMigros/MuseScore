@@ -166,6 +166,7 @@ enum class Pid {
     SPACE,            // used for spacer
     TEMPO,
     TEMPO_FOLLOW_TEXT,
+    TEMPO_ALIGN_RIGHT_OF_REHEARSAL_MARK,
     ACCIDENTAL_BRACKET,
     ACCIDENTAL_TYPE,
     ACCIDENTAL_STACKING_ORDER_OFFSET,
@@ -491,6 +492,7 @@ extern String propertyToString(Pid, const PropertyValue& value, bool mscx);
 extern P_TYPE propertyType(Pid);
 extern const char* propertyName(Pid);
 extern bool propertyLink(Pid id);
+extern bool propertyLinkSameScore(Pid id);
 extern PropertyGroup propertyGroup(Pid id);
 extern Pid propertyId(const muse::AsciiStringView& name);
 extern String propertyUserName(Pid);

@@ -70,6 +70,7 @@ const std::unordered_map<ActionCode, bool EngravingDebuggingOptions::*> Notation
     { "show-skylines", &EngravingDebuggingOptions::showSkylines },
     { "show-system-bounding-rects", &EngravingDebuggingOptions::showSystemBoundingRects },
     { "show-element-masks", &EngravingDebuggingOptions::showElementMasks },
+    { "show-line-attach-points", &EngravingDebuggingOptions::showLineAttachPoints },
     { "mark-corrupted-measures", &EngravingDebuggingOptions::markCorruptedMeasures }
 };
 
@@ -1103,7 +1104,7 @@ void NotationActionController::move(MoveDirection direction, bool quickly)
     case MoveDirection::Left:
         if (playbackController()->isPlaying()) {
             MeasureBeat beat = playbackController()->currentBeat();
-            int targetBeatIdx = beat.beatIndex;
+            int targetBeatIdx = static_cast<int>(beat.beat);
             int targetMeasureIdx = beat.measureIndex;
             int increment = (direction == MoveDirection::Right ? 1 : -1);
 
@@ -1424,7 +1425,15 @@ void NotationActionController::addText(TextStyleType type)
         return;
     }
 
-    EngravingItem* item = contextItem(interaction);
+    EngravingItem* item = nullptr;
+
+    const INotationSelectionPtr sel = interaction->selection();
+    if (sel->isRange()) {
+        const INotationSelectionRangePtr range = sel->range();
+        item = range->rangeStartSegment()->firstElementForNavigation(range->startStaffIndex());
+    } else {
+        item = interaction->contextItem();
+    }
 
     if (isVerticalBoxTextStyle(type)) {
         if (!item || !item->isVBox()) {
@@ -1456,7 +1465,7 @@ void NotationActionController::addImage()
         return;
     }
 
-    EngravingItem* item = contextItem(interaction);
+    EngravingItem* item = interaction->contextItem();
     if (!interaction->canAddImageToItem(item)) {
         return;
     }
@@ -1596,7 +1605,7 @@ void NotationActionController::openSelectionMoreOptions()
         return;
     }
 
-    auto item = contextItem(interaction);
+    auto item = interaction->contextItem();
     if (!item) {
         return;
     }

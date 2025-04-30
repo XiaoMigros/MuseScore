@@ -73,6 +73,7 @@
 #include "beamlayout.h"
 #include "tremololayout.h"
 #include "autoplace.h"
+#include "stemlayout.h"
 
 using namespace muse;
 using namespace mu::engraving;
@@ -389,7 +390,7 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
             double overlap = 0.0;                // how much tie can overlap start and end notes
             bool shortStart = false;            // whether tie should clear start note or not
             Note* startNote = tie->startNote();
-            Chord* startChord = startNote->chord();
+            Chord* startChord = startNote ? startNote->chord() : nullptr;
             if (startChord && startChord->measure() == item->measure() && startChord == prevChordRest(item)) {
                 double startNoteWidth = startNote->width();
                 // overlap into start chord?
@@ -1214,6 +1215,8 @@ void ChordLayout::layoutArticulations3(Chord* item, Slur* slur, LayoutContext& c
 //! May be called again when the chord is added to or removed from a beam.
 void ChordLayout::layoutStem(Chord* item, const LayoutContext& ctx)
 {
+    TRACEFUNC;
+
     LAYOUT_CALL() << "chord: " << item->eid();
 
     // Stem needs to know hook's bbox and SMuFL anchors.
@@ -1225,7 +1228,7 @@ void ChordLayout::layoutStem(Chord* item, const LayoutContext& ctx)
 
     // we should calculate default stem length for this chord even if it doesn't have a stem
     // because this length is used for tremolos or other things that attach to where the stem WOULD be
-    item->setDefaultStemLength(item->calcDefaultStemLength());
+    item->setDefaultStemLength(StemLayout::calcDefaultStemLength(item, ctx));
 
     if (!item->stem()) {
         return;
@@ -1252,19 +1255,14 @@ void ChordLayout::layoutStem(Chord* item, const LayoutContext& ctx)
     }
 }
 
-void ChordLayout::computeUpBeamCase(Chord* item, Beam* beam, const LayoutContext& ctx)
+void ChordLayout::computeUpBeamCase(Chord* item, Beam* beam)
 {
-    if (item == beam->elements().front()) {
-        // TODO: remove this
-        BeamLayout::layout(beam, ctx);
-    }
-
-    if (!beam->userModified() && !beam->cross()) {
-        item->setUp(beam->up());
+    if (beam->userModified()) {
+        item->setUp(isChordPosBelowBeam(item, beam));
     } else if (beam->cross()) {
         item->setUp(item->isBelowCrossBeam(beam));
-    } else if (beam->userModified()) {
-        item->setUp(isChordPosBelowBeam(item, beam));
+    } else {
+        item->setUp(beam->up());
     }
 }
 
@@ -1277,6 +1275,10 @@ bool ChordLayout::isChordPosBelowBeam(Chord* item, Beam* beam)
 
     PointF startAnchor = beam->startAnchor();
     PointF endAnchor = beam->endAnchor();
+
+    if (startAnchor.isNull() || endAnchor.isNull()) {
+        return beam->cross() ? item->isBelowCrossBeam(beam) : beam->up();
+    }
 
     if (item == beam->elements().front()) {
         return noteY > startAnchor.y();
@@ -1393,7 +1395,7 @@ void ChordLayout::computeUp(const Chord* item, Chord::LayoutData* ldata, const L
     }
 
     if (hasBeam) {
-        computeUpBeamCase(const_cast<Chord*>(item), item->beam(), ctx);
+        computeUpBeamCase(const_cast<Chord*>(item), item->beam());
         return;
     } else if (item->tremoloTwoChord()) {
         ldata->up = computeUp_TremoloTwoNotesCase(item, item->tremoloTwoChord(), ctx);
@@ -2077,11 +2079,13 @@ void ChordLayout::layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_
         layoutChords3(chords, notes, staff, ctx);
     }
 
-    layoutLedgerLines(chords);
-    AccidentalsLayout::layoutAccidentals(chords, ctx);
-    for (Chord* chord : chords) {
-        for (Chord* grace : chord->graceNotes()) {
-            AccidentalsLayout::layoutAccidentals({ grace }, ctx);
+    if (!isTab) {
+        layoutLedgerLines(chords);
+        AccidentalsLayout::layoutAccidentals(chords, ctx);
+        for (Chord* chord : chords) {
+            for (Chord* grace : chord->graceNotes()) {
+                AccidentalsLayout::layoutAccidentals({ grace }, ctx);
+            }
         }
     }
 
@@ -2194,6 +2198,7 @@ double ChordLayout::layoutChords2(std::vector<Note*>& notes, bool up, LayoutCont
         }
         note->mutldata()->mirror.set_value(mirror);
         if (chord->stem()) {
+            chord->stem()->mutldata()->setPosX(chord->stemPosX());
             TLayout::layoutStem(chord->stem(), chord->stem()->mutldata(), ctx.conf()); // needed because mirroring can cause stem position to change
         }
 

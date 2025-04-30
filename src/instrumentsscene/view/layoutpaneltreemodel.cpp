@@ -157,6 +157,13 @@ bool LayoutPanelTreeModel::removeRows(int row, int count, const QModelIndex& par
     return true;
 }
 
+bool LayoutPanelTreeModel::shouldShowSystemObjectLayers() const
+{
+    // Only show system object staves in master score
+    // TODO: extend system object staves logic to parts
+    return m_notation && m_notation->isMaster();
+}
+
 void LayoutPanelTreeModel::initPartOrders()
 {
     m_sortedPartIdList.clear();
@@ -305,7 +312,7 @@ void LayoutPanelTreeModel::setupNotationConnections()
 
     m_notation->undoStack()->changesChannel().onReceive(this, [this](const mu::engraving::ScoreChangesRange& changes) {
         if (!m_layoutPanelVisible) {
-            m_shouldUpdateSystemObjectLayers = true;
+            m_scoreChanged = true;
             return;
         }
 
@@ -353,6 +360,8 @@ void LayoutPanelTreeModel::onScoreChanged(const mu::engraving::ScoreChangesRange
     for (AbstractLayoutPanelTreeItem* item : m_rootItem->childItems()) {
         item->onScoreChanged(changes);
     }
+
+    m_scoreChanged = false;
 }
 
 void LayoutPanelTreeModel::clear()
@@ -390,13 +399,16 @@ void LayoutPanelTreeModel::load()
     async::NotifyList<const Part*> masterParts = m_masterNotation->parts()->partList();
     sortParts(masterParts);
 
+    const bool showSystemObjectLayers = shouldShowSystemObjectLayers();
     const std::vector<Staff*>& systemObjectStaves = m_masterNotation->notation()->parts()->systemObjectStaves();
-    SystemObjectGroupsByStaff systemObjects = collectSystemObjectGroups(systemObjectStaves);
+
+    SystemObjectGroupsByStaff systemObjects;
+    if (showSystemObjectLayers) {
+        systemObjects = collectSystemObjectGroups(systemObjectStaves);
+    }
 
     for (const Part* part : masterParts) {
-        if (m_notation->isMaster()) {
-            // Only show system object staves in master score
-            // TODO: extend system object staves logic to parts
+        if (showSystemObjectLayers) {
             for (Staff* staff : part->staves()) {
                 if (muse::contains(systemObjectStaves, staff)) {
                     m_rootItem->appendChild(buildSystemObjectsLayerItem(staff, systemObjects[staff]));
@@ -454,7 +466,12 @@ void LayoutPanelTreeModel::setLayoutPanelVisible(bool visible)
 
     if (visible) {
         updateSelectedRows();
-        updateSystemObjectLayers();
+
+        if (m_scoreChanged) {
+            onScoreChanged();
+            m_shouldUpdateSystemObjectLayers = true;
+            updateSystemObjectLayers();
+        }
     }
 }
 
@@ -476,6 +493,7 @@ void LayoutPanelTreeModel::addInstruments()
 void LayoutPanelTreeModel::addSystemMarkings()
 {
     if (const Staff* staff = resolveNewSystemObjectStaff()) {
+        m_systemStaffToSelect = staff->id();
         m_masterNotation->parts()->addSystemObjects({ staff->id() });
     }
 }
@@ -1046,6 +1064,10 @@ void LayoutPanelTreeModel::updateSystemObjectLayers()
         return;
     }
 
+    if (!shouldShowSystemObjectLayers()) {
+        return;
+    }
+
     TRACEFUNC;
 
     m_shouldUpdateSystemObjectLayers = false;
@@ -1114,8 +1136,9 @@ void LayoutPanelTreeModel::updateSystemObjectLayers()
             m_rootItem->insertChild(newItem, row);
             endInsertRows();
 
-            if (row != 0) {
+            if (row != 0 && m_systemStaffToSelect == staff->id()) {
                 m_selectionModel->select(createIndex(row, 0, newItem));
+                m_systemStaffToSelect = ID();
             }
 
             break;

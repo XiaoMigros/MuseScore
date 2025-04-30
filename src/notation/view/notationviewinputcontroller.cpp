@@ -34,6 +34,8 @@
 #include "engraving/dom/drumset.h"
 #include "engraving/dom/shadownote.h"
 
+#include "defer.h"
+
 using namespace mu;
 using namespace mu::notation;
 using namespace mu::engraving;
@@ -612,6 +614,13 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
     EngravingItem* hitElement = nullptr;
     staff_idx_t hitStaffIndex = muse::nidx;
 
+    DEFER {
+        EngravingItem* playbackStartElement = resolveStartPlayableElement();
+        if (playbackStartElement) {
+            playbackController()->seekElement(playbackStartElement);
+        }
+    };
+
     if (!m_readonly) {
         m_prevHitElement = hitElementContext().element;
 
@@ -645,10 +654,6 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
     }
 
     if (playbackController()->isPlaying()) {
-        if (seekAllowed(hitElement)) {
-            playbackController()->seekElement(hitElement);
-        }
-
         return;
     }
 
@@ -723,11 +728,6 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
         } else {
             viewInteraction()->select({ hitElement }, selectType, hitStaffIndex);
         }
-    }
-
-    EngravingItem* playbackStartElement = resolveStartPlayableElement();
-    if (playbackStartElement) {
-        playbackController()->seekElement(playbackStartElement);
     }
 
     if (button == Qt::LeftButton) {
@@ -1138,7 +1138,7 @@ void NotationViewInputController::keyPressEvent(QKeyEvent* event)
         updateShadowNotePopupVisibility();
     }
 
-    updateShadowNotePopupVisibility();
+    updateShadowNotePopupVisibility(/*forceHide*/ true);
 }
 
 void NotationViewInputController::keyReleaseEvent(QKeyEvent* event)
@@ -1269,25 +1269,23 @@ void NotationViewInputController::dragMoveEvent(QDragMoveEvent* event)
         return;
     }
 
-    if (mimeData->hasFormat(MIME_STAFFLLIST_FORMAT)) {
-        bool isInternal = event->source() == m_view->asItem();
-        if (!isInternal || event->modifiers() & Qt::AltModifier) {
-            event->setDropAction(Qt::CopyAction);
-        } else {
-            event->setDropAction(Qt::MoveAction);
-        }
-    } else {
-        event->setDropAction(Qt::CopyAction);
-    }
-
     PointF pos = m_view->toLogical(event->position());
     Qt::KeyboardModifiers modifiers = event->modifiers();
 
     bool isAccepted = false;
     if (mimeData->hasFormat(MIME_STAFFLLIST_FORMAT)) {
-        isAccepted = viewInteraction()->isDropRangeAccepted(pos);
+        bool isInternal = event->source() == m_view->asItem();
+        if (!isInternal || modifiers & Qt::AltModifier) {
+            event->setDropAction(Qt::CopyAction);
+        } else {
+            event->setDropAction(Qt::MoveAction);
+        }
+
+        isAccepted = viewInteraction()->updateDropRange(pos);
     } else {
-        isAccepted = viewInteraction()->isDropSingleAccepted(pos, modifiers);
+        event->setDropAction(Qt::CopyAction);
+
+        isAccepted = viewInteraction()->updateDropSingle(pos, modifiers);
     }
 
     event->setAccepted(isAccepted);
@@ -1393,6 +1391,10 @@ void NotationViewInputController::updateShadowNotePopupVisibility(bool forceHide
 EngravingItem* NotationViewInputController::resolveStartPlayableElement() const
 {
     EngravingItem* hitElement = hitElementContext().element;
+
+    if (playbackController()->isPlaying()) {
+        return seekAllowed(hitElement) ? hitElement : nullptr;
+    }
 
     INotationSelectionPtr selection = viewInteraction()->selection();
     if (!selection->isRange()) {

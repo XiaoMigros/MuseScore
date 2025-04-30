@@ -29,6 +29,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/imusesoundsrepository.h
     ${CMAKE_CURRENT_LIST_DIR}/imusesoundsconfiguration.h
     ${CMAKE_CURRENT_LIST_DIR}/musesoundstypes.h
+    ${CMAKE_CURRENT_LIST_DIR}/musesoundserrors.h
     ${CMAKE_CURRENT_LIST_DIR}/imusesoundscheckupdatescenario.h
     ${CMAKE_CURRENT_LIST_DIR}/imusesoundscheckupdateservice.h
 
@@ -45,5 +46,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/view/musesoundslistmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/musesoundslistmodel.h
     )
+
+set(MODULE_LINK Qt::Concurrent)
 
 setup_module()

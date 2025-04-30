@@ -1,11 +1,10 @@
-#!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-Studio-CLA-applies
+# MuseScore-CLA-applies
 #
-# MuseScore Studio
+# MuseScore
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore Limited
+# Copyright (C) 2025 MuseScore BVBA and others
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -19,10 +18,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-BUILD_TOOLS=$HOME/build_tools
-ENV_FILE=$BUILD_TOOLS/tx/tx_environment.sh
+declare_module(muse_extensions)
+set(MODULE_ALIAS muse::extensions)
 
-source $ENV_FILE
+set(MODULE_QRC extensions.qrc)
 
-echo "Start tx push:"
-bash ./tools/translations/tx_push.sh 
+set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
+
+set(MODULE_SRC
+    ${CMAKE_CURRENT_LIST_DIR}/extensionsstubmodule.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/extensionsstubmodule.h
+    ${CMAKE_CURRENT_LIST_DIR}/extensionsproviderstub.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/extensionsproviderstub.h
+    )
+
+set(MODULE_IS_STUB ON)
+setup_module()
+

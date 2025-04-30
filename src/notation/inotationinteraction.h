@@ -28,6 +28,7 @@
 #include "notationtypes.h"
 #include "inotationnoteinput.h"
 #include "inotationselection.h"
+#include "inotationselectionfilter.h"
 
 class QKeyEvent;
 class QInputMethodEvent;
@@ -83,9 +84,10 @@ public:
     virtual muse::async::Notification selectionChanged() const = 0;
     virtual void selectTopOrBottomOfChord(MoveDirection d) = 0;
 
+    virtual EngravingItem* contextItem() const = 0;
+
     // SelectionFilter
-    virtual bool isSelectionTypeFiltered(SelectionFilterType type) const = 0;
-    virtual void setSelectionTypeFiltered(SelectionFilterType type, bool filtered) = 0;
+    virtual INotationSelectionFilterPtr selectionFilter() const = 0;
 
     // Drag
     using IsDraggable = std::function<bool (const EngravingItem*)>;
@@ -106,8 +108,8 @@ public:
     virtual bool startDropSingle(const QByteArray& edata) = 0;
     virtual bool startDropRange(const QByteArray& data) = 0;
     virtual bool startDropImage(const QUrl& url) = 0;
-    virtual bool isDropSingleAccepted(const muse::PointF& pos, Qt::KeyboardModifiers modifiers) = 0; //! NOTE Also may set drop target
-    virtual bool isDropRangeAccepted(const muse::PointF& pos) = 0;
+    virtual bool updateDropSingle(const muse::PointF& pos, Qt::KeyboardModifiers modifiers) = 0; //! NOTE Also may set drop target
+    virtual bool updateDropRange(const muse::PointF& pos) = 0;
     virtual bool dropSingle(const muse::PointF& pos, Qt::KeyboardModifiers modifiers) = 0;
     virtual bool dropRange(const QByteArray& data, const muse::PointF& pos, bool deleteSourceMaterial) = 0;
     virtual void setDropTarget(EngravingItem* item, bool notify = true) = 0;
@@ -322,6 +324,4 @@ public:
 };
 
 using INotationInteractionPtr = std::shared_ptr<INotationInteraction>;
-
-EngravingItem* contextItem(INotationInteractionPtr);
 }

@@ -73,7 +73,6 @@ extern Note* prevChordNote(Note* note);
 extern Segment* nextSeg1(Segment* s);
 extern Segment* prevSeg1(Segment* seg);
 
-extern Volta* findVolta(const Segment* seg, const Score* score);
 extern Note* searchTieNote(const Note* note, const Segment* nextSegment = nullptr, const bool disableOverRepeats = true);
 extern Note* searchTieNote114(Note* note);
 
@@ -117,4 +116,5 @@ extern std::vector<Measure*> findFollowingRepeatMeasures(const Measure* measure)
 extern std::vector<Measure*> findPreviousRepeatMeasures(const Measure* measure);
 extern bool repeatHasPartialLyricLine(const Measure* endRepeatMeasure);
 extern bool segmentsAreAdjacentInRepeatStructure(const Segment* firstSeg, const Segment* secondSeg);
+extern bool segmentsAreInDifferentRepeatSegments(const Segment* firstSeg, const Segment* secondSeg);
 } // namespace mu::engraving
