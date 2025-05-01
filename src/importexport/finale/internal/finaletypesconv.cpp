@@ -35,29 +35,6 @@ using namespace muse;
 using namespace musx::dom;
 
 namespace mu::iex::finale {
-DurationType FinaleTConv::noteTypeToDurationType(musx::dom::NoteType noteType)
-{
-    static const std::unordered_map<musx::dom::NoteType, DurationType> noteTypeTable = {
-        { musx::dom::NoteType::Maxima,     DurationType::V_INVALID },
-        { musx::dom::NoteType::Longa,      DurationType::V_LONG },
-        { musx::dom::NoteType::Breve,      DurationType::V_BREVE },
-        { musx::dom::NoteType::Whole,      DurationType::V_WHOLE },
-        { musx::dom::NoteType::Half,       DurationType::V_HALF },
-        { musx::dom::NoteType::Quarter,    DurationType::V_QUARTER },
-        { musx::dom::NoteType::Eighth,     DurationType::V_EIGHTH },
-        { musx::dom::NoteType::Note16th,   DurationType::V_16TH },
-        { musx::dom::NoteType::Note32nd,   DurationType::V_32ND },
-        { musx::dom::NoteType::Note64th,   DurationType::V_64TH },
-        { musx::dom::NoteType::Note128th,  DurationType::V_128TH },
-        { musx::dom::NoteType::Note256th,  DurationType::V_256TH },
-        { musx::dom::NoteType::Note512th,  DurationType::V_512TH },
-        { musx::dom::NoteType::Note1024th, DurationType::V_1024TH },
-        { musx::dom::NoteType::Note2048th, DurationType::V_INVALID },
-        { musx::dom::NoteType::Note4096th, DurationType::V_INVALID },
-    };
-    return muse::value(noteTypeTable, noteType, DurationType::V_INVALID);
-}
-
 ClefType FinaleTConv::toMuseScoreClefType(ClefIndex clef)
 {
     // For now, base this on the default clef definitions.
@@ -90,8 +67,8 @@ ClefType FinaleTConv::toMuseScoreClefType(ClefIndex clef)
 String FinaleTConv::instrTemplateIdfromUuid(std::string uuid)
 {
     // keep in sync with 'id' property of https://docs.google.com/spreadsheets/d/1SwqZb8lq5rfv5regPSA10drWjUAoi65EuMoYtG-4k5s/edit
-    /// @todo Add (sensible) defaults: woodwinds-end
-    /// @todo Detect midi program (and if percussion, don't fallback to piano)
+    // todo: Add (sensible) defaults: woodwinds-end
+    // todo: Detect midi program
     static const std::unordered_map<std::string_view, String> uuidTable = {
         // General
         { uuid::BlankStaff,                u"piano" }, // 'sensible' different default
@@ -900,10 +877,11 @@ String FinaleTConv::instrTemplateIdfromUuid(std::string uuid)
         { uuid::Udu,                       u"percussion" },
         { uuid::Zills,                     u"percussion" },
     };
+    // todo: different fallback for unpitched percussion
     return muse::value(uuidTable, uuid, u"piano");
 }
 
-BracketType FinaleTConv::toMuseScoreBracketType(details::StaffGroup::BracketStyle bracketStyle)
+BracketType FinaleTConv::toMuseScoreBracketType(details::StaffGroup::BracketStyle style)
 {
     using MusxBracketStyle = details::StaffGroup::BracketStyle;
     static const std::unordered_map<MusxBracketStyle, BracketType> bracketTypeTable = {
@@ -914,20 +892,7 @@ BracketType FinaleTConv::toMuseScoreBracketType(details::StaffGroup::BracketStyl
         { MusxBracketStyle::BracketCurvedHooks,   BracketType::NORMAL },
         { MusxBracketStyle::DeskBracket,          BracketType::SQUARE },
     };
-    return muse::value(bracketTypeTable, bracketStyle, BracketType::NO_BRACKET);
-}
-
-TupletNumberType toMuseScoreTupletNumberType(musx::dom::options::TupletOptions::NumberStyle numberStyle)
-{
-    using MusxTupletNumberType = options::TupletOptions::NumberStyle;
-    static const std::unordered_map<MusxTupletNumberType, TupletNumberType> tupletNumberTypeTable = {
-        { MusxTupletNumberType::Nothing,                  TupletNumberType::NO_TEXT },
-        { MusxTupletNumberType::Number,                   TupletNumberType::SHOW_NUMBER },
-        { MusxTupletNumberType::UseRatio,                 TupletNumberType::SHOW_RELATION },
-        { MusxTupletNumberType::RatioPlusDenominatorNote, TupletNumberType::SHOW_RELATION }, // not supported
-        { MusxTupletNumberType::RatioPlusBothNotes,       TupletNumberType::SHOW_RELATION }, // not supported
-    };
-    return muse::value(tupletNumberTypeTable, numberStyle, TupletNumberType::SHOW_NUMBER);
+    return muse::value(bracketTypeTable, style, BracketType::NO_BRACKET);
 }
 
 }
