@@ -98,7 +98,7 @@ Staff* EnigmaXmlImporter::createStaff(Part* part, const std::shared_ptr<const ot
 {
     Staff* s = Factory::createStaff(part);
 
-    // todo: staff settings can change at any tick
+    /// @todo staff settings can change at any tick
     Fraction eventTick{0, 1};
 
     // initialise MuseScore's default values
@@ -134,6 +134,7 @@ Staff* EnigmaXmlImporter::createStaff(Part* part, const std::shared_ptr<const ot
     s->setBarLineTo(calcBarlineOffsetHalfSpaces(musxStaff->botBarlineOffset));
 
     // hide when empty
+    /// @todo inherit
     s->setHideWhenEmpty(Staff::HideMode::INSTRUMENT);
 
     // clefs
@@ -182,22 +183,21 @@ void EnigmaXmlImporter::importMeasures()
         Measure* measure = Factory::createMeasure(m_score->dummy()->system());
         measure->setTick(tick);
         /// @todo eventually we need to import all the TimeSig features we can. Right now it's just the simplified case.
-        auto musxTimeSig = musxMeasure->createTimeSignature()->calcSimplified();
-        auto scoreTimeSig = simpleMusxTimeSigToFraction(musxTimeSig);
+        auto musxTimeSig = musxMeasure->createTimeSignature();
+        auto scoreTimeSig = simpleMusxTimeSigToFraction(musxTimeSig->calcSimplified());
         if (scoreTimeSig != currTimeSig) {
             m_score->sigmap()->add(tick.ticks(), scoreTimeSig);
             currTimeSig = scoreTimeSig;
         }
-        measure->setTick(tick);
         measure->setTimesig(scoreTimeSig);
         measure->setTicks(scoreTimeSig);
         m_score->measures()->add(measure);
 
         // for now, add a full measure rest to each staff for the measure.
-        for (mu::engraving::Staff* staff : m_score->staves()) {
-            mu::engraving::staff_idx_t staffIdx = staff->idx();
-            mu::engraving::Segment* restSeg = measure->getSegment(mu::engraving::SegmentType::ChordRest, tick);
-            Rest* rest = mu::engraving::Factory::createRest(restSeg, mu::engraving::TDuration(mu::engraving::DurationType::V_MEASURE));
+        for (Staff* staff : m_score->staves()) {
+            staff_idx_t staffIdx = staff->idx();
+            Segment* restSeg = measure->getSegment(SegmentType::ChordRest, tick);
+            Rest* rest = Factory::createRest(restSeg, TDuration(DurationType::V_MEASURE));
             rest->setScore(m_score);
             rest->setTicks(measure->ticks());
             rest->setTrack(staffIdx * VOICES);
@@ -253,24 +253,24 @@ void EnigmaXmlImporter::importParts()
         Part* part = new Part(m_score);
 
         // load default part settings
-        // to-do: overwrite most of these settings later
+        /// @todo overwrite most of these settings later
         const InstrumentTemplate* it = searchTemplate(FinaleTConv::instrTemplateIdfromUuid(compositeStaff->instUuid));
         if (it) {
             part->initFromInstrTemplate(it);
         }
 
-        QString id = QString("P%1").arg(++partNumber);
+        String id = String("P%1").arg(++partNumber);
         part->setId(id);
 
         // names of part
         auto fullBaseName = staff->getFullInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setPartName(QString::fromStdString(trimNewLineFromString(fullBaseName)));
+        part->setPartName(String::fromStdString(trimNewLineFromString(fullBaseName)));
 
         auto fullEffectiveName = compositeStaff->getFullInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setLongName(QString::fromStdString(trimNewLineFromString(fullEffectiveName)));
+        part->setLongName(String::fromStdString(trimNewLineFromString(fullEffectiveName)));
 
         auto abrvName = compositeStaff->getAbbreviatedInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setShortName(QString::fromStdString(trimNewLineFromString(abrvName)));
+        part->setShortName(String::fromStdString(trimNewLineFromString(abrvName)));
 
         if (multiStaffInst) {
             m_part2Inst.emplace(id, multiStaffInst->staffNums);
@@ -307,14 +307,18 @@ void EnigmaXmlImporter::importBrackets()
 
         for (size_t i = 0; i < n; ++i) {
             const auto& gi = result[i].info;
-            if (!gi.startSlot || !gi.endSlot)
+            if (!gi.startSlot || !gi.endSlot) {
                 continue;
+            }
 
             for (size_t j = 0; j < n; ++j) {
-                if (i == j) continue;
-                const auto& gj = result[j].info;
-                if (!gj.startSlot || !gj.endSlot)
+                if (i == j) {
                     continue;
+                }
+                const auto& gj = result[j].info;
+                if (!gj.startSlot || !gj.endSlot) {
+                    continue;
+                }
 
                 if (*gi.startSlot >= *gj.startSlot && *gi.endSlot <= *gj.endSlot &&
                     (*gi.startSlot > *gj.startSlot || *gi.endSlot < *gj.endSlot)) {
@@ -324,10 +328,12 @@ void EnigmaXmlImporter::importBrackets()
         }
 
         std::sort(result.begin(), result.end(), [](const StaffGroupLayer& a, const StaffGroupLayer& b) {
-            if (a.layer != b.layer)
+            if (a.layer != b.layer) {
                 return a.layer < b.layer;
-            if (!a.info.startSlot || !b.info.startSlot)
+            }
+            if (!a.info.startSlot || !b.info.startSlot) {
                 return static_cast<bool>(b.info.startSlot);
+            }
             return *a.info.startSlot < *b.info.startSlot;
         });
 
