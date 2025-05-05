@@ -25,7 +25,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include "engraving/engravingerrors.h"
+#include "style/style.h"
 
 #include "musx/musx.h"
 
@@ -67,6 +67,8 @@ private:
     void importParts();
     void importMeasures();
     void importBrackets();
+
+    void importStyles(engraving::MStyle& style, musx::dom::Cmper partId);
 
     engraving::Staff* createStaff(engraving::Part* part, const std::shared_ptr<const musx::dom::others::Staff> musxStaff,
                                   const engraving::InstrumentTemplate* it = nullptr);
