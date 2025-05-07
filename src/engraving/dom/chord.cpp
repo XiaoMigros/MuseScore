@@ -74,6 +74,10 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
+static const ElementStyle chordStyle {
+    { Sid::articulationStemHAlign, Pid::ARTIC_STEM_H_ALIGN },
+};
+
 //---------------------------------------------------------
 //   upNote
 //---------------------------------------------------------
@@ -250,12 +254,14 @@ std::vector<int> Chord::noteDistances() const
 Chord::Chord(Segment* parent)
     : ChordRest(ElementType::CHORD, parent)
 {
+    initElementStyle(&chordStyle);
     m_stem             = 0;
     m_hook             = 0;
     m_stemDirection    = DirectionV::AUTO;
     m_arpeggio         = 0;
     m_spanArpeggio     = 0;
-    m_endsNoteAnchoredLine    = false;
+    m_endsNoteAnchoredLine = false;
+    m_articStemHAlign  = ArticulationStemSideAlign::AVERAGE;
     m_noteType         = NoteType::NORMAL;
     m_stemSlash        = 0;
     m_noStem           = false;
@@ -274,6 +280,8 @@ Chord::Chord(const Chord& c, bool link)
     if (link) {
         score()->undo(new Link(this, const_cast<Chord*>(&c)));
     }
+
+    initElementStyle(&chordStyle);
 
     for (Note* onote : c.m_notes) {
         Note* nnote = Factory::copyNote(*onote, link);
@@ -299,6 +307,7 @@ Chord::Chord(const Chord& c, bool link)
     m_stemSlash     = 0;
 
     m_spanArpeggio   = c.m_spanArpeggio;
+    m_articStemHAlign = c.m_articStemHAlign;
     m_graceIndex     = c.m_graceIndex;
     m_noStem         = c.m_noStem;
     m_showStemSlash  = c.m_showStemSlash;
@@ -1754,12 +1763,13 @@ void Chord::localSpatiumChanged(double oldValue, double newValue)
 PropertyValue Chord::getProperty(Pid propertyId) const
 {
     switch (propertyId) {
-    case Pid::NO_STEM:         return noStem();
-    case Pid::SHOW_STEM_SLASH: return showStemSlash();
-    case Pid::SMALL:           return isSmall();
-    case Pid::STEM_DIRECTION:  return PropertyValue::fromValue<DirectionV>(stemDirection());
-    case Pid::PLAY: return isChordPlayable();
-    case Pid::COMBINE_VOICE: return PropertyValue::fromValue<AutoOnOff>(combineVoice());
+    case Pid::NO_STEM:            return noStem();
+    case Pid::SHOW_STEM_SLASH:    return showStemSlash();
+    case Pid::SMALL:              return isSmall();
+    case Pid::STEM_DIRECTION:     return PropertyValue::fromValue<DirectionV>(stemDirection());
+    case Pid::ARTIC_STEM_H_ALIGN: return PropertyValue::fromValue<ArticulationStemSideAlign>(articStemHAlign());
+    case Pid::PLAY:               return isChordPlayable();
+    case Pid::COMBINE_VOICE:      return PropertyValue::fromValue<AutoOnOff>(combineVoice());
     default:
         return ChordRest::getProperty(propertyId);
     }
@@ -1801,6 +1811,9 @@ bool Chord::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::STEM_DIRECTION:
         setStemDirection(v.value<DirectionV>());
+        break;
+    case Pid::ARTIC_STEM_H_ALIGN:
+        setArticStemHAlign(v.value<ArticulationStemSideAlign>());
         break;
     case Pid::PLAY:
         setIsChordPlayable(v.toBool());

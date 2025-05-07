@@ -2432,18 +2432,7 @@ void Score::cmdFlip()
         } else if (e->isArticulationFamily()) {
             auto artic = toArticulation(e);
             flipOnce(artic, [artic]() {
-                ArticulationAnchor articAnchor = artic->anchor();
-                switch (articAnchor) {
-                    case ArticulationAnchor::TOP:
-                        articAnchor = ArticulationAnchor::BOTTOM;
-                        break;
-                    case ArticulationAnchor::BOTTOM:
-                        articAnchor = ArticulationAnchor::TOP;
-                        break;
-                    case ArticulationAnchor::AUTO:
-                        articAnchor = artic->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
-                        break;
-                }
+                ArticulationAnchor articAnchor = artic->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
                 PropertyFlags pf = artic->propertyFlags(Pid::ARTICULATION_ANCHOR);
                 if (pf == PropertyFlags::STYLED) {
                     pf = PropertyFlags::UNSTYLED;
@@ -2472,19 +2461,7 @@ void Score::cmdFlip()
             Ornament* ornament = trill->ornament();
 
             flipOnce(ornament, [ornament]() {
-                ArticulationAnchor articAnchor = ArticulationAnchor(ornament->getProperty(Pid::ARTICULATION_ANCHOR).toInt());
-
-                switch (articAnchor) {
-                    case ArticulationAnchor::TOP:
-                        articAnchor = ArticulationAnchor::BOTTOM;
-                        break;
-                    case ArticulationAnchor::BOTTOM:
-                        articAnchor = ArticulationAnchor::TOP;
-                        break;
-                    case ArticulationAnchor::AUTO:
-                        articAnchor = ornament->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
-                        break;
-                }
+                ArticulationAnchor articAnchor = ornament->up() ? ArticulationAnchor::BOTTOM : ArticulationAnchor::TOP;
                 PropertyFlags pf = ornament->propertyFlags(Pid::ARTICULATION_ANCHOR);
                 if (pf == PropertyFlags::STYLED) {
                     pf = PropertyFlags::UNSTYLED;
@@ -3833,6 +3810,12 @@ void Score::cmdDeleteSelection()
                         for (EngravingObject* se : linkedSpanners) {
                             deletedSpanners.insert(toSpanner(se));
                         }
+                    }
+                }
+                if (e->isArticulation() && toArticulation(e)->chordRest()->isChord()) {
+                    Chord* c = toChord(toArticulation(e)->chordRest());
+                    if (c->hasSingleArticulation()) {
+                        c->undoResetProperty(Pid::ARTIC_STEM_H_ALIGN);
                     }
                 }
                 deleteItem(e);
