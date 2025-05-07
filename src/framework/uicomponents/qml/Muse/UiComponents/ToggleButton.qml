@@ -28,6 +28,7 @@ FocusScope {
     id: root
 
     property alias navigation: navCtrl
+    property alias clickArea: mouseArea
 
     property bool checked: false
 
