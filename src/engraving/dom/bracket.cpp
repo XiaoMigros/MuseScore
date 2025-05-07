@@ -139,7 +139,10 @@ void Bracket::startEdit(EditData& ed)
 
 std::vector<PointF> Bracket::gripsPositions(const EditData&) const
 {
-    return { PointF(0.0, ldata()->bracketHeight()) + pagePos() };
+    return {
+        pagePos(),
+        pagePos() + PointF(0.0, ldata()->bracketHeight())
+    };
 }
 
 //---------------------------------------------------------
@@ -155,7 +158,12 @@ void Bracket::endEdit(EditData& ed)
 void Bracket::editDrag(EditData& ed)
 {
     double bracketHeight = ldata()->bracketHeight();
-    bracketHeight += ed.delta.y();
+    if (ed.curGrip == Grip::START) {
+        bracketHeight -= ed.delta.y();
+        mutldata()->setPosY(ldata()->pos().y() + ed.delta.y());
+    } else {
+        bracketHeight += ed.delta.y();
+    }
     mutldata()->bracketHeight.set_value(bracketHeight);
 
     renderer()->layoutItem(this);
@@ -166,35 +174,64 @@ void Bracket::editDrag(EditData& ed)
 //    snap to nearest staff
 //---------------------------------------------------------
 
-void Bracket::endEditDrag(EditData&)
+void Bracket::endEditDrag(EditData& ed)
 {
     double ay2 = m_ay1 + ldata()->bracketHeight();
 
     staff_idx_t staffIdx1 = staffIdx();
     staff_idx_t staffIdx2;
     size_t n = system()->staves().size();
-    if (staffIdx1 + 1 >= n) {
-        staffIdx2 = staffIdx1;
-    } else {
-        double ay  = parentItem()->pagePos().y();
-        System* s = system();
-        double y   = s->staff(staffIdx1)->y() + ay;
-        double h1  = staff()->staffHeight();
+    if (ed.curGrip == Grip::START) {
+        if (staffIdx2 < 1) {
+            staffIdx1 = staffIdx2;
+        } else {
+            double ay  = parentItem()->pagePos().y();
+            System* s = system();
+            double y   = s->staff(staffIdx2)->y() + ay; //top of bottom staff
+            double h1  = staff()->staffHeight();
 
-        for (staffIdx2 = staffIdx1 + 1; staffIdx2 < n; ++staffIdx2) {
-            double h = s->staff(staffIdx2)->y() + ay - y;
-            if (ay2 < (y + (h + h1) * .5)) {
-                break;
+            for (staffIdx1 = staffIdx2; staffIdx1 > 0; --staffIdx1) {
+                double h = s->staff(staffIdx1)->y() + ay - y;
+                if (ay2 > (y + (h + h1) * .5)) {
+                    break;
+                }
+                y += h;
             }
-            y += h;
+            staffIdx1 -= 1;
         }
-        staffIdx2 -= 1;
+    } else {
+        if (staffIdx1 + 1 >= n) {
+            staffIdx2 = staffIdx1;
+        } else {
+            double ay  = parentItem()->pagePos().y(); //sysstaff probably
+            System* s = system();
+            double y   = s->staff(staffIdx1)->y() + ay;
+            double h1  = staff()->staffHeight();
+
+            for (staffIdx2 = staffIdx1 + 1; staffIdx2 < n; ++staffIdx2) {
+                double h = s->staff(staffIdx2)->y() + ay - y;
+                //h = y of new staff - y of old staff
+                if (ay2 < (y + (h + h1) * .5)) {
+                    // if new position is smaller (higher up) than  y + half of (original staff distance plus original staff height)
+                    break;
+                }
+                y += h;
+            }
+            staffIdx2 -= 1;
+        }
     }
 
-    double sy = system()->staff(staffIdx1)->y();
-    double ey = system()->staff(staffIdx2)->y() + score()->staff(staffIdx2)->staffHeight();
-    mutldata()->bracketHeight.set_value(ey - sy);
-    bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, staffIdx2 - staffIdx1 + 1);
+    double startY = system()->staff(staffIdx1)->y();
+    double endY = system()->staff(staffIdx2)->y() + score()->staff(staffIdx2)->staffHeight();
+    mutldata()->bracketHeight.set_value(endY - startY);
+    if (score()->staff(staffIdx1) == bracketItem()->staff()) {
+        bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, staffIdx2 - staffIdx1 + 1);
+    } else {
+        mutldata()->setPosY(0.0);
+        score()->undoAddBracket(score()->staff(staffIdx1), bracketItem()->column(), bracketItem()->bracketType(),
+                                int(staffIdx2 - staffIdx1 + 1));
+        score()->undoRemoveBracket(this);
+    }
 }
 
 //---------------------------------------------------------
