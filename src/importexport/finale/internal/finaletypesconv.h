@@ -31,12 +31,16 @@ class FinaleTConv
 public:
     FinaleTConv() = default;
 
-    static engraving::String instrTemplateIdfromUuid(std::string uuid);
-    static engraving::ClefType toMuseScoreClefType(musx::dom::ClefIndex clef);
-    static engraving::BracketType toMuseScoreBracketType(musx::dom::details::StaffGroup::BracketStyle);
-
     static engraving::ID createPartId(int partNumber);
     static engraving::ID createStaffId(musx::dom::InstCmper staffId);
+
+    static engraving::DurationType noteTypeToDurationType(musx::dom::NoteType noteType);
+    static engraving::ClefType toMuseScoreClefType(musx::dom::ClefIndex clef);
+    static engraving::String instrTemplateIdfromUuid(std::string uuid);
+    static engraving::BracketType toMuseScoreBracketType(musx::dom::details::StaffGroup::BracketStyle bracketStyle);
+    static engraving::TupletNumberType toMuseScoreTupletNumberType(musx::dom::options::TupletOptions::NumberStyle numberStyle);
+    static engraving::Align justifyToAlignment(musx::dom::others::NamePositioning::AlignJustify alignJustify);
+    static engraving::CourtesyBarlineMode boolToCourtesyBarlineMode(bool useDoubleBarlines);
 };
 
 }

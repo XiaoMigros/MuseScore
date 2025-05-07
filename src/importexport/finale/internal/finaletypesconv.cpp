@@ -35,8 +35,44 @@ using namespace muse;
 using namespace musx::dom;
 
 namespace mu::iex::finale {
+<<<<<<< HEAD
 ID createPartId(int partNumber) { return "P" + std::to_string(partNumber); }
 ID createStaffId(musx::dom::InstCmper staffId) { return std::to_string(staffId); }
+=======
+
+ID FinaleTConv::createPartId(int partNumber)
+{
+    return "P" + std::to_string(partNumber);
+}
+
+ID FinaleTConv::createStaffId(musx::dom::InstCmper staffId)
+{
+    return std::to_string(staffId);
+}
+
+DurationType FinaleTConv::noteTypeToDurationType(musx::dom::NoteType noteType)
+{
+    static const std::unordered_map<musx::dom::NoteType, DurationType> noteTypeTable = {
+        { musx::dom::NoteType::Maxima,     DurationType::V_INVALID },
+        { musx::dom::NoteType::Longa,      DurationType::V_LONG },
+        { musx::dom::NoteType::Breve,      DurationType::V_BREVE },
+        { musx::dom::NoteType::Whole,      DurationType::V_WHOLE },
+        { musx::dom::NoteType::Half,       DurationType::V_HALF },
+        { musx::dom::NoteType::Quarter,    DurationType::V_QUARTER },
+        { musx::dom::NoteType::Eighth,     DurationType::V_EIGHTH },
+        { musx::dom::NoteType::Note16th,   DurationType::V_16TH },
+        { musx::dom::NoteType::Note32nd,   DurationType::V_32ND },
+        { musx::dom::NoteType::Note64th,   DurationType::V_64TH },
+        { musx::dom::NoteType::Note128th,  DurationType::V_128TH },
+        { musx::dom::NoteType::Note256th,  DurationType::V_256TH },
+        { musx::dom::NoteType::Note512th,  DurationType::V_512TH },
+        { musx::dom::NoteType::Note1024th, DurationType::V_1024TH },
+        { musx::dom::NoteType::Note2048th, DurationType::V_INVALID },
+        { musx::dom::NoteType::Note4096th, DurationType::V_INVALID },
+    };
+    return muse::value(noteTypeTable, noteType, DurationType::V_INVALID);
+}
+>>>>>>> 48fdf78a67 (fixes to typesconv)
 
 ClefType FinaleTConv::toMuseScoreClefType(ClefIndex clef)
 {
@@ -895,10 +931,27 @@ BracketType FinaleTConv::toMuseScoreBracketType(details::StaffGroup::BracketStyl
         { MusxBracketStyle::BracketCurvedHooks,   BracketType::NORMAL },
         { MusxBracketStyle::DeskBracket,          BracketType::SQUARE },
     };
+<<<<<<< HEAD
     return muse::value(bracketTypeTable, style, BracketType::NO_BRACKET);
+=======
+    return muse::value(bracketTypeTable, bracketStyle, BracketType::NO_BRACKET);
 }
 
-Align justifyToAlignment(others::NamePositioning::AlignJustify alignJustify)
+TupletNumberType FinaleTConv::toMuseScoreTupletNumberType(options::TupletOptions::NumberStyle numberStyle)
+{
+    using MusxTupletNumberType = options::TupletOptions::NumberStyle;
+    static const std::unordered_map<MusxTupletNumberType, TupletNumberType> tupletNumberTypeTable = {
+        { MusxTupletNumberType::Nothing,                  TupletNumberType::NO_TEXT },
+        { MusxTupletNumberType::Number,                   TupletNumberType::SHOW_NUMBER },
+        { MusxTupletNumberType::UseRatio,                 TupletNumberType::SHOW_RELATION },
+        { MusxTupletNumberType::RatioPlusDenominatorNote, TupletNumberType::SHOW_RELATION }, // not supported
+        { MusxTupletNumberType::RatioPlusBothNotes,       TupletNumberType::SHOW_RELATION }, // not supported
+    };
+    return muse::value(tupletNumberTypeTable, numberStyle, TupletNumberType::SHOW_NUMBER);
+>>>>>>> 48fdf78a67 (fixes to typesconv)
+}
+
+Align FinaleTConv::justifyToAlignment(others::NamePositioning::AlignJustify alignJustify)
 {
     static const std::unordered_map<others::NamePositioning::AlignJustify, Align> alignTable = {
         { others::NamePositioning::AlignJustify::Left,   Align(AlignH::LEFT, AlignV::VCENTER) },
@@ -908,7 +961,7 @@ Align justifyToAlignment(others::NamePositioning::AlignJustify alignJustify)
     return muse::value(alignTable, alignJustify, Align(AlignH::HCENTER, AlignV::VCENTER));
 }
 
-CourtesyBarlineMode boolToCourtesyBarlineMode(bool useDoubleBarlines);
+CourtesyBarlineMode FinaleTConv::boolToCourtesyBarlineMode(bool useDoubleBarlines)
 {
     static const std::unordered_map<bool, CourtesyBarlineMode> courtesyBarlineModeTable = {
         { false, CourtesyBarlineMode::ALWAYS_SINGLE },
