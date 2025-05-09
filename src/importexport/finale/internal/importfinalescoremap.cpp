@@ -426,7 +426,8 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
         Fraction tickDifference = currentEntryInfoStart.value() - segment->rtick();
         fillWithInvisibleRests(segment->tick(), curTrackIdx, tickDifference, tupletMap);
         tickEnd += tickDifference;
-    } else if (segment->rtick() > currentEntryInfoStart.value()) {
+        segment = m_score->tick2measure(tickEnd)->getSegment(SegmentType::ChordRest, tickEnd);
+    } else if (segment->rtick().reduced() > currentEntryInfoStart.value().reduced()) {
         // edge case: current entry is at the beginning of the measure
         /// @todo this method needs a different location. tuplet map is from the previous measure
         Fraction tickDifference = segment->measure()->ticks() - segment->rtick();
@@ -644,7 +645,6 @@ void EnigmaXmlImporter::importMeasures()
 
     // Add entries (notes, rests, tuplets)
     std::vector<std::shared_ptr<others::Staff>> musxStaves = m_doc->getOthers()->getArray<others::Staff>(SCORE_PARTID);
-    Segment* segment = nullptr;
     for (const std::shared_ptr<others::Staff>& musxStaff : musxStaves) {
         staff_idx_t curStaffIdx = muse::value(m_inst2Staff, InstCmper(musxStaff->getCmper()), muse::nidx);
         if (curStaffIdx == muse::nidx) {
@@ -654,7 +654,7 @@ void EnigmaXmlImporter::importMeasures()
         if (m_score->firstMeasure()) {
             continue;
         }
-        segment = m_score->firstSegment(SegmentType::ChordRest);
+        Segment* segment = m_score->firstMeasure()->getSegment(SegmentType::ChordRest, m_score->firstMeasure()->tick());
         if (!segment) {
             logger()->logWarning(String(u"Unable to initialise start segment"));
             break;
