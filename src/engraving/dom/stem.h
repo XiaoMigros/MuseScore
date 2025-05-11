@@ -40,13 +40,15 @@ public:
 
     Stem* clone() const override { return new Stem(*this); }
 
-    void spatiumChanged(double oldValue, double newValue) override;
     EngravingItem* elementBase() const override;
 
     bool isEditable() const override { return true; }
     void startEdit(EditData&) override;
     void startEditDrag(EditData&) override;
     void editDrag(EditData&) override;
+
+    void startDrag(EditData&) override;
+    RectF drag(EditData&) override;
 
     bool acceptDrop(EditData&) const override;
     EngravingItem* drop(EditData&) override;
@@ -61,8 +63,8 @@ public:
     Chord* chord() const { return toChord(explicitParent()); }
     bool up() const;
 
-    Millimetre baseLength() const { return m_baseLength; }
-    void setBaseLength(Millimetre baseLength);
+    Spatium baseLength() const { return m_baseLength; }
+    void setBaseLength(Spatium baseLength);
 
     Spatium userLength() const { return m_userLength; }
     void setUserLength(Spatium userLength) { m_userLength = userLength; }
@@ -72,7 +74,7 @@ public:
     void setLineWidth(Spatium lineWidth) { m_lineWidth = lineWidth; }
 
     PointF flagPosition() const;
-    double length() const { return m_baseLength + m_userLength.toMM(spatium()); }
+    double length() const { return absoluteFromSpatium(m_baseLength + m_userLength); }
 
     bool needStartEditingAfterSelecting() const override { return true; }
     int gripsCount() const override { return 1; }
@@ -90,7 +92,7 @@ private:
     friend class Factory;
     Stem(Chord* parent = 0);
 
-    Millimetre m_baseLength = Millimetre(0.0);
+    Spatium m_baseLength = Spatium(0.0);
 
     Spatium m_userLength = Spatium(0.0);
     Spatium m_lineWidth = Spatium(0.0);

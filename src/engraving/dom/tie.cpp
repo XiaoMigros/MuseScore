@@ -156,6 +156,35 @@ void TieSegment::editDrag(EditData& ed)
     }
 }
 
+RectF TieSegment::drag(EditData& ed)
+{
+    consolidateAdjustmentOffsetIntoUserOffset();
+    Grip g = ed.curGrip;
+
+    switch (g) {
+    case Grip::START:
+    case Grip::END:
+    case Grip::BEZIER1:
+    case Grip::BEZIER2:
+        ups(g).off = ed.gridSnapped(ups(g).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
+        break;
+    case Grip::SHOULDER:
+        ups(Grip::BEZIER1).off = ed.gridSnapped(ups(Grip::BEZIER1).off + ed.delta, spatium());
+        ups(Grip::BEZIER2).off = ed.gridSnapped(ups(Grip::BEZIER2).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
+        break;
+    case Grip::DRAG:
+        ups(g).off = PointF();
+        roffset() = ed.gridSnapped(roffset() + ed.delta, spatium());
+        break;
+    case Grip::NO_GRIP:
+    case Grip::GRIPS:
+        break;
+    }
+    return canvasBoundingRect();
+}
+
 void TieSegment::consolidateAdjustmentOffsetIntoUserOffset()
 {
     for (size_t i = 0; i < m_adjustmentOffsets.size(); ++i) {
