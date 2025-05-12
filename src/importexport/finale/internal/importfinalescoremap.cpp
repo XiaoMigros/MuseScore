@@ -180,7 +180,7 @@ ChordRest* EnigmaXmlImporter::importEntry(EntryInfoPtr entryInfo, Segment* segme
     for (size_t i = 0; i < currentEntry->notes.size(); ++i) {
         NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, i);
         if (noteInfoPtr->crossStaff) {
-            staff_idx_t crossStaffIdx = muse::value(m_inst2Staff, noteInfoPtr.calcStaff(), muse::nidx);
+            staff_idx_t crossStaffIdx = muse::value(m_inst2Staff, noteInfoPtr.calcStaff(), muse::nidx); // cmper needs InstCmper() ??
             IF_ASSERT_FAILED(crossStaffIdx != muse::nidx) {
                 logger()->logWarning(String(u"Collect cross staffing: Musx inst value not found for staff cmper %1").arg(String::fromStdString(std::to_string(noteInfoPtr.calcStaff()))));
                 continue;
@@ -204,8 +204,6 @@ ChordRest* EnigmaXmlImporter::importEntry(EntryInfoPtr entryInfo, Segment* segme
     if (!(targetStaff && targetStaff->visible() && idx >= minStaff && idx < maxStaff
           && targetStaffType->group() == baseStaffType->group() && targetStaff->isLinked() == baseStaff->isLinked())) {
         crossStaffMove = 0;
-        targetStaff = baseStaff;
-        idx = staffIdx;
     }
 
     if (currentEntry->isNote) {
@@ -309,6 +307,15 @@ static void transferTupletProperties(std::shared_ptr<const details::TupletDef> m
     t->setNumber(number);*/
 }
 
+static std::optional<Fraction> musxFractionToFraction(musx::util::Fraction count)
+{
+    /*if (count.remainder()) {
+        // logger->logWarning(String(u"Fraction has fractional portion that could not be reduced."));
+        return std::nullopt;
+    }*/
+    return Fraction(count.numerator(), count.denominator());
+}
+
 static size_t indexOfParentTuplet(std::vector<ReadableTuplet> tupletMap, size_t index) {
     size_t i = index;
     while (i >= 1) {
@@ -381,8 +388,15 @@ void EnigmaXmlImporter::fillWithInvisibleRests(Fraction startTick, track_idx_t c
 bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrackIdx, Segment* segment,
                                          std::vector<ReadableTuplet>& tupletMap, size_t& lastAddedTupletIndex)
 {
-    if (!segment) {
+    std::optional<Fraction> currentEntryInfoStart = musxFractionToFraction(entryInfo->elapsedDuration);
+    if (!currentEntryInfoStart.has_value() || !segment) {
         logger()->logWarning(String(u"Position in measure unknown"));
+        return false;
+    }
+
+    std::optional<Fraction> currentEntryActualDuration = musxFractionToFraction(entryInfo->actualDuration);
+    if (!currentEntryActualDuration.has_value()) {
+        logger()->logWarning(String(u"Duration for this entry is invalid. Track: %1, Tick: %2").arg(String::number(curTrackIdx), String::number(segment->tick().ticks())));
         return false;
     }
 
@@ -395,22 +409,20 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
         logger()->logWarning(String(u"voice 2 currently unspported"));
     }
 
-    Fraction currentEntryInfoStart      = FinaleTConv::musxFractionToFraction(entryInfo->elapsedDuration).reduced();
-    Fraction currentEntryActualDuration = FinaleTConv::musxFractionToFraction(entryInfo->actualDuration).reduced();
     Fraction tickEnd = segment->tick();
 
-    if (segment->rtick().reduced() < currentEntryInfoStart) {
+    if (segment->rtick().reduced() < currentEntryInfoStart.value().reduced()) {
         // The entry starts further into the measure than expected (perfectly normal and caused by gaps)
         // Simply fill with invisible rests up to the starting point
-        Fraction tickDifference = currentEntryInfoStart - segment->rtick();
+        Fraction tickDifference = currentEntryInfoStart.value() - segment->rtick();
         fillWithInvisibleRests(segment->tick(), curTrackIdx, tickDifference, tupletMap);
         tickEnd += tickDifference;
         segment = m_score->tick2measure(tickEnd)->getSegment(SegmentType::ChordRest, tickEnd);
-    } else if (segment->rtick().reduced() > currentEntryInfoStart) {
+    } else if (segment->rtick().reduced() > currentEntryInfoStart.value().reduced()) {
         // edge case: current entry is at the beginning of the measure
         /// @todo this method needs a different location. tuplet map is from the previous measure
         Fraction tickDifference = segment->measure()->ticks() - segment->rtick();
-        if (currentEntryInfoStart == Fraction(0, 1)) {
+        if (currentEntryInfoStart.value() == Fraction(0, 1)) {
             fillWithInvisibleRests(segment->tick(), curTrackIdx, tickDifference, tupletMap);
             tickEnd += tickDifference;
             segment = m_score->tick2measure(tickEnd)->getSegment(SegmentType::ChordRest, tickEnd);
@@ -441,16 +453,19 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
 
     // create Tuplets as needed, starting with the outermost
     for (size_t i = 0; i < tupletMap.size(); ++i) {
-        if (tupletMap.layer < 0) {
+        if (!tupletMap[i].valid) {
             continue;
         }
-        if (tupletMap[i].absBegin == currentEntryInfoStart) {
+        if (tupletMap[i].absBegin == currentEntryInfoStart.value()) {
+            std::optional<Fraction> tupletRatio = musxFractionToFraction(tupletMap[i].musxTuplet->calcRatio());
+            if (!tupletRatio.has_value()) {
+                continue;
+            }
             tupletMap[i].scoreTuplet = Factory::createTuplet(segment->measure());
             tupletMap[i].scoreTuplet->setTrack(curTrackIdx);
             tupletMap[i].scoreTuplet->setTick(segment->tick());
             tupletMap[i].scoreTuplet->setParent(segment->measure());
-            Fraction tupletRatio = FinaleTConv::musxFractionToFraction(tupletMap[i].musxTuplet->calcRatio());
-            tupletMap[i].scoreTuplet->setRatio(tupletRatio);
+            tupletMap[i].scoreTuplet->setRatio(tupletRatio.value());
             std::pair<musx::dom::NoteType, unsigned> musxBaseLen = calcNoteInfoFromEdu(tupletMap[i].musxTuplet->displayDuration);
             TDuration baseLen = FinaleTConv::noteTypeToDurationType(musxBaseLen.first);
             baseLen.setDots(static_cast<int>(musxBaseLen.second));
@@ -459,16 +474,15 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
             tupletMap[i].scoreTuplet->setTicks(f.reduced());
             IF_ASSERT_FAILED(tupletMap[i].scoreTuplet->ticks() == tupletMap[i].absDuration.reduced()) {
                 logger()->logWarning(String(u"Tuplet duration is corrupted"));
-                /// @todo account for tuplets with invalid durations, i.e. durations not attainable in MuseScore
             }
             transferTupletProperties(tupletMap[i].musxTuplet, tupletMap[i].scoreTuplet, logger());
             // reparent tuplet if needed
             size_t parentIndex = indexOfParentTuplet(tupletMap, i);
-            if (tupletMap[parentIndex].layer < 0) {
+            if (tupletMap[parentIndex].valid) {
                 tupletMap[i-1].scoreTuplet->add(tupletMap[i].scoreTuplet);
             }
             lastAddedTupletIndex = i;
-        } else if (tupletMap[i].absBegin > currentEntryInfoStart) {
+        } else if (tupletMap[i].absBegin > currentEntryInfoStart.value()) {
             break;
         }
     }
@@ -476,7 +490,7 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
     Tuplet* parentTuplet = nullptr;
     if (tupletMap[lastAddedTupletIndex].scoreTuplet) {
         do {
-            if (tupletMap[lastAddedTupletIndex].absEnd > currentEntryInfoStart) {
+            if (tupletMap[lastAddedTupletIndex].absEnd > currentEntryInfoStart.value()) {
                 break;
             }
         } while (lastAddedTupletIndex > 0 && --lastAddedTupletIndex);
@@ -486,7 +500,7 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
     // load entry
     ChordRest* cr = importEntry(entryInfo, segment, curTrackIdx);
     if (cr) {
-        cr->setTicks(currentEntryActualDuration); // should probably be actual length, like done here
+        cr->setTicks(currentEntryActualDuration.value()); // should probably be actual length, like done here
         cr->setTrack(curTrackIdx);
         segment->add(cr);
         if (parentTuplet) {
@@ -495,11 +509,11 @@ bool EnigmaXmlImporter::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t cur
     } else {
         logger()->logWarning(String(u"Failed to read entry contents"));
         // Fill space with invisible rests instead
-        fillWithInvisibleRests(segment->tick(), curTrackIdx, currentEntryActualDuration, tupletMap);
+        fillWithInvisibleRests(segment->tick(), curTrackIdx, currentEntryActualDuration.value(), tupletMap);
         return false;
     }
 
-    tickEnd += currentEntryActualDuration;
+    tickEnd += currentEntryActualDuration.value();
     segment = m_score->tick2measure(tickEnd)->getSegment(SegmentType::ChordRest, tickEnd);
     return true;
 }
@@ -526,18 +540,26 @@ static std::vector<ReadableTuplet> createTupletMap(std::vector<EntryFrame::Tuple
     result.reserve(n);
 
     for (EntryFrame::TupletInfo tuplet : tupletInfo) {
+        std::optional<Fraction> absBegin = musxFractionToFraction(tuplet.startDura);
+        std::optional<Fraction> absDuration = musxFractionToFraction(tuplet.endDura - tuplet.startDura);
+        std::optional<Fraction> absEnd = musxFractionToFraction(tuplet.endDura);
         ReadableTuplet rTuplet;
-        rTuplet.absBegin    = FinaleTConv::musxFractionToFraction(tuplet.startDura);
-        rTuplet.absDuration = FinaleTConv::musxFractionToFraction(tuplet.endDura - tuplet.startDura);
-        rTuplet.absEnd      = FinaleTConv::musxFractionToFraction(tuplet.endDura);
+        rTuplet.absBegin = (absBegin.has_value() ? absBegin.value() : Fraction(-1, 1));
+        rTuplet.absDuration = (absDuration.has_value() ? absDuration.value() : Fraction(-1, 1));
+        rTuplet.absEnd = (absEnd.has_value() ? absEnd.value() : Fraction(-1, 1));
         rTuplet.musxTuplet = tuplet.tuplet;
         rTuplet.layer = 0;
+        rTuplet.valid = absBegin.has_value() && absDuration.has_value();
         result.emplace_back(rTuplet);
     }
 
    for (size_t i = 0; i < n; ++i) {
+        if (!result[i].valid) {
+            continue;
+        }
+
         for (size_t j = 0; j < n; ++j) {
-            if(i == j) {
+            if(i == j || !result[j].valid) {
                 continue;
             }
 
