@@ -885,6 +885,7 @@ RectF LineSegment::drag(EditData& ed)
     if (!line()->diagonal() && !(ed.curGrip == Grip::MIDDLE)) {
         deltaResize = PointF(deltaResize.x(), eed->initOffset.y());
     }
+    //const PointF deltaResize(ed.evtDelta.x(), line()->diagonal() ? ed.evtDelta.y() : 0.0);
     deltaResize = ed.gridSnapped(deltaResize, spatium());
 
     switch (ed.curGrip) {
@@ -902,6 +903,7 @@ RectF LineSegment::drag(EditData& ed)
     default:
         break;
     }
+    rebaseAnchors(ed, ed.isStartEndGrip() ? ed.curGrip : Grip::MIDDLE);
     setOffsetChanged(true);
     return canvasBoundingRect();
 }
