@@ -204,6 +204,8 @@ ChordRest* EnigmaXmlImporter::importEntry(EntryInfoPtr entryInfo, Segment* segme
     if (!(targetStaff && targetStaff->visible() && idx >= minStaff && idx < maxStaff
           && targetStaffType->group() == baseStaffType->group() && targetStaff->isLinked() == baseStaff->isLinked())) {
         crossStaffMove = 0;
+    }
+    if (!targetStaff) {
         targetStaff = baseStaff;
         idx = staffIdx;
     }
