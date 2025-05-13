@@ -22,19 +22,24 @@
 #ifndef MU_ENGRAVING_IENGRAVING_H
 #define MU_ENGRAVING_IENGRAVING_H
 
-namespace mu::engraving {
-class IEngraving;
+#include <QString>
+#include "modularity/imoduleexport.h"
 
-class IEngraving
+namespace mu::engraving {
+
+class Score;
+
+class IEngraving : MODULE_EXPORT_INTERFACE
 {
+    INTERFACE_ID(IEngraving)
 public:
     virtual ~IEngraving() = default;
-
-    /// Methods for plugin API
+    
     virtual bool APIwriteScore(const QString& name, const QString& ext) = 0;
     virtual Score* APIreadScore(const QString& name) = 0;
     virtual void APIcloseScore() = 0;
 };
+
 }
 
 #endif // MU_ENGRAVING_IENGRAVING_H
