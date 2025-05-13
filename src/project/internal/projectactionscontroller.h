@@ -59,8 +59,12 @@
 #include "iprojectautosaver.h"
 
 namespace mu::project {
-class ProjectActionsController : public IProjectFilesController, public muse::mi::IProjectProvider, public muse::Injectable,
-    public muse::actions::Actionable, public muse::async::Asyncable, virtual public engraving::IEngraving
+class ProjectActionsController : public IProjectFilesController, 
+                               public muse::mi::IProjectProvider, 
+                               public muse::Injectable,
+                               public muse::actions::Actionable, 
+                               public muse::async::Asyncable, 
+                               virtual public engraving::IEngraving
 {
     muse::Inject<IProjectConfiguration> configuration = { this };
     muse::Inject<INotationReadersRegister> readers = { this };
@@ -110,7 +114,7 @@ public:
     const ProjectBeingDownloaded& projectBeingDownloaded() const override;
     muse::async::Notification projectBeingDownloadedChanged() const override;
 
-    std::optional<INotationWriter::UnitType> determineWriterUnitType(const std::string& ext) const;
+    // IEngraving interface
     bool APIwriteScore(const QString& name, const QString& ext) override;
     mu::engraving::Score* APIreadScore(const QString& name) override;
     void APIcloseScore() override;
@@ -227,6 +231,8 @@ private:
     bool hasSelection() const;
 
     QUrl scoreManagerUrl() const;
+
+    std::optional<INotationWriter::UnitType> determineWriterUnitType(const std::string& ext) const;
 
     bool m_isProjectSaving = false;
     bool m_isProjectClosing = false;
