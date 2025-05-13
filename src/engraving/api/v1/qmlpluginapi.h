@@ -137,6 +137,7 @@ public:
     muse::Inject<muse::actions::IActionsDispatcher> actionsDispatcher = { this };
     muse::Inject<mu::context::IGlobalContext> context = { this };
     muse::Inject<muse::IApplication> application = { this };
+    muse::Inject<mu::engraving::IEngraving> engravingInterface = { this };
 
 public:
     // Should be initialized in qmlpluginapi.cpp
@@ -280,9 +281,6 @@ public:
     /// \cond MS_INTERNAL
     PluginAPI(QQuickItem* parent = 0);
 
-    explicit PluginAPI(IEngraving* engraving)
-        : engravingInterface(engraving) {}
-
     static void registerQmlTypes();
 
     void setup(QQmlEngine* e) override;
@@ -352,8 +350,6 @@ public:
 
 private:
     mu::engraving::Score* currentScore() const;
-
-    IEngraving* engravingInterface;
 
     QString m_pluginType;
     QString m_title;
