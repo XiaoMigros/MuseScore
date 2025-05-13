@@ -23,7 +23,7 @@
 #define MU_ENGRAVING_IENGRAVING_H
 
 #include <QString>
-#include "modularity/imoduleexport.h"
+#include "modularity/imoduleinterface.h"
 
 namespace mu::engraving {
 
