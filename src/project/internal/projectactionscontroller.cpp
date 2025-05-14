@@ -1947,12 +1947,15 @@ bool ProjectActionsController::APIwriteScore(const QString& name, const QString&
 
 Score* ProjectActionsController::APIreadScore(const QString& name)
 {
-    const muse::io::path_t path(name);
-    const ProjectFile file(path);
-    const Ret ret = projectFilesController()->openProject(file);
+    
     if(globalContext()->currentProject()){
         closeOpenedProject(false);
     }
+    
+    const muse::io::path_t path(name);
+    const ProjectFile file(path);
+    const Ret ret = projectFilesController()->openProject(file);
+    
     if (ret.success() && globalContext()->currentNotation()) {
         return globalContext()->currentNotation()->elements()->msScore();
     }
