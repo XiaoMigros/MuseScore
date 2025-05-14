@@ -184,7 +184,7 @@ bool PluginAPI::writeScore(Score* s, const QString& name, const QString& ext)
         LOGW("PluginAPI::writeScore: only writing the selected score is currently supported");
         return false;
     }
-    return engravingInterface->APIwriteScore(name, ext);
+    return engravingInterface.get()->APIwriteScore(name, ext);
 }
 
 //---------------------------------------------------------
@@ -210,7 +210,7 @@ apiv1::Score* PluginAPI::readScore(const QString& name, bool noninteractive)
         return nullptr;
     }
 
-    mu::engraving::Score* score = engravingInterface->APIreadScore(name);
+    mu::engraving::Score* score = engravingInterface.get()->APIreadScore(name);
     if (score) {
         return wrap<apiv1::Score>(score, Ownership::SCORE);
     }
@@ -237,7 +237,7 @@ void PluginAPI::closeScore(apiv1::Score* score)
         return;
     }
 
-    engravingInterface->APIcloseScore();
+    engravingInterface.get()->APIcloseScore();
 }
 
 //---------------------------------------------------------
