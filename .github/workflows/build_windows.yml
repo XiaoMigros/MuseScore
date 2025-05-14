@@ -47,7 +47,7 @@ jobs:
 
   windows_x64:
     if: github.event_name != 'workflow_dispatch' || contains(inputs.platforms, 'windows_x64')
-    runs-on: ubicloud-standard-8
+    runs-on: windows-2022
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -200,7 +200,7 @@ jobs:
     if: |
       github.event_name != 'pull_request' &&
       (github.event_name != 'workflow_dispatch' || contains(inputs.platforms, 'windows_portable'))
-    runs-on: ubicloud-standard-8
+    runs-on: standard-8
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
