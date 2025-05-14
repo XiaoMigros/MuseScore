@@ -50,6 +50,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/projectmodule.h
     ${CMAKE_CURRENT_LIST_DIR}/projecterrors.h
     ${CMAKE_CURRENT_LIST_DIR}/projectextensionpoints.h
+    ${CMAKE_CURRENT_LIST_DIR}/iexportprojectscenario.h
     ${CMAKE_CURRENT_LIST_DIR}/inotationproject.h
     ${CMAKE_CURRENT_LIST_DIR}/iprojectcreator.h
     ${CMAKE_CURRENT_LIST_DIR}/inotationreader.h
@@ -89,7 +90,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/projectconfiguration.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/exporttype.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/exporttype.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/iexportprojectscenario.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/exportprojectscenario.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/exportprojectscenario.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/iopensaveprojectscenario.h
@@ -146,9 +146,12 @@ set(MODULE_SRC
 set(MODULE_LINK
     muse::uicomponents
     notation
-    Qt::Concurrent
     Qt::Quick
 )
+
+if (QT_ADD_CONCURRENT)
+    list(APPEND MODULE_LINK Qt::Concurrent)
+endif()
 
 setup_module()
 
