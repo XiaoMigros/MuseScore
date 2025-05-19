@@ -528,9 +528,9 @@ static std::vector<ReadableTuplet> createTupletMap(std::vector<EntryFrame::Tuple
 
     for (EntryFrame::TupletInfo tuplet : tupletInfo) {
         ReadableTuplet rTuplet;
-        rTuplet.absBegin    = FinaleTConv::musxFractionToFraction(tuplet.startDura);
-        rTuplet.absDuration = FinaleTConv::musxFractionToFraction(tuplet.endDura - tuplet.startDura);
-        rTuplet.absEnd      = FinaleTConv::musxFractionToFraction(tuplet.endDura);
+        rTuplet.absBegin    = FinaleTConv::musxFractionToFraction(tuplet.startDura).reduced();
+        rTuplet.absDuration = FinaleTConv::musxFractionToFraction(tuplet.endDura - tuplet.startDura).reduced();
+        rTuplet.absEnd      = FinaleTConv::musxFractionToFraction(tuplet.endDura).reduced();
         rTuplet.musxTuplet = tuplet.tuplet;
         rTuplet.layer = 0;
         result.emplace_back(rTuplet);
