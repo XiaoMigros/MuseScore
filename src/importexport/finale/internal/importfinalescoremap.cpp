@@ -568,13 +568,17 @@ static Fraction simpleMusxTimeSigToFraction(const std::pair<musx::util::Fraction
     return Fraction(count.quotient(),  musx::util::Fraction::fromEdu(Edu(noteType)).denominator());
 }
 
-static std::vector<ReadableTuplet> createTupletMap(std::vector<EntryFrame::TupletInfo> tupletInfo)
+static std::vector<ReadableTuplet> createTupletMap(std::vector<EntryFrame::TupletInfo> tupletInfo, int voice)
 {
     const size_t n = tupletInfo.size();
     std::vector<ReadableTuplet> result;
     result.reserve(n);
 
-    for (EntryFrame::TupletInfo tuplet : tupletInfo) {
+    const bool forVoice2 = bool(voice);
+    for (const auto& tuplet : tupletInfo) {
+        if (forVoice2 != tuplet.voice2) {
+            continue;
+        }
         ReadableTuplet rTuplet;
         rTuplet.absBegin    = FinaleTConv::musxFractionToFraction(tuplet.startDura).reduced();
         rTuplet.absDuration = FinaleTConv::musxFractionToFraction(tuplet.endDura - tuplet.startDura).reduced();
@@ -604,6 +608,73 @@ static std::vector<ReadableTuplet> createTupletMap(std::vector<EntryFrame::Tuple
         return a.layer < b.layer;
     });
 
+    return result;
+}
+
+static Clef* createClef(Score* score, staff_idx_t staffIdx, ClefIndex musxClef, Measure* measure, Edu musxEduPos, bool afterBarline)
+{
+    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(musxClef);
+    if (entryClefType != ClefType::INVALID) {
+        Clef* clef = Factory::createClef(score->dummy()->segment());
+        clef->setTrack(staffIdx * VOICES);
+        clef->setConcertClef(entryClefType);
+        clef->setTransposingClef(entryClefType);
+        // clef->setShowCourtesy();
+        // clef->setForInstrumentChange();
+        clef->setGenerated(false);
+        const bool isHeader = !afterBarline && !measure->prevMeasure() && musxEduPos == 0;
+        clef->setIsHeader(isHeader);
+        if (afterBarline) {
+            clef->setClefToBarlinePosition(ClefToBarlinePosition::AFTER);
+        } else if (musxEduPos == 0) {
+            clef->setClefToBarlinePosition(ClefToBarlinePosition::BEFORE);
+        }
+
+        Fraction clefTick = measure->tick() + FinaleTConv::musxFractionToFraction(musx::util::Fraction::fromEdu(musxEduPos));
+        Segment* clefSeg = measure->getSegment(
+                           clef->isHeader() ? SegmentType::HeaderClef : SegmentType::Clef, clefTick);
+        clefSeg->add(clef);
+        return clef;
+    }
+    return nullptr;
+}
+
+std::unordered_map<int, track_idx_t> EnigmaXmlImporter::mapFinaleVoices(const std::map<LayerIndex, bool>& finaleVoiceMap,
+                                                                        musx::dom::InstCmper curStaff, musx::dom::MeasCmper curMeas) const
+{
+    using FinaleVoiceID = int;
+    std::unordered_map<FinaleVoiceID, track_idx_t> result;
+    std::unordered_map<track_idx_t, FinaleVoiceID> reverseMap;
+    for (const auto& [layerIndex, usesV2] : finaleVoiceMap) {
+        const auto& it = m_layer2Voice.find(layerIndex);
+        if (it != m_layer2Voice.end()) {
+            auto [revIt, emplaced] = reverseMap.emplace(it->second, FinaleTConv::createFinaleVoiceId(layerIndex, false));
+            if (emplaced) {
+                result.emplace(revIt->second, revIt->first);
+            } else {
+                logger()->logWarning(String(u"Layer %1 was already mapped to a voice").arg(int(layerIndex) + 1), m_doc, curStaff, curMeas);
+            }
+        } else {
+            logger()->logWarning(String(u"Layer %1 was not mapped to a voice").arg(int(layerIndex) + 1), m_doc, curStaff, curMeas);
+        }
+    }
+    for (const auto& [layerIndex, usesV2] : finaleVoiceMap) {
+        if (usesV2) {
+            bool foundVoice = false;
+            for (track_idx_t v : {0, 1, 2, 3}) {
+                auto [revIt, emplaced] = reverseMap.emplace(v, FinaleTConv::createFinaleVoiceId(layerIndex, true));
+                if (emplaced) {
+                    result.emplace(revIt->second, revIt->first);
+                    foundVoice = true;
+                    break;
+                }
+            }
+            if (!foundVoice) {
+                logger()->logWarning(String(u"Voice 2 exceeded available MuseScore voices for layer %1.").arg(int(layerIndex) + 1), m_doc, curStaff, curMeas);
+                break;
+            }
+        }
+    }
     return result;
 }
 
@@ -662,10 +733,10 @@ void EnigmaXmlImporter::importMeasures()
     }
 
     // Add entries (notes, rests, tuplets)
-    auto musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(SCORE_PARTID, BASE_SYSTEM_ID);
-    for (const auto& musxScrollViewItem : musxScrollView) {
+    std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(SCORE_PARTID, BASE_SYSTEM_ID); /// @todo eventually SCORE_PARTID may need to be a parameter
+    for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
         staff_idx_t curStaffIdx = muse::value(m_inst2Staff, InstCmper(musxScrollViewItem->staffId), muse::nidx);
-        if (curStaffIdx == muse::nidx) { //IF_ASSERT_FAILED
+        IF_ASSERT_FAILED (curStaffIdx != muse::nidx) {
             logger()->logWarning(String(u"Add entries: Musx inst value not found."), m_doc, musxScrollViewItem->staffId, 1);
             continue;
         } else {
@@ -680,6 +751,7 @@ void EnigmaXmlImporter::importMeasures()
             logger()->logWarning(String(u"Add entries: Initial tick does not exist."), m_doc, musxScrollViewItem->staffId, 1);
             continue;
         }
+        ClefIndex musxCurrClef = others::Staff::calcFirstClefIndex(m_doc, SCORE_PARTID, musxScrollViewItem->staffId); /// @todo eventually SCORE_PARTID may need to be a parameter
         for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
             Measure* measure = m_score->tick2measure(currTick);
             if (!measure) {
@@ -691,58 +763,80 @@ void EnigmaXmlImporter::importMeasures()
                 logger()->logWarning(String(u"Unable to initialise start segment"), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
                 break;
             }
+            // The Finale UI requires transposition to be a full-measure staff-style assignment, so checking only the beginning of the bar should be sufficient.
+            // However, it is possible to defeat this requirement using plugins. That said, doing so produces erratic results, so I'm not sure we should support it.
+            // For now, only check the start of the measure.
+            bool transposedClefOverride = false;
+            auto musxStaffAtMeasureStart = others::StaffComposite::createCurrent(m_doc, musxMeasure->getPartId(), musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
+            if (musxStaffAtMeasureStart && musxStaffAtMeasureStart->transposition && musxStaffAtMeasureStart->transposition->setToClef) {
+                if (musxStaffAtMeasureStart->transposedClef != musxCurrClef) {
+                    if (createClef(m_score, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, 0, false)) {
+                        musxCurrClef = musxStaffAtMeasureStart->transposedClef;
+                    }
+                }
+                transposedClefOverride = true;
+            }
             bool processedEntries = false;
             details::GFrameHoldContext gfHold(musxMeasure->getDocument(), musxMeasure->getPartId(), musxScrollViewItem->staffId, musxMeasure->getCmper());
             if (gfHold) {
-
-                /// @todo add clef change and options
-                /*ClefType entryClefType = FinaleTConv::toMuseScoreClefType(entryInfo->clefIndex);
-                if (entryClefType != ClefType::INVALID) {
-                    Clef* clef = Factory::createClef(m_score->dummy()->segment());
-                    clef->setTrack(curTrackIdx);
-                    clef->setConcertClef(entryClefType);
-                    // clef->setTransposingClef(entryClefType);
-                    // clef->setShowCourtesy();
-                    // clef->setForInstrumentChange();
-                    clef->setGenerated(false);
-                    clef->setIsHeader(false); /// @todo is this always correct?
-                    // clef->setClefToBarlinePosition(ClefToBarlinePosition::BEFORE);
-
-                    Segment* clefSeg = segment->measure()->getSegment(
-                                       clef->isHeader() ? SegmentType::HeaderClef : SegmentType::Clef, segment->tick());
-                    clefSeg->add(clef);
-                }*/
-
-                for (LayerIndex layer = 0; layer < MAX_LAYERS; layer++) {
+                if (!transposedClefOverride) {
+                    if (gfHold->clefId.has_value()) {
+                        if (gfHold->clefId.value() != musxCurrClef) {
+                            if (createClef(m_score, curStaffIdx, gfHold->clefId.value(), measure, 0, gfHold->clefAfterBarline)) {
+                                musxCurrClef = gfHold->clefId.value();
+                            }
+                        }
+                    } else {
+                        std::vector<std::shared_ptr<others::ClefList>> midMeasureClefs = m_doc->getOthers()->getArray<others::ClefList>(gfHold.getRequestedPartId(), gfHold->clefListId);
+                        for (const std::shared_ptr<others::ClefList>& midMeasureClef : midMeasureClefs) {
+                            if (midMeasureClef->xEduPos > 0 || midMeasureClef->clefIndex != musxCurrClef) {
+                                const bool afterBarline = midMeasureClef->xEduPos == 0 && midMeasureClef->afterBarline;
+                                if (Clef* clef = createClef(m_score, curStaffIdx, midMeasureClef->clefIndex, measure, midMeasureClef->xEduPos, afterBarline)) {
+                                    /// @todo perhaps populate other fields from midMeasureClef, such as x/y offsets, clef-specific mag, etc.?
+                                    musxCurrClef = midMeasureClef->clefIndex;
+                                }
+                            }
+                        }
+                    }
+                }
+                std::map<LayerIndex, bool> finaleLayers = gfHold.calcVoices();
+                std::unordered_map<int, track_idx_t> finaleVoiceMap = mapFinaleVoices(finaleLayers, musxScrollViewItem->staffId, musxMeasure->getCmper());
+                for (const auto& finaleLayer : finaleLayers) {
+                    const LayerIndex layer = finaleLayer.first;
                     /// @todo reparse with forWrittenPitch true, to obtain correct transposed keysigs/clefs/enharmonics
                     std::shared_ptr<const EntryFrame> entryFrame = gfHold.createEntryFrame(layer, /*forWrittenPitch*/ false);
                     if (!entryFrame) {
+                        logger()->logWarning(String(u"Layer %1 not found.").arg(int(layer)), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
                         continue;
                     }
-                    const std::vector<std::shared_ptr<const EntryInfo>>& entries = entryFrame->getEntries();
-                    if (entries.empty()) {
-                        continue;
-                    }
-                    processedEntries = true;
+                    const int maxV1V2 = finaleLayer.second ? 1 : 0;
+                    for (int voice = 0; voice <= maxV1V2; voice++) {
+                        // gfHold.calcVoices() guarantees that every layer/voice returned contains entries
+                        processedEntries = true;
 
-                    /// @todo load (measure-specific) key signature from entryFrame->keySignature RGP: this todo is probably unnecessary.
-                    /// Key sigs should be handled at the measure/staff level. They can only change on barlines in Finale. The one in entryFrame
-                    /// is provided for convenience and takes into account transposition (when written pitch is requested).
+                        /// @todo load (measure-specific) key signature from entryFrame->keySignature RGP: this todo is probably unnecessary.
+                        /// Key sigs should be handled at the measure/staff level. They can only change on barlines in Finale. The one in entryFrame
+                        /// is provided for convenience and takes into account transposition (when written pitch is requested).
 
-                    track_idx_t curTrackIdx = curStaffIdx * VOICES + static_cast<voice_idx_t>(layer);
-                    std::vector<ReadableTuplet> tupletMap = createTupletMap(entryFrame->tupletInfo);
-                    // trick: insert invalid 'tuplet' spanning the whole measure. useful for fallback when filling with rests
-                    ReadableTuplet rTuplet;
-                    Fraction mDur = simpleMusxTimeSigToFraction(musxMeasure->createTimeSignature()->calcSimplified(), logger());
-                    rTuplet.absBegin = Fraction(0, 1);
-                    rTuplet.absDuration = mDur;
-                    rTuplet.absEnd = mDur;
-                    rTuplet.layer = -1,
-                    tupletMap.insert(tupletMap.begin(), rTuplet);
-                    size_t lastAddedTupletIndex = 0;
-                    for (size_t i = 0; i < entries.size(); ++i) {
-                        EntryInfoPtr entryInfoPtr = EntryInfoPtr(entryFrame, i);
-                        processEntryInfo(entryInfoPtr, curTrackIdx, segment, tupletMap, lastAddedTupletIndex);
+                        track_idx_t trackOffset = muse::value(finaleVoiceMap, FinaleTConv::createFinaleVoiceId(layer, bool(voice)), muse::nidx);
+                        IF_ASSERT_FAILED(trackOffset >= 0 && trackOffset < VOICES) {
+                            logger()->logWarning(String(u"Encountered incorrectly mapped voice ID for layer %1").arg(int(layer) + 1), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
+                            continue;
+                        }
+                        track_idx_t curTrackIdx = curStaffIdx * VOICES + trackOffset;
+                        std::vector<ReadableTuplet> tupletMap = createTupletMap(entryFrame->tupletInfo, voice);
+                        // trick: insert invalid 'tuplet' spanning the whole measure. useful for fallback when filling with rests
+                        ReadableTuplet rTuplet;
+                        Fraction mDur = simpleMusxTimeSigToFraction(musxMeasure->createTimeSignature()->calcSimplified(), logger());
+                        rTuplet.absBegin = Fraction(0, 1);
+                        rTuplet.absDuration = mDur;
+                        rTuplet.absEnd = mDur;
+                        rTuplet.layer = -1,
+                        tupletMap.insert(tupletMap.begin(), rTuplet);
+                        size_t lastAddedTupletIndex = 0;
+                        for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
+                            processEntryInfo(entryInfoPtr, curTrackIdx, segment, tupletMap, lastAddedTupletIndex);
+                        }
                     }
                 }
             }
