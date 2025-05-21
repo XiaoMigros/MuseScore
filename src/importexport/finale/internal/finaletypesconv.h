@@ -29,7 +29,10 @@
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/mscore.h"
 
+#include "importfinalelogger.h"
+
 namespace mu::iex::finale {
+class FinaleLogger;
 class FinaleTConv
 {
 public:
@@ -48,6 +51,9 @@ public:
     static engraving::Align justifyToAlignment(musx::dom::others::NamePositioning::AlignJustify alignJustify);
     static engraving::CourtesyBarlineMode boolToCourtesyBarlineMode(bool useDoubleBarlines);
     static engraving::NoteVal notePropertiesToNoteVal(std::tuple<musx::dom::Note::NoteName, int, int, int> noteProperties, engraving::Key key = engraving::Key::C);
+    static engraving::Fraction musxFractionToFraction(musx::util::Fraction fraction);
+    static engraving::Fraction eduToFraction(musx::dom::Edu edu);
+    static engraving::Fraction simpleMusxTimeSigToFraction(const std::pair<musx::util::Fraction, musx::dom::NoteType>& simpleMusxTimeSig, FinaleLoggerPtr& logger);
 };
 
 }
