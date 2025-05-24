@@ -85,12 +85,8 @@ private:
                                                          musx::dom::InstCmper curStaff, musx::dom::MeasCmper curMeas) const;
     bool processEntryInfo(musx::dom::EntryInfoPtr entryInfo, engraving::track_idx_t curTrackIdx, engraving::Measure* measure,
                           std::vector<ReadableTuplet>& tupletMap, std::unordered_map<size_t, engraving::ChordRest*>& entryMap);
-<<<<<<< HEAD
-    void importClefs(musx::dom::details::GFrameHoldContext gfHold,
-                     const std::shared_ptr<musx::dom::others::InstrumentUsed>& musxScrollViewItem,
-=======
+    bool processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx, std::unordered_map<size_t, ChordRest*>& entryMap);
     void importClefs(const std::shared_ptr<musx::dom::others::InstrumentUsed>& musxScrollViewItem,
->>>>>>> a6e4679be8 (oops forgot to fix merge)
                      const std::shared_ptr<musx::dom::others::Measure>& musxMeasure,
                      engraving::Measure* measure, engraving::staff_idx_t curStaffIdx,
                      musx::dom::ClefIndex& musxCurrClef);
