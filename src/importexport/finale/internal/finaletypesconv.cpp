@@ -83,6 +83,15 @@ DurationType FinaleTConv::noteTypeToDurationType(musx::dom::NoteType noteType)
 }
 >>>>>>> 48fdf78a67 (fixes to typesconv)
 
+TDuration FinaleTConv::noteInfoToDuration(std::pair<musx::dom::NoteType, unsigned> noteInfo)
+{
+    TDuration d = FinaleTConv::noteTypeToDurationType(noteInfo.first);
+    if (d.isValid()) {
+        d.setDots(static_cast<int>(noteInfo.second));
+    }
+    return d;
+}
+
 ClefType FinaleTConv::toMuseScoreClefType(ClefIndex clef)
 {
     // For now, base this on the default clef definitions.
