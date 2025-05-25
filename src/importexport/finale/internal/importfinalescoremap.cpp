@@ -64,14 +64,16 @@ void EnigmaXmlImporter::import()
 {
     // styles (first, so that spatium and other defaults are correct)
     importStyles(m_score->style(), m_currentMusxPartId);
+
     // scoremap
     importParts();
     importBrackets();
     importMeasures();
     importPageLayout();
+    importStaffItems();
+
     // entries
     mapLayers();
-    importStaffItems();
     importEntries();
 }
 
@@ -170,6 +172,7 @@ void EnigmaXmlImporter::importMeasures()
     m_score->sigmap()->clear();
     m_score->sigmap()->add(0, currTimeSig);
 
+    // create global time signatures. local timesigs are set up later
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
         Fraction tick{ 0, 1 };
@@ -191,8 +194,86 @@ void EnigmaXmlImporter::importMeasures()
         measure->setTimesig(scoreTimeSig);
         measure->setTicks(scoreTimeSig);
         m_score->measures()->append(measure);
+    }
 
-        /// @todo key signature
+    // import system layout
+    /// @todo harmonise with coda creation plugin
+    std::vector<std::shared_ptr<others::Page>> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    std::vector<std::shared_ptr<others::StaffSystem>> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    for (const std::shared_ptr<others::StaffSystem>& staffSystem : staffSystems) {
+        //retrieve leftmost and rightmost measures of system
+        Fraction startTick = muse::value(m_meas2Tick, staffSystem->startMeas, Fraction(-1, 1));
+        Measure* startMeasure = startTick >= Fraction(0, 1)  ? m_score->tick2measure(startTick) : nullptr;
+        Fraction endTick = muse::value(m_meas2Tick, staffSystem->endMeas, Fraction(-1, 1));
+        Measure* endMeasure = endTick >= Fraction(0, 1)  ? m_score->tick2measure(endTick) : nullptr;
+        IF_ASSERT_FAILED(startMeasure && endMeasure) {
+            logger()->logWarning(String(u"Unable to retrieve measure(s) by tick for staffsystem"));
+            continue;
+        }
+        MeasureBase* sysStart = startMeasure;
+        MeasureBase* sysEnd = endMeasure;
+        
+        // create left and right margins
+        if (!muse::RealIsEqual(staffSystem->left, 0.0)) {
+            HBox* leftBox = Factory::createHBox(m_score->dummy()->system());
+            leftBox->setTick(startMeasure->tick());
+            //leftBox->setNext(beforeMeasure);
+            leftBox->setPrev(startMeasure->prev());
+            leftBox->setBoxWidth(Spatium(staffSystem->left / EVPU_PER_SPACE));
+            leftBox->setSizeIsSpatiumDependent(true); // ideally false, but could have unwanted consequences
+            startMeasure->setPrev(leftBox);
+            // newMeasureBase->manageExclusionFromParts(/*exclude =*/ true); // excluded by default
+            sysStart = leftBox;
+        }
+        if (!muse::RealIsEqual(staffSystem->right, 0.0)) {
+            HBox* rightBox = Factory::createHBox(m_score->dummy()->system());
+            Fraction rightTick = endMeasure->nextMeasure() ? endMeasure->nextMeasure()->tick() : m_score->last()->endTick();
+            rightBox->setTick(rightTick);
+            rightBox->setNext(endMeasure->next());
+            rightBox->setPrev(endMeasure);
+            rightBox->setBoxWidth(Spatium(staffSystem->right / EVPU_PER_SPACE));
+            rightBox->setSizeIsSpatiumDependent(true); // ideally false, but could have unwanted consequences
+            endMeasure->setNext(rightBox);
+            // newMeasureBase->manageExclusionFromParts(/*exclude =*/ true); // excluded by default
+            sysEnd = rightBox;
+        }
+        // lock measures in place
+        // we lock all systems to guarantee we end up with the correct measure distribution
+        m_score->addSystemLock(new SystemLock(sysStart, sysEnd));
+
+        bool isFirstSystemOnPage = false;
+        bool isLastSystemOnPage = false;
+        for (const std::shared_ptr<others::Page>& page : pages) {
+            /// @todo check for blank pages. check for firstPageSystem is null.
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystem);
+            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
+            if (pageStartTick == startTick) {
+                isFirstSystemOnPage = true;
+            }
+            if (pageStartTick == endTick + endMeasure->ticks()) {
+                isLastSystemOnPage = true;
+            }
+            if (isFirstSystemOnPage || isLastSystemOnPage) {
+                break;
+            }
+        }
+
+        // create top and bottom margins
+        if (isFirstSystemOnPage) {
+            Spacer* spacer = Factory::createSpacer(startMeasure);
+            spacer->setSpacerType(SpacerType::UP);
+            spacer->setTrack(0);
+            spacer->setGap(Spatium((-staffSystem->top + staffSystem->distanceToPrev) / EVPU_PER_SPACE));
+            /// @todo account for title frames / perhaps header frames
+            //measure->add(spacer);
+        }
+        if (!isLastSystemOnPage) {
+            Spacer* spacer = Factory::createSpacer(startMeasure);
+            spacer->setSpacerType(SpacerType::FIXED);
+            spacer->setTrack(m_score->nstaves() * VOICES); /// @todo account for invisible staves
+            spacer->setGap(Spatium((staffSystem->bottom + staffSystem->distanceToPrev) / EVPU_PER_SPACE));
+            //measure->add(spacer);
+        }
     }
 }
 
@@ -342,6 +423,157 @@ void EnigmaXmlImporter::importBrackets()
                 Staff* s = m_score->staff(idx);
                 s->setBarLineTo(0);
                 s->setBarLineSpan(1);
+            }
+        }
+    }
+}
+
+static Clef* createClef(Score* score, staff_idx_t staffIdx, ClefIndex musxClef, Measure* measure, Edu musxEduPos, bool afterBarline, bool visible)
+{
+    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(musxClef);
+    if (entryClefType == ClefType::INVALID) {
+        return nullptr;
+    }
+    Clef* clef = Factory::createClef(score->dummy()->segment());
+    clef->setTrack(staffIdx * VOICES);
+    clef->setConcertClef(entryClefType);
+    clef->setTransposingClef(entryClefType);
+    // clef->setShowCourtesy();
+    // clef->setForInstrumentChange();
+    clef->setVisible(visible);
+    clef->setGenerated(false);
+    const bool isHeader = !afterBarline && !measure->prevMeasure() && musxEduPos == 0;
+    clef->setIsHeader(isHeader);
+    if (afterBarline) {
+        clef->setClefToBarlinePosition(ClefToBarlinePosition::AFTER);
+    } else if (musxEduPos == 0) {
+        clef->setClefToBarlinePosition(ClefToBarlinePosition::BEFORE);
+    }
+
+    Fraction clefTick = measure->tick() + FinaleTConv::eduToFraction(musxEduPos);
+    Segment* clefSeg = measure->getSegment(
+        clef->isHeader() ? SegmentType::HeaderClef : SegmentType::Clef, clefTick);
+    clefSeg->add(clef);
+    return clef;
+}
+
+void EnigmaXmlImporter::importClefs(const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem,
+                                    const std::shared_ptr<others::Measure>& musxMeasure, Measure* measure, staff_idx_t curStaffIdx,
+                                    ClefIndex& musxCurrClef)
+{
+    // The Finale UI requires transposition to be a full-measure staff-style assignment, so checking only the beginning of the bar should be sufficient.
+    // However, it is possible to defeat this requirement using plugins. That said, doing so produces erratic results, so I'm not sure we should support it.
+    // For now, only check the start of the measure.
+    auto musxStaffAtMeasureStart = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
+    if (musxStaffAtMeasureStart && musxStaffAtMeasureStart->transposition && musxStaffAtMeasureStart->transposition->setToClef) {
+        if (musxStaffAtMeasureStart->transposedClef != musxCurrClef) {
+            if (createClef(m_score, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, /*xEduPos*/ 0, false, true)) {
+                musxCurrClef = musxStaffAtMeasureStart->transposedClef;
+            }
+        }
+        return;
+    }
+    if (auto gfHold = m_doc->getDetails()->get<details::GFrameHold>(m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper())) {
+        if (gfHold->clefId.has_value()) {
+            if (gfHold->clefId.value() != musxCurrClef || gfHold->showClefMode == ShowClefMode::Always) {
+                const bool visible = gfHold->showClefMode != ShowClefMode::Never;
+                if (createClef(m_score, curStaffIdx, gfHold->clefId.value(), measure, /*xEduPos*/ 0, gfHold->clefAfterBarline, visible)) {
+                    musxCurrClef = gfHold->clefId.value();
+                }
+            }
+        } else {
+            std::vector<std::shared_ptr<others::ClefList>> midMeasureClefs = m_doc->getOthers()->getArray<others::ClefList>(m_currentMusxPartId, gfHold->clefListId);
+            for (const std::shared_ptr<others::ClefList>& midMeasureClef : midMeasureClefs) {
+                if (midMeasureClef->xEduPos > 0 || midMeasureClef->clefIndex != musxCurrClef || midMeasureClef->clefMode == ShowClefMode::Always) {
+                    const bool visible = midMeasureClef->clefMode != ShowClefMode::Never;
+                    const bool afterBarline = midMeasureClef->xEduPos == 0 && midMeasureClef->afterBarline;
+                    /// @todo Test with stretched staff time. (midMeasureClef->xEduPos is in global edu values.)
+                    if (Clef * clef = createClef(m_score, curStaffIdx, midMeasureClef->clefIndex, measure, midMeasureClef->xEduPos, afterBarline, visible)) {
+                        // only set y offset because MuseScore automatically calculates the horizontal spacing offset
+                        clef->setOffset(0.0, clef->spatium() * (-double(midMeasureClef->yEvpuPos) / EVPU_PER_SPACE));
+                        /// @todo perhaps populate other fields from midMeasureClef, such as clef-specific mag, etc.?
+                        musxCurrClef = midMeasureClef->clefIndex;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void EnigmaXmlImporter::importStaffItems()
+{
+    std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
+    std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
+        std::shared_ptr<TimeSignature> currMusxTimeSig;
+        std::shared_ptr<KeySignature> currMusxKeySig;
+        ClefIndex musxCurrClef = others::Staff::calcFirstClefIndex(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId);
+        /// @todo handle pickup measures and other measures where display and actual timesigs differ
+        for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
+            Fraction currTick = muse::value(m_meas2Tick, musxMeasure->getCmper(), Fraction(-1, 1));
+            Measure * measure = currTick >= Fraction(0, 1)  ? m_score->tick2measure(currTick) : nullptr;
+            IF_ASSERT_FAILED(measure) {
+                logger()->logWarning(String(u"Unable to retrieve measure by tick"), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
+                return;
+            }
+            staff_idx_t staffIdx = muse::value(m_inst2Staff, musxScrollViewItem->staffId, muse::nidx);
+            Staff* staff = staffIdx != muse::nidx ? m_score->staff(staffIdx) : nullptr;
+            IF_ASSERT_FAILED(staff) {
+                logger()->logWarning(String(u"Unable to retrieve staff by idx"), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
+                return;
+            }
+            auto currStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
+            IF_ASSERT_FAILED(currStaff) {
+                logger()->logWarning(String(u"Unable to retrieve composite staff information"), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
+                return;
+            }
+
+            // timesig
+            const std::shared_ptr<TimeSignature> globalTimeSig = musxMeasure->createTimeSignature();
+            const std::shared_ptr<TimeSignature> musxTimeSig = musxMeasure->createTimeSignature(musxScrollViewItem->staffId);
+            if (!currMusxTimeSig || !currMusxTimeSig->isSame(*musxTimeSig) || musxMeasure->showTime == others::Measure::ShowTimeSigMode::Always) {
+                Fraction timeSig = FinaleTConv::simpleMusxTimeSigToFraction(musxTimeSig->calcSimplified(), logger());
+                Segment* seg = measure->getSegment(SegmentType::TimeSig, currTick);
+                TimeSig* ts = Factory::createTimeSig(seg);
+                ts->setSig(timeSig);
+                ts->setTrack(staffIdx * VOICES);
+                ts->setVisible(musxMeasure->showTime != others::Measure::ShowTimeSigMode::Never);
+                Fraction stretch = Fraction(musxTimeSig->calcTotalDuration().calcEduDuration(), globalTimeSig->calcTotalDuration().calcEduDuration()).reduced();
+                ts->setStretch(stretch);
+                /// @todo other time signature options? Beaming? Composite list?
+                seg->add(ts);
+                staff->addTimeSig(ts);
+            }
+            currMusxTimeSig = musxTimeSig;
+
+            // clefs
+            importClefs(musxScrollViewItem, musxMeasure, measure, staffIdx, musxCurrClef);
+
+            // keysig
+            const std::shared_ptr<KeySignature> musxKeySig = musxMeasure->createKeySignature(musxScrollViewItem->staffId);
+            if (!currMusxKeySig || !currMusxKeySig->isSame(*musxKeySig) || musxMeasure->showKey == others::Measure::ShowKeySigMode::Always) {
+                /// @todo custom keysigs
+                if (musxKeySig->calcEDODivisions() == music_theory::STANDARD_12EDO_STEPS && musxKeySig->isBuiltIn()) {
+                    Key key = FinaleTConv::keyFromAlteration(musxKeySig->getAlteration());
+                    Segment* seg = measure->getSegment(SegmentType::KeySig, currTick);
+                    KeySig* ks = Factory::createKeySig(seg);
+                    ks->setKey(key);
+                    ks->setTrack(staffIdx * VOICES);
+                    ks->setVisible(musxMeasure->showKey != others::Measure::ShowKeySigMode::Never);
+                    KeyMode km = KeyMode::UNKNOWN;
+                    if (musxKeySig->keyless) {
+                        km = KeyMode::NONE;
+                    } else if (musxKeySig->isMajor()) {
+                        km = KeyMode::MAJOR;
+                    } else if (musxKeySig->isMinor()) {
+                        km = KeyMode::MINOR;
+                    }
+                    ks->setMode(km);
+                    seg->add(ks);
+                    staff->setKey(currTick, ks->keySigEvent());
+                } else {
+                    logger()->logWarning(String(u"Microtonal / custom key signatures not supported."), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
+                }
             }
         }
     }
