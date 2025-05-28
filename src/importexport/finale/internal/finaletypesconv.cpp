@@ -1045,4 +1045,9 @@ PointF FinaleTConv::evpuToPointF(Evpu xEvpu, Evpu yEvpu)
     return PointF(doubleFromEvpu(xEvpu), doubleFromEvpu(yEvpu));
 }
 
+double FinaleTConv::doubleFromEfix(Efix efix)
+{
+    return double(efix) / EFIX_PER_SPACE;
+}
+
 }
