@@ -1080,4 +1080,9 @@ double FinaleTConv::doubleFromEfix(Efix efix)
     return double(efix) / EFIX_PER_SPACE;
 }
 
+double FinaleTConv::doubleFromPercent(int percent)
+{
+    return double(percent) / 100.0;
+}
+
 }
