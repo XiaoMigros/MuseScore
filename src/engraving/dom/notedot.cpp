@@ -65,4 +65,26 @@ double NoteDot::mag() const
 {
     return parentItem()->mag() * style().styleD(Sid::dotMag);
 }
+
+bool NoteDot::acceptDrop(EditData& data) const
+{
+    if (note()) {
+        return note()->acceptDrop(data);
+    }
+    if (rest()) {
+        return rest()->acceptDrop(data);
+    }
+    return false;
+}
+
+EngravingItem* NoteDot::drop(EditData& data)
+{
+    if (note()) {
+        return note()->drop(data);
+    }
+    if (rest()) {
+        return rest()->drop(data);
+    }
+    return nullptr;
+}
 }
