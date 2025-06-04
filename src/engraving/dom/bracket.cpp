@@ -139,7 +139,10 @@ void Bracket::startEdit(EditData& ed)
 
 std::vector<PointF> Bracket::gripsPositions(const EditData&) const
 {
-    return { PointF(0.0, ldata()->bracketHeight()) + pagePos() };
+    return {
+        pagePos(),
+        pagePos() + PointF(0.0, ldata()->bracketHeight())
+    };
 }
 
 //---------------------------------------------------------
@@ -155,7 +158,12 @@ void Bracket::endEdit(EditData& ed)
 void Bracket::editDrag(EditData& ed)
 {
     double bracketHeight = ldata()->bracketHeight();
-    bracketHeight += ed.delta.y();
+    if (ed.curGrip == Grip::START) {
+        bracketHeight -= ed.delta.y();
+        mutldata()->setPosY(ldata()->pos().y() + ed.delta.y());
+    } else {
+        bracketHeight += ed.delta.y();
+    }
     mutldata()->bracketHeight.set_value(bracketHeight);
 }
 
@@ -164,22 +172,30 @@ void Bracket::editDrag(EditData& ed)
 //    snap to nearest staff
 //---------------------------------------------------------
 
-void Bracket::endEditDrag(EditData&)
+void Bracket::endEditDrag(EditData& ed)
 {
     double ay2 = m_ay1 + ldata()->bracketHeight();
 
     staff_idx_t staffIdx1 = staffIdx();
-    staff_idx_t staffIdx2;
+    staff_idx_t staffIdx2 = staffIdx1 + static_cast<size_t>(bracketItem()->bracketSpan() - 1);
     size_t n = system()->staves().size();
-    if (staffIdx1 + 1 >= n) {
-        staffIdx2 = staffIdx1;
-    } else {
-        double ay  = parentItem()->pagePos().y();
-        System* s = system();
-        double y   = s->staff(staffIdx1)->y() + ay;
-        double h1  = staff()->staffHeight();
 
-        for (staffIdx2 = staffIdx1 + 1; staffIdx2 < n; ++staffIdx2) {
+    double ay  = parentItem()->pagePos().y();
+    System* s  = system();
+    double y   = s->staff(staffIdx1)->y() + ay;
+    double h1  = staff()->staffHeight();
+
+    if (ed.curGrip == Grip::START) {
+        for (staffIdx1 = n - 1; staffIdx1 > 0; --staffIdx1) { // >= 0 ??
+            double h = s->staff(staffIdx1)->y() + ay - y;
+            if (ay2 > (y + (h + h1) * .5)) {
+                break;
+            }
+            y += h;
+        }
+        // staffIdx1 -= 1;
+    } else {
+        for (staffIdx2 = 0; staffIdx2 < n; ++staffIdx2) {
             double h = s->staff(staffIdx2)->y() + ay - y;
             if (ay2 < (y + (h + h1) * .5)) {
                 break;
@@ -189,10 +205,26 @@ void Bracket::endEditDrag(EditData&)
         staffIdx2 -= 1;
     }
 
-    double sy = system()->staff(staffIdx1)->y();
-    double ey = system()->staff(staffIdx2)->y() + score()->staff(staffIdx2)->staffHeight();
-    mutldata()->bracketHeight.set_value(ey - sy);
-    bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, staffIdx2 - staffIdx1 + 1);
+    const bool startStaffUnchanged = [&]() { // insert -> bool before { ?
+        if (staffIdx1 > staffIdx2) {
+            std::swap(staffIdx1, staffIdx2);
+            return false;
+        }
+        return score()->staff(staffIdx1) == bracketItem()->staff();
+    }();
+
+    double startY = system()->staff(staffIdx1)->y();
+    double endY = system()->staff(staffIdx2)->y() + score()->staff(staffIdx2)->staffHeight();
+    mutldata()->bracketHeight.set_value(endY - startY);
+    if (startStaffUnchanged) {
+        bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, staffIdx2 - staffIdx1 + 1);
+    } else {
+        mutldata()->setPosY(0.0);
+        score()->undoAddBracket(score()->staff(staffIdx1), bracketItem()->column(), bracketItem()->bracketType(),
+                                int(staffIdx2 - staffIdx1 + 1));
+        score()->deselect(this);
+        score()->undoRemoveBracket(this);
+    }
 }
 
 //---------------------------------------------------------
@@ -222,11 +254,20 @@ EngravingItem* Bracket::drop(EditData& data)
 
 bool Bracket::isEditAllowed(EditData& ed) const
 {
-    if (ed.key == Key_Up && span() > 1) {
-        return true;
-    }
-    if (ed.key == Key_Down && m_lastStaff < system()->staves().size() - 1) {
-        return true;
+    if (ed.curGrip == Grip::START) {
+        if (ed.key == Key_Up && staffIdx() > 1) {
+            return true;
+        }
+        if (ed.key == Key_Down && span() > 1) {
+            return true;
+        }
+    } else {
+        if (ed.key == Key_Up && span() > 1) {
+            return true;
+        }
+        if (ed.key == Key_Down && m_lastStaff < system()->staves().size() - 1) {
+            return true;
+        }
     }
 
     if (!(ed.modifiers & ShiftModifier)) {
@@ -257,13 +298,30 @@ bool Bracket::edit(EditData& ed)
         return false;
     }
 
-    if (ed.key == Key_Up && span() > 1) {
-        bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, static_cast<int>(span()) - 1);
-        return true;
-    }
-    if (ed.key == Key_Down && m_lastStaff < system()->staves().size() - 1) {
-        bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, static_cast<int>(span()) + 1);
-        return true;
+    if (ed.curGrip == Grip::START) {
+        if (ed.key == Key_Up && staffIdx() > 1) {
+            score()->undoAddBracket(score()->staff(staffIdx() - 1), bracketItem()->column(),
+                                    bracketItem()->bracketType(), int(bracketItem()->bracketSpan() + 1));
+            score()->deselect(this);
+            score()->undoRemoveBracket(this);
+            return true;
+        }
+        if (ed.key == Key_Down && span() > 1) {
+            score()->undoAddBracket(score()->staff(staffIdx() + 1), bracketItem()->column(),
+                                    bracketItem()->bracketType(), int(bracketItem()->bracketSpan() - 1));
+            score()->deselect(this);
+            score()->undoRemoveBracket(this);
+            return true;
+        }
+    } else {
+        if (ed.key == Key_Up && span() > 1) {
+            bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, static_cast<int>(span()) - 1);
+            return true;
+        }
+        if (ed.key == Key_Down && m_lastStaff < system()->staves().size() - 1) {
+            bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, static_cast<int>(span()) + 1);
+            return true;
+        }
     }
 
     if (ed.key == Key_Left) {
