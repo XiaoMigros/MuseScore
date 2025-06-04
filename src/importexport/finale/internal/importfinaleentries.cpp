@@ -349,18 +349,9 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     } else {
         Rest* rest = Factory::createRest(segment, d);
 
-        if (!currentEntry->floatRest && !currentEntry->notes.empty()) {
-            NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, 0);
-            if (noteInfoPtr->getNoteId() == musx::dom::Note::RESTID) {
-                /// @todo test other staff line configurations that 5 lines. (Finale reference line is not always the top line, e.g. 1-line staves.)
-                /// @todo correctly calculate default rest position in multi-voice situation.
-                auto [pitchClass, octave, alteration, staffPosition] = noteInfoPtr.calcNoteProperties();
-                int linePosition = 2 * rest->computeNaturalLine(targetStaff->lines(rest->tick()));
-                rest->ryoffset() = double(-staffPosition - linePosition) * targetStaff->spatium(rest->tick()) / 2.0;
-                rest->setAutoplace(false);
-            } else {
-                logger()->logWarning(String(u"Rest found with unexpected note ID"), m_doc, noteInfoPtr.getEntryInfo().getStaff(), noteInfoPtr.getEntryInfo().getMeasure());
-            }
+        for (size_t i = 0; i < currentEntry->notes.size(); ++i) {
+            // NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, i);
+            /// @todo calculate y-offset here (remember is also staff-dependent)
         }
         cr = toChordRest(rest);
     }
@@ -397,6 +388,8 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
     beam->setTrack(curTrackIdx);
     if (entryInfoPtr->getEntry()->isNote && cr->isChord()) {
         beam->setDirection(toChord(cr)->stemDirection());
+    } else {
+        beam->setDirection(DirectionV::AUTO);
     }
     beam->add(cr);
     cr->setBeamMode(BeamMode::BEGIN);
@@ -557,6 +550,7 @@ void FinaleParser::importEntries()
     // Add entries (notes, rests, tuplets)
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    staff_idx_t lastStaffIdxInPart = 0;
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
         staff_idx_t curStaffIdx = muse::value(m_inst2Staff, InstCmper(musxScrollViewItem->staffId), muse::nidx);
         IF_ASSERT_FAILED (curStaffIdx != muse::nidx) {
@@ -572,7 +566,6 @@ void FinaleParser::importEntries()
 
         Staff* curStaff = m_score->staff(curStaffIdx);
         // reset tie tracking when appropriate
-        staff_idx_t lastStaffIdxInPart = curStaffIdx;
         if (track2staff(curStaff->part()->endTrack()) > lastStaffIdxInPart) {
             lastStaffIdxInPart = track2staff(curStaff->part()->endTrack());
             m_noteInfoPtr2Note.clear();
@@ -610,9 +603,10 @@ void FinaleParser::importEntries()
 
                         // generate tuplet map, tremolo map and create tuplets
                         // trick: insert invalid 'tuplet' spanning the whole measure. useful for fallback
+                        /// @todo does this need to account for local timesigs
                         ReadableTuplet rTuplet;
                         rTuplet.startTick = Fraction(0, 1);
-                        rTuplet.endTick = (measure->timesig() * curStaff->timeStretch(measure->tick())).reduced(); // account for local timesigs (needed?)
+                        rTuplet.endTick = FinaleTConv::simpleMusxTimeSigToFraction(musxMeasure->createTimeSignature()->calcSimplified(), logger());
                         rTuplet.layer = -1;
                         std::vector<ReadableTuplet> tupletMap = { rTuplet };
                         std::vector<ReadableTuplet> tremoloMap;
