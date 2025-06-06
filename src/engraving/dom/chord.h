@@ -260,6 +260,7 @@ public:
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid) const override;
+    bool isUserModified() const override;
 
     void reset() override;
 
@@ -329,6 +330,8 @@ public:
     };
 
     StartEndSlurs& startEndSlurs() { return m_startEndSlurs; }
+
+    bool allNotesTiedToNext() const;
 
 private:
 

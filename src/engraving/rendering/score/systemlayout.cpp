@@ -137,7 +137,8 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
     prevMeasureState.curHeader = ctx.state().curMeasure()->header();
     prevMeasureState.curTrailer = ctx.state().curMeasure()->trailer();
 
-    const SystemLock* systemLock = ctx.dom().systemLocks()->lockStartingAt(ctx.state().curMeasure());
+    const SystemLock* systemLock = ctx.conf().viewMode() == LayoutMode::PAGE || ctx.conf().viewMode() == LayoutMode::SYSTEM
+                                   ? ctx.dom().systemLocks()->lockStartingAt(ctx.state().curMeasure()) : nullptr;
 
     while (ctx.state().curMeasure()) {      // collect measure for system
         oldSystem = ctx.mutState().curMeasure()->system();
@@ -1238,6 +1239,7 @@ void SystemLayout::collectSpannersToLayout(ElementsToLayout& elements, const Lay
         } else {
             switch (spanner->type()) {
             case ElementType::SLUR:
+            case ElementType::HAMMER_ON_PULL_OFF:
                 if (!toSlur(spanner)->isCrossStaff()) {
                     elements.slurs.push_back(spanner);
                 }
@@ -1629,6 +1631,9 @@ void SystemLayout::processLines(System* system, LayoutContext& ctx, const std::v
                 continue;
             }
             system->staff(stfIdx)->skyline().add(ss->shape().translate(ss->pos()));
+            if (ss->isHammerOnPullOffSegment()) {
+                TLayout::layoutHammerOnPullOffSegment(toHammerOnPullOffSegment(ss), ctx);
+            }
         }
     }
 }

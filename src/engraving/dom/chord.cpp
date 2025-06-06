@@ -909,6 +909,33 @@ double Chord::centerX() const
     return x;
 }
 
+bool Chord::allNotesTiedToNext() const
+{
+    Chord* tiedChord = nullptr;
+    for (Note* note : m_notes) {
+        if (!note->tieFor()) {
+            return false;
+        }
+
+        Note* endNote = note->tieFor()->endNote();
+        Chord* endChord = endNote ? endNote->chord() : nullptr;
+        if (!endChord) {
+            return false;
+        }
+
+        if (!tiedChord) {
+            tiedChord = endChord;
+            continue;
+        }
+
+        if (endChord != tiedChord) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 //---------------------------------------------------------
 //   processSiblings
 //---------------------------------------------------------
@@ -1623,6 +1650,15 @@ PropertyValue Chord::propertyDefault(Pid propertyId) const
     default:
         return ChordRest::propertyDefault(propertyId);
     }
+}
+
+bool Chord::isUserModified() const
+{
+    if (showStemSlash() != propertyDefault(Pid::SHOW_STEM_SLASH).toBool()) {
+        return true;
+    }
+
+    return EngravingItem::isUserModified();
 }
 
 //---------------------------------------------------------
