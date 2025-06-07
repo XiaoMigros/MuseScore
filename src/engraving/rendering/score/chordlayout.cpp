@@ -2105,7 +2105,7 @@ void ChordLayout::calculateChordOffsets(Segment* segment, staff_idx_t staffIdx, 
                 if (posInfo.downHooks) {
                     bool needsHookSpace = (ledgerOverlapBelow || ledgerOverlapAbove);
                     Hook* hook = topDownNote->chord()->hook();
-                    double hookSpace = hook ? hook->width() : 0.0;
+                    double hookSpace = hook && hook->addToSkyline() ? hook->width() : 0.0;
                     offsetInfo.upOffset = needsHookSpace ? hookSpace + ledgerLen + ledgerGap : offsetInfo.upOffset + 0.3 * sp;
                 }
             }
@@ -2116,7 +2116,7 @@ void ChordLayout::calculateChordOffsets(Segment* segment, staff_idx_t staffIdx, 
             double clearLeft = isTab ? StemLayout::stemPosX(bottomUpNote->chord()) : 0.0;
             double clearRight = isTab ? StemLayout::stemPosX(bottomUpNote->chord()) : 0.0;
             double overlapPadding = (isTab ? 0 : 0.3) * sp;
-            if (const Stem* topDownStem = topDownNote->chord()->stem()) {
+            if ((const Stem* topDownStem = topDownNote->chord()->stem()) && topDownStem->addToSkyline()) {
                 if (ledgerOverlapBelow) {
                     // Create space between stem and ledger line below staff
                     clearLeft += ledgerLen + ledgerGap + topDownStem->lineWidthMag();
@@ -2124,7 +2124,7 @@ void ChordLayout::calculateChordOffsets(Segment* segment, staff_idx_t staffIdx, 
                     clearLeft += topDownStem->lineWidthMag() + overlapPadding;
                 }
             }
-            if (const Stem* bottomUpStem = bottomUpNote->chord()->stem()) {
+            if ((const Stem* bottomUpStem = bottomUpNote->chord()->stem()) && bottomUpStem->addToSkyline()) {
                 if (ledgerOverlapAbove) {
                     // Create space between stem and ledger line above staff
                     clearRight += posInfo.maxDownWidth + ledgerLen + ledgerGap - posInfo.maxUpWidth
@@ -2146,12 +2146,11 @@ void ChordLayout::calculateChordOffsets(Segment* segment, staff_idx_t staffIdx, 
                 // we will need more space to avoid collision with hook
                 // but we won't need as much dot adjustment
                 Hook* hook = topDownNote->chord()->hook();
-                double hookWidth = hook ? hook->width() : 0.0;
-                if (ledgerOverlapBelow) {
-                    offsetInfo.upOffset = hookWidth + ledgerLen + ledgerGap;
-                }
+                double hookWidth = hook && hook->addToSkyline() ? hook->width() : 0.0;
                 if (isTab) {
                     offsetInfo.upOffset = hookWidth + posInfo.maxDownWidth;
+                } else if (ledgerOverlapBelow) {
+                    offsetInfo.upOffset = hookWidth + ledgerLen + ledgerGap;
                 }
                 offsetInfo.upOffset = std::max(offsetInfo.upOffset, posInfo.maxDownWidth + 0.1 * sp);
                 offsetInfo.dotAdjustThreshold = posInfo.maxUpWidth - 0.3 * sp;
