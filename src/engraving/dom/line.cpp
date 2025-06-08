@@ -273,7 +273,7 @@ bool LineSegment::edit(EditData& ed)
         } else {
             s2 = findNewAnchorSegment(ed, s2);
         }
-        if (s1 == 0 || s2 == 0 || s1->tick() >= s2->tick()) {
+        if (!s1 || !s2 || s1->tick() >= s2->tick()) {
             return true;
         }
 
@@ -370,6 +370,18 @@ bool LineSegment::edit(EditData& ed)
                     m2 = m2->nextMeasure();
                 }
             }
+        } else if (ed.key == Key_Home) {
+            if (moveStart) {
+                m1 = m1->system()->firstMeasure();
+            } else if (moveEnd) {
+                m2 = m2->system()->firstMeasure();
+            }
+        } else if (ed.key == Key_End) {
+            if (moveStart) {
+                m1 = m1->system()->lastMeasure();
+            } else if (moveEnd) {
+                m2 = m2->system()->lastMeasure();
+            }
         }
         if (m1->tick() > m2->tick()) {
             return true;
@@ -419,26 +431,61 @@ Segment* LineSegment::findNewAnchorSegment(const EditData& ed, const Segment* cu
             return curSeg->prev1WithElemsOnStaff(staffIdx());
         }
         if (ed.key == Key_Right) {
+            Segment* lastCRSegInScore = score()->lastSegment();
+            while (lastCRSegInScore && !lastCRSegInScore->isChordRestType()) {
+                lastCRSegInScore = lastCRSegInScore->prev1(SegmentType::ChordRest);
+            }
+            if (curSeg == lastCRSegInScore && curSeg == line()->endSegment()) {
+                // If we reach this point, it means that the line in question does not accept time anchors
+                // and that the line's end segment is the last CR segment in the score. Trying to use
+                // next1WithElemsOnStaff won't do anything from here, but the last segment in the score is
+                // still a valid new anchor segment for this line (see also LineSegment::edit)...
+                return score()->lastSegment();
+            }
             return curSeg->next1WithElemsOnStaff(staffIdx());
         }
     }
 
-    if (ed.modifiers & ControlModifier) {
-        if (ed.key == Key_Left) {
-            Measure* measure = curSeg->rtick().isZero() ? curSeg->measure()->prevMeasure() : curSeg->measure();
-            return measure ? measure->findFirstR(SegmentType::ChordRest, Fraction(0, 1)) : nullptr;
+    switch (ed.key) {
+    case Key_Left: {
+        if (ed.modifiers & ControlModifier) {
+            Measure* m = curSeg->rtick().isZero() ? curSeg->measure()->prevMeasure() : curSeg->measure();
+            return m ? m->findFirstR(SegmentType::ChordRest, Fraction(0, 1)) : nullptr;
         }
-        if (ed.key == Key_Right) {
-            Measure* measure = curSeg->measure()->nextMeasure();
-            return measure ? measure->findFirstR(SegmentType::ChordRest, Fraction(0, 1)) : nullptr;
-        }
-    }
-
-    if (ed.key == Key_Left) {
         return curSeg->prev1ChordRestOrTimeTick();
     }
-    if (ed.key == Key_Right) {
+    case Key_Right: {
+        if (ed.modifiers & ControlModifier) {
+            Measure* measure = curSeg->measure()->nextMeasure();
+            if (measure) {
+                return measure->findFirstR(SegmentType::ChordRest, Fraction(0, 1));
+            } else {
+                Measure* m = score()->lastMeasure();
+                EditTimeTickAnchors::updateAnchors(m, staffIdx());
+                return m->getChordRestOrTimeTickSegment(m->endTick());
+            }
+        }
         return curSeg->next1ChordRestOrTimeTick();
+    }
+    case Key_Home: {
+        Measure* m = curSeg->measure()->system()->firstMeasure();
+        if (curSeg->rtick() == Fraction(0, 1) && m == curSeg->measure() && m->prevMeasure()) {
+            m = m->prevMeasure()->system()->firstMeasure();
+        }
+        return m->findFirstR(SegmentType::ChordRest, Fraction(0, 1));
+    }
+    case Key_End: {
+        Measure* measure = curSeg->measure()->system()->lastMeasure()->nextMeasure();
+        if (measure) {
+            return measure->findFirstR(SegmentType::ChordRest, Fraction(0, 1));
+        } else {
+            Measure* m = score()->lastMeasure();
+            EditTimeTickAnchors::updateAnchors(m, staffIdx());
+            return m->getChordRestOrTimeTickSegment(m->endTick());
+        }
+    }
+    default:
+        break;
     }
 
     return nullptr;
@@ -478,6 +525,15 @@ Segment* LineSegment::findSegmentForGrip(Grip grip, PointF pos) const
     Segment* seg = nullptr;   // don't prefer any segment while searching line position
     staff_idx_t staffIndex = oldStaffIndex;
     score()->dragPosition(pos, &staffIndex, &seg, spacingFactor, allowTimeAnchor());
+
+    // Lines that don't allow time anchors can anchor to the last segment in the score (see also LineSegment::findNewAnchorSegment)
+    if (seg && !allowTimeAnchor() && grip == Grip::END) {
+        Segment* last = score()->lastSegment();
+        const bool lastSegIsClosest = std::abs(last->canvasX() - pos.x()) < std::abs(seg->canvasX() - pos.x());
+        if (lastSegIsClosest) {
+            return last;
+        }
+    }
 
     return seg;
 }

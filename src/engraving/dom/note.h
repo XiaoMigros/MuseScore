@@ -378,7 +378,7 @@ public:
     void setDotRelativeLine(int);
 
     void setHeadHasParentheses(bool hasParentheses, bool addToLinked = true, bool generated = false);
-    bool headHasParentheses() const { return m_hasHeadParentheses; }
+    bool headHasParentheses() const { return m_hasUserParentheses; }
 
     static SymId noteHead(int direction, NoteHeadGroup, NoteHeadType, int tpc, Key key, NoteHeadScheme scheme);
     static SymId noteHead(int direction, NoteHeadGroup, NoteHeadType);
@@ -412,8 +412,6 @@ public:
 
     void setStretchedBend(StretchedBend* s) { m_stretchedBend = s; }
     StretchedBend* stretchedBend() const { return m_stretchedBend; }
-    bool isHammerOn() const { return m_isHammerOn; }
-    void setIsHammerOn(bool hammerOn) { m_isHammerOn = hammerOn; }
 
     void setHarmonic(bool val) { m_harmonic = val; }
     bool harmonic() const { return m_harmonic; }
@@ -539,9 +537,9 @@ private:
 
     Symbol* m_leftParenthesis = nullptr;
     Symbol* m_rightParenthesis = nullptr;
-    bool m_hasHeadParentheses = false;
+    bool m_hasUserParentheses = false;
+    bool m_hasGeneratedParens = false;
 
-    bool m_isHammerOn = false;
     bool m_harmonic = false;
 
     ElementList m_el;          // fingering, other text, symbols or images
