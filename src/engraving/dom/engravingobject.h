@@ -23,10 +23,7 @@
 #pragma once
 
 #include "global/allocator.h"
-#include "types/string.h"
 
-#include "draw/types/geometry.h"
-#include "modularity/ioc.h"
 #include "../devtools/iengravingelementsprovider.h"
 
 #include "../style/styledef.h"
@@ -34,7 +31,7 @@
 #include "../types/propertyvalue.h"
 #include "../types/types.h"
 
-#include "../infrastructure/rtti.h"
+#include "../infrastructure/rtti.h" // IWYU pragma: export
 #include "../infrastructure/eid.h"
 
 namespace mu::engraving {
@@ -84,6 +81,9 @@ class GuitarBendText;
 class HBox;
 class Hairpin;
 class HairpinSegment;
+class HammerOnPullOff;
+class HammerOnPullOffSegment;
+class HammerOnPullOffText;
 class HarmonicMark;
 class HarmonicMarkSegment;
 class Harmony;
@@ -157,7 +157,6 @@ class StaffTypeChange;
 class Stem;
 class StemSlash;
 class Sticking;
-class StretchedBend;
 class StringTunings;
 class Symbol;
 class System;
@@ -346,7 +345,6 @@ public:
     CONVERT(VBox,          VBOX)
     CONVERT(TBox,          TBOX)
     CONVERT(FBox,          FBOX)
-    CONVERT(Slur,          SLUR)
     CONVERT(Glissando,     GLISSANDO)
     CONVERT(GlissandoSegment,     GLISSANDO_SEGMENT)
     CONVERT(GuitarBend,    GUITAR_BEND)
@@ -370,7 +368,6 @@ public:
     CONVERT(Beam,          BEAM)
     CONVERT(Hook,          HOOK)
     CONVERT(StemSlash,     STEM_SLASH)
-    CONVERT(SlurSegment,   SLUR_SEGMENT)
     CONVERT(LaissezVibSegment,    LAISSEZ_VIB_SEGMENT)
     CONVERT(LaissezVib,    LAISSEZ_VIB)
     CONVERT(PartialTieSegment,    PARTIAL_TIE_SEGMENT)
@@ -384,7 +381,6 @@ public:
     CONVERT(Hairpin,       HAIRPIN)
     CONVERT(HairpinSegment, HAIRPIN_SEGMENT)
     CONVERT(Bend,          BEND)
-    CONVERT(StretchedBend, STRETCHED_BEND)
     CONVERT(TremoloBar,    TREMOLOBAR)
     CONVERT(MeasureRepeat, MEASURE_REPEAT)
     CONVERT(Tuplet,        TUPLET)
@@ -457,6 +453,9 @@ public:
     CONVERT(TimeTickAnchor, TIME_TICK_ANCHOR)
     CONVERT(Parenthesis, PARENTHESIS)
     CONVERT(ShadowNote, SHADOW_NOTE)
+    CONVERT(HammerOnPullOff, HAMMER_ON_PULL_OFF)
+    CONVERT(HammerOnPullOffSegment, HAMMER_ON_PULL_OFF_SEGMENT)
+    CONVERT(HammerOnPullOffText, HAMMER_ON_PULL_OFF_TEXT)
 #undef CONVERT
 
     virtual bool isEngravingItem() const { return false; }   // overridden in element.h
@@ -484,6 +483,16 @@ public:
                || isPedalSegment()
                || isVoltaSegment()
                || isNoteLineSegment();
+    }
+
+    bool isSlur() const
+    {
+        return type() == ElementType::SLUR || type() == ElementType::HAMMER_ON_PULL_OFF;
+    }
+
+    bool isSlurSegment() const
+    {
+        return type() == ElementType::SLUR_SEGMENT || type() == ElementType::HAMMER_ON_PULL_OFF_SEGMENT;
     }
 
     bool isLineSegment() const
@@ -626,7 +635,8 @@ static inline SlurTieSegment* toSlurTieSegment(EngravingObject* e)
 {
     assert(
         e == 0 || e->type() == ElementType::SLUR_SEGMENT || e->type() == ElementType::TIE_SEGMENT
-        || e->type() == ElementType::LAISSEZ_VIB_SEGMENT || e->type() == ElementType::PARTIAL_TIE_SEGMENT);
+        || e->type() == ElementType::LAISSEZ_VIB_SEGMENT || e->type() == ElementType::PARTIAL_TIE_SEGMENT
+        || e->type() == ElementType::HAMMER_ON_PULL_OFF_SEGMENT);
     return (SlurTieSegment*)e;
 }
 
@@ -634,7 +644,8 @@ static inline const SlurTieSegment* toSlurTieSegment(const EngravingObject* e)
 {
     assert(
         e == 0 || e->type() == ElementType::SLUR_SEGMENT || e->type() == ElementType::TIE_SEGMENT
-        || e->type() == ElementType::LAISSEZ_VIB_SEGMENT || e->type() == ElementType::PARTIAL_TIE_SEGMENT);
+        || e->type() == ElementType::LAISSEZ_VIB_SEGMENT || e->type() == ElementType::PARTIAL_TIE_SEGMENT
+        || e->type() == ElementType::HAMMER_ON_PULL_OFF_SEGMENT);
     return (const SlurTieSegment*)e;
 }
 
@@ -706,13 +717,13 @@ static inline const StaffTextBase* toStaffTextBase(const EngravingObject* e)
 
 static inline Bend* toBend(EngravingObject* e)
 {
-    assert(e == 0 || e->isBend() || e->isStretchedBend());
+    assert(e == 0 || e->isBend());
     return (Bend*)e;
 }
 
 static inline const Bend* toBend(const EngravingObject* e)
 {
-    assert(e == 0 || e->isBend() || e->isStretchedBend());
+    assert(e == 0 || e->isBend());
     return (const Bend*)e;
 }
 
@@ -805,7 +816,6 @@ CONVERT(MeasureNumber)
 CONVERT(MMRestRange)
 CONVERT(Hairpin)
 CONVERT(HairpinSegment)
-CONVERT(StretchedBend)
 CONVERT(TremoloBar)
 CONVERT(MeasureRepeat)
 CONVERT(MMRest)
@@ -877,5 +887,8 @@ CONVERT(PartialLyricsLine)
 CONVERT(PartialLyricsLineSegment)
 CONVERT(Parenthesis)
 CONVERT(ShadowNote)
+CONVERT(HammerOnPullOff)
+CONVERT(HammerOnPullOffSegment)
+CONVERT(HammerOnPullOffText)
 #undef CONVERT
 }

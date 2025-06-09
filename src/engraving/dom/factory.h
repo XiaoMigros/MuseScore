@@ -70,9 +70,6 @@ public:
     static Bend* createBend(Note* parent, bool isAccessibleEnabled = true);
     static std::shared_ptr<Bend> makeBend(Note* parent);
 
-    static StretchedBend* createStretchedBend(Chord* parent, bool isAccessibleEnabled = true);
-    static StretchedBend* copyStretchedBend(const StretchedBend& src);
-
     static Bracket* createBracket(EngravingItem* parent, bool isAccessibleEnabled = true);
     static std::shared_ptr<Bracket> makeBracket(EngravingItem* parent);
     static BracketItem* createBracketItem(EngravingItem* parent);
@@ -240,6 +237,9 @@ public:
 
     static Hairpin* createHairpin(EngravingItem* parent, bool isAccessibleEnabled = true);
     static std::shared_ptr<Hairpin> makeHairpin(EngravingItem* parent);
+
+    static HammerOnPullOff* createHammerOnPullOff(EngravingItem* parent, bool isAccessibleEnabled = true);
+    static std::shared_ptr<HammerOnPullOff> makeHammerOnPullOff(EngravingItem* parent);
 
     static Glissando* createGlissando(EngravingItem* parent, bool isAccessibleEnabled = true);
     static std::shared_ptr<Glissando> makeGlissando(EngravingItem* parent);
