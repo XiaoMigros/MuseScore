@@ -2818,17 +2818,16 @@ void Note::verticalDrag(EditData& ed)
 
     NoteEditData* ned   = static_cast<NoteEditData*>(ed.getData(this).get());
 
-    double _spatium      = spatium();
-    bool tab            = st->isTabStaff();
-    double step          = _spatium * (tab ? st->lineDistance().val() : 0.5);
-    int lineOffset      = lrint(ed.moveDelta.y() / step);
+    bool tab = st->isTabStaff();
+    double step = spatium() * st->lineDistance().val() * (tab ? 1.0 : 0.5);
+    int lineOffset = lrint(ed.moveDelta.y() / step);
 
     if (lineOffset == 0) {
         return;
     }
 
     if (tab) {
-        const StringData* strData = staff()->part()->stringData(_tick, stf->idx());
+        const StringData* strData = part()->stringData(_tick, stf->idx());
         const int pitchOffset = stf->pitchOffset(_tick);
         int nString = ned->string + (st->upsideDown() ? -lineOffset : lineOffset);
         int nFret   = strData->fret(m_pitch + pitchOffset, nString, staff());
