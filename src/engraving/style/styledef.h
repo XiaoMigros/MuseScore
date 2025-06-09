@@ -116,6 +116,9 @@ enum class Sid {
     lyricsMelismaMinLength,
     lyricsDashPosAtStartOfSystem,
     lyricsAvoidBarlines,
+    lyricsLimitDashCount,
+    lyricsMaxDashCount,
+    lyricsCenterDashedSyllables,
 
     lyricsOddFontFace,
     lyricsOddFontSize,
@@ -483,6 +486,10 @@ enum class Sid {
 
     keySigCourtesyBarlineMode,
     timeSigCourtesyBarlineMode,
+
+    barlineBeforeSigChange,
+    doubleBarlineBeforeKeySig,
+    doubleBarlineBeforeTimeSig,
 
     swingRatio,
     swingUnit,
@@ -905,6 +912,26 @@ enum class Sid {
     rhGuitarFingeringFrameFgColor,
     rhGuitarFingeringFrameBgColor,
     rhGuitarFingeringOffset,
+
+    hammerOnPullOffTappingFontFace,
+    hammerOnPullOffTappingFontSize,
+    hammerOnPullOffTappingLineSpacing,
+    hammerOnPullOffTappingFontSpatiumDependent,
+    hammerOnPullOffTappingFontStyle,
+    hammerOnPullOffTappingColor,
+    hammerOnPullOffTappingAlign,
+    hammerOnPullOffTappingFrameType,
+    hammerOnPullOffTappingFramePadding,
+    hammerOnPullOffTappingFrameWidth,
+    hammerOnPullOffTappingFrameRound,
+    hammerOnPullOffTappingFrameFgColor,
+    hammerOnPullOffTappingFrameBgColor,
+    hammerOnPullOffTappingOffset,
+
+    hopoShowOnStandardStaves,
+    hopoShowOnTabStaves,
+    hopoUpperCase,
+    hopoShowAll,
 
     stringNumberFontFace,
     stringNumberFontSize,
