@@ -2823,6 +2823,10 @@ void Note::verticalDrag(EditData& ed)
     double step          = _spatium * (tab ? st->lineDistance().val() : 0.5);
     int lineOffset      = lrint(ed.moveDelta.y() / step);
 
+    if (lineOffset == 0) {
+        return;
+    }
+
     if (tab) {
         const StringData* strData = staff()->part()->stringData(_tick, stf->idx());
         const int pitchOffset = stf->pitchOffset(_tick);
