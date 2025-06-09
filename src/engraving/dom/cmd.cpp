@@ -1998,9 +1998,6 @@ void Score::upDown(bool up, UpDownMode mode)
                 Note* firstTiedNote = oNote->firstTiedNote();
                 int newLine = firstTiedNote->line() + (up ? -1 : 1);
                 Staff* vStaff = score()->staff(firstTiedNote->chord()->vStaffIdx());
-                Key vKey = vStaff->key(tick);
-                Key cKey = vStaff->concertKey(tick);
-                Interval interval = vStaff->part()->instrument(tick)->transpose();
 
                 bool error = false;
                 AccidentalVal accOffs = firstTiedNote->chord()->measure()->findAccidental(
@@ -2014,14 +2011,13 @@ void Score::upDown(bool up, UpDownMode mode)
 
                 if (testPitch <= 127 && testPitch > 0) {
                     newPitch = testPitch;
-                    if (!firstTiedNote->concertPitch()) {
-                        newPitch += interval.chromatic;
+                    newTpc1 = newTpc2 = step2tpc(nStep % 7, accOffs);
+                    if (firstTiedNote->concertPitch()) {
+                        newTpc2 = firstTiedNote->transposeTpc(newTpc1);
                     } else {
-                        interval.flip();
-                        vKey = transposeKey(cKey, interval, vStaff->part()->preferSharpFlat());
+                        newPitch += vStaff->transpose(tick).chromatic;
+                        newTpc1 = firstTiedNote->transposeTpc(newTpc2);
                     }
-                    newTpc1 = pitch2tpc(newPitch, cKey, Prefer::NEAREST);
-                    newTpc2 = pitch2tpc(newPitch - firstTiedNote->transposition(), vKey, Prefer::NEAREST);
                 }
             }
             break;
@@ -3295,18 +3291,17 @@ void Score::cmdIncDecDuration(int nSteps, bool stepDotted)
     ChordRest* cr = toChordRest(el);
 
     // if measure rest is selected as input, then the correct initialDuration will be the
-    // duration of the measure's time signature, else is just the input state's duration
-    TDuration initialDuration;
-    if (cr->durationType() == DurationType::V_MEASURE) {
+    // duration of the measure's time signature, else is just the ChordRest's duration
+    TDuration initialDuration = cr->durationType();
+    if (initialDuration == DurationType::V_MEASURE) {
         initialDuration = TDuration(cr->measure()->timesig(), true);
 
         if (initialDuration.fraction() < cr->measure()->timesig() && nSteps > 0) {
             // Duration already shortened by truncation; shorten one step less
             --nSteps;
         }
-    } else {
-        initialDuration = m_is.duration();
     }
+
     TDuration d = (nSteps != 0) ? initialDuration.shiftRetainDots(nSteps, stepDotted) : initialDuration;
     if (!d.isValid()) {
         return;
