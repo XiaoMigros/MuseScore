@@ -25,9 +25,12 @@
 #include "engraving/dom/property.h"
 #include "engraving/dom/undo.h"
 
+#include <QQmlListProperty>
+
 // api
 #include "apistructs.h"
 #include "part.h"
+#include "scoreelement.h"
 
 #include "log.h"
 
@@ -63,6 +66,16 @@ QRectF EngravingItem::bbox() const
     RectF bbox = element()->ldata()->bbox();
     qreal spatium = element()->spatium();
     return QRectF(bbox.x() / spatium, bbox.y() / spatium, bbox.width() / spatium, bbox.height() / spatium);
+}
+
+QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
+{
+    mu::engraving::EngravingItemList list = element()->childrenItems(all);
+    std::vector<mu::engraving::EngravingItem*> eList;
+    for (mu::engraving::EngravingItem* el : list) {
+        eList.emplace_back(el);
+    }
+    return wrapContainerProperty<EngravingItem>(this, eList);
 }
 
 //---------------------------------------------------------
