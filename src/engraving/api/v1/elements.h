@@ -109,16 +109,6 @@ class EngravingItem : public apiv1::ScoreElement
      */
     Q_PROPERTY(apiv1::EngravingItem * parent READ parent)
     /**
-     * Children of this element. Does not include children of children.
-     * \since 4.6
-     */
-    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem>* children READ children)
-    /**
-     * Children of this element, including children of children.
-     * \since 4.6
-     */
-    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem>* allChildren READ allChildren)
-    /**
      * Staff which this element belongs to.
      * \since MuseScore 3.5
      */
@@ -745,27 +735,6 @@ class EngravingItem : public apiv1::ScoreElement
     apiv1::EngravingItem* parent() const { return wrap(element()->parentItem()); }
     Staff* staff() { return wrap<Staff>(element()->staff()); }
 
-    QQmlListProperty<apiv1::EngravingItem>* children() const
-    {
-        mu::engraving::EngravingItemList list = element()->childrenItems(false);
-        QQmlListProperty<apiv1::EngravingItem>* eList = nullptr;
-        for (size_t i = 0; i < list.size(); ++i) {
-            eList->append(eList, wrap(list.at(i)));
-        }
-        //return wrapContainerProperty<EngravingItem>(this, eList);
-        return eList;
-    }
-
-    QQmlListProperty<apiv1::EngravingItem>* allChildren() const
-    {
-        mu::engraving::EngravingItemList list = element()->childrenItems(true);
-        /*QQmlListProperty<apiv1::EngravingItem>* eList;
-        for (size_t i = 0; i < list.size(); ++i) {
-            eList->append(eList, wrap(list.at(i)));
-        }*/
-        return wrapContainerProperty<EngravingItem>(this, list);
-    }
-
     QRectF bbox() const;
 
     int subtype() const { return element()->subtype(); }
@@ -784,6 +753,10 @@ public:
     const mu::engraving::EngravingItem* element() const { return toEngravingItem(e); }
     /// \}
     /// \endcond
+
+    /// All children for a given element. If \p all is true, children of children are counted too.
+    /// \param all whether to include children of children
+    Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all);
 
     /// Create a copy of the element
     Q_INVOKABLE apiv1::EngravingItem* clone() const { return wrap(element()->clone(), Ownership::PLUGIN); }

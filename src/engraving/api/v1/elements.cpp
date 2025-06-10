@@ -25,9 +25,12 @@
 #include "engraving/dom/property.h"
 #include "engraving/dom/undo.h"
 
+#include <QQmlListProperty>
+
 // api
 #include "fraction.h"
 #include "part.h"
+#include "scoreelement.h"
 
 #include "log.h"
 
@@ -69,6 +72,16 @@ void EngravingItem::setEID(QString eid)
 {
     EID id = EID::fromStdString(eid.toStdString());
     element()->setEID(id);
+}
+
+QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
+{
+	mu::engraving::EngravingItemList list = element()->childrenItems(all);
+	std::vector<mu::engraving::EngravingItem*> eList;
+	for (mu::engraving::EngravingItem* el : list) {
+		eList.emplace_back(el);
+	}
+	return wrapContainerProperty<EngravingItem>(this, eList);
 }
 
 //---------------------------------------------------------
