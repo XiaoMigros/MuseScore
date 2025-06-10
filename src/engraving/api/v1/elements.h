@@ -689,6 +689,14 @@ class EngravingItem : public apiv1::ScoreElement
 
     int subtype() const { return element()->subtype(); }
 
+    /**
+    * If the element points upwards.
+    * Valid for: Chords, stems, beams, ties, slurs, guitar bends, tremolos, articulations
+    * \since MuseScore 4.6
+    */
+    Q_PROPERTY(bool up READ up)
+    bool up() const;
+
 public:
     /// \cond MS_INTERNAL
     EngravingItem(mu::engraving::EngravingItem* e = nullptr, Ownership own = Ownership::PLUGIN)
@@ -1020,9 +1028,6 @@ class Chord : public ChordRest
     /// The PlayEventType of the chord.
     /// \since MuseScore 3.3
     Q_PROPERTY(mu::engraving::PlayEventType playEventType READ playEventType WRITE setPlayEventType)
-    /// If the chord points upwards.
-    /// \since MuseScore 4.6
-    Q_PROPERTY(bool up READ up)
 
     API_PROPERTY(noStem,                  NO_STEM)
     ///\since MuseScore 4.6
@@ -1047,7 +1052,6 @@ public:
     mu::engraving::NoteType noteType() { return chord()->noteType(); }
     mu::engraving::PlayEventType playEventType() { return chord()->playEventType(); }
     void setPlayEventType(mu::engraving::PlayEventType v);
-    bool up() { return chord()->up(); }
 
     static void addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingItem* el);
     /// \endcond
