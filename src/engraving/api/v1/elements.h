@@ -147,6 +147,13 @@ class EngravingItem : public apiv1::ScoreElement
      * \since MuseScore 3.5
      */
     Q_PROPERTY(QPointF pagePos READ pagePos)
+    /**
+     * For spanner segments: Position of its end part,
+     * including manual offset through \ref userOff2.
+     * \see EngravingItem::userOff2
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QPointF pos2 READ pos2)
 
     /**
      * Bounding box of this element.
@@ -711,6 +718,14 @@ class EngravingItem : public apiv1::ScoreElement
     qreal posY() const { return element()->pos().y() / element()->spatium(); }
 
     QPointF pagePos() const { return PointF(element()->pagePos() / element()->spatium()).toQPointF(); }
+
+    QPointF pos2() const
+    {
+        if (element()->isSpannerSegment()) {
+            return PointF(toSpannerSegment(element())->pos2() / element()->spatium()).toQPointF();
+        }
+        return QPointF();
+    }
 
     apiv1::EngravingItem* parent() const { return wrap(element()->parentItem()); }
     Staff* staff() { return wrap<Staff>(element()->staff()); }
