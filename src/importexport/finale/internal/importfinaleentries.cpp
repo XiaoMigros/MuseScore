@@ -437,7 +437,7 @@ static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t
     Fraction timeStretch = measure->score()->staff(track2staff(curTrackIdx))->timeStretch(m->tick());
     for (ReadableTuplet tuplet : tremoloMap) {
         Chord* c1 = measure->findChord(measure->tick() + tuplet.startTick, curTrackIdx); // timestretch?
-        Chord* c2 = measure->findChord(measure->tick() + (tuplet.startTick + tuplet.endTick) / 2, curTrackIdx);
+        Chord* c2 = measure->findChord(measure->tick() + ((tuplet.startTick + tuplet.endTick) / 2), curTrackIdx);
         IF_ASSERT_FAILED(c1 && c2 && c1->ticks() == c2->ticks()) {
             continue;
         }
