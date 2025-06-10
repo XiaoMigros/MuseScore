@@ -28,8 +28,6 @@ Note* Tie::startNote() { return wrap<Note>(toTie(e)->startNote()); }
 
 Note* Tie::endNote() { return wrap<Note>(toTie(e)->endNote()); }
 
-bool Tie::up() { return toTie(e)->up(); }
-
 bool Tie::isInside() { return toTie(e)->isInside(); }
 
 Tie* mu::engraving::apiv1::tieWrap(mu::engraving::Tie* tie) { return wrap<Tie>(tie); }

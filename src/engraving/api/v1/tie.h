@@ -44,9 +44,6 @@ class Tie : public EngravingItem
     /// The ending note of the tie.
     /// \since MuseScore 3.3
     Q_PROPERTY(apiv1::Note * endNote READ endNote)
-    /// Whether the tie points upwards.
-    /// \since MuseScore 4.6
-    Q_PROPERTY(bool up READ up)
     /// Whether the placement is inside.
     /// \since MuseScore 4.6
     Q_PROPERTY(bool isInside READ isInside)
@@ -59,7 +56,6 @@ public:
 
     Note* startNote();
     Note* endNote();
-    bool up();
     bool isInside();
 
     /// \endcond
