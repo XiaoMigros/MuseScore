@@ -22,7 +22,11 @@
 
 #include "elements.h"
 
+#include "engraving/dom/guitarbend.h"
 #include "engraving/dom/property.h"
+#include "engraving/dom/slur.h"
+#include "engraving/dom/spacer.h"
+#include "engraving/dom/tremolotwochord.h"
 #include "engraving/dom/undo.h"
 
 #include <QQmlListProperty>
@@ -77,6 +81,32 @@ void EngravingItem::setEID(QString eid)
 QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
 {
 	return wrapContainerProperty<EngravingItem>(this, element()->childrenItems(all));
+}
+
+bool EngravingItem::up() const
+{
+    if (element()->isChordRest()) {
+        return toChordRest(element())->ldata()->up;
+    } else if (element()->isStem()) {
+        return toStem(element())->up();
+    } else if (element()->isSlur()) {
+        return toSlur(element())->up();
+    } else if (element()->isTie()) {
+        return toTie(element())->up();
+    } else if (element()->isSlurTieSegment()) {
+        return toSlurTieSegment(element())->slurTie()->up();
+    } else if (element()->isArticulation()) {
+        return toArticulation(element())->ldata()->up;
+    } else if (element()->isGuitarBend()) {
+        return toGuitarBend(element())->ldata()->up();
+    } else if (element()->isGuitarBendSegment()) {
+        return toGuitarBendSegment(element())->guitarBend()->ldata()->up();
+    } else if (element()->isBeam()) {
+        return toBeam(element())->up();
+    } else if (element()->type() == mu::engraving::ElementType::TREMOLO_TWOCHORD) {
+        return item_cast<const TremoloTwoChord*>(element())->up();
+    }
+    return false;
 }
 
 //---------------------------------------------------------
