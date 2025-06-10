@@ -349,9 +349,18 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     } else {
         Rest* rest = Factory::createRest(segment, d);
 
-        for (size_t i = 0; i < currentEntry->notes.size(); ++i) {
-            // NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, i);
-            /// @todo calculate y-offset here (remember is also staff-dependent)
+        if (!currentEntry->floatRest && !currentEntry->notes.empty()) {
+            NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, 0);
+            if (noteInfoPtr->getNoteId() == musx::dom::Note::RESTID) {
+                /// @todo test other staff line configurations that 5 lines. (Finale reference line is not always the top line, e.g. 1-line staves.)
+                /// @todo correctly calculate default rest position in multi-voice situation.
+                auto [pitchClass, octave, alteration, staffPosition] = noteInfoPtr.calcNoteProperties();
+                int linePosition = 2 * rest->computeNaturalLine(targetStaff->lines(rest->tick()));
+                rest->ryoffset() = double(-staffPosition - linePosition) * targetStaff->staffType(rest->tick())->lineDistance().val() / 2.0;
+                rest->setAutoplace(false);
+            } else {
+                logger()->logWarning(String(u"Rest found with unexpected note ID"), m_doc, noteInfoPtr.getEntryInfo().getStaff(), noteInfoPtr.getEntryInfo().getMeasure());
+            }
         }
         cr = toChordRest(rest);
     }
@@ -425,9 +434,10 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
 static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t curTrackIdx, Measure* measure)
 {
     /// @todo account for invalid durations
+    Fraction timeStretch = measure->score()->staff(track2staff(curTrackIdx))->timeStretch(m->tick());
     for (ReadableTuplet tuplet : tremoloMap) {
-        Chord* c1 = measure->findChord(measure->tick() + tuplet.startTick, curTrackIdx);
-        Chord* c2 = measure->findChord(measure->tick() + ((tuplet.startTick + tuplet.endTick) / 2), curTrackIdx);
+        Chord* c1 = measure->findChord(measure->tick() + tuplet.startTick, curTrackIdx); // timestretch?
+        Chord* c2 = measure->findChord(measure->tick() + (tuplet.startTick + tuplet.endTick) / 2, curTrackIdx);
         IF_ASSERT_FAILED(c1 && c2 && c1->ticks() == c2->ticks()) {
             continue;
         }
@@ -440,7 +450,7 @@ static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t
 
         // now we have to set the correct duration for the chords to 
         // fill the space (and account for any tuplets they may be in)
-        Fraction d = c2->tick() - c1->tick();
+        Fraction d = (c2->tick() - c1->tick()) * timeStretch;
         for (Tuplet* t = c1->tuplet(); t; t = t->tuplet()) {
             d *= t->ratio();
         }
@@ -591,6 +601,7 @@ void FinaleParser::importEntries()
                         logger()->logWarning(String(u"Encountered incorrectly mapped voice ID for layer %1").arg(int(layer) + 1), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
                         continue;
                     }
+
                     track_idx_t curTrackIdx = curStaffIdx * VOICES + voiceOff;
 
                     // generate tuplet map, tremolo map and create tuplets
