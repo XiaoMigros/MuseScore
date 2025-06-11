@@ -756,7 +756,7 @@ public:
 
     /// All children for a given element. If \p all is true, children of children are counted too.
     /// \param all whether to include children of children
-    Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all);
+    Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all = false);
 
     /// Create a copy of the element
     Q_INVOKABLE apiv1::EngravingItem* clone() const { return wrap(element()->clone(), Ownership::PLUGIN); }
