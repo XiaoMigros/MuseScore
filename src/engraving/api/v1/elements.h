@@ -749,6 +749,13 @@ class EngravingItem : public apiv1::ScoreElement
     */
     Q_PROPERTY(bool up READ up)
     bool up() const;
+    /**
+     * \brief Current tick for this element
+     * \returns Tick of this element, i.e. number of ticks from the beginning
+     * of the score to this element. Not valid for all elements.
+     * \see \ref ticklength
+     */
+    Q_PROPERTY(int tick READ tick)
 
 public:
     /// \cond MS_INTERNAL
@@ -772,6 +779,8 @@ public:
     Q_INVOKABLE QString subtypeName() const { return element()->translatedSubtypeUserName().toQString(); }
     /// Deprecated: same as ScoreElement::name. Left for compatibility purposes.
     Q_INVOKABLE QString _name() const { return name(); }
+
+    int tick() const { return element()->tick().ticks(); }
 };
 
 //---------------------------------------------------------
