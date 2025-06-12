@@ -173,16 +173,16 @@ void NotationActionController::init()
     registerAction("add-tenuto", [this]() { toggleArticulation(SymbolId::articTenutoAbove); });
     registerAction("add-staccato", [this]() { toggleArticulation(SymbolId::articStaccatoAbove); });
 
-    registerAction("duplet", [this]() { putTuplet(2); }, &Controller::noteOrRestSelected);
-    registerAction("triplet", [this]() { putTuplet(3); }, &Controller::noteOrRestSelected);
-    registerAction("quadruplet", [this]() { putTuplet(4); }, &Controller::noteOrRestSelected);
-    registerAction("quintuplet", [this]() { putTuplet(5); }, &Controller::noteOrRestSelected);
-    registerAction("sextuplet", [this]() { putTuplet(6); }, &Controller::noteOrRestSelected);
-    registerAction("septuplet", [this]() { putTuplet(7); }, &Controller::noteOrRestSelected);
-    registerAction("octuplet", [this]() { putTuplet(8); }, &Controller::noteOrRestSelected);
-    registerAction("nonuplet", [this]() { putTuplet(9); }, &Controller::noteOrRestSelected);
-    registerAction("custom-tuplet", &Controller::putTuplet, &Controller::noteOrRestSelected);
-    registerAction("tuplet-dialog", &Controller::openTupletOtherDialog, &Controller::noteOrRestSelected);
+    registerAction("duplet", [this]() { putTuplet(2); }, &Controller::hasSelection);
+    registerAction("triplet", [this]() { putTuplet(3); }, &Controller::hasSelection);
+    registerAction("quadruplet", [this]() { putTuplet(4); }, &Controller::hasSelection);
+    registerAction("quintuplet", [this]() { putTuplet(5); }, &Controller::hasSelection);
+    registerAction("sextuplet", [this]() { putTuplet(6); }, &Controller::hasSelection);
+    registerAction("septuplet", [this]() { putTuplet(7); }, &Controller::hasSelection);
+    registerAction("octuplet", [this]() { putTuplet(8); }, &Controller::hasSelection);
+    registerAction("nonuplet", [this]() { putTuplet(9); }, &Controller::hasSelection);
+    registerAction("custom-tuplet", &Controller::putTuplet, &Controller::hasSelection);
+    registerAction("tuplet-dialog", &Controller::openTupletOtherDialog, &Controller::hasSelection);
 
     registerAction("put-note", &Controller::putNote);
     registerAction("remove-note", &Controller::removeNote);
@@ -970,8 +970,9 @@ void NotationActionController::putTuplet(const TupletOptions& options)
         return;
     }
 
-    if (!interaction->canAddTupletToSelectedChordRests()) {
-        interactive()->error(muse::trc("notation", "Cannot create tuplet"), muse::trc("notation", "Note value is too short"));
+    if (!interaction->canAddTupletToSelectedChordRests(options)) {
+        interactive()->error(muse::trc("notation", "Cannot create tuplet"),
+                             muse::trc("notation", "Note value is too short or tuplet is invalid for selected range"));
         return;
     }
 

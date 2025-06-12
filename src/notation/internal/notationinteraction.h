@@ -210,7 +210,7 @@ public:
     void toggleArticulationForSelection(SymbolId articulationSymbolId) override;
     void toggleDotsForSelection(Pad dots) override;
     void addGraceNotesToSelectedNotes(GraceNoteType type) override;
-    bool canAddTupletToSelectedChordRests() const override;
+    bool canAddTupletToSelectedChordRests(const TupletOptions& options) const override;
     void addTupletToSelectedChordRests(const TupletOptions& options) override;
     void addBeamToSelectedChordRests(BeamMode mode) override;
 

@@ -494,8 +494,6 @@ void Cursor::addTuplet(FractionWrapper* ratio, FractionWrapper* duration)
         return;
     }
 
-    _score->changeCRlen(cr, fDuration);
-
     mu::engraving::Tuplet* tuplet = new mu::engraving::Tuplet(tupletMeasure);
     tuplet->setParent(tupletMeasure);
     tuplet->setTrack(track());

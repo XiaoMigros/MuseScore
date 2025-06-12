@@ -698,7 +698,7 @@ void NotationNoteInput::addTuplet(const TupletOptions& options)
             ratio.setDenominator(mu::engraving::Tuplet::computeTupletDenominator(ratio.numerator(), inputState.ticks()));
         }
         score()->changeCRlen(chordRest, inputState.duration());
-        score()->addTuplet(chordRest, ratio, options.numberType, options.bracketType);
+        score()->addTuplet(chordRest, chordRest->ticks(), ratio, options.numberType, options.bracketType);
     }
     apply();
 

@@ -5343,16 +5343,34 @@ void NotationInteraction::addGraceNotesToSelectedNotes(GraceNoteType type)
     apply();
 }
 
-bool NotationInteraction::canAddTupletToSelectedChordRests() const
+bool NotationInteraction::canAddTupletToSelectedChordRests(const TupletOptions& options) const
 {
-    for (ChordRest* chordRest : score()->getSelectedChordRests()) {
-        if (chordRest->isGrace() || (chordRest->isChord() && toChord(chordRest)->isTrillCueNote())) {
-            continue;
+    if (selection()->isRange()) {
+        const INotationSelectionRangePtr range = selection()->range();
+        if (!selection()->canCopy() || range->measureRange().endMeasure != range->measureRange().startMeasure) {
+            return false;
+        }
+        Fraction dur(range->endTick() - range->startTick());
+        Fraction ratio = options.ratio;
+        if (options.autoBaseLen) {
+            ratio.setDenominator(dur.reduced().numerator());
+        }
+        return mu::engraving::TDuration::isValid(dur / ratio.denominator());
+    } else {
+        std::set<ChordRest*> selectedChordRests = score()->getSelectedChordRests();
+        if (selectedChordRests.empty()) {
+            return false;
         }
 
-        if (chordRest->durationType() < mu::engraving::TDuration(mu::engraving::DurationType::V_512TH)
-            && chordRest->durationType() != mu::engraving::TDuration(mu::engraving::DurationType::V_MEASURE)) {
-            return false;
+        for (ChordRest* chordRest : selectedChordRests) {
+            if (chordRest->isGrace() || (chordRest->isChord() && toChord(chordRest)->isTrillCueNote())) {
+                continue;
+            }
+
+            if (chordRest->durationType() < mu::engraving::TDuration(mu::engraving::DurationType::V_512TH)
+                && chordRest->durationType() != mu::engraving::TDuration(mu::engraving::DurationType::V_MEASURE)) {
+                return false;
+            }
         }
     }
 
@@ -5367,13 +5385,28 @@ void NotationInteraction::addTupletToSelectedChordRests(const TupletOptions& opt
 
     startEdit(TranslatableString("undoableAction", "Add tuplet"));
 
-    for (ChordRest* chordRest : score()->getSelectedChordRests()) {
-        if (!chordRest->isGrace() && !(chordRest->isChord() && toChord(chordRest)->isTrillCueNote())) {
-            Fraction ratio = options.ratio;
-            if (options.autoBaseLen) {
-                ratio.setDenominator(Tuplet::computeTupletDenominator(ratio.numerator(), chordRest->ticks()));
+    if (selection()->isRange()) {
+        const INotationSelectionRangePtr range = selection()->range();
+        Fraction dur(range->endTick() - range->startTick());
+        Fraction ratio = options.ratio;
+        if (options.autoBaseLen) {
+            ratio.setDenominator(dur.reduced().numerator());
+        }
+        for (ChordRest* cr : score()->getSelectedChordRests()) {
+            if (cr->tick() != range->startTick()) {
+                continue;
             }
-            score()->addTuplet(chordRest, ratio, options.numberType, options.bracketType);
+            score()->addTuplet(cr, dur, ratio, options.numberType, options.bracketType);
+        }
+    } else {
+        for (ChordRest* chordRest : score()->getSelectedChordRests()) {
+            if (!chordRest->isGrace() && !(chordRest->isChord() && toChord(chordRest)->isTrillCueNote())) {
+                Fraction ratio = options.ratio;
+                if (options.autoBaseLen) {
+                    ratio.setDenominator(Tuplet::computeTupletDenominator(ratio.numerator(), chordRest->ticks()));
+                }
+                score()->addTuplet(chordRest, chordRest->ticks(), ratio, options.numberType, options.bracketType);
+            }
         }
     }
 
