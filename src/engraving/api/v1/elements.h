@@ -1003,6 +1003,13 @@ class ChordRest : public DurationElement
     * \since MuseScore 4.6
     */
     Q_PROPERTY(bool isWholeRest READ isWholeRest)
+    /**
+     * \brief Current tick for this ChordRest
+     * \returns Tick of this ChordRest, i.e. number of ticks from the beginning
+     * of the score to this ChordRest.
+     * \see \ref ticklength
+     */
+    Q_PROPERTY(int tick READ tick)
 
 public:
     /// \cond MS_INTERNAL
@@ -1015,6 +1022,8 @@ public:
     EngravingItem* beam() { return wrap(chordRest()->beam()); }
 
     bool isWholeRest() { return chordRest()->isRest() ? toRest(chordRest())->isWholeRest() : false; }
+
+    int tick() const { return chordRest()->segment()->tick().ticks(); }
     /// \endcond
 };
 
