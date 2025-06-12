@@ -4249,26 +4249,37 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
         return;
     }
 
-    if (ocr->tuplet()) {
+    if (ocr->tuplet() && ocr->tuplet()->ticks() >= tuplet->ticks()) {
         tuplet->setTuplet(ocr->tuplet());
     }
 
     bool single = tuplet->ticks().reduced() == ocr->ticks().reduced();
 
     std::vector<ChordRest*> crsToCopy;
+    std::vector<Tuplet*> tupletsToRemove;
     Fraction localTick(0, 1);
     for (Segment* seg = ocr->segment(); seg && seg->tick() < endTick; seg = seg->next1MM(SegmentType::ChordRest)) {
         ChordRest* e = toChordRest(seg->element(track));
         if (!e) {
             continue;
         }
-        removeChordRest(e, false);
         localTick += e->ticks();
-        if (localTick < localTicks) {
+        if (e->tuplet() && e->tuplet() != tuplet->tuplet()) {
+            tupletsToRemove.emplace_back(e->tuplet());
+        } else {
+            removeChordRest(e, false);
+        }
+        if (localTick <= localTicks) {
             crsToCopy.emplace_back(e);
         } else {
+            if (localTick > localTicks) {
+                setRest(endTick, tuplet->track(), localTick - localTicks, true, nullptr);
+            }
             break;
         }
+    }
+    for (Tuplet* t : tupletsToRemove) {
+        cmdDeleteTuplet(t, false);
     }
 
     for (size_t i = 0; i < crsToCopy.size(); ++i) {
@@ -4307,7 +4318,7 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
         l -= dd.fraction();
     }
     if (l.numerator() != 0) {
-        // LOGD("Tuplet missing following fraction:: %s", l.toString().toStdString());
+        // LOGD("Tuplet missing following fraction:: %s", std::to_string(l.toString()));
     }
 
     std::reverse(dList.begin(), dList.end());
