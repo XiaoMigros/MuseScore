@@ -131,10 +131,11 @@ enum class KerningType : unsigned char
 {
     KERNING,
     NON_KERNING,
-    LIMITED_KERNING,
+    KERN_UNTIL_LEFT_EDGE,
+    KERN_UNTIL_CENTER,
+    KERN_UNTIL_RIGHT_EDGE,
     SAME_VOICE_LIMIT,
     ALLOW_COLLISION,
-    NOT_SET,
 };
 
 class EngravingItemList : public std::list<EngravingItem*>
@@ -433,6 +434,9 @@ public:
     bool autoplace() const;
     virtual void setAutoplace(bool v) { setFlag(ElementFlag::NO_AUTOPLACE, !v); }
     bool addToSkyline() const { return !(m_flags & (ElementFlag::INVISIBLE | ElementFlag::NO_AUTOPLACE)) && !ldata()->isSkipDraw(); }
+
+    bool verticalAlign() const { return m_verticalAlign; }
+    void setVerticalAlign(bool v) { m_verticalAlign = v; }
 
     PropertyValue getProperty(Pid) const override;
     bool setProperty(Pid, const PropertyValue&) override;
@@ -736,6 +740,8 @@ private:
     mutable ElementFlags m_flags;
 
     bool m_colorsInversionEnabled = true;
+
+    bool m_verticalAlign = false;
 
     mutable LayoutData* m_layoutData = nullptr;
 };

@@ -27,7 +27,6 @@
 #include "global/types/number.h"
 #include "draw/fontmetrics.h"
 
-#include "iengravingconfiguration.h"
 #include "infrastructure/rtti.h"
 #include "infrastructure/ld_access.h"
 
@@ -69,6 +68,7 @@
 #include "dom/guitarbend.h"
 
 #include "dom/hairpin.h"
+#include "dom/hammeronpulloff.h"
 #include "dom/harppedaldiagram.h"
 #include "dom/harmonicmark.h"
 #include "dom/harmony.h"
@@ -128,8 +128,6 @@
 #include "dom/stemslash.h"
 #include "dom/sticking.h"
 #include "dom/stringtunings.h"
-#include "dom/stretchedbend.h"
-#include "dom/bsymbol.h"
 #include "dom/symbol.h"
 #include "dom/system.h"
 #include "dom/systemdivider.h"
@@ -154,7 +152,6 @@
 #include "dom/whammybar.h"
 
 #include "accidentalslayout.h"
-#include "arpeggiolayout.h"
 #include "autoplace.h"
 #include "beamlayout.h"
 #include "chordlayout.h"
@@ -205,8 +202,6 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
         break;
     case ElementType::BEND:
         layoutBend(item_cast<const Bend*>(item), static_cast<Bend::LayoutData*>(ldata));
-        break;
-    case ElementType::STRETCHED_BEND:   layoutStretchedBend(item_cast<StretchedBend*>(item), ctx);
         break;
     case ElementType::HBOX:
         layoutHBox(item_cast<const HBox*>(item), static_cast<HBox::LayoutData*>(ldata), ctx);
@@ -275,6 +270,12 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
     case ElementType::HAIRPIN:          layoutHairpin(item_cast<Hairpin*>(item), ctx);
         break;
     case ElementType::HAIRPIN_SEGMENT:  layoutHairpinSegment(item_cast<HairpinSegment*>(item), ctx);
+        break;
+    case ElementType::HAMMER_ON_PULL_OFF: layoutHammerOnPullOff(item_cast<HammerOnPullOff*>(item), ctx);
+        break;
+    case ElementType::HAMMER_ON_PULL_OFF_SEGMENT: layoutHammerOnPullOffSegment(item_cast<HammerOnPullOffSegment*>(item), ctx);
+        break;
+    case ElementType::HAMMER_ON_PULL_OFF_TEXT: layoutHammerOnPullOffText(item_cast<HammerOnPullOffText*>(item), ctx);
         break;
     case ElementType::HARP_DIAGRAM:
         layoutHarpPedalDiagram(item_cast<const HarpPedalDiagram*>(item), static_cast<HarpPedalDiagram::LayoutData*>(ldata));
@@ -1465,23 +1466,24 @@ void TLayout::layoutFBox(const FBox* item, FBox::LayoutData* ldata, const Layout
 
     ldata->setPos(PointF());
 
-    const std::vector<FretDiagram*>& fretDiagrams = item->fretDiagrams();
-    if (fretDiagrams.empty()) {
-        return;
+    const ElementList& elements = item->el();
+
+    std::vector<FretDiagram*> fretDiagrams;
+    for (EngravingItem* element : elements) {
+        if (!element || !element->isFretDiagram() || !element->visible()) {
+            continue;
+        }
+
+        fretDiagrams.emplace_back(toFretDiagram(element));
     }
 
     //! NOTE: layout fret diagrams and calculate sizes
 
     const size_t totalDiagrams = fretDiagrams.size();
-    double maxFretDiagramHeight = 0.0;
     double maxFretDiagramWidth = 0.0;
 
     for (size_t i = 0; i < totalDiagrams; ++i) {
         FretDiagram* fretDiagram = fretDiagrams[i];
-        if (!fretDiagram) {
-            continue;
-        }
-
         fretDiagram->setUserMag(item->diagramScale());
 
         Harmony* harmony = fretDiagram->harmony();
@@ -1490,47 +1492,61 @@ void TLayout::layoutFBox(const FBox* item, FBox::LayoutData* ldata, const Layout
 
         layoutItem(fretDiagram, const_cast<LayoutContext&>(ctx));
 
-        double height = fretDiagram->ldata()->bbox().height() + fretDiagram->harmony()->ldata()->harmonyHeight
-                        + ctx.conf().styleMM(Sid::harmonyFretDist);
         double width = fretDiagram->ldata()->bbox().width();
-
-        maxFretDiagramHeight = std::max(maxFretDiagramHeight, height);
         maxFretDiagramWidth = std::max(maxFretDiagramWidth, width);
     }
 
     //! NOTE: table view layout
 
-    double cellWidth = maxFretDiagramWidth;
-    double cellHeight = maxFretDiagramHeight;
-
-    ldata->cellWidth = cellWidth;
-    ldata->cellHeight = cellHeight;
-
     const double spatium = item->spatium();
-
     const size_t chordsPerRow = item->chordsPerRow();
     const double rowGap = item->rowGap().val() * spatium;
     const double columnGap = item->columnGap().val() * spatium;
 
-    const size_t rows = std::ceil(double(totalDiagrams) / double(chordsPerRow));
+    //! The height of each row is determined by the height of the tallest cell in that row
+    std::vector<double> rowHeights;
+    for (size_t i = 0; i < totalDiagrams; i += chordsPerRow) {
+        size_t itemsInRow = std::min(chordsPerRow, totalDiagrams - i);
+        double maxRowHeight = 0.0;
+
+        for (size_t j = 0; j < itemsInRow; ++j) {
+            FretDiagram* fretDiagram = fretDiagrams[i + j];
+
+            RectF fretRect = fretDiagram->ldata()->bbox();
+
+            const Harmony::LayoutData* harmonyLdata = fretDiagram->harmony()->ldata();
+            RectF harmonyRect = harmonyLdata->bbox();
+            harmonyRect.moveTo(harmonyLdata->pos());
+
+            double height = fretRect.united(harmonyRect).height();
+            maxRowHeight = std::max(maxRowHeight, height);
+        }
+
+        rowHeights.push_back(maxRowHeight);
+    }
+
+    const double cellWidth = maxFretDiagramWidth;
+    const size_t rows = rowHeights.size();
     const size_t columns = std::min(totalDiagrams, chordsPerRow);
 
-    static constexpr double MARGINS = 8.0;
-    const double totalTableHeight = rows * cellHeight + (rows - 1) * rowGap + MARGINS;
-    const double totalTableWidth = cellWidth * columns + (columns - 1) * columnGap + MARGINS;
+    double totalTableHeight = 0.0;
+    for (size_t i = 0; i < rows; ++i) {
+        totalTableHeight += rowHeights[i];
+        if (i > 0) {
+            totalTableHeight += rowGap;
+        }
+    }
+
+    if (muse::RealIsNull(totalTableHeight)) {
+        totalTableHeight = item->minHeight();
+    }
+
+    const double totalTableWidth = cellWidth * columns + (columns - 1) * columnGap;
 
     ldata->totalTableHeight = totalTableHeight;
     ldata->totalTableWidth = totalTableWidth;
 
-    PropertyValue heightProperty = item->getProperty(Pid::BOX_HEIGHT);
-    PropertyValue heightDefaultProperty = item->propertyDefault(Pid::BOX_HEIGHT);
-
-    double boxHeight = totalTableHeight;
-    if (heightProperty.isValid() && heightProperty != heightDefaultProperty) {
-        boxHeight = item->absoluteFromSpatium(item->boxHeight());
-    }
-
-    ldata->setBbox(0.0, 0.0, parentSystem->ldata()->bbox().width(), boxHeight);
+    ldata->setBbox(0.0, 0.0, parentSystem->ldata()->bbox().width(), totalTableHeight);
 
     AlignH alignH = item->contentHorizontallAlignment();
     const double leftMargin = item->getProperty(Pid::LEFT_MARGIN).toDouble() * spatium;
@@ -1543,11 +1559,10 @@ void TLayout::layoutFBox(const FBox* item, FBox::LayoutData* ldata, const Layout
                           : alignH == AlignH::RIGHT ? item->width() - totalTableWidth : 0.0;
     const double startY = !muse::RealIsNull(topMargin) ? topMargin : -bottomMargin;
 
+    const double shapeMarginAboveDiagram = ctx.conf().styleMM(Sid::harmonyFretDist).val() * 1.5;
+
     for (size_t i = 0; i < totalDiagrams; ++i) {
         FretDiagram* fretDiagram = fretDiagrams[i];
-        if (!fretDiagram) {
-            continue;
-        }
 
         size_t row = i / chordsPerRow;
         size_t col = i % chordsPerRow;
@@ -1560,10 +1575,15 @@ void TLayout::layoutFBox(const FBox* item, FBox::LayoutData* ldata, const Layout
                             : leftMargin + spatium;
 
         double x = startX + rowOffsetX + col * (cellWidth + columnGap);
-        double y = startY + row * (cellHeight + rowGap);
+
+        double y = startY;
+        for (size_t r = 0; r < row; ++r) {
+            y += rowHeights[r] + rowGap;
+        }
 
         double fretDiagramX = x;
-        double fretDiagramY = y + fretDiagram->harmony()->ldata()->harmonyHeight + ctx.conf().styleMM(Sid::harmonyFretDist);
+        double fretDiagramY = y + fretDiagram->harmony()->ldata()->harmonyHeight + shapeMarginAboveDiagram;
+
         fretDiagram->mutldata()->setPos(PointF(fretDiagramX, fretDiagramY));
     }
 }
@@ -2130,7 +2150,7 @@ void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata, con
 
         if (e->isChord()) {
             const Chord* chord = toChord(e);
-            x = chord->x() + chord->centerX();
+            x = chord->x() + ChordLayout::centerX(chord);
         } else if (e->isRest()) {
             const Rest* rest = toRest(e);
             x = rest->x() + rest->centerX();
@@ -3242,6 +3262,78 @@ void TLayout::layoutHairpin(Hairpin* item, LayoutContext& ctx)
     layoutTextLineBase(item, ctx);
 }
 
+void TLayout::layoutHammerOnPullOff(HammerOnPullOff* item, LayoutContext& ctx)
+{
+    layoutSlur(static_cast<Slur*>(item), ctx);
+}
+
+void TLayout::layoutHammerOnPullOffSegment(HammerOnPullOffSegment* item, LayoutContext& ctx)
+{
+    // The layout of the slur has already been done. Here we layout the H/P letters.
+    item->updateHopoText();
+
+    System* system = item->system();
+    Fraction systemEndTick = system->endTick();
+    Skyline& sk = system->staff(item->staffIdx())->skyline();
+
+    for (HammerOnPullOffText* hopoText : item->hopoText()) {
+        bool above = hopoText->placeAbove();
+
+        Align align;
+        align.vertical = above ? AlignV::BASELINE : AlignV::TOP;
+        align.horizontal = AlignH::HCENTER;
+        hopoText->setAlign(align);
+        layoutItem(hopoText, ctx);
+
+        const Chord* startChord = hopoText->startChord();
+        const Chord* endChord = hopoText->endChord();
+        double startX = startChord->systemPos().x() + startChord->upNote()->headWidth();
+        double endX = startX;
+        if (endChord->tick() < systemEndTick) {
+            endX = endChord->systemPos().x();
+        } else {
+            // The last endChord of this segment is in next system. Use end barline instead.
+            Segment* endSeg = system->lastMeasure()->last(SegmentType::BarLineType);
+            endX = endSeg ? endSeg->systemPos().x() : endX;
+        }
+        if (startChord->stem() && endChord->stem() && startChord->up() == above && endChord->up() == above) {
+            // Mid-way between centered on the notes and centered on the stems
+            endX += (above ? 0.5 : -0.5) * endChord->upNote()->headWidth();
+        }
+        double centerX = 0.5 * (startX + endX);
+
+        double vertPadding = 0.5 * item->spatium();
+        Shape hopoTextShape = hopoText->ldata()->shape().translated(PointF(centerX, 0.0));
+        SkylineLine& skyline = above ? sk.north() : sk.south();
+        double y = above ? -skyline.minDistanceToShapeAbove(hopoTextShape) : skyline.minDistanceToShapeBelow(hopoTextShape);
+        y += above ? -vertPadding : vertPadding;
+        y = above ? std::min(y, -vertPadding) : std::max(y, item->staff()->staffHeight(item->tick()) + vertPadding);
+
+        Note* startNote = above ? startChord->upNote() : startChord->downNote();
+        Note* endNote = above ? endChord->upNote() : endChord->downNote();
+        double yNoteLimit = above ? std::min(startNote->y(), endNote->y()) - 2 * vertPadding
+                            : std::max(startNote->y(), endNote->y()) + 2 * vertPadding;
+        y = above ? std::min(y, yNoteLimit) : std::max(y, yNoteLimit);
+
+        hopoText->mutldata()->setPos(centerX, y);
+
+        hopoTextShape.translateY(y);
+        skyline.add(hopoTextShape);
+    }
+
+    Shape hopoSegmentShape = item->mutldata()->shape();
+    for (HammerOnPullOffText* hopoText : item->hopoText()) {
+        hopoSegmentShape.add(hopoText->ldata()->shape().translated(hopoText->pos()));
+    }
+
+    item->mutldata()->setShape(hopoSegmentShape);
+}
+
+void TLayout::layoutHammerOnPullOffText(HammerOnPullOffText* item, LayoutContext& ctx)
+{
+    layoutBaseTextBase(item, ctx);
+}
+
 void TLayout::fillHairpinSegmentShape(const HairpinSegment* item, HairpinSegment::LayoutData* ldata)
 {
     LAYOUT_CALL_ITEM(item);
@@ -3305,10 +3397,6 @@ void TLayout::layoutHarmony(const Harmony* item, Harmony::LayoutData* ldata, con
     LAYOUT_CALL_ITEM(item);
     LD_INDEPENDENT;
 
-    if (ldata->isValid()) {
-        return;
-    }
-
     if (!item->explicitParent()) {
         ldata->setPos(0.0, 0.0);
         const_cast<Harmony*>(item)->setOffset(0.0, 0.0);
@@ -3344,28 +3432,48 @@ void TLayout::layoutHarmony(const Harmony* item, Harmony::LayoutData* ldata, con
             }
         } else {
             RectF bb;
+            RectF hAlignBox;
             for (TextSegment* ts : item->textList()) {
-                bb.unite(ts->tightBoundingRect().translated(ts->x, ts->y));
+                RectF tsBbox = ts->tightBoundingRect().translated(ts->x(), ts->y());
+                bb.unite(tsBbox);
+
+                if (ts->align()) {
+                    hAlignBox.unite(tsBbox);
+                }
             }
 
             double xx = 0.0;
-            switch (item->align().horizontal) {
-            case AlignH::LEFT:
-                xx = -bb.left();
-                break;
-            case AlignH::HCENTER:
-                xx = -(bb.center().x());
-                break;
-            case AlignH::RIGHT:
-                xx = -bb.right();
-                break;
+            if (fd) {
+                switch (ctx.conf().styleV(Sid::chordAlignmentToFretboard).value<AlignH>()) {
+                case AlignH::LEFT:
+                    xx = -hAlignBox.left();
+                    break;
+                case AlignH::HCENTER:
+                    xx = -(hAlignBox.center().x());
+                    break;
+                case AlignH::RIGHT:
+                    xx = -hAlignBox.right();
+                    break;
+                }
+            } else {
+                switch (item->noteheadAlign()) {
+                case AlignH::LEFT:
+                    xx = -hAlignBox.left();
+                    break;
+                case AlignH::HCENTER:
+                    xx = -(hAlignBox.center().x());
+                    break;
+                case AlignH::RIGHT:
+                    xx = -hAlignBox.right();
+                    break;
+                }
             }
 
             double yy = -bb.y();      // Align::TOP
             if (item->align() == AlignV::VCENTER) {
                 yy = -bb.y() / 2.0;
             } else if (item->align() == AlignV::BASELINE) {
-                yy = 0.0;
+                yy = item->baseLine();
             } else if (item->align() == AlignV::BOTTOM) {
                 yy = -bb.height() - bb.y();
             }
@@ -3377,7 +3485,7 @@ void TLayout::layoutHarmony(const Harmony* item, Harmony::LayoutData* ldata, con
             }
 
             for (TextSegment* ts : item->textList()) {
-                ts->offset = PointF(xx, yy);
+                ts->setOffset(PointF(xx, yy));
             }
 
             ldata->setBbox(bb.translated(xx, yy));
@@ -3385,7 +3493,7 @@ void TLayout::layoutHarmony(const Harmony* item, Harmony::LayoutData* ldata, con
         }
 
         if (fd) {
-            switch (item->align().horizontal) {
+            switch (ctx.conf().styleV(Sid::chordAlignmentToFretboard).value<AlignH>()) {
             case AlignH::LEFT:
                 newPosX = 0.0;
                 break;
@@ -3397,7 +3505,7 @@ void TLayout::layoutHarmony(const Harmony* item, Harmony::LayoutData* ldata, con
                 break;
             }
         } else {
-            switch (item->align().horizontal) {
+            switch (item->noteheadAlign()) {
             case AlignH::LEFT:
                 newPosX = 0.0;
                 break;
@@ -3414,6 +3522,13 @@ void TLayout::layoutHarmony(const Harmony* item, Harmony::LayoutData* ldata, con
     };
 
     auto positionPoint = calculateBoundingRect(item, ldata, ctx);
+
+    if (item->isPolychord()) {
+        for (LineF& line : ldata->polychordDividerLines.mut_value()) {
+            line.setP1(PointF(ldata->bbox().left(), line.y1()));
+            line.setP2(PointF(ldata->bbox().right(), line.y2()));
+        }
+    }
 
     if (item->hasFrame()) {
         item->layoutFrame(ldata);
@@ -4350,7 +4465,7 @@ void TLayout::layoutNote(const Note* item, Note::LayoutData* ldata)
         if (item->ghost()) {
             const_cast<Note*>(item)->setHeadHasParentheses(true, /* addToLinked= */ false, /* generated= */ true);
         } else {
-            const_cast<Note*>(item)->setHeadHasParentheses(false, /* addToLinked= */ false);
+            const_cast<Note*>(item)->setHeadHasParentheses(false, /*addToLinked=*/ false, /* generated= */ true);
         }
 
         double w = item->tabHeadWidth(tab);
@@ -4373,7 +4488,7 @@ void TLayout::layoutNote(const Note* item, Note::LayoutData* ldata)
             if (item->ghost()) {
                 const_cast<Note*>(item)->setHeadHasParentheses(true, /* addToLinked= */ false, /* generated= */ true);
             } else {
-                const_cast<Note*>(item)->setHeadHasParentheses(false, /* addToLinked= */ false);
+                const_cast<Note*>(item)->setHeadHasParentheses(false, /* addToLinked= */ false, /* generated= */ true);
             }
         }
 
@@ -5763,26 +5878,6 @@ void TLayout::layoutSticking(const Sticking* item, Sticking::LayoutData* ldata)
     Autoplace::autoplaceSegmentElement(item, ldata);
 }
 
-void TLayout::layoutStretchedBend(StretchedBend* item, LayoutContext& ctx)
-{
-    LAYOUT_CALL_ITEM(item);
-    item->fillArrows(ctx.conf().styleMM(Sid::bendArrowWidth));
-    item->fillSegments();
-    item->fillStretchedSegments(false);
-
-    item->setbbox(item->calculateBoundingRect());
-    item->setPos(0.0, 0.0);
-}
-
-void TLayout::layoutStretched(StretchedBend* item, LayoutContext& ctx)
-{
-    LAYOUT_CALL_ITEM(item);
-    UNUSED(ctx);
-    item->fillStretchedSegments(true);
-    item->setbbox(item->calculateBoundingRect());
-    item->setPos(0.0, 0.0);
-}
-
 void TLayout::layoutStringTunings(StringTunings* item, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
@@ -7025,7 +7120,7 @@ void TLayout::layoutWhammyBarSegment(WhammyBarSegment* item, LayoutContext& ctx)
     Autoplace::autoplaceSpannerSegment(item, ldata, ctx.conf().spatium());
 }
 
-using LayoutSystemTypes = rtti::TypeList<LyricsLine, Slur, Volta>;
+using LayoutSystemTypes = rtti::TypeList<LyricsLine, Slur, HammerOnPullOff, Volta>;
 
 class LayoutSystemVisitor : public rtti::Visitor<LayoutSystemVisitor>
 {

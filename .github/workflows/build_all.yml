@@ -26,7 +26,7 @@ on:
         required: false
       use_qt69:
         description: 'Use Qt 6.9'
-        default: 'off'
+        default: 'on'
         required: false   
   workflow_call:
     inputs:
@@ -48,6 +48,7 @@ on:
       deploy_backend:
         description: 'Deploy backend: on - deploy'
         default: 'off'
+        type: string
         required: false
       sentry_project:
         description: 'Upload symbols and dumps to Sentry (choose a project): mu4(default for stable build), sandbox'
@@ -56,7 +57,7 @@ on:
         required: false
       use_qt69:
         description: 'Use Qt 6.9'
-        default: 'off'
+        default: 'on'
         type: string
         required: false  
 

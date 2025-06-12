@@ -26,9 +26,6 @@
 
 #include "../../dom/property.h"
 
-#include "global/modularity/ioc.h"
-#include "../../iengravingconfiguration.h"
-
 namespace mu::engraving {
 class EngravingItem;
 class ElementList;
@@ -44,7 +41,6 @@ class BagpipeEmbellishment;
 class BarLine;
 class Beam;
 class Bend;
-class StretchedBend;
 class Box;
 class HBox;
 class VBox;
@@ -75,6 +71,9 @@ class GuitarBend;
 class GuitarBendSegment;
 
 class Hairpin;
+class HammerOnPullOff;
+class HammerOnPullOffSegment;
+class HammerOnPullOffText;
 class Harmony;
 class HarmonicMark;
 class HarpPedalDiagram;
@@ -189,7 +188,6 @@ public:
     static void write(const BarLine* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const Beam* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const Bend* item, XmlWriter& xml, WriteContext& ctx);
-    static void write(const StretchedBend* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const Box* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const HBox* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const VBox* item, XmlWriter& xml, WriteContext& ctx);
@@ -217,6 +215,7 @@ public:
     static void write(const GuitarBend* item, XmlWriter& xml, WriteContext& ctx);
 
     static void write(const Hairpin* item, XmlWriter& xml, WriteContext& ctx);
+    static void write(const HammerOnPullOff* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const Harmony* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const HarmonicMark* item, XmlWriter& xml, WriteContext& ctx);
     static void write(const HarpPedalDiagram* item, XmlWriter& xml, WriteContext& ctx);
@@ -334,6 +333,10 @@ private:
     static void writeProperties(const StaffTextBase* item, XmlWriter& xml, WriteContext& ctx);
     static void writeProperties(const SlurTie* item, XmlWriter& xml, WriteContext& ctx);
     static void writeSlur(const SlurTieSegment* seg, XmlWriter& xml, WriteContext& ctx, int no);
+
+    static void writeProperties(const HammerOnPullOffSegment* seg, XmlWriter& xml, WriteContext& ctx);
+    static void write(const HammerOnPullOffText* item, XmlWriter& xml, WriteContext& ctx, size_t idx);
+
     static void writeProperties(const SLine* item, XmlWriter& xml, WriteContext& ctx);
     static void writeProperties(const GuitarBendSegment* item, XmlWriter& xml, WriteContext& ctx);
     static void writeProperties(const Spanner* item, XmlWriter& xml, WriteContext& ctx);

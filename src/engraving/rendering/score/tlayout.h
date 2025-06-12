@@ -122,6 +122,9 @@ class GradualTempoChange;
 
 class HairpinSegment;
 class Hairpin;
+class HammerOnPullOff;
+class HammerOnPullOffSegment;
+class HammerOnPullOffText;
 class HarmonicMarkSegment;
 
 class LedgerLine;
@@ -152,7 +155,6 @@ class Slur;
 class Spacer;
 class SpannerSegment;
 class StaffLines;
-class StretchedBend;
 class StringTunings;
 
 class BSymbol;
@@ -247,6 +249,9 @@ public:
 
     static void layoutHairpinSegment(HairpinSegment* item, LayoutContext& ctx);
     static void layoutHairpin(Hairpin* item, LayoutContext& ctx);
+    static void layoutHammerOnPullOff(HammerOnPullOff* item, LayoutContext& ctx);
+    static void layoutHammerOnPullOffSegment(HammerOnPullOffSegment* item, LayoutContext& ctx);
+    static void layoutHammerOnPullOffText(HammerOnPullOffText* item, LayoutContext& ctx);
     static void fillHairpinSegmentShape(const HairpinSegment* item, HairpinSegment::LayoutData* ldata);
     static void layoutHarpPedalDiagram(const HarpPedalDiagram* item, HarpPedalDiagram::LayoutData* ldata);
     static void layoutHarmonicMarkSegment(HarmonicMarkSegment* item, LayoutContext& ctx);
@@ -320,8 +325,6 @@ public:
     static void layoutStem(const Stem* item, Stem::LayoutData* ldata, const LayoutConfiguration& conf);
     static void layoutStemSlash(const StemSlash* item, StemSlash::LayoutData* ldata, const LayoutConfiguration& conf);
     static void layoutSticking(const Sticking* item, Sticking::LayoutData* ldata);
-    static void layoutStretchedBend(StretchedBend* item, LayoutContext& ctx);
-    static void layoutStretched(StretchedBend* item, LayoutContext& ctx);
     static void layoutStringTunings(StringTunings* item, LayoutContext& ctx);
     static void layoutSoundFlag(const SoundFlag* item, SoundFlag::LayoutData* ldata);
 

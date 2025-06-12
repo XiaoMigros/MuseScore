@@ -112,6 +112,12 @@ DockWindow::DockWindow(QQuickItem* parent)
 DockWindow::~DockWindow()
 {
     dockWindowProvider()->deinit();
+
+    // Without this, the connections would be deleted by the QObject destructor,
+    // because they are child objects of this. But since they use DockWindow-
+    // specific code (rather than QObject-specific), we need to delete them
+    // before the end of the DockWindow destructor.
+    qDeleteAll(m_pageConnections);
 }
 
 void DockWindow::componentComplete()
@@ -142,7 +148,7 @@ void DockWindow::geometryChange(const QRectF& newGeometry, const QRectF& oldGeom
     //! NOTE: it is important to reset the current minimum width for all top-level toolbars
     //! Otherwise, the window content can be displaced after LayoutWidget::onResize(QSize newSize)
     //! due to lack of free space
-    QList<DockToolBarView*> topToolBars = topLevelToolBars(m_currentPage);
+    const QList<DockToolBarView*> topToolBars = topLevelToolBars(m_currentPage);
     for (DockToolBarView* toolBar : topToolBars) {
         toolBar->setMinimumWidth(toolBar->contentWidth());
     }
@@ -474,7 +480,7 @@ void DockWindow::addDock(DockBase* dock, Location location, const DockBase* rela
 
     KDDockWidgets::DockWidgetBase* relativeDock = relativeTo ? relativeTo->dockWidget() : nullptr;
 
-    auto visibilityOption = dock->isVisible() ? KDDockWidgets::InitialVisibilityOption::StartVisible
+    auto visibilityOption = dock->defaultVisibility() ? KDDockWidgets::InitialVisibilityOption::StartVisible
                             : KDDockWidgets::InitialVisibilityOption::StartHidden;
 
     KDDockWidgets::InitialOption options(visibilityOption, dock->preferredSize());
@@ -559,6 +565,8 @@ bool DockWindow::doLoadPage(const QString& uri, const QVariantMap& params)
         return false;
     }
 
+    newPage->setVisible(true);
+
     loadPageContent(newPage);
     restorePageState(newPage);
     initDocks(newPage);
@@ -569,8 +577,6 @@ bool DockWindow::doLoadPage(const QString& uri, const QVariantMap& params)
 
     connect(m_currentPage, &DockPageView::layoutRequested,
             this, &DockWindow::forceLayout, Qt::UniqueConnection);
-
-    m_currentPage->setVisible(true);
 
     return true;
 }
@@ -818,7 +824,7 @@ void DockWindow::adjustContentForAvailableSpace(DockPageView* page)
     QList<DockBase*> topLevelToolBarsDocks;
 
     for (DockToolBarView* toolBar : topLevelToolBars(page)) {
-        if (!toolBar->dockWidget()->isFloating()) {
+        if (!toolBar->dockWidget()->isFloating() && toolBar->isVisible()) {
             topLevelToolBarsDocks << toolBar;
         }
     }

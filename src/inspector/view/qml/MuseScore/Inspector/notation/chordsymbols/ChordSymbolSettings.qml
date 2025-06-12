@@ -78,6 +78,7 @@ Column {
     }
 
     DropdownPropertyView {
+        id: durationSection
         titleText: qsTrc("inspector", "Duration")
         propertyItem: root.model ? root.model.durationType : null
 
@@ -88,6 +89,72 @@ Column {
             { text: qsTrc("inspector", "Until the next chord symbol"), value: ChordSymbolTypes.DURATION_UNTIL_NEXT_CHORD_SYMBOL },
             { text: qsTrc("inspector", "Until the end of the measure"), value: ChordSymbolTypes.DURATION_STOP_AT_MEASURE_END },
             { text: qsTrc("inspector", "Until the end of the attached duration"), value: ChordSymbolTypes.DURATION_SEGMENT_DURATION }
+        ]
+    }
+
+    FlatButton {
+        width: parent.width
+
+        navigation.name: "AddFretboardDiagram"
+        navigation.panel: root.navigationPanel
+        navigation.row: durationSection.navigationRowEnd + 1
+
+        text: qsTrc("inspector", "Add fretboard diagram")
+        icon: IconCode.FRETBOARD_DIAGRAM
+        orientation: Qt.Horizontal
+
+        visible: root.model ? !root.model.hasLinkedFretboardDiagram : false
+
+        onClicked: {
+            if (root.model) {
+                root.model.addFretboardDiagram()
+            }
+        }
+    }
+
+    PropertyCheckBox {
+        id: hideNoteheadCheckBox
+
+        text: qsTrc("inspector", "Vertically align with symbols on the same system")
+        propertyItem: root.model ? root.model.verticalAlign : null
+
+        navigation.name: "Vertically align with symbols on the same system"
+        navigation.panel: root.navigationPanel
+        navigation.row: durationSection.navigationRowEnd + 1
+    }
+
+    SpinBoxPropertyView {
+        id: bassNoteScale
+
+        titleText: qsTrc("inspector", "Bass note scale")
+        propertyItem: root.model ? root.model.bassScale : null
+
+        step: 1
+        decimals: 0
+        maxValue: 300
+        minValue: 0
+        measureUnitsSymbol: "%"
+
+        navigationName: "Bass note scale"
+        navigationPanel: root.navigationPanel
+        navigationRowStart: hideNoteheadCheckBox.navigationRowEnd + 1
+    }
+
+    FlatRadioButtonGroupPropertyView {
+        id: positionButtonList
+        titleText: qsTrc("inspector", "Position")
+        propertyItem: root.model ? root.model.position : null
+
+        navigationPanel: root.navigationPanel
+        navigationRowStart: bassNoteScale.navigationRowEnd + 1
+
+        requestIconFontSize: 16
+        requestWidth: 98
+
+        model: [
+            { iconCode: IconCode.NOTE_ALIGN_LEFT, value: 0},
+            { iconCode: IconCode.NOTE_ALIGN_CENTER, value: 2},
+            { iconCode: IconCode.NOTE_ALIGN_RIGHT, value: 1 }
         ]
     }
 }

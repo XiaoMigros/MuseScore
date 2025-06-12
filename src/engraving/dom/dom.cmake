@@ -131,6 +131,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/harmonicmark.h
     ${CMAKE_CURRENT_LIST_DIR}/harmony.cpp
     ${CMAKE_CURRENT_LIST_DIR}/harmony.h
+    ${CMAKE_CURRENT_LIST_DIR}/hammeronpulloff.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/hammeronpulloff.h
     ${CMAKE_CURRENT_LIST_DIR}/harppedaldiagram.cpp
     ${CMAKE_CURRENT_LIST_DIR}/harppedaldiagram.h
     ${CMAKE_CURRENT_LIST_DIR}/hook.cpp
@@ -312,8 +314,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/stemslash.h
     ${CMAKE_CURRENT_LIST_DIR}/sticking.cpp
     ${CMAKE_CURRENT_LIST_DIR}/sticking.h
-    ${CMAKE_CURRENT_LIST_DIR}/stretchedbend.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/stretchedbend.h
     ${CMAKE_CURRENT_LIST_DIR}/stringdata.cpp
     ${CMAKE_CURRENT_LIST_DIR}/stringdata.h
     ${CMAKE_CURRENT_LIST_DIR}/stringtunings.cpp

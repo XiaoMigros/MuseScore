@@ -1528,6 +1528,7 @@ void Score::addElement(EngravingItem* element)
     break;
 
     case ElementType::SLUR:
+    case ElementType::HAMMER_ON_PULL_OFF:
         addLayoutFlags(LayoutFlag::PLAY_EVENTS);
     // fall through
 
@@ -1722,6 +1723,7 @@ void Score::removeElement(EngravingItem* element)
         break;
 
     case ElementType::SLUR:
+    case ElementType::HAMMER_ON_PULL_OFF:
         addLayoutFlags(LayoutFlag::PLAY_EVENTS);
     // fall through
 
@@ -3057,14 +3059,12 @@ void Score::cmdConcertPitchChanged(bool flag)
                     continue;
                 }
                 Harmony* h  = toHarmony(e);
-                int rootTpc = transposeTpc(h->rootTpc(), interval, true);
-                int baseTpc = transposeTpc(h->bassTpc(), interval, true);
                 for (EngravingObject* se : h->linkList()) {
                     // don't transpose all links
                     // just ones resulting from mmrests
                     Harmony* he = toHarmony(se);              // toHarmony() does not work as e is an ScoreElement
                     if (he->staff() == h->staff()) {
-                        undoTransposeHarmony(he, rootTpc, baseTpc);
+                        undoTransposeHarmony(he, interval);
                     }
                 }
                 //realized harmony should be invalid after a transpose command

@@ -171,6 +171,8 @@ struct HarmonyDesc
     engraving::Harmony* m_harmony;
     engraving::FretDiagram* m_fretDiagram;
 
+    const engraving::ChordDescription* descr() const;
+
     HarmonyDesc(engraving::track_idx_t m_track, engraving::Harmony* m_harmony, engraving::FretDiagram* m_fretDiagram)
         : m_track(m_track), m_harmony(m_harmony),
         m_fretDiagram(m_fretDiagram) {}
@@ -556,6 +558,7 @@ public:
 
     double totalY() const { return m_defaultY + m_relativeY; }
     muse::String placement() const;
+    void setBpm(const double bpm) { m_tpoSound = bpm; }
 
 private:
     void directionType(std::vector<MusicXmlSpannerDesc>& starts, std::vector<MusicXmlSpannerDesc>& stops);
@@ -622,6 +625,7 @@ private:
     muse::String m_wordsText;
     muse::String m_metroText;
     muse::String m_rehearsalText;
+    muse::String m_justify;
     muse::String m_dynaVelocity;
     muse::String m_sndCoda;
     muse::String m_sndDacapo;

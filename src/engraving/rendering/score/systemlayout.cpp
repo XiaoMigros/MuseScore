@@ -137,7 +137,8 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
     prevMeasureState.curHeader = ctx.state().curMeasure()->header();
     prevMeasureState.curTrailer = ctx.state().curMeasure()->trailer();
 
-    const SystemLock* systemLock = ctx.dom().systemLocks()->lockStartingAt(ctx.state().curMeasure());
+    const SystemLock* systemLock = ctx.conf().viewMode() == LayoutMode::PAGE || ctx.conf().viewMode() == LayoutMode::SYSTEM
+                                   ? ctx.dom().systemLocks()->lockStartingAt(ctx.state().curMeasure()) : nullptr;
 
     while (ctx.state().curMeasure()) {      // collect measure for system
         oldSystem = ctx.mutState().curMeasure()->system();
@@ -882,6 +883,19 @@ void SystemLayout::layoutParenthesisAndBigTimeSigs(const ElementsToLayout& eleme
     }
 }
 
+void SystemLayout::layoutHarmonies(const std::vector<Harmony*> harmonies, System* system, LayoutContext& ctx)
+{
+    for (Harmony* harmony : harmonies) {
+        TLayout::layoutHarmony(harmony, harmony->mutldata(), ctx);
+        Autoplace::autoplaceSegmentElement(harmony, harmony->mutldata());
+    }
+
+    if (ctx.conf().styleB(Sid::verticallyAlignChordSymbols)) {
+        std::vector<EngravingItem*> harmonyItems(harmonies.begin(), harmonies.end());
+        AlignmentLayout::alignItemsForSystem(harmonyItems, system);
+    }
+}
+
 void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
 {
     TRACEFUNC;
@@ -1004,8 +1018,7 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
 
     bool hasFretDiagram = elementsToLayout.fretDiagrams.size() > 0;
     if (!hasFretDiagram) {
-        HarmonyLayout::autoplaceHarmonies(sl);
-        HarmonyLayout::alignHarmonies(system, sl, true, ctx.conf().maxChordShiftAbove(), ctx.conf().maxChordShiftBelow());
+        layoutHarmonies(elementsToLayout.harmonies, system, ctx);
     }
 
     for (StaffText* st : elementsToLayout.staffText) {
@@ -1031,8 +1044,7 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
             }
         }
 
-        HarmonyLayout::autoplaceHarmonies(sl);
-        HarmonyLayout::alignHarmonies(system, sl, false, ctx.conf().maxFretShiftAbove(), ctx.conf().maxFretShiftBelow());
+        layoutHarmonies(elementsToLayout.harmonies, system, ctx);
     }
 
     layoutVoltas(elementsToLayout, ctx);
@@ -1192,6 +1204,9 @@ void SystemLayout::collectElementsToLayout(Measure* measure, ElementsToLayout& e
             case ElementType::PARENTHESIS:
                 elements.parenthesis.push_back(toParenthesis(item));
                 break;
+            case ElementType::HARMONY:
+                elements.harmonies.push_back(toHarmony(item));
+                break;
             default:
                 break;
             }
@@ -1238,6 +1253,7 @@ void SystemLayout::collectSpannersToLayout(ElementsToLayout& elements, const Lay
         } else {
             switch (spanner->type()) {
             case ElementType::SLUR:
+            case ElementType::HAMMER_ON_PULL_OFF:
                 if (!toSlur(spanner)->isCrossStaff()) {
                     elements.slurs.push_back(spanner);
                 }
@@ -1629,6 +1645,9 @@ void SystemLayout::processLines(System* system, LayoutContext& ctx, const std::v
                 continue;
             }
             system->staff(stfIdx)->skyline().add(ss->shape().translate(ss->pos()));
+            if (ss->isHammerOnPullOffSegment()) {
+                TLayout::layoutHammerOnPullOffSegment(toHammerOnPullOffSegment(ss), ctx);
+            }
         }
     }
 }
