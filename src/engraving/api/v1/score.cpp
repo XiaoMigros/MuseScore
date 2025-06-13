@@ -159,9 +159,9 @@ void Score::appendPartByMusicXmlId(const QString& instrumentMusicXmlId)
 //   Score::firstSegment
 //---------------------------------------------------------
 
-Segment* Score::firstSegment()
+Segment* Score::firstSegment(mu::engraving::SegmentType segmentType)
 {
-    return wrap<Segment>(score()->firstSegment(mu::engraving::SegmentType::All), Ownership::SCORE);
+    return wrap<Segment>(score()->firstSegment(segmentType), Ownership::SCORE);
 }
 
 Measure* Score::tick2measure()

@@ -208,7 +208,9 @@ public:
     /// Creates and returns a cursor to be used to navigate in the score
     Q_INVOKABLE apiv1::Cursor* newCursor();
 
-    Q_INVOKABLE apiv1::Segment* firstSegment();   // TODO: segment type
+    /// The first segment of a given type in the score.
+    /// Before MuseScore 4.6, the type could not be specified.
+    Q_INVOKABLE apiv1::Segment* firstSegment(mu::engraving::SegmentType = mu::engraving::SegmentType::All);
     /// \cond MS_INTERNAL
     Segment* lastSegment();
 
@@ -235,22 +237,18 @@ public:
     /// \endcond
 
     /**
-     * For "dock" type plugins: to be used before score
-     * modifications to make them undoable.
+     * For MuseScore 4 and for "dock" type plugins: to be used before score
+     * modifications to make them undoable, and to avoid corruptions or crashes.
      * Starts an undoable command. Must be accompanied by
-     * a corresponding endCmd() call. Should be used at
-     * least once by "dock" type plugins in case they
-     * modify the score.
+     * a corresponding endCmd() call.
      * \param qActionName - Optional action name that appears in Undo/Redo
      * menus, palettes, and lists.
      */
     Q_INVOKABLE void startCmd(const QString& qActionName = {});
     /**
-     * For "dock" type plugins: to be used after score
-     * modifications to make them undoable.
-     * Ends an undoable command. Should be used at least
-     * once by "dock" type plugins in case they modify
-     * the score.
+     * For MuseScore 4 and for "dock" type plugins: to be used after score
+     * modifications to make them undoable, and to avoid corruptions or crashes.
+     * Ends an undoable command.
      * \param rollback If true, reverts all the changes
      * made since the last startCmd() invocation.
      */
