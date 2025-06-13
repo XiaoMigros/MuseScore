@@ -32,6 +32,7 @@
 
 // api
 #include "excerpt.h"
+#include "fraction.h"
 #include "style.h"
 #include "part.h"
 #include "excerpt.h"
@@ -219,6 +220,10 @@ public:
     Measure* firstMeasureMM();
     Measure* lastMeasure();
     Measure* lastMeasureMM();
+
+    /// The measure at a given tick in the score.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Measure* tick2measure(apiv1::FractionWrapper* f);
 
     QString name() const;
     void setName(const QString& name);

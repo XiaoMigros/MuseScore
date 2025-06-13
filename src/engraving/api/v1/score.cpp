@@ -33,6 +33,7 @@
 
 // api
 #include "cursor.h"
+#include "fraction.h"
 #include "elements.h"
 
 using namespace mu::engraving::apiv1;
@@ -162,6 +163,11 @@ void Score::appendPartByMusicXmlId(const QString& instrumentMusicXmlId)
 Segment* Score::firstSegment(int segmentType)
 {
     return wrap<Segment>(score()->firstSegment(engraving::SegmentType(segmentType)), Ownership::SCORE);
+}
+
+Measure* Score::tick2measure(FractionWrapper* f)
+{
+    return wrap<Measure>(score()->tick2measure(f->fraction()));
 }
 
 //---------------------------------------------------------
