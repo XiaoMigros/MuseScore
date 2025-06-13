@@ -1290,10 +1290,26 @@ public:
 class System : public EngravingItem
 {
     Q_OBJECT
+    /// List of measures and frames in this system.
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> measures READ measures)
     /// The first measure of this system
     Q_PROPERTY(apiv1::Measure * firstMeasure READ firstMeasure)
     /// The last measure of this system
     Q_PROPERTY(apiv1::Measure * lastMeasure READ lastMeasure)
+    /// Indicates whether this system is locked
+    Q_PROPERTY(bool isLocked READ isLocked)
+    /// Indicates whether this system has a page break
+    Q_PROPERTY(bool pageBreak READ pageBreak)
+    /// Bounding box for a given staff.
+    /// \param staffIdx staff number
+    Q_INVOKABLE QRectF bbox(int staffIdx);
+    /// Y position of the bbox relative to the top staff line.
+    /// \param staffIdx staff number
+    Q_INVOKABLE qreal yOffset(int staffIdx);
+    /// Whether the given staff is visible for this system.
+    /// This can differ from \ref Staff.show (e.g. due to 'hide when empty' rules).
+    /// \param staffIdx staff number
+    Q_INVOKABLE bool show(int staffIdx);
 
 public:
     /// \cond MS_INTERNAL
@@ -1303,8 +1319,12 @@ public:
     mu::engraving::System* system() { return toSystem(e); }
     const mu::engraving::System* system() const { return toSystem(e); }
 
+    QQmlListProperty<EngravingItem> measures() { return wrapContainerProperty<EngravingItem>(this, system()->measures()); }
+
     Measure* firstMeasure() { return wrap<Measure>(system()->firstMeasure(), Ownership::SCORE); }
     Measure* lastMeasure() { return wrap<Measure>(system()->lastMeasure(), Ownership::SCORE); }
+    bool isLocked() { return system()->isLocked(); }
+    bool pageBreak() { return system()->pageBreak(); }
     /// \endcond
 };
 
