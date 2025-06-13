@@ -4242,7 +4242,7 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
     track_idx_t track = tuplet->track();
     Measure* measure = tuplet->measure();
     Fraction tick = tuplet->tick();
-    Fraction endTick = tick + tuplet->ticks();
+    Fraction endTick = tick + tuplet->globalTicks();
     Fraction localTicks = tuplet->ticks() * tuplet->ratio();
     Fraction an = localTicks / tuplet->baseLen().fraction();
     if (!an.denominator()) {
@@ -4264,24 +4264,23 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
             continue;
         }
         localTick += e->ticks();
-        if (e->tuplet() && e->tuplet() != tuplet->tuplet()) {
-            tupletsToRemove.emplace_back(e->tuplet());
-        } else {
-            removeChordRest(e, false);
-        }
         if (localTick <= localTicks) {
             crsToCopy.emplace_back(e);
         } else {
-            if (localTick > localTicks) {
-                setRest(endTick, tuplet->track(), localTick - localTicks, true, nullptr);
-            }
             break;
         }
     }
-    for (Tuplet* t : tupletsToRemove) {
-        cmdDeleteTuplet(t, false);
+    if (single) {
+        removeChordRest(ocr, false);
+    } else {
+        // range selection or custom duration (plugin)
+        Segment* startSeg = measure->findSegment(SegmentType::ChordRest, tick);
+        Segment* endSeg = measure->findSegment(SegmentType::ChordRest, endTick);
+        std::vector<ChordRest*> crsToDelete = deleteRange(startSeg, endSeg, track, track, selectionFilter());
+        for (ChordRest* cr : crsToDelete) {
+            removeChordRest(cr, false);
+        }
     }
-
     for (size_t i = 0; i < crsToCopy.size(); ++i) {
         ChordRest* e = crsToCopy[i];
 
