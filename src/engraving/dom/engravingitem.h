@@ -144,6 +144,7 @@ class EngravingItemList : public std::list<EngravingItem*>
 public:
 
     EngravingItem* at(size_t i) const;
+    size_t size() const;
 };
 
 //-------------------------------------------------------------------
