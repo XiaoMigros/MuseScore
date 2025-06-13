@@ -62,7 +62,7 @@ void EngravingItem::setOffsetY(qreal offY)
     set(mu::engraving::Pid::OFFSET, QPointF(offX, offY));
 }
 
-static QRectF scaleRect(RectF rect, double spatium)
+static QRectF scaleRect(const mu::engraving::RectF& rect, double spatium)
 {
 	return QRectF(rect.x() / spatium, rect.y() / spatium, rect.width() / spatium, rect.height() / spatium);
 }
@@ -85,7 +85,7 @@ void EngravingItem::setEID(QString eid)
 
 QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
 {
-	return wrapContainerProperty<EngravingItem>(this, element()->childrenItems(all));
+	return wrapContainerProperty<EngravingItem>(this, &element()->childrenItems(all));
 }
 
 bool EngravingItem::up() const

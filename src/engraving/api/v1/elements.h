@@ -1064,6 +1064,7 @@ public:
         : DurationElement(c, own) {}
 
     mu::engraving::ChordRest* chordRest() { return toChordRest(e); }
+    const mu::engraving::ChordRest* chordRest() const { return toChordRest(e); }
 
     QQmlListProperty<EngravingItem> lyrics() { return wrapContainerProperty<EngravingItem>(this, chordRest()->lyrics()); }   // TODO: special type for Lyrics?
     EngravingItem* beam() { return wrap(chordRest()->beam()); }
