@@ -1104,7 +1104,7 @@ class Segment : public EngravingItem
     // Allowing plugins to change random segments types doesn't seem to be a
     // good idea though.
     /// Type of this segment, one of PluginAPI::PluginAPI::Segment values.
-    Q_PROPERTY(mu::engraving::SegmentType segmentType READ segmentType)
+    Q_PROPERTY(int segmentType READ segmentType)
     /// \brief Current tick for this segment
     /// \returns Tick of this segment, i.e. number of ticks from the beginning
     /// of the score to this segment.
@@ -1122,7 +1122,7 @@ public:
 
     int tick() const { return segment()->tick().ticks(); }
 
-    mu::engraving::SegmentType segmentType() const { return segment()->segmentType(); }
+    int segmentType() const { return int(segment()->segmentType()); }
 
     Segment* nextInScore() { return wrap<Segment>(segment()->next1()); }
     Segment* nextInMeasure() { return wrap<Segment>(segment()->next()); }
