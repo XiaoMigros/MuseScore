@@ -1258,6 +1258,9 @@ class Measure : public EngravingItem
     /// \param staffIdx staff to retrieve the spacer from
     /// \since MuseScore 4.6
     Q_INVOKABLE apiv1::EngravingItem* vspacerDown(int staffIdx);
+    /// List of segments in the measure.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::Segment> segments READ segments)
 
 public:
     /// \cond MS_INTERNAL
@@ -1279,6 +1282,7 @@ public:
     int no() { return measure()->no(); }
 
     QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measure()->el()); }
+    QQmlListProperty<Segment> segments() { return wrapContainerProperty<Segment>(this, measure()->segments()); }
     /// \endcond
 };
 
