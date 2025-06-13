@@ -27,6 +27,7 @@
 #include "engraving/dom/property.h"
 #include "engraving/dom/slur.h"
 #include "engraving/dom/spacer.h"
+#include "engraving/dom/system.h"
 #include "engraving/dom/tremolotwochord.h"
 #include "engraving/dom/undo.h"
 
@@ -61,6 +62,11 @@ void EngravingItem::setOffsetY(qreal offY)
     set(mu::engraving::Pid::OFFSET, QPointF(offX, offY));
 }
 
+static QRectF scaleRect(RectF rect, double spatium)
+{
+	return QRectF(rect.x() / spatium, rect.y() / spatium, rect.width() / spatium, rect.height() / spatium);
+}
+
 //---------------------------------------------------------
 //   EngravingItem::bbox
 //   return the element bbox in spatium units, rather than in raster units as stored internally
@@ -68,9 +74,7 @@ void EngravingItem::setOffsetY(qreal offY)
 
 QRectF EngravingItem::bbox() const
 {
-    RectF bbox = element()->ldata()->bbox();
-    qreal spatium = element()->spatium();
-    return QRectF(bbox.x() / spatium, bbox.y() / spatium, bbox.width() / spatium, bbox.height() / spatium);
+    return scaleRect(element()->ldata()->bbox(), element()->spatium());
 }
 
 void EngravingItem::setEID(QString eid)
@@ -323,6 +327,24 @@ EngravingItem* Measure::vspacerDown(int staffIdx)
     return el ? wrap(el, Ownership::SCORE) : nullptr;
 }
 
+QRectF System::bbox(int staffIdx)
+{
+    mu::engraving::SysStaff* ss = muse::value(system()->staves(), static_cast<staff_idx_t>(staffIdx));
+    return ss ? scaleRect(ss->bbox(), system()->spatium()) : QRectF();
+}
+
+qreal System::yOffset(int staffIdx)
+{
+    mu::engraving::SysStaff* ss = muse::value(system()->staves(), static_cast<staff_idx_t>(staffIdx));
+    return ss ? ss->yOffset() / system()->spatium() : 0.0;
+}
+
+bool System::show(int staffIdx)
+{
+    mu::engraving::SysStaff* ss = muse::value(system()->staves(), static_cast<staff_idx_t>(staffIdx));
+    return ss ? ss->show() : false;
+}
+
 //---------------------------------------------------------
 //   Page::pagenumber
 //---------------------------------------------------------
@@ -384,6 +406,8 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
         return wrap<Segment>(toSegment(e), own);
     case ElementType::MEASURE:
         return wrap<Measure>(toMeasure(e), own);
+    case ElementType::SYSTEM:
+        return wrap<System>(toSystem(e), own);
     case ElementType::PAGE:
         return wrap<Page>(toPage(e), own);
     default:
