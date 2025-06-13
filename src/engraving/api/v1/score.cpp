@@ -164,6 +164,11 @@ Segment* Score::firstSegment()
     return wrap<Segment>(score()->firstSegment(mu::engraving::SegmentType::All), Ownership::SCORE);
 }
 
+Measure* Score::tick2measure()
+{
+    return wrap<Measure>(score()->tick2measure(mu::engraving::Fraction::fromTicks(tick));
+}
+
 //---------------------------------------------------------
 //   Score::lastSegment
 //---------------------------------------------------------
