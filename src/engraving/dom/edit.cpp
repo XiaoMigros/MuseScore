@@ -254,7 +254,8 @@ MeasureRepeat* Score::addMeasureRepeat(const Fraction& tick, track_idx_t track, 
     return mr;
 }
 
-Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, TupletNumberType numberType, TupletBracketType bracketType)
+Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction duration, Fraction ratio, TupletNumberType numberType,
+                         TupletBracketType bracketType)
 {
     if (destinationChordRest->durationType() < TDuration(DurationType::V_512TH)
         && destinationChordRest->durationType() != TDuration(DurationType::V_MEASURE)) {
@@ -266,7 +267,7 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
         return nullptr;
     }
 
-    Fraction f(destinationChordRest->ticks());
+    Fraction f(duration);
     Tuplet* ot  = destinationChordRest->tuplet();
 
     f.reduce();         //measure duration might not be reduced
@@ -4238,54 +4239,97 @@ Hairpin* Score::addHairpinToDynamicOnGripDrag(Dynamic* dynamic, bool isLeftGrip,
 
 void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
 {
-    track_idx_t track = ocr->track();
-    Measure* measure = ocr->measure();
-    Fraction tick = ocr->tick();
-    Fraction an = (tuplet->ticks() * tuplet->ratio()) / tuplet->baseLen().fraction();
+    track_idx_t track = tuplet->track();
+    Measure* measure = tuplet->measure();
+    Fraction tick = tuplet->tick();
+    Fraction endTick = tick + tuplet->globalTicks();
+    Fraction localTicks = tuplet->ticks() * tuplet->ratio();
+    Fraction an = localTicks / tuplet->baseLen().fraction();
     if (!an.denominator()) {
         return;
     }
 
-    if (ocr->tuplet()) {
+    if (ocr->tuplet() && ocr->tuplet()->ticks() >= tuplet->ticks()) {
         tuplet->setTuplet(ocr->tuplet());
     }
-    removeChordRest(ocr, false);
 
-    ChordRest* cr;
-    if (ocr->isChord()) {
-        cr = Factory::createChord(this->dummy()->segment());
-        toChord(cr)->setStemDirection(toChord(ocr)->stemDirection());
-        for (Note* oldNote : toChord(ocr)->notes()) {
-            Note* note = Factory::createNote(toChord(cr));
-            note->setPitch(oldNote->pitch());
-            note->setTpc1(oldNote->tpc1());
-            note->setTpc2(oldNote->tpc2());
-            cr->add(note);
+    bool single = tuplet->ticks().reduced() == ocr->ticks().reduced();
+
+    std::vector<ChordRest*> crsToCopy;
+    std::vector<Tuplet*> tupletsToRemove;
+    Fraction localTick(0, 1);
+    for (Segment* seg = ocr->segment(); seg && seg->tick() < endTick; seg = seg->next1MM(SegmentType::ChordRest)) {
+        ChordRest* e = toChordRest(seg->element(track));
+        if (!e) {
+            continue;
         }
+        localTick += e->ticks();
+        if (localTick <= localTicks) {
+            crsToCopy.emplace_back(e);
+        } else {
+            break;
+        }
+    }
+    if (single) {
+        removeChordRest(ocr, false);
     } else {
-        cr = Factory::createRest(this->dummy()->segment());
+        // range selection or custom duration (plugin)
+        Segment* startSeg = measure->findSegment(SegmentType::ChordRest, tick);
+        Segment* endSeg = measure->findSegment(SegmentType::ChordRest, endTick);
+        std::vector<ChordRest*> crsToDelete = deleteRange(startSeg, endSeg, track, track, selectionFilter());
+        for (ChordRest* cr : crsToDelete) {
+            removeChordRest(cr, false);
+        }
+    }
+    for (size_t i = 0; i < crsToCopy.size(); ++i) {
+        ChordRest* e = crsToCopy[i];
+
+        ChordRest* cr;
+        if (e->isChord()) {
+            cr = Factory::createChord(this->dummy()->segment());
+            toChord(cr)->setStemDirection(toChord(e)->stemDirection());
+            for (Note* oldNote : toChord(e)->notes()) {
+                Note* note = Factory::createNote(toChord(cr));
+                note->setPitch(oldNote->pitch());
+                note->setTpc1(oldNote->tpc1());
+                note->setTpc2(oldNote->tpc2());
+                cr->add(note);
+            }
+        } else {
+            cr = Factory::createRest(this->dummy()->segment());
+        }
+
+        cr->setTuplet(tuplet);
+        cr->setTrack(track);
+        cr->setDurationType(single ? tuplet->baseLen() : e->durationType());
+        cr->setTicks(single ? tuplet->baseLen().fraction() : e->ticks());
+
+        undoAddCR(cr, measure, tick);
+        tick += cr->actualTicks();
     }
 
-    int actualNotes = an.numerator() / an.denominator();
+    Fraction l((endTick - tick) * tuplet->ratio());
+    std::vector<TDuration> dList;
+    for (TDuration dd(l, true, tuplet->baseLen().dots(), tuplet->baseLen().type());
+         dd.isValid() && l.numerator() > 0;
+         dd = TDuration(l, true, tuplet->baseLen().dots(), tuplet->baseLen().type())) {
+        dList.push_back(dd);
+        l -= dd.fraction();
+    }
+    if (l.numerator() != 0) {
+        // LOGD("Tuplet missing following fraction:: %s", std::to_string(l.toString()));
+    }
 
-    tuplet->setTrack(track);
-    cr->setTuplet(tuplet);
-    cr->setTrack(track);
-    cr->setDurationType(tuplet->baseLen());
-    cr->setTicks(tuplet->baseLen().fraction());
+    std::reverse(dList.begin(), dList.end());
 
-    undoAddCR(cr, measure, tick);
-
-    Fraction ticks = cr->actualTicks();
-
-    for (int i = 0; i < (actualNotes - 1); ++i) {
-        tick += ticks;
+    for (size_t i = 0; i < dList.size(); ++i) {
         Rest* rest = Factory::createRest(this->dummy()->segment());
         rest->setTuplet(tuplet);
         rest->setTrack(track);
-        rest->setDurationType(tuplet->baseLen());
-        rest->setTicks(tuplet->baseLen().fraction());
+        rest->setDurationType(dList[i]);
+        rest->setTicks(dList[i].fraction());
         undoAddCR(rest, measure, tick);
+        tick += rest->actualTicks();
     }
 }
 

@@ -203,7 +203,7 @@ public:
     virtual void toggleArticulationForSelection(SymbolId articulationSymbolId) = 0;
     virtual void toggleDotsForSelection(Pad dots) = 0;
     virtual void addGraceNotesToSelectedNotes(GraceNoteType type) = 0;
-    virtual bool canAddTupletToSelectedChordRests() const = 0;
+    virtual bool canAddTupletToSelectedChordRests(const TupletOptions&) const = 0;
     virtual void addTupletToSelectedChordRests(const TupletOptions& options) = 0;
     virtual void addBeamToSelectedChordRests(BeamMode mode) = 0;
 

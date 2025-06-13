@@ -514,7 +514,8 @@ public:
     Chord* addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie, Tuplet* tuplet);
     MeasureRepeat* addMeasureRepeat(const Fraction& tick, track_idx_t track, int numMeasures);
 
-    Tuplet* addTuplet(ChordRest* destinationChordRest, Fraction ratio, TupletNumberType numberType, TupletBracketType bracketType);
+    Tuplet* addTuplet(ChordRest* destinationChordRest, Fraction duration, Fraction ratio, TupletNumberType numberType,
+                      TupletBracketType bracketType);
 
     ChordRest* addClone(ChordRest* cr, const Fraction& tick, const TDuration& d);
     Rest* setRest(const Fraction& tick, track_idx_t track, const Fraction&, bool useDots, Tuplet* tuplet, bool useFullMeasureRest = true);
