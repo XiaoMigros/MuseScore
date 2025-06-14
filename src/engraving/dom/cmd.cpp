@@ -2202,6 +2202,24 @@ void Score::applyAccidentalToInputNotes(AccidentalType accidentalType)
     m_is.setNotes(notes);
 }
 
+static void changeOrnamentAccidental(Ornament* ornament, bool above, AccidentalType idx)
+{
+    Pid whichInterval = above ? Pid::INTERVAL_ABOVE : Pid::INTERVAL_BELOW;
+    OrnamentInterval currInterval = ornament->getProperty(whichInterval).value<OrnamentInterval>();
+    Note* n = above ? ornament->noteAbove() : ornament->noteBelow();
+    Chord* parentChord = ornament->explicitParent() ? toChord(ornament->parent()) : nullptr;
+    const Note* mainNote = parentChord ? parentChord->upNote() : nullptr;
+    if (!mainNote) {
+        return;
+    }
+    IntervalType t = ornament->intervalTypeFromAccidentalType(idx, n, mainNote);
+    bool isSameInterval = t == currInterval.type;
+    currInterval.type = isSameInterval ? IntervalType::AUTO : t;
+    OrnamentShowAccidental showAcc = isSameInterval ? OrnamentShowAccidental::DEFAULT : OrnamentShowAccidental::ALWAYS;
+    ornament->score()->undoChangeProperty(whichInterval, currInterval);
+    ornament->score()->undoChangeProperty(Pid::ORNAMENT_SHOW_ACCIDENTAL, showAcc);
+}
+
 //---------------------------------------------------------
 //   changeAccidental
 ///   Change accidental to subtype \a idx for all selected
@@ -2211,23 +2229,39 @@ void Score::applyAccidentalToInputNotes(AccidentalType accidentalType)
 void Score::changeAccidental(AccidentalType idx)
 {
     for (EngravingItem* item : selection().elements()) {
-        Accidental* accidental = 0;
-        Note* note = 0;
         switch (item->type()) {
-        case ElementType::ACCIDENTAL:
-            accidental = toAccidental(item);
-
-            if (accidental->accidentalType() == idx) {
-                changeAccidental(accidental->note(), AccidentalType::NONE);
-            } else {
+        case ElementType::ACCIDENTAL: {
+            Accidental* accidental = toAccidental(item);
+            if (accidental->note()) {
                 changeAccidental(accidental->note(), idx);
+            } else if (accidental->ornament() && !selection().isRange()) {
+                Ornament* ornament = accidental->ornament();
+                for (size_t i = 0; i < ornament->accidentalsAboveAndBelow().size(); ++i) {
+                    if (ornament->accidentalsAboveAndBelow()[i] == accidental) {
+                        changeOrnamentAccidental(ornament, i == 0, idx);
+                    }
+                }
             }
-
-            break;
-        case ElementType::NOTE:
-            note = toNote(item);
+        }
+        break;
+        case ElementType::NOTE: {
+            Note* note = toNote(item);
             changeAccidental(note, idx);
-            break;
+        }
+        break;
+        case ElementType::ORNAMENT: {
+            if (selection().isRange()) {
+                break;
+            }
+            Ornament* ornament = toOrnament(item);
+            if (ornament->hasIntervalAbove()) {
+                changeOrnamentAccidental(ornament, true, idx);
+            }
+            if (ornament->hasIntervalBelow()) {
+                changeOrnamentAccidental(ornament, false, idx);
+            }
+        }
+        break;
         default:
             break;
         }
@@ -2300,11 +2334,27 @@ static void changeAccidental2(Note* n, int pitch, int tpc)
 void Score::changeAccidental(Note* note, AccidentalType accidental)
 {
     Chord* chord = note->chord();
-    if (!chord) {
+    Segment* segment = chord ? chord->segment() : nullptr;
+    if (!segment) {
         return;
     }
-    Segment* segment = chord->segment();
-    if (!segment) {
+    if (note->isTrillCueNote()) {
+        if (selection().isRange()) {
+            return;
+        }
+        EngravingItem* parentElement = segment->element(chord->track());
+        Chord* parentChord = parentElement->isChord() ? toChord(parentElement) : nullptr;
+        if (parentChord) {
+            Ornament* ornament = parentChord->findOrnament();
+            if (ornament->cueNoteChord() == chord) {
+                if (ornament->hasIntervalAbove()) {
+                    changeOrnamentAccidental(ornament, true, accidental);
+                }
+                if (ornament->hasIntervalBelow()) {
+                    changeOrnamentAccidental(ornament, false, accidental);
+                }
+            }
+        }
         return;
     }
     Measure* measure = segment->measure();

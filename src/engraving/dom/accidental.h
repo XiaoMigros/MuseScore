@@ -67,6 +67,8 @@ public:
 
     Note* note() const { return (explicitParent() && explicitParent()->isNote()) ? toNote(explicitParent()) : 0; }
 
+    Ornament* ornament() const { return (explicitParent() && explicitParent()->isOrnament()) ? toOrnament(explicitParent()) : 0; }
+
     // Score Tree functions
     EngravingObject* scanParent() const override;
 
