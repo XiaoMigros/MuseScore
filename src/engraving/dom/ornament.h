@@ -78,10 +78,11 @@ public:
 
     void setShowCueNote(AutoOnOff show) { m_showCueNote = show; }
 
+    IntervalType intervalTypeFromAccidentalType(AccidentalType accidentalType, Note* note, const Note* mainNote);
+
 private:
     void updateAccidentalsAboveAndBelow();
     void updateCueNote();
-    void mapOldTrillAccidental(Note* note, const Note* mainNote);
     void manageAccidentalVisibilityRules(Note* note);
 
 private:
