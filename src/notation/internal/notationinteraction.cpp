@@ -5230,13 +5230,16 @@ void NotationInteraction::toggleAccidentalForSelection(AccidentalType type)
 
     bool accidentalAlreadyAdded = false;
     for (const EngravingItem* item : score()->selection().elements()) {
-        if (!item->isNote()) {
-            continue;
-        }
-
-        if (toNote(item)->accidentalType() != type) {
-            accidentalAlreadyAdded = false;
-            break;
+        if (item->isNote()) {
+            if (toNote(item)->accidentalType() != type) {
+                accidentalAlreadyAdded = false;
+                break;
+            }
+        } else if (item->isAccidental()) {
+            if (toAccidental(item)->accidentalType() != type) {
+                accidentalAlreadyAdded = false;
+                break;
+            }
         }
 
         accidentalAlreadyAdded = true;

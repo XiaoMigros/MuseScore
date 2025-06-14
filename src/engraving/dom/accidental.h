@@ -66,6 +66,8 @@ public:
     Accidental* clone() const override { return new Accidental(*this); }
 
     Note* note() const { return (explicitParent() && explicitParent()->isNote()) ? toNote(explicitParent()) : 0; }
+	
+    Ornament* ornament() const { return (explicitParent() && explicitParent()->isOrnmanet()) ? toOrnament(explicitParent()) : 0; }
 
     // Score Tree functions
     EngravingObject* scanParent() const override;

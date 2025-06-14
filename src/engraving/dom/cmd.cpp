@@ -2202,6 +2202,25 @@ void Score::applyAccidentalToInputNotes(AccidentalType accidentalType)
     m_is.setNotes(notes);
 }
 
+static void changeOrnamentAccidental(Ornament* ornament, bool above, AccidentalType idx)
+{
+    Pid whichInterval = above ? Pid::INTERVAL_ABOVE : Pid::INTERVAL_BELOW;
+    OrnamentInterval currInterval = ornament->getProperty(whichInterval);
+    Note* n = above ? ornament->noteAbove() ? ornament->noteBelow();
+    Chord* parentChord = ornament->explicitParent() ? toChord(ornament->parent()) : nullptr;
+    const Note* mainNote = parentChord ? parentChord->upNote() : nullptr;
+    IntervalType t = Ornament::intervalTypeFromAccidentalType(idx, n, mainNote);
+    if (t != currInterval.type) {
+        currInterval.step = step;
+        if (currInterval.isPerfect() && (currInterval.type == IntervalType::MAJOR || currInterval.type == IntervalType::MINOR)) {
+            currInterval.type = IntervalType::PERFECT;
+        } else if (!currInterval.isPerfect() && currInterval.type == IntervalType::PERFECT) {
+            currInterval.type = IntervalType::AUTO;
+        }
+        ornament->score()->undoChangeProperty(whichInterval, currInterval);
+    }
+}
+
 //---------------------------------------------------------
 //   changeAccidental
 ///   Change accidental to subtype \a idx for all selected
@@ -2211,23 +2230,39 @@ void Score::applyAccidentalToInputNotes(AccidentalType accidentalType)
 void Score::changeAccidental(AccidentalType idx)
 {
     for (EngravingItem* item : selection().elements()) {
-        Accidental* accidental = 0;
-        Note* note = 0;
         switch (item->type()) {
-        case ElementType::ACCIDENTAL:
-            accidental = toAccidental(item);
-
-            if (accidental->accidentalType() == idx) {
-                changeAccidental(accidental->note(), AccidentalType::NONE);
-            } else {
+        case ElementType::ACCIDENTAL: {
+            Accidental* accidental = toAccidental(item);
+            if (accidental->note()) {
                 changeAccidental(accidental->note(), idx);
+            } else if (accidental->ornament()) {
+                Ornament* ornament = accidental->ornament();
+                for (size_t i = 0; i < ornament->accidentalsAboveAndBelow().size(); ++i) {
+                    if (ornament->accidentalsAboveAndBelow()[i] == accidental) {
+                        changeOrnamentAccidental(ornament, i == 0, idx);
+                    }
+                }
             }
-
-            break;
+        }
+        break;
         case ElementType::NOTE:
-            note = toNote(item);
+            Note* note = toNote(item);
             changeAccidental(note, idx);
-            break;
+        }
+        break;
+        case ElementType::ORNAMENT: {
+            if (selection().isRange()) {
+                break;
+            }
+            Ornament* ornament = toOrnament(item);
+            if (ornament->hasIntervalAbove()) {
+                changeOrnamentAccidental(ornament, true, idx);
+            }
+            if (ornament->hasIntervalBelow()) {
+                changeOrnamentAccidental(ornament, false, idx);
+            }
+        }
+        break;
         default:
             break;
         }
