@@ -295,7 +295,7 @@ void Ornament::computeNotesAboveAndBelow(AccidentalState* accState)
             int intervalSteps = above ? static_cast<int>(_intervalAbove.step) : -static_cast<int>(_intervalBelow.step);
             note->transposeDiatonic(intervalSteps, false, true);
             if (m_trillOldCompatAccidental) {
-                mapOldTrillAccidental(note, mainNote);
+                _intervalAbove.type = intervalTypeFromAccidentalType(m_trillOldCompatAccidental->accidentalType(), note, mainNote);
                 m_trillOldCompatAccidental = nullptr;
             } else {
                 int pitchLine = absStep(note->tpc(), note->epitch());
@@ -437,29 +437,26 @@ SymId Ornament::fromTrillType(TrillType trillType)
     }
 }
 
-void Ornament::mapOldTrillAccidental(Note* note, const Note* mainNote)
+IntervalType Ornament::intervalTypeFromAccidentalType(AccidentalType accidentalType, Note* note, const Note* mainNote)
 {
     // Compatibility with trills pre-4.1
-    AccidentalVal oldCompatValue = Accidental::subtype2value(m_trillOldCompatAccidental->accidentalType());
+    AccidentalVal oldCompatValue = Accidental::subtype2value(accidentalType);
     AccidentalVal noteAccidentalVal = tpc2alter(note->tpc());
     int accidentalDiff = static_cast<int>(oldCompatValue) - static_cast<int>(noteAccidentalVal);
     score()->transpose(note, Interval(0, accidentalDiff), true);
     int semitones = note->pitch() - mainNote->pitch();
     switch (semitones) {
     case 0:
-        _intervalAbove.type = IntervalType::DIMINISHED;
-        break;
+        return IntervalType::DIMINISHED;
     case 1:
-        _intervalAbove.type = IntervalType::MINOR;
-        break;
+        return IntervalType::MINOR;
     case 2:
-        _intervalAbove.type = IntervalType::MAJOR;
-        break;
+        return IntervalType::MAJOR;
     case 3:
-        _intervalAbove.type = IntervalType::AUGMENTED;
-        break;
+        return IntervalType::AUGMENTED;
     default:
         break;
     }
+    return IntervalType::AUTO;
 }
 } // namespace mu::engraving
