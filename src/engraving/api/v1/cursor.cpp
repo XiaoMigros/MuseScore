@@ -28,9 +28,11 @@
 #include "engraving/dom/chord.h"
 #include "engraving/dom/rest.h"
 #include "engraving/dom/note.h"
+#include "engraving/dom/repeatlist.h"
 #include "engraving/dom/stafftext.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/page.h"
+#include "engraving/dom/score.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/segment.h"
 #include "engraving/dom/timesig.h"
@@ -535,13 +537,18 @@ int Cursor::tick()
     return seg ? seg->tick().ticks() : 0;
 }
 
+int Cursor::utick()
+{
+    return m_score->repeatList(true).tick2utick(tick());
+}
+
 //---------------------------------------------------------
 //   time
 //---------------------------------------------------------
 
-double Cursor::time()
+double Cursor::time(bool includeRepeats)
 {
-    return m_score->utick2utime(tick()) * 1000;
+    return m_score->utick2utime(includeRepeats ? utick() : tick()) * 1000;
 }
 
 //---------------------------------------------------------

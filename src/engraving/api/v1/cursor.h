@@ -89,8 +89,11 @@ class Cursor : public QObject
 
     /** MIDI tick position, read only */
     Q_PROPERTY(int tick READ tick)           // FIXME: fraction transition
-    /** Time at tick position, read only */
-    Q_PROPERTY(double time READ time)
+    /**
+     * MIDI tick position, accounting for repeats.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(int utick READ utick)
 
     /** Tempo at current tick, read only */
     Q_PROPERTY(qreal tempo READ tempo)
@@ -198,6 +201,9 @@ public:
 
     Q_INVOKABLE void rewind(RewindMode mode);
     Q_INVOKABLE void rewindToTick(int tick);
+    /** Time at tick position, read only */
+    /** \param includeRepeats since 4.6*/
+    Q_INVOKABLE double time(bool includeRepeats = false);
 
     Q_INVOKABLE bool next();
     Q_INVOKABLE bool nextMeasure();
