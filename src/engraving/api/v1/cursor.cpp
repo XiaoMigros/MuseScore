@@ -535,13 +535,18 @@ int Cursor::tick()
     return seg ? seg->tick().ticks() : 0;
 }
 
+int Cursor::utick()
+{
+    return m_score->repeatList(true).tick2utick(tick());
+}
+
 //---------------------------------------------------------
 //   time
 //---------------------------------------------------------
 
-double Cursor::time()
+double Cursor::time(bool includeRepeats)
 {
-    return m_score->utick2utime(tick()) * 1000;
+    return m_score->utick2utime(includeRepeats ? utick() : tick()) * 1000;
 }
 
 //---------------------------------------------------------
