@@ -1209,7 +1209,65 @@ public:
 //    Measure wrapper
 //---------------------------------------------------------
 
-class Measure : public EngravingItem
+class MeasureBase : public EngravingItem
+{
+    Q_OBJECT
+
+    /**
+     * \brief Measure number, counting from 1.
+     * Number of this measure in the score counting from 1, i.e.
+     * for the first measure its \p no value will be equal to 1.
+     * User-visible measure number can be calculated as
+     * \code
+     * measure.no + measure.noOffset
+     * \endcode
+     * where \p measure is the relevant \ref Measure object.
+     * \since MuseScore 4.6
+     * \see ScoreElement::noOffset
+     */
+    Q_PROPERTY(int no READ no)
+    /**
+     * \brief Current tick for this measure
+     * \returns Tick of this measure, i.e. number of ticks from the beginning
+     * of the score to this measure.
+     * \see \ref ticklength
+     */
+    Q_PROPERTY(int tick READ tick)
+    /// List of measure-related elements: layout breaks, jump/repeat markings etc.
+    /// For frames (since MuseScore 4.6), contains their text elements.
+    /// \since MuseScore 3.3
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
+
+public:
+    /// \cond MS_INTERNAL
+    MeasureBase(mu::engraving::MeasureBase* mb = nullptr, Ownership own = Ownership::SCORE)
+        : EngravingItem(mb, own) {}
+
+    mu::engraving::MeasureBase* measureBase() { return toMeasureBase(e); }
+    const mu::engraving::MeasureBase* measureBase() const { return toMeasureBase(e); }
+
+    int no() { return measureBase()->no(); }
+
+    int tick() const { return measureBase()->tick().ticks(); }
+
+    QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measureBase()->el()); }
+
+    static void addInternal(mu::engraving::MeasureBase* measureBase, mu::engraving::EngravingItem* el);
+    /// \endcond
+
+    /// Add to a MeasureBases's elements.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void add(apiv1::EngravingItem* wrapped);
+    /// Remove a MeasureBase's element.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void remove(apiv1::EngravingItem* wrapped);
+};
+//---------------------------------------------------------
+//   Measure
+//    Measure wrapper
+//---------------------------------------------------------
+
+class Measure : public MeasureBase
 {
     Q_OBJECT
     /// The first segment of this measure
@@ -1240,23 +1298,6 @@ class Measure : public EngravingItem
     /// \since MuseScore 3.6
     Q_PROPERTY(apiv1::Measure * prevMeasureMM READ prevMeasureMM)
 
-    /**
-     * \brief Measure number, counting from 1.
-     * Number of this measure in the score counting from 1, i.e.
-     * for the first measure its \p no value will be equal to 1.
-     * User-visible measure number can be calculated as
-     * \code
-     * measure.no + measure.noOffset
-     * \endcode
-     * where \p measure is the relevant \ref Measure object.
-     * \since MuseScore 4.6
-     * \see ScoreElement::noOffset
-     */
-    Q_PROPERTY(int no READ no)
-    /// List of measure-related elements: layout breaks, jump/repeat markings etc.
-    /// \since MuseScore 3.3
-    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
-
     /// Up spacer for a given staff.
     /// \param staffIdx staff to retrieve the spacer from
     /// \since MuseScore 4.6
@@ -1272,7 +1313,7 @@ class Measure : public EngravingItem
 public:
     /// \cond MS_INTERNAL
     Measure(mu::engraving::Measure* m = nullptr, Ownership own = Ownership::SCORE)
-        : EngravingItem(m, own) {}
+        : MeasureBase(m, own) {}
 
     mu::engraving::Measure* measure() { return toMeasure(e); }
     const mu::engraving::Measure* measure() const { return toMeasure(e); }
@@ -1286,9 +1327,6 @@ public:
     Measure* prevMeasureMM() { return wrap<Measure>(measure()->prevMeasureMM(), Ownership::SCORE); }
     Measure* nextMeasureMM() { return wrap<Measure>(measure()->nextMeasureMM(), Ownership::SCORE); }
 
-    int no() { return measure()->no(); }
-
-    QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measure()->el()); }
     QQmlListProperty<Segment> segments() { return wrapContainerProperty<Segment>(this, measure()->segments()); }
     /// \endcond
 };
@@ -1302,7 +1340,7 @@ class System : public EngravingItem
 {
     Q_OBJECT
     /// List of measures and frames in this system.
-    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> measures READ measures)
+    Q_PROPERTY(QQmlListProperty<apiv1::MeasureBase> measures READ measures)
     /// The first measure of this system
     Q_PROPERTY(apiv1::Measure * firstMeasure READ firstMeasure)
     /// The last measure of this system
@@ -1330,7 +1368,7 @@ public:
     mu::engraving::System* system() { return toSystem(e); }
     const mu::engraving::System* system() const { return toSystem(e); }
 
-    QQmlListProperty<EngravingItem> measures() { return wrapContainerProperty<EngravingItem>(this, system()->measures()); }
+    QQmlListProperty<MeasureBase> measures() { return wrapContainerProperty<MeasureBase>(this, system()->measures()); }
 
     Measure* firstMeasure() { return wrap<Measure>(system()->firstMeasure(), Ownership::SCORE); }
     Measure* lastMeasure() { return wrap<Measure>(system()->lastMeasure(), Ownership::SCORE); }
