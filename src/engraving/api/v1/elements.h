@@ -153,6 +153,11 @@ class EngravingItem : public apiv1::ScoreElement
      */
     Q_PROPERTY(QPointF pagePos READ pagePos)
     /**
+     * Position of this element relative to the canvas (user interface), in spatium units.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QPointF canvasPos READ canvasPos)
+    /**
      * For spanner segments: Position of its end part,
      * including manual offset through \ref userOff2.
      * \see EngravingItem::userOff2
@@ -723,6 +728,7 @@ class EngravingItem : public apiv1::ScoreElement
     qreal posY() const { return element()->pos().y() / element()->spatium(); }
 
     QPointF pagePos() const { return PointF(element()->pagePos() / element()->spatium()).toQPointF(); }
+    QPointF canvasPos() const { return PointF(element()->canvasPos() / element()->spatium()).toQPointF(); }
 
     QPointF pos2() const
     {
