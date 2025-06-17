@@ -312,6 +312,24 @@ void Chord::addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingIte
     chord->score()->undoAddElement(s);
 }
 
+//---------------------------------------------------------
+//   Chord::remove
+//---------------------------------------------------------
+
+void Chord::remove(apiv1::EngravingItem* wrapped)
+{
+    mu::engraving::EngravingItem* s = wrapped->element();
+    if (!s) {
+        LOGW("PluginAPI::Chord::remove: Unable to retrieve element. %s", qPrintable(wrapped->name()));
+    } else if (s->explicitParent() != chord()) {
+        LOGW("PluginAPI::Chord::remove: The element is not a child of this chord. Use removeElement() instead.");
+    } else if (chord()->notes().size() <= 1 && s->type() == ElementType::NOTE) {
+        LOGW("PluginAPI::Chord::remove: Removal of final note is not allowed.");
+    } else {
+        chord()->score()->deleteItem(s);     // Create undo op and remove the element.
+    }
+}
+
 EngravingItem* Measure::vspacerUp(int staffIdx)
 {
     mu::engraving::MStaff* ms = muse::value(measure()->mstaves(), static_cast<staff_idx_t>(staffIdx));
@@ -324,6 +342,45 @@ EngravingItem* Measure::vspacerDown(int staffIdx)
     mu::engraving::MStaff* ms = muse::value(measure()->mstaves(), static_cast<staff_idx_t>(staffIdx));
     mu::engraving::EngravingItem* el = ms ? ms->vspacerDown() : nullptr;
     return el ? wrap(el, Ownership::SCORE) : nullptr;
+}
+
+void MeasureBase::add(apiv1::EngravingItem* wrapped)
+{
+    mu::engraving::EngravingItem* s = wrapped ? wrapped->element() : nullptr;
+    if (s) {
+        // Ensure that the object has the expected ownership
+        if (wrapped->ownership() == Ownership::SCORE) {
+            LOGW("MeasureBase::add: Cannot add this element. The element is already part of the score.");
+            return;              // Don't allow operation.
+        }
+        // Score now owns the object.
+        wrapped->setOwnership(Ownership::SCORE);
+
+        addInternal(measureBase(), s);
+    }
+}
+
+void MeasureBase::addInternal(mu::engraving::MeasureBase* measureBase, mu::engraving::EngravingItem* s)
+{
+    s->setScore(measureBase->score());
+    s->setParent(measureBase);
+    measureBase->score()->undoAddElement(s);
+}
+
+//---------------------------------------------------------
+//   Chord::remove
+//---------------------------------------------------------
+
+void MeasureBase::remove(apiv1::EngravingItem* wrapped)
+{
+    mu::engraving::EngravingItem* s = wrapped->element();
+    if (!s) {
+        LOGW("PluginAPI::MeasureBase::remove: Unable to retrieve element. %s", qPrintable(wrapped->name()));
+    } else if (s->explicitParent() != measureBase()) {
+        LOGW("PluginAPI::MeasureBase::remove: The element is not a child of this measure base. Use removeElement() instead.");
+    } else {
+        measureBase()->score()->deleteItem(s);     // Create undo op and remove the element.
+    }
 }
 
 QRectF System::bbox(int staffIdx)
@@ -351,24 +408,6 @@ bool System::show(int staffIdx)
 int Page::pagenumber() const
 {
     return static_cast<int>(page()->no());
-}
-
-//---------------------------------------------------------
-//   Chord::remove
-//---------------------------------------------------------
-
-void Chord::remove(apiv1::EngravingItem* wrapped)
-{
-    mu::engraving::EngravingItem* s = wrapped->element();
-    if (!s) {
-        LOGW("PluginAPI::Chord::remove: Unable to retrieve element. %s", qPrintable(wrapped->name()));
-    } else if (s->explicitParent() != chord()) {
-        LOGW("PluginAPI::Chord::remove: The element is not a child of this chord. Use removeElement() instead.");
-    } else if (chord()->notes().size() <= 1 && s->type() == ElementType::NOTE) {
-        LOGW("PluginAPI::Chord::remove: Removal of final note is not allowed.");
-    } else {
-        chord()->score()->deleteItem(s);     // Create undo op and remove the element.
-    }
 }
 
 //---------------------------------------------------------
@@ -405,6 +444,11 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
         return wrap<Segment>(toSegment(e), own);
     case ElementType::MEASURE:
         return wrap<Measure>(toMeasure(e), own);
+    case ElementType::HBOX:
+    case ElementType::VBOX:
+    case ElementType::TBOX:
+    case ElementType::FBOX:
+        return wrap<MeasureBase>(toMeasureBase(e), own);
     case ElementType::SYSTEM:
         return wrap<System>(toSystem(e), own);
     case ElementType::PAGE:

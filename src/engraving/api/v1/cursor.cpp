@@ -281,9 +281,7 @@ void Cursor::add(EngravingItem* wrapped)
         case ElementType::HBOX:
         case ElementType::STAFFTYPE_CHANGE:
         case ElementType::LAYOUT_BREAK: {
-            mu::engraving::Measure* m = _segment->measure();
-            s->setParent(m);
-            m_score->undoAddElement(s);
+            MeasureBase::addInternal(_segment->measure());
             break;
         }
 
