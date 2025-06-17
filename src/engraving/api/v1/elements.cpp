@@ -333,15 +333,13 @@ void Chord::remove(apiv1::EngravingItem* wrapped)
 
 EngravingItem* Measure::vspacerUp(int staffIdx)
 {
-    mu::engraving::MStaff* ms = muse::value(measure()->mstaves(), static_cast<staff_idx_t>(staffIdx));
-    mu::engraving::EngravingItem* el = ms ? ms->vspacerUp() : nullptr;
+    mu::engraving::EngravingItem* el = measure()->vspacerUp(static_cast<staff_idx_t>(staffIdx));
     return el ? wrap(el, Ownership::SCORE) : nullptr;
 }
 
 EngravingItem* Measure::vspacerDown(int staffIdx)
 {
-    mu::engraving::MStaff* ms = muse::value(measure()->mstaves(), static_cast<staff_idx_t>(staffIdx));
-    mu::engraving::EngravingItem* el = ms ? ms->vspacerDown() : nullptr;
+    mu::engraving::EngravingItem* el = measure()->vspacerDown(static_cast<staff_idx_t>(staffIdx));
     return el ? wrap(el, Ownership::SCORE) : nullptr;
 }
 
