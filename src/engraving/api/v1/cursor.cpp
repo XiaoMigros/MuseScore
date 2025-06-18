@@ -260,111 +260,123 @@ void Cursor::add(EngravingItem* wrapped)
 
     if (s->isChordRest()) {
         s->score()->undoAddCR(toChordRest(s), _segment->measure(), _segment->tick());
-    } else if (s->type() == ElementType::KEYSIG) {
+        return;
+    }
+    switch (s->type()) {
+    case ElementType::KEYSIG: {
         mu::engraving::Segment* ns = _segment->measure()->undoGetSegment(SegmentType::KeySig, _segment->tick());
         s->setParent(ns);
         m_score->undoAddElement(s);
-    } else if (s->type() == ElementType::TIMESIG) {
+        break;
+    }
+    case ElementType::TIMESIG: {
         mu::engraving::Measure* m = _segment->measure();
         Fraction tick = m->tick();
         m_score->cmdAddTimeSig(m, m_track, toTimeSig(s), false);
         m = m_score->tick2measure(tick);
         _segment = m->first(m_filter);
         nextInTrack();
-    } else {
-        switch (s->type()) {
-        // To be added at measure level
-        case ElementType::MEASURE_NUMBER:
-        case ElementType::SPACER:
-        case ElementType::JUMP:
-        case ElementType::MARKER:
-        case ElementType::HBOX:
-        case ElementType::STAFFTYPE_CHANGE:
-        case ElementType::LAYOUT_BREAK: {
-            MeasureBase::addInternal(_segment->measure());
-            break;
-        }
+        break;
+    }
 
-        // To be added at chord level
-        case ElementType::NOTE:
-        case ElementType::ARPEGGIO:
-        case ElementType::TREMOLO_SINGLECHORD:
-        case ElementType::TREMOLO_TWOCHORD:
-        case ElementType::CHORDLINE:
-        case ElementType::ARTICULATION: {
-            mu::engraving::EngravingItem* curElement = currentElement();
-            if (curElement->isChord()) {
-                // call Chord::addInternal() (i.e. do the same as a call to Chord.add())
-                Chord::addInternal(toChord(curElement), s);
-            }
-            break;
-            break;
-        }
+    // To be added at measurebase level
+    case ElementType::LAYOUT_BREAK: {
+        MeasureBase::addInternal(_segment->measure(), s);
+        break;
+    }
+    // To be added at measure level
+    // todo: insert boxes before/after other boxes correctly
+    case ElementType::MEASURE_NUMBER:
+    case ElementType::SPACER:
+    case ElementType::JUMP:
+    case ElementType::MARKER:
+    case ElementType::HBOX:
+    case ElementType::STAFFTYPE_CHANGE: {
+        mu::engraving::Measure* m = _segment->measure();
+        s->setParent(m);
+        m_score->undoAddElement(s);
+        break;
+    }
 
-        // To be added at chord/rest level
-        case ElementType::LYRICS: {
-            mu::engraving::EngravingItem* curElement = currentElement();
-            if (curElement->isChordRest()) {
-                s->setParent(curElement);
-                m_score->undoAddElement(s);
-            }
-            break;
+    // To be added at chord level
+    case ElementType::NOTE:
+    case ElementType::ARPEGGIO:
+    case ElementType::TREMOLO_SINGLECHORD:
+    case ElementType::TREMOLO_TWOCHORD:
+    case ElementType::CHORDLINE:
+    case ElementType::ARTICULATION: {
+        mu::engraving::EngravingItem* curElement = currentElement();
+        if (curElement->isChord()) {
+            // call Chord::addInternal() (i.e. do the same as a call to Chord.add())
+            Chord::addInternal(toChord(curElement), s);
         }
+        break;
+        break;
+    }
 
-        // To be added to a note (and in case of SYMBOL also to a rest)
-        case ElementType::SYMBOL: {
-            mu::engraving::EngravingItem* curElement = currentElement();
-            if (curElement->isRest()) {
-                s->setParent(curElement);
-                m_score->undoAddElement(s);
-            }
-        } // FALLTHROUGH
-        case ElementType::FINGERING:
-        case ElementType::BEND:
-        case ElementType::NOTEHEAD: {
-            mu::engraving::EngravingItem* curElement = currentElement();
-            if (curElement->isChord()) {
-                mu::engraving::Chord* chord = toChord(curElement);
-                if (!chord->notes().empty()) {
-                    // Get first note from chord to add element
-                    mu::engraving::Note* note = chord->notes().front();
-                    Note::addInternal(note, s);
-                }
-            }
-            break;
-        }
-
-        // To be added to a segment (clef subtype)
-        case ElementType::CLEF:
-        case ElementType::AMBITUS: {
-            mu::engraving::EngravingItem* parent = nullptr;
-            // Find backwards first measure containing a clef
-            for (mu::engraving::Measure* m = _segment->measure(); m; m = m->prevMeasure()) {
-                mu::engraving::Segment* seg = m->findSegment(SegmentType::Clef | SegmentType::HeaderClef, m->tick());
-                if (!seg) {
-                    continue;
-                }
-                parent = m->undoGetSegmentR(s->isAmbitus() ? SegmentType::Ambitus : seg->segmentType(), Fraction(0, 1));
-                break;
-            }
-            if (parent && parent->isSegment()) {
-                if (s->isClef()) {
-                    mu::engraving::Clef* clef = toClef(s);
-                    if (clef->clefType() == mu::engraving::ClefType::INVALID) {
-                        clef->setClefType(mu::engraving::ClefType::G);
-                    }
-                }
-                s->setParent(parent);
-                s->setTrack(m_track);
-                m_score->undoAddElement(s);
-            }
-            break;
-        }
-
-        default:           // All others will be added to the current segment
+    // To be added at chord/rest level
+    case ElementType::LYRICS: {
+        mu::engraving::EngravingItem* curElement = currentElement();
+        if (curElement->isChordRest()) {
+            s->setParent(curElement);
             m_score->undoAddElement(s);
+        }
+        break;
+    }
+
+    // To be added to a note (and in case of SYMBOL also to a rest)
+    case ElementType::SYMBOL: {
+        mu::engraving::EngravingItem* curElement = currentElement();
+        if (curElement->isRest()) {
+            s->setParent(curElement);
+            m_score->undoAddElement(s);
+        }
+    } // FALLTHROUGH
+    case ElementType::FINGERING:
+    case ElementType::BEND:
+    case ElementType::NOTEHEAD: {
+        mu::engraving::EngravingItem* curElement = currentElement();
+        if (curElement->isChord()) {
+            mu::engraving::Chord* chord = toChord(curElement);
+            if (!chord->notes().empty()) {
+                // Get first note from chord to add element
+                mu::engraving::Note* note = chord->notes().front();
+                Note::addInternal(note, s);
+            }
+        }
+        break;
+    }
+
+    // To be added to a segment (clef subtype)
+    case ElementType::CLEF:
+    case ElementType::AMBITUS: {
+        mu::engraving::EngravingItem* parent = nullptr;
+        // Find backwards first measure containing a clef
+        for (mu::engraving::Measure* m = _segment->measure(); m; m = m->prevMeasure()) {
+            mu::engraving::Segment* seg = m->findSegment(SegmentType::Clef | SegmentType::HeaderClef, m->tick());
+            if (!seg) {
+                continue;
+            }
+            parent = m->undoGetSegmentR(s->isAmbitus() ? SegmentType::Ambitus : seg->segmentType(), Fraction(0, 1));
             break;
         }
+        if (parent && parent->isSegment()) {
+            if (s->isClef()) {
+                mu::engraving::Clef* clef = toClef(s);
+                if (clef->clefType() == mu::engraving::ClefType::INVALID) {
+                    clef->setClefType(mu::engraving::ClefType::G);
+                }
+            }
+            s->setParent(parent);
+            s->setTrack(m_track);
+            m_score->undoAddElement(s);
+        }
+        break;
+    }
+
+    default:           // All others will be added to the current segment
+        m_score->undoAddElement(s);
+        break;
     }
 }
 
