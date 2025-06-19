@@ -825,7 +825,7 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(rightStaffSystem->bottom + rightStaffSystem->distanceToPrev + (-staffSystems[i+1]->top))));
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((rightStaffSystem->bottom + 96) + staffSystems[i+1]->distanceToPrev + (-staffSystems[i+1]->top))));
             startMeasure->add(downSpacer);
         }
     }
