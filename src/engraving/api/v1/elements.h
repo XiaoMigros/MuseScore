@@ -757,11 +757,13 @@ class EngravingItem : public apiv1::ScoreElement
     bool up() const;
     /**
      * \brief Current tick for this element
-     * \returns Tick of this element, i.e. number of ticks from the beginning
+     * \returns Tick of this element, i.e. fraction of ticks from the beginning
      * of the score to this element. Not valid for all elements.
+     * For the integer value, call \ref fraction.ticks
      * \see \ref ticklength
+     * \since MuseScore 4.6
      */
-    Q_PROPERTY(int tick READ tick)
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ tick)
 
 public:
     /// \cond MS_INTERNAL
@@ -786,7 +788,7 @@ public:
     /// Deprecated: same as ScoreElement::name. Left for compatibility purposes.
     Q_INVOKABLE QString _name() const { return name(); }
 
-    int tick() const { return element()->tick().ticks(); }
+    FractionWrapper* tick() const;
 };
 
 //---------------------------------------------------------
@@ -1179,6 +1181,15 @@ class Segment : public EngravingItem
      */
     Q_PROPERTY(int tick READ tick)                               // TODO: revise engraving (or this API):
                                                                  // Pid::TICK is relative or absolute in different contexts
+    /**
+     * \brief Current tick fraction for this element
+     * \returns Tick of this element, i.e. fraction of ticks from the beginning
+     * of the score to this element. Not valid for all elements.
+     * For the integer value, call \ref fraction.ticks
+     * \see \ref ticklength
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ fraction)
 
 public:
     /// \cond MS_INTERNAL
@@ -1189,6 +1200,7 @@ public:
     const mu::engraving::Segment* segment() const { return toSegment(e); }
 
     int tick() const { return segment()->tick().ticks(); }
+    FractionWrapper* fraction() const;
 
     mu::engraving::SegmentType segmentType() const { return segment()->segmentType(); }
 
@@ -1232,7 +1244,7 @@ class MeasureBase : public EngravingItem
      * of the score to this measure.
      * \see \ref ticklength
      */
-    Q_PROPERTY(int tick READ tick)
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ tick)
     /// List of measure-related elements: layout breaks, jump/repeat markings etc.
     /// For frames (since MuseScore 4.6), contains their text elements.
     /// \since MuseScore 3.3
@@ -1248,7 +1260,7 @@ public:
 
     int no() { return measureBase()->no(); }
 
-    int tick() const { return measureBase()->tick().ticks(); }
+    FractionWrapper* tick() const;
 
     QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measureBase()->el()); }
 

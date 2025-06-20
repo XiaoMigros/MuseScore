@@ -114,6 +114,11 @@ bool EngravingItem::up() const
     return false;
 }
 
+FractionWrapper* EngravingItem::tick() const
+{
+    return wrap(element()->tick());
+}
+
 //---------------------------------------------------------
 //   Segment::elementAt
 //---------------------------------------------------------
@@ -125,6 +130,11 @@ EngravingItem* Segment::elementAt(int track)
         return nullptr;
     }
     return wrap(el, Ownership::SCORE);
+}
+
+FractionWrapper* Segment::fraction() const
+{
+    return wrap(segment()->tick());
 }
 
 //---------------------------------------------------------
@@ -341,6 +351,11 @@ EngravingItem* Measure::vspacerDown(int staffIdx)
 {
     mu::engraving::EngravingItem* el = measure()->vspacerDown(static_cast<staff_idx_t>(staffIdx));
     return el ? wrap(el, Ownership::SCORE) : nullptr;
+}
+
+FractionWrapper* MeasureBase::tick() const
+{
+    return wrap(measureBase()->tick());
 }
 
 void MeasureBase::add(apiv1::EngravingItem* wrapped)

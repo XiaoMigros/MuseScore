@@ -481,6 +481,7 @@ public:
     Q_INVOKABLE void closeLog();
 
     Q_INVOKABLE apiv1::FractionWrapper* fraction(int numerator, int denominator) const;
+    Q_INVOKABLE apiv1::FractionWrapper* fractionFromTicks(int ticks) const;
 
     Q_INVOKABLE void quit();
 

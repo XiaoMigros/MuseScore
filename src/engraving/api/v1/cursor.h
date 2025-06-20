@@ -87,13 +87,24 @@ class Cursor : public QObject
      */
     Q_PROPERTY(int filter READ filter WRITE setFilter)
 
-    /** MIDI tick position, read only */
-    Q_PROPERTY(int tick READ tick)           // FIXME: fraction transition
+    /** MIDI tick position, read only
+     * As of MuseScore 4.6, this property is deprecated and should
+     * not be used to read the cursor position. Use \ref cursor.fraction
+     * instead. However, this property can still sometimes be useful to
+     * compare position values using operators.
+     */
+    Q_PROPERTY(int tick READ tick)
     /**
      * MIDI tick position, accounting for repeats.
      * \since MuseScore 4.6
      */
     Q_PROPERTY(int utick READ utick)
+     /**
+     * Time position in this score, measured as a fraction of a
+     * whole note (the same units MuseScore's code uses internally).
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ qmlFraction)
 
     /** Tempo at current tick, read only */
     Q_PROPERTY(qreal tempo READ tempo)
@@ -159,6 +170,8 @@ private:
     mu::engraving::Segment* segment() const;
     void setSegment(mu::engraving::Segment* seg);
 
+    mu::engraving::Fraction fraction() const;
+
     int inputStateString() const;
     void setInputStateString(int);
 
@@ -193,7 +206,8 @@ public:
     Measure* measure() const;
 
     int tick();
-    double time();
+    int utick();
+    FractionWrapper* qmlFraction() const;
     qreal tempo();
 
     int qmlKeySignature();
@@ -201,8 +215,7 @@ public:
 
     Q_INVOKABLE void rewind(RewindMode mode);
     Q_INVOKABLE void rewindToTick(int tick);
-    /** Time at tick position, read only */
-    /** \param includeRepeats since 4.6*/
+    Q_INVOKABLE void rewindToFraction(apiv1::FractionWrapper* f);
     Q_INVOKABLE double time(bool includeRepeats = false);
 
     Q_INVOKABLE bool next();

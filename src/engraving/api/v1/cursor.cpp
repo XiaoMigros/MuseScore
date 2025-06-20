@@ -22,6 +22,7 @@
 
 #include "cursor.h"
 #include "elements.h"
+#include "fraction.h"
 #include "score.h"
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/chordrest.h"
@@ -153,6 +154,7 @@ void Cursor::rewind(RewindMode mode)
 //---------------------------------------------------------
 //   rewindToTick
 ///   Rewind cursor to a position defined by tick.
+///   To avoid rounding errors, use \ref rewindToFraction.
 ///   \param tick Determines the position where to move
 ///   this cursor.
 ///   \see \ref mu::plugins::api::Segment::tick "Segment.tick"
@@ -165,6 +167,23 @@ void Cursor::rewindToTick(int tick)
     // better to search not precisely if possible
     mu::engraving::Fraction fTick = mu::engraving::Fraction::fromTicks(tick + 1);
     mu::engraving::Segment* seg = m_score->tick2leftSegment(fTick);
+    if (!(seg->segmentType() & m_filter)) {
+        // we need another segment type, search by known tick
+        seg = m_score->tick2segment(seg->tick(), /* first */ true, m_filter);
+    }
+
+    setSegment(seg);
+    nextInTrack();
+}
+
+void Cursor::rewindToFraction(FractionWrapper* f)
+{
+    const mu::engraving::Fraction fraction = f->fraction();
+    if (!fraction.isValid() || fraction.negative()) {
+        return;
+    }
+
+    mu::engraving::Segment* seg = m_score->tick2leftSegment(fraction);
     if (!(seg->segmentType() & m_filter)) {
         // we need another segment type, search by known tick
         seg = m_score->tick2segment(seg->tick(), /* first */ true, m_filter);
@@ -552,8 +571,21 @@ int Cursor::utick()
     return m_score->repeatList(true).tick2utick(tick());
 }
 
+mu::engraving::Fraction Cursor::fraction() const
+{
+    const mu::engraving::Segment* seg = segment();
+    return seg ? seg->tick() : Fraction(0, 1);
+}
+
+FractionWrapper* Cursor::qmlFraction() const
+{
+    return wrap(fraction());
+}
+
 //---------------------------------------------------------
 //   time
+/// Time at tick position, read only
+/// \param includeRepeats since 4.6
 //---------------------------------------------------------
 
 double Cursor::time(bool includeRepeats)
@@ -567,7 +599,7 @@ double Cursor::time(bool includeRepeats)
 
 qreal Cursor::tempo()
 {
-    return m_score->tempo(Fraction::fromTicks(tick())).val;
+    return m_score->tempo(fraction()).val;
 }
 
 //---------------------------------------------------------
@@ -764,7 +796,7 @@ void Cursor::nextInTrack()
 
 int Cursor::qmlKeySignature()
 {
-    return static_cast<int>(inputState().staff()->key(Fraction::fromTicks(tick())));
+    return static_cast<int>(inputState().staff()->key(fraction()));
 }
 
 //---------------------------------------------------------
