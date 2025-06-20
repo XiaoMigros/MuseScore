@@ -51,8 +51,13 @@ class FractionWrapper : public QObject
      * notes represented by this fraction.
      */
     Q_PROPERTY(int ticks READ ticks)   // FIXME: fraction transition
-    /** String representation of this fraction */
+    /** String representation of this fraction: "N/D" */
     Q_PROPERTY(QString str READ toString)
+    /**
+    * Returns a reduced (simplified) version of this fraction.
+    * \since MuseScore 4.6
+    */
+    Q_PROPERTY(apiv1::FractionWrapper * reduced READ reduced)
 
     mu::engraving::Fraction f;
 
@@ -70,6 +75,10 @@ public:
     int denominator() const { return f.denominator(); }
     int ticks() const { return f.ticks(); }
     QString toString() const { return f.toString(); }
+
+    FractionWrapper* reduced() const { return wrap(f.reduced()); }
+	// add operators?
+
     /// \endcond
 };
 
