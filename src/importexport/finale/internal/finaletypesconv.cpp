@@ -28,6 +28,7 @@
 
 #include "types/string.h"
 
+#include "engraving/dom/accidental.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/noteval.h"
 
@@ -40,10 +41,6 @@ using namespace muse;
 using namespace musx::dom;
 
 namespace mu::iex::finale {
-<<<<<<< HEAD
-ID createPartId(int partNumber) { return "P" + std::to_string(partNumber); }
-ID createStaffId(musx::dom::InstCmper staffId) { return std::to_string(staffId); }
-=======
 
 ID FinaleTConv::createPartId(int partNumber)
 {
@@ -82,7 +79,6 @@ DurationType FinaleTConv::noteTypeToDurationType(musx::dom::NoteType noteType)
     };
     return muse::value(noteTypeTable, noteType, DurationType::V_INVALID);
 }
->>>>>>> 48fdf78a67 (fixes to typesconv)
 
 TDuration FinaleTConv::noteInfoToDuration(std::pair<musx::dom::NoteType, unsigned> noteInfo)
 {
@@ -952,10 +948,7 @@ BracketType FinaleTConv::toMuseScoreBracketType(details::StaffGroup::BracketStyl
         { MusxBracketStyle::BracketCurvedHooks,   BracketType::NORMAL },
         { MusxBracketStyle::DeskBracket,          BracketType::SQUARE },
     };
-<<<<<<< HEAD
     return muse::value(bracketTypeTable, style, BracketType::NO_BRACKET);
-=======
-    return muse::value(bracketTypeTable, bracketStyle, BracketType::NO_BRACKET);
 }
 
 TupletNumberType FinaleTConv::toMuseScoreTupletNumberType(options::TupletOptions::NumberStyle numberStyle)
@@ -969,7 +962,6 @@ TupletNumberType FinaleTConv::toMuseScoreTupletNumberType(options::TupletOptions
         { MusxTupletNumberType::RatioPlusBothNotes,       TupletNumberType::SHOW_RELATION }, // not supported
     };
     return muse::value(tupletNumberTypeTable, numberStyle, TupletNumberType::SHOW_NUMBER);
->>>>>>> 48fdf78a67 (fixes to typesconv)
 }
 
 Align FinaleTConv::justifyToAlignment(others::NamePositioning::AlignJustify alignJustify)
@@ -1057,15 +1049,9 @@ SymId FinaleTConv::acciSymbolFromAcciAmount(int acciAmount)
     /// @todo add support for microtonal symbols (will require access to musx KeySignature instance)
     /// This code assumes each chromatic halfstep is 1 EDO division, but we cannot make that assumption
     /// with microtonal symbols.
-    static const std::unordered_map<int, SymId> acciSymbolTable = {
-        { -2,   SymId::accidentalDoubleFlat },
-        { -1,   SymId::accidentalFlat },
-        { 1,    SymId::accidentalSharp },
-        { 2,    SymId::accidentalDoubleSharp },
-    };
-    return muse::value(acciSymbolTable, acciAmount, SymId::noSym);
+    AccidentalType at = Accidental::value2subtype(AccidentalVal(acciAmount));
+    return at != AccidentalType::NONE ? Accidental::subtype2symbol(at) : SymId::noSym;
 }
-
 StaffGroup FinaleTConv::staffGroupFromNotationStyle(musx::dom::others::Staff::NotationStyle notationStyle)
 {
     using NotationStyle = musx::dom::others::Staff::NotationStyle;
