@@ -57,6 +57,8 @@ public:
     static engraving::Key keyFromAlteration(int musxAlteration);
     static engraving::KeyMode keyModeFromDiatonicMode(music_theory::DiatonicMode diatonicMode);
     static engraving::StaffGroup staffGroupFromNotationStyle(musx::dom::others::Staff::NotationStyle notationStyle);
+    static engraving::String metaTagFromFileInfo(musx::dom::texts::FileInfoText::TextType textType);
+    static engraving::String metaTagFromTextComponent(std::string component);
     static double doubleFromEvpu(musx::dom::Evpu evpu);
     static engraving::PointF evpuToPointF(musx::dom::Evpu xEvpu, musx::dom::Evpu yEvpu);
     static double doubleFromEfix(musx::dom::Efix efix);

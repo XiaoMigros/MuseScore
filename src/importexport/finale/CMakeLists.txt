@@ -43,6 +43,9 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/importfinaleparser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/importfinaleparser.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/importfinalestyles.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/importfinaletext.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/text/finaletextconv.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/text/finaletextconv.h
     ${CMAKE_CURRENT_LIST_DIR}/finalemodule.cpp
     ${CMAKE_CURRENT_LIST_DIR}/finalemodule.h
 )

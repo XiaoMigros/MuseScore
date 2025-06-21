@@ -1070,6 +1070,34 @@ double FinaleTConv::doubleFromEfix(Efix efix)
     return double(efix) / EFIX_PER_SPACE;
 }
 
+String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
+{
+    using TextType = texts::FileInfoText::TextType;
+    static const std::unordered_map<TextType, String> metaTagTable = {
+        { TextType::Title,       u"workTitle" },
+        { TextType::Composer,    u"composer" },
+        { TextType::Copyright,   u"copyright" },
+        { TextType::Description, u"description" }, // not native
+        { TextType::Lyricist,    u"lyricist" },
+        { TextType::Arranger,    u"arranger" },
+        { TextType::Subtitle,    u"subtitle" }, // not native
+    }
+    return muse::value(metaTagTable, textType, String());
+}
+
+String FinaleTConv::metaTagFromTextComponent(std::string component)
+{
+    static const std::unordered_map<std::string, String> metaTagTable = {
+        { "title()",       u"workTitle" },
+        { "composer()",    u"composer" },
+        { "copyright()",   u"copyright" },
+        { "lyricist()",    u"lyricist" },
+        { "arranger()",    u"arranger" },
+        { "subtitle()",    u"subtitle" }, // not native
+    }
+    return muse::value(metaTagTable, component, String());
+}
+
 double FinaleTConv::doubleFromPercent(int percent)
 {
     return double(percent) / 100.0;
