@@ -93,6 +93,11 @@ private:
     // styles
     void importStyles(engraving::MStyle& style, musx::dom::Cmper partId);
 
+    // texts
+    void importTexts();
+
+    String stringFromText(std::string rawString);
+
     engraving::Score* m_score;
     const std::shared_ptr<musx::dom::Document> m_doc;
     FinaleLoggerPtr m_logger;

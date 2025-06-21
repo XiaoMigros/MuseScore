@@ -57,6 +57,8 @@ void FinaleParser::parse()
     // entries (notes, rests & tuplets)
     mapLayers();
     importEntries();
+
+    // importTexts(); WIP
 }
 
 }
