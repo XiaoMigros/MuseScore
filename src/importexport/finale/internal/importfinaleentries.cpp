@@ -363,9 +363,9 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     int entrySize = entryInfo.calcEntrySize();
     if (entrySize <= musx::dom::MAX_CUE_PERCENTAGE) {
         double crMag = FinaleTConv::doubleFromPercent(entrySize);
-        if (crMag != m_score->style().styleD(Sid::smallNoteMag)) {
+        if (crMag < m_score->style().styleD(Sid::smallNoteMag)) {
             if (m_smallNoteMagFound) {
-                logger()->logWarning(String(u"Inconsistent cue note sizes found. Using the last encountered."), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
+                logger()->logWarning(String(u"Inconsistent cue note sizes found. Using the smallest encountered."), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
             }
             m_score->style().set(Sid::smallNoteMag, crMag);
         }
