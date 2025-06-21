@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "dom/masterscore.h"
 #include "internal/importfinaleparser.h"
 #include "internal/importfinalelogger.h"
 #include "finaletypesconv.h"
@@ -57,17 +58,18 @@ static const std::vector<std::tuple<int, String, FontStyle> > fontStyleMapper = 
     { 2,  u"i", FontStyle::Italic },
     { 4,  u"u", FontStyle::Underline },
     { 32, u"s", FontStyle::Strike },
-}
+};
 
-String FinaleParser::stringFromText(std::string rawString) {
+String FinaleParser::stringFromText(std::string rawString)
+{
     String endString;
     auto fontInfo = std::make_shared<FontInfo>(m_doc); // Finale font tracker. Currently only used for font name.
     FontStyle currFontStyle = FontStyle::Normal; // keep track of this to avoid badly nested tags
     /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
 
-    auto testForTag = [](std::string& main, std::string& test) -> bool {
-        if (main.substr(0, test.length) == test) {
-            main.erase(0, test.length);
+    auto testForTag = [](std::string& main, const std::string& test) -> bool {
+        if (main.substr(0, test.length()) == test) {
+            main.erase(0, test.length());
             return true;
         }
         return false;
@@ -81,13 +83,13 @@ String FinaleParser::stringFromText(std::string rawString) {
                 rawString.erase(0, 1);  // remove from rawString
             } else if (rawString.substr(0, 4) =="font") {
                 size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
-                    musx::util::EnigmaString::parseFontCommand("^" + rawString.subString(0, endBracketPos), *fontInfo.get());
-                    auto fontDefinition = m_doc->getOthers()->get<others::FontDefinition>(m_currentMusxPartId, Cmper(fontInfo.fontId));
+                if (rawString.front() == '(' && endBracketPos > 0) {
+                    musx::util::EnigmaString::parseFontCommand("^" + rawString.substr(0, endBracketPos), *fontInfo.get());
+                    auto fontDefinition = m_doc->getOthers()->get<others::FontDefinition>(m_currentMusxPartId, Cmper(fontInfo->fontId));
                     // When using musical fonts, don't actually set the font type since symbols are loaded separately.
                     /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
                     if (fontDefinition->name != "Maestro") {
-                        endString.append(String(u'<font face="' + String::fromStdString(fontDefinition->name) + u'"/>'));
+                        endString.append(String(u"<font face=\"" + String::fromStdString(fontDefinition->name) + u"\"/>"));
 						/// @todo append this based on whether symbol ends up being replaced or not
                     }
                     rawString.erase(0, endBracketPos);
@@ -97,18 +99,18 @@ String FinaleParser::stringFromText(std::string rawString) {
                 }
             } else if (testForTag(rawString, "size")) {
                 size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
-                    endString.append(String(u'<font size="'));
-                    endString.append(String::fromStdString(rawString.substr(1, endBracketPos - 1) + String(u'"/>'));
+                if (rawString.front() == '(' && endBracketPos > 0) {
+                    endString.append(String(u"<font size=\""));
+                    endString.append(String::fromStdString(rawString.substr(1, endBracketPos - 1)) + String(u"\"/>'"));
                     rawString.erase(0, endBracketPos); // remove up to endbracketpos
                 } else {
                     // log error
                 }
             } else if (testForTag(rawString, "nfx")) {
                 size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
+                if (rawString.front() == '(' && endBracketPos > 0) {
                     // retrieve value in brackets
-                    int finaleFontStyle = String::fromStdString(rawString.substr(1, endBracketPos - 1).toInt();
+                    int finaleFontStyle = String::fromStdString(rawString.substr(1, endBracketPos - 1)).toInt();
                     std::vector<std::tuple<String, FontStyle, bool> > fontTags;
 
                     // How this works:
@@ -147,8 +149,8 @@ String FinaleParser::stringFromText(std::string rawString) {
                             auto [tagA, msEnumA, addA] = fontTags[i];
                             auto [tagB, msEnumB, addB] = fontTags[i + 1];
                             if (msEnumA == msEnumB) {
-                                fontTags.erase(i, i + 1);
-                                i = 0; // reset so we can find new pairs made available by the removal
+                                fontTags.erase(fontTags.begin() + i + 1);
+                                if (i > 0) --i; // back up to recheck the new pair at this position
                             }
                         }
 
@@ -164,7 +166,7 @@ String FinaleParser::stringFromText(std::string rawString) {
                 }
             } else if (testForTag(rawString, "page")) {
                 size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
+                if (rawString.front() == '(' && endBracketPos > 0) {
                     // do something
                     rawString.erase(0, endBracketPos);
                 } else {
@@ -186,16 +188,18 @@ String FinaleParser::stringFromText(std::string rawString) {
                  endString.append(m_score->masterScore()->name()); // correct behaviour apparently, + .mscz???
             } else {
                 // Find and replace metaTags with their actual text value
+                /*
                 for (const auto& metaTag : kEnigmaTags) {
                     if (rawString.substr(0, metaTag.length) == metaTag) {
                         rawString.insert(f, m_score->metaTag(FinaleTConv::metaTagFromTextComponent(metaTag)).toStdString());
                         rawString.erase(0, metaTag.length);
                     }
                 }
+                */
             }
             continue;
         }
-        endString.append(FinaleTextConv::symIdFromFinaleChar(rawString.front()));
+        endString.append(FinaleTextConv::symIdFromFinaleChar(rawString.front(), fontInfo->getName()));
         rawString.erase(0, 1);
     }
     return endString;
@@ -247,7 +251,7 @@ void FinaleParser::importTexts()
         // convert this to xmlText
         String pageXmlText = stringFromText(rawText);
 
-        const bool importAsHeaderFooter = [&]() {
+        [[maybe_unused]]const bool importAsHeaderFooter = [&]() {
             // if text is not at top or bottom, invisible,
             // not recurring, or not on page 1
             if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center
@@ -272,7 +276,7 @@ void FinaleParser::importTexts()
             //check for existing header/footer text in the same location of the same page(s). if so, don't import.
             return true; // dbg
         }();
-        const bool importAsFrameText = [&]() {
+        [[maybe_unused]]const bool importAsFrameText = [&]() {
             if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center) {
                 return false;
             }
