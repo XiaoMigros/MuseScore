@@ -985,6 +985,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
                 }
             }
         }
+        x -= 0.5 * a->ldata()->bbox().width();
         a->setPos(x, y);
         if (a->visible()) {
             prevVisibleArticulation = a;
@@ -1139,6 +1140,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
                     staffBotY = a->y() + a->height() + minDist + yOffset;
                 }
             }
+            a->mutldata()->moveX(-0.5 * a->width());
         }
 
         if (!a->isOnCrossBeamSide()) {
@@ -1151,7 +1153,9 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
             } else {
                 Autoplace::autoplaceSegmentElement(a, a->mutldata(), a->up(), true);
             }
-            a->segment()->staffShape(a->vStaffIdx()).add(a->shape().translated(a->pos() + item->pos() + item->staffOffset()));
+            if (a->addToSkyline()) {
+                a->segment()->staffShape(a->vStaffIdx()).add(a->shape().translated(a->pos() + item->pos() + item->staffOffset()));
+            }
         }
     }
 }
@@ -3355,8 +3359,8 @@ void ChordLayout::layoutNote2(Note* item, LayoutContext& ctx)
         double w = item->tabHeadWidth(staffType);
         double xOff = 0.5 * (w - widthWithoutParens);
         ldata->moveX(-xOff);
-        ldata->setBbox(0, staffType->fretBoxY(ctx.conf().style()) * item->magS(), w,
-                       staffType->fretBoxH(ctx.conf().style()) * item->magS());
+        ldata->setBbox(0, staffType->fretBoxY() * item->magS(), w,
+                       staffType->fretBoxH() * item->magS());
     } else if (isTabStaff && (!item->ghost() || item->shouldHideFret()) && item->headHasParentheses()) {
         item->setHeadHasParentheses(false, /*addToLinked=*/ false, /* generated= */ true);
     }

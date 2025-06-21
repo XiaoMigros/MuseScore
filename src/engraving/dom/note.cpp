@@ -1174,7 +1174,7 @@ double Note::headHeight() const
 double Note::tabHeadHeight(const StaffType* tab) const
 {
     if (tab && m_fret != INVALID_FRET_INDEX && m_string != INVALID_STRING_INDEX) {
-        return tab->fretBoxH(style()) * magS();
+        return tab->fretBoxH() * magS();
     }
     return headHeight();
 }
@@ -1720,6 +1720,7 @@ bool Note::acceptDrop(EditData& data) const
 
     return type == ElementType::ARTICULATION
            || type == ElementType::ORNAMENT
+           || type == ElementType::TAPPING
            || type == ElementType::FERMATA
            || type == ElementType::CHORDLINE
            || type == ElementType::TEXT

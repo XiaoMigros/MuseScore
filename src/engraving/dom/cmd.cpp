@@ -2409,6 +2409,13 @@ bool Score::toggleArticulation(EngravingItem* el, Articulation* a)
         return false;
     }
 
+    Tapping* tap = c->tapping();
+    if (tap) {
+        // If we got here it means that the user is entering a tap
+        // of different hand, so replace the old one
+        undoRemoveElement(tap);
+    }
+
     if (!a->isDouble()) {
         a->setParent(c);
         a->setTrack(c->track());
@@ -2699,10 +2706,13 @@ void Score::cmdResetBeamMode()
         return;
     }
 
-    Fraction endTick = selection().tickEnd();
+    const staff_idx_t staffStart = selection().staffStart();
+    const staff_idx_t staffEnd = selection().staffEnd();
+    const Fraction endTick = selection().tickEnd();
 
-    for (Segment* seg = selection().firstChordRestSegment(); seg && seg->tick() < endTick; seg = seg->next1(SegmentType::ChordRest)) {
-        for (track_idx_t track = selection().staffStart() * VOICES; track < selection().staffEnd() * VOICES; ++track) {
+    for (track_idx_t track = staff2track(staffStart); track < staff2track(staffEnd); ++track) {
+        ChordRest* firstCR = selection().firstChordRest(track);
+        for (Segment* seg = firstCR->segment(); seg && seg->tick() < endTick; seg = seg->next1(SegmentType::ChordRest)) {
             ChordRest* cr = toChordRest(seg->element(track));
             if (!cr) {
                 continue;
@@ -2718,6 +2728,7 @@ void Score::cmdResetBeamMode()
             }
         }
     }
+
     if (noSelection) {
         deselectAll();
     }

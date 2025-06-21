@@ -629,6 +629,9 @@ enum class Sid {
     voltaFrameFgColor,
     voltaFrameBgColor,
 
+    voltaAlignStartBeforeKeySig,
+    voltaAlignEndLeftOfBarline,
+
     ottava8VAPlacement,
     ottava8VBPlacement,
     ottava15MAPlacement,
@@ -890,6 +893,21 @@ enum class Sid {
     fingeringFrameBgColor,
     fingeringOffset,
 
+    tabFretNumberFontFace,
+    tabFretNumberFontSize,
+    tabFretNumberLineSpacing,
+    tabFretNumberFontSpatiumDependent,
+    tabFretNumberFontStyle,
+    tabFretNumberColor,
+    tabFretNumberAlign,
+    tabFretNumberOffset,
+    tabFretNumberFrameType,
+    tabFretNumberFramePadding,
+    tabFretNumberFrameWidth,
+    tabFretNumberFrameRound,
+    tabFretNumberFrameFgColor,
+    tabFretNumberFrameBgColor,
+
     lhGuitarFingeringFontFace,
     lhGuitarFingeringFontSize,
     lhGuitarFingeringLineSpacing,
@@ -939,6 +957,15 @@ enum class Sid {
     hopoShowOnTabStaves,
     hopoUpperCase,
     hopoShowAll,
+
+    lhTappingSymbolNormalStave,
+    lhTappingSymbolTab,
+    lhTappingShowItemsNormalStave,
+    lhTappingShowItemsTab,
+    lhTappingSlurTopAndBottomNoteOnTab,
+
+    rhTappingSymbolNormalStave,
+    rhTappingSymbolTab,
 
     stringNumberFontFace,
     stringNumberFontSize,

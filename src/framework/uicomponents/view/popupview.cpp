@@ -184,6 +184,7 @@ void PopupView::initCloseController()
     m_closeController->setParentItem(parentItem());
     m_closeController->setWindow(window());
     m_closeController->setIsCloseOnPressOutsideParent(m_closePolicies & ClosePolicy::CloseOnPressOutsideParent);
+    m_closeController->setCanClosed(!m_closePolicies.testFlag(ClosePolicy::NoAutoClose));
 
     m_closeController->closeNotification().onNotify(this, [this]() {
         close(true);
@@ -237,6 +238,8 @@ void PopupView::doOpen()
 
     beforeOpen();
 
+    resolveParentWindow();
+
     updateGeometry();
 
     if (!isDialog()) {
@@ -271,7 +274,6 @@ void PopupView::doOpen()
         m_window->setResizable(m_resizable);
     }
 
-    resolveParentWindow();
     resolveNavigationParentControl();
 
     QScreen* screen = resolveScreen();
@@ -310,6 +312,7 @@ void PopupView::close(bool force)
     }
 
     if (m_closeController) {
+        m_closeController->setCanClosed(true);
         m_closeController->setActive(false);
     }
 

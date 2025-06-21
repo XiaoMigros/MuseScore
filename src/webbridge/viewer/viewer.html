@@ -43,129 +43,68 @@ SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
       #screen { width: 100%; height: calc(100% - 40px); }
     </style>
   </head>
-  <body onload="init()">
+  <body>
 
     <figure id="spinner">
       <center style="margin-top:1.5em; line-height:150%">
         <strong>MuseScoreStudio</strong>
-        <div id="qtstatus"></div>
+        <div id="status"></div>
         <noscript>JavaScript is disabled. Please enable JavaScript to use this application.</noscript>
       </center>
     </figure>
 
     <div id="screen"></div>
 
-<!--    <div id="panel">
+    <!-- <div id="panel">
       <button onclick="onclickTest1()">Test 1</button>
       <button>Test 2</button>
       <button>Test 3</button>
-      <input id="load_file" type="file" onchange="loadFile(this.files[0])">
-    </div>-->
-
-    <script type="text/javascript">
-        async function init()
-        {
-            const spinner = document.querySelector('#spinner');
-            const screen = document.querySelector('#screen');
-            const status = document.querySelector('#qtstatus');
-
-            const showUi = (ui) => {
-                [spinner, screen].forEach(element => element.style.display = 'none');
-                if (screen === ui)
-                    screen.style.position = 'default';
-                ui.style.display = 'block';
-            }
-
-            try {
-                showUi(spinner);
-                status.innerHTML = 'Loading...';
-
-                const instance = await qtLoad({
-                    qt: {
-                        onLoaded: () => showUi(screen),
-                        onExit: exitData =>
-                        {
-                            status.innerHTML = 'Application exit';
-                            status.innerHTML +=
-                                exitData.code !== undefined ? ` with code ${exitData.code}` : '';
-                            status.innerHTML +=
-                                exitData.text !== undefined ? ` (${exitData.text})` : '';
-                            showUi(spinner);
-                        },
-                        entryFunction: window.MuseScoreStudio_entry,
-                        containerElements: [screen],
-                        
-                    }
-                });
-
-                window.muwasm = instance
-                if (window.onInited) {
-                  window.onInited()
-                }
-            } catch (e) {
-                console.error(e);
-                console.error(e.stack);
-            }
-        }
-    </script>
-    <script src="MuseScoreStudio.js"></script>
-    <script type="text/javascript" src="qtloader.js"></script>
-
-    <script type="text/javascript">
-      function onclickTest1() {
-        window.muapi.onclickTest1()
-      }
-
-      async function loadFile(file) {
-            if (!file) {
-                return
-            }
-
-            const buffer = await file.arrayBuffer();
-            muapi.load(new Uint8Array(buffer)) 
-      }
-    </script>  
-
-    // Interactive
-    <script type="text/javascript">
-
-      function openFileDialog(callback) {
-        console.log("[js] openFileDialog")
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            const fileName = file.name
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const contents = e.target.result;
-                const uint8View = new Uint8Array(contents);
-                console.log("[js] openFileDialog fileName: ", fileName, ", contents: ", uint8View.length, ", [0]=", uint8View[0])
-                callback(fileName, uint8View);
-            };
-            reader.readAsArrayBuffer(file); 
-        };
-        input.click();
-      }
-    </script>
+      <input id="load_file" type="file" onchange="window.muapi.loadScoreFile(this.files[0])">
+    </div> -->
 
     <script type="module">
-        import createMuApi from "./muapi.js";
+      import createMuApi from "./distr/muapi.js";
 
-        function onInit() {
-          console.log("on init mu api")
-          window.muapi = createMuApi({
-            muwasm: window.muwasm   
-          })
-        }
+      const spinner = document.querySelector('#spinner');
+      const screen = document.querySelector('#screen');
+      const status = document.querySelector('#status');
 
-        if (window.muwasm) {
-          onInit()
-        } else {
-          window.onInited = onInit
-        }
+      const showUi = (ui) => {
+          [spinner, screen].forEach(element => element.style.display = 'none');
+          if (screen === ui)
+              screen.style.position = 'default';
+          ui.style.display = 'block';
+      }
 
-    </script>    
+      try {
+      
+        showUi(spinner);
+        status.innerHTML = 'Loading...';
 
+        window.muapi = await createMuApi({
+
+          // properties
+          screen: screen,
+
+          // runtime
+          onLoaded: () => showUi(screen),
+          onExit: function(exitData) {
+            status.innerHTML = 'Application exit';
+            status.innerHTML += exitData.code !== undefined ? ` with code ${exitData.code}` : '';
+            status.innerHTML += exitData.text !== undefined ? ` (${exitData.text})` : '';
+            showUi(spinner);
+          },
+
+          // api callbacks
+          onProjectSaved: function(data) {
+            console.log("[html] onProjectSaved len: ", data.length)
+          }   
+        })
+    } catch (e) {
+        console.error(e);
+        console.error(e.stack);
+    }
+    </script>
+    <script src="MuseScoreStudio.js"></script> 
   </body>
 </html>

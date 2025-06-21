@@ -615,6 +615,9 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(voltaFrameFgColor,                          PropertyValue::fromValue(Color::BLACK)),
     styleDef(voltaFrameBgColor,                          PropertyValue::fromValue(Color::transparent)),
 
+    styleDef(voltaAlignStartBeforeKeySig,                false),
+    styleDef(voltaAlignEndLeftOfBarline,                 false),
+
     styleDef(ottava8VAPlacement,                         PlacementV::ABOVE),
     styleDef(ottava8VBPlacement,                         PlacementV::BELOW),
     styleDef(ottava15MAPlacement,                        PlacementV::ABOVE),
@@ -875,6 +878,21 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(fingeringFrameBgColor,                      PropertyValue::fromValue(Color::transparent)),
     styleDef(fingeringOffset,                            PointF()),
 
+    styleDef(tabFretNumberFontFace,                      "FreeSans"),
+    styleDef(tabFretNumberFontSize,                      9.0),
+    styleDef(tabFretNumberLineSpacing,                   1.0),
+    styleDef(tabFretNumberFontSpatiumDependent,          true),
+    styleDef(tabFretNumberFontStyle,                     int(FontStyle::Normal)),
+    styleDef(tabFretNumberColor,                         PropertyValue::fromValue(Color::BLACK)),
+    styleDef(tabFretNumberAlign,                         Align(AlignH::LEFT, AlignV::BASELINE)),
+    styleDef(tabFretNumberOffset,                        PointF()),
+    styleDef(tabFretNumberFrameType,                     int(FrameType::NO_FRAME)),
+    styleDef(tabFretNumberFramePadding,                  0.2),
+    styleDef(tabFretNumberFrameWidth,                    0.1),
+    styleDef(tabFretNumberFrameRound,                    0),
+    styleDef(tabFretNumberFrameFgColor,                  PropertyValue::fromValue(Color::BLACK)),
+    styleDef(tabFretNumberFrameBgColor,                  PropertyValue::fromValue(Color::transparent)),
+
     styleDef(lhGuitarFingeringFontFace,                  "Edwin"),
     styleDef(lhGuitarFingeringFontSize,                  8.0),
     styleDef(lhGuitarFingeringLineSpacing,               1.0),
@@ -924,6 +942,15 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(hopoShowOnTabStaves,                                     true),
     styleDef(hopoUpperCase,                                           true),
     styleDef(hopoShowAll,                                             true),
+
+    styleDef(lhTappingSymbolNormalStave,                 LHTappingSymbol::DOT),
+    styleDef(lhTappingSymbolTab,                         LHTappingSymbol::DOT),
+    styleDef(lhTappingShowItemsNormalStave,              int(LHTappingShowItems::HALF_SLUR)),
+    styleDef(lhTappingShowItemsTab,                      int(LHTappingShowItems::HALF_SLUR)),
+    styleDef(lhTappingSlurTopAndBottomNoteOnTab,         true),
+
+    styleDef(rhTappingSymbolNormalStave,                 RHTappingSymbol::PLUS),
+    styleDef(rhTappingSymbolTab,                         RHTappingSymbol::T),
 
     styleDef(stringNumberFontFace,                       "Edwin"),
     styleDef(stringNumberFontSize,                       8.0),

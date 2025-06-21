@@ -159,7 +159,16 @@ class EngravingItem : public apiv1::ScoreElement
      */
     Q_PROPERTY(QRectF bbox READ bbox)
 
-    API_PROPERTY(subtype,                 SUBTYPE)
+    /**
+     * Subtype of this element.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(int subtype READ subtype)
+    /**
+     * Unlike the name might suggest, this property no longer returns the subtype and is scarcely used.
+     * Named 'subtype' prior to MuseScore 4.6
+     */
+    API_PROPERTY(subType,                 SUBTYPE)
     API_PROPERTY_READ_ONLY_T(bool, selected, SELECTED)
     API_PROPERTY_READ_ONLY_T(bool, generated, GENERATED)
     /**
@@ -409,6 +418,8 @@ class EngravingItem : public apiv1::ScoreElement
     Staff* staff() { return wrap<Staff>(element()->staff()); }
 
     QRectF bbox() const;
+
+    int subtype() const { return element()->subtype(); }
 
 public:
     /// \cond MS_INTERNAL
@@ -689,6 +700,9 @@ class Chord : public ChordRest
     Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotes READ graceNotes)
     /// List of notes belonging to this chord.
     Q_PROPERTY(QQmlListProperty<apiv1::Note> notes READ notes)
+    /// List of articulations belonging to this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> articulations READ articulations)
     /// Stem of this chord, if exists. \since MuseScore 3.6
     Q_PROPERTY(apiv1::EngravingItem * stem READ stem)
     /// Stem slash of this chord, if exists. Stem slashes are present in grace notes of type acciaccatura.
@@ -713,6 +727,7 @@ public:
 
     QQmlListProperty<Chord> graceNotes() { return wrapContainerProperty<Chord>(this, chord()->graceNotes()); }
     QQmlListProperty<Note> notes() { return wrapContainerProperty<Note>(this, chord()->notes()); }
+    QQmlListProperty<EngravingItem> articulations() { return wrapContainerProperty<EngravingItem>(this, chord()->articulations()); }
     EngravingItem* stem() { return wrap(chord()->stem()); }
     EngravingItem* stemSlash() { return wrap(chord()->stemSlash()); }
     EngravingItem* hook() { return wrap(chord()->hook()); }
