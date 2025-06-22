@@ -96,7 +96,7 @@ private:
     // texts
     void importTexts();
 
-    engraving::String stringFromText(std::string rawString);
+    engraving::String stringFromText(const std::string& rawString);
 
     engraving::Score* m_score;
     const std::shared_ptr<musx::dom::Document> m_doc;
