@@ -1144,6 +1144,14 @@ void NotationViewInputController::mouseDoubleClickEvent(QMouseEvent* event)
 
     if (hitElement->isMeasure() && event->modifiers() == Qt::NoModifier) {
         dispatcher()->dispatch("note-input", ActionData::make_arg1<PointF>(m_mouseDownInfo.logicalBeginPoint));
+    } else if (hitElement->isNote() && event->modifiers() == Qt::NoModifier) {
+        const mu::engraving::Note* note = toNote(hitElement);
+        if (!note->chord()) {
+            return;
+        }
+        for (const mu::engraving::EngravingItem* n : note->chord()->notes()) {
+            viewInteraction()->select({ n }, SelectType::ADD, n->staffIdx());
+        }
     } else if (hitElement->isInstrumentName()) {
         m_shouldStartEditOnLeftClickRelease = true;
     }
