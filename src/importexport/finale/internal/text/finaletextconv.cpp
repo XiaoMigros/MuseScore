@@ -39,6 +39,8 @@ using namespace muse;
 using namespace muse::io;
 using namespace mu::engraving;
 
+namespace mu::iex::finale {
+
 bool FinaleTextConv::init()
 {
     bool ok = initConversionJson();
@@ -49,8 +51,9 @@ bool FinaleTextConv::init()
 /// @todo
 // MaestroTimes: import 194 as 2, 205 as 3, 202/203/193 as 2, 216 as 217 (no suitable smufl equivalent)"
 
-String FinaleTextConv::symIdFromFinaleChar(char c, std::string font)
-    std::vector<std::tuple<char16_t, char16_t, SymId, int>> characterList = muse::value(m_convertedFonts, font, nullptr);
+String FinaleTextConv::symIdFromFinaleChar(char c, const std::string& font)
+{
+    std::vector<CharacterMap> characterList = muse::value(m_convertedFonts, font, {});
     char16_t newC = char16_t(c);
     if (characterList.empty()) {
         return String(newC);
@@ -75,9 +78,9 @@ String FinaleTextConv::symIdFromFinaleChar(char c, std::string font)
     return String(newC);
 }
 
-String FinaleTextConv::smuflCodeList(char c, std::string font)
+String FinaleTextConv::smuflCodeList(char c, const std::string& font)
 {
-    std::vector<std::tuple<char16_t, char16_t, SymId, int>> characterList = muse::value(m_convertedFonts, font, nullptr);
+    std::vector<std::tuple<char16_t, char16_t, SymId, int>> characterList = muse::value(m_convertedFonts, font, {});
     char16_t newC = char16_t(c);
     if (characterList.empty()) {
         return String(newC);
@@ -107,28 +110,30 @@ bool FinaleTextConv::initConversionJson()
     m_convertedFonts.clear();
 
     Dir thirdPartyFontsDir(":/src/importexport/finale/third_party/FinaleToSMuFL/");
-    RetVal<io::paths_t> thirdPartyFiles = thirdPartyFontsDir->scanFiles(thirdPartyFontsDir->path(), { "*.json" });
+    RetVal<io::paths_t> thirdPartyFiles = thirdPartyFontsDir.scanFiles(thirdPartyFontsDir.path(), { "*.json" });
     if (!thirdPartyFiles.ret) {
-        LOGE() << "Failed to scan files in directory: " << thirdPartyFontsDir->path();
-        return;
+        LOGE() << "Failed to scan files in directory: " << thirdPartyFontsDir.path();
+        return false;
     }
 
     Dir homemadeFontsDir("./fontdata/");
-    RetVal<io::paths_t> homemadeFiles = homemadeFontsDir->scanFiles(homemadeFontsDir->path(), { "*.json" });
+    RetVal<io::paths_t> homemadeFiles = homemadeFontsDir.scanFiles(homemadeFontsDir.path(), { "*.json" });
     if (!homemadeFiles.ret) {
-        LOGE() << "Failed to scan files in directory: " << homemadeFontsDir->path();
-        return;
+        LOGE() << "Failed to scan files in directory: " << homemadeFontsDir.path();
+        return false;
     }
 
-    io::paths_t allFiles = muse::join(thirdPartyFiles.val, homemadeFiles.val);
+    io::paths_t allFiles = thirdPartyFiles.val;
+    muse::join(allFiles, homemadeFiles.val);
     std::sort(allFiles.begin(), allFiles.end());
 	// There are max. 2 json files per font: The default one and a manual patch.
 
     std::string prevFont;
-	std::vector<std::tuple<char16_t, char16_t, SymId, int>> prevCharacterList;
+    std::vector<CharacterMap> prevCharacterList;
 
     for (const io::path_t& file : allFiles) {
-        RetVal<ByteArray> data = fileSystem->readFile(file);
+        /// @todo RGP what is fileSystem?
+        RetVal<ByteArray> data;// = fileSystem->readFile(file);
         if (!data.ret) {
             LOGE() << "Failed to read file: " << file.toStdString();
             continue;
@@ -147,7 +152,7 @@ bool FinaleTextConv::initConversionJson()
             return false;
         }
 
-        std::vector<std::tuple<char16_t, char16_t, SymId, int>> characterList;
+        std::vector<CharacterMap> characterList;
 
         for (std::string key : glyphNamesJson.keys()) {
             JsonObject symObj = glyphNamesJson.value(key).toObject();
@@ -186,7 +191,7 @@ bool FinaleTextConv::initConversionJson()
 			prevCharacterList = characterList;
 			prevFont = fileName;
 		} else {
-			characterList = muse::join(characterList, prevCharacterList);
+            muse::join(characterList, prevCharacterList);
 			prevCharacterList.clear();
 			prevFont.clear();
 			if (characterList.empty()) {
@@ -194,14 +199,16 @@ bool FinaleTextConv::initConversionJson()
 			}
 			std::sort(characterList.begin(), characterList.end(),[] (const auto& a, const auto& b) {
 				auto [finaleCodeA, smuflCodeA, symA, indexA] = a;
-				auto [finaleCodeB, smuflCodeA, symA, indexA] = b;
+                auto [finaleCodeB, smuflCodeB, symB, indexB] = b;
 				if (finaleCodeA == finaleCodeB) {
 					return indexA < indexB;
 				}
 				return finaleCodeA < finaleCodeB;
 			});
-			m_convertedFonts.emplace_back(std::make_pair(fileName, characterList));
+            m_convertedFonts.emplace(std::make_pair(fileName, characterList));
 		}
     }
     return true;
+}
+
 }
