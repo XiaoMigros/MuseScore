@@ -1052,6 +1052,7 @@ SymId FinaleTConv::acciSymbolFromAcciAmount(int acciAmount)
     AccidentalType at = Accidental::value2subtype(AccidentalVal(acciAmount));
     return at != AccidentalType::NONE ? Accidental::subtype2symbol(at) : SymId::noSym;
 }
+
 StaffGroup FinaleTConv::staffGroupFromNotationStyle(musx::dom::others::Staff::NotationStyle notationStyle)
 {
     using NotationStyle = musx::dom::others::Staff::NotationStyle;
@@ -1090,7 +1091,7 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
         { TextType::Lyricist,    u"lyricist" },
         { TextType::Arranger,    u"arranger" },
         { TextType::Subtitle,    u"subtitle" }, // not native
-    }
+    };
     return muse::value(metaTagTable, textType, String());
 }
 
@@ -1103,7 +1104,7 @@ String FinaleTConv::metaTagFromTextComponent(std::string component)
         { "lyricist()",    u"lyricist" },
         { "arranger()",    u"arranger" },
         { "subtitle()",    u"subtitle" }, // not native
-    }
+    };
     return muse::value(metaTagTable, component, String());
 }
 

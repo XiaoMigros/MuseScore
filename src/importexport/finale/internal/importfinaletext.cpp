@@ -35,6 +35,7 @@
 #include "engraving/dom/excerpt.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/measure.h"
+#include "engraving/dom/masterscore.h"
 #include "engraving/dom/page.h"
 #include "engraving/dom/score.h"
 #include "engraving/dom/segment.h"
@@ -57,147 +58,132 @@ static const std::vector<std::tuple<int, String, FontStyle> > fontStyleMapper = 
     { 2,  u"i", FontStyle::Italic },
     { 4,  u"u", FontStyle::Underline },
     { 32, u"s", FontStyle::Strike },
-}
+};
 
-String FinaleParser::stringFromText(std::string rawString) {
+String FinaleParser::stringFromText(const std::string& rawString)
+{
     String endString;
-    auto fontInfo = std::make_shared<FontInfo>(m_doc); // Finale font tracker. Currently only used for font name.
+    std::shared_ptr<FontInfo> prevFont;
     FontStyle currFontStyle = FontStyle::Normal; // keep track of this to avoid badly nested tags
     /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
 
-    auto testForTag = [](std::string& main, std::string& test) -> bool {
-        if (main.substr(0, test.length) == test) {
-            main.erase(0, test.length);
-            return true;
+    // The processTextChunk function process each chunk of processed text with font information. It is only
+    // called when the font information changes.
+    auto processTextChunk = [&](const std::string& nextChunk, const std::shared_ptr<FontInfo>& font) -> bool {
+        if (!prevFont || prevFont->fontId != font->fontId) {
+            // When using musical fonts, don't actually set the font type since symbols are loaded separately.
+            /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
+            if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
+                endString.append(String(u"<font face=\"" + String::fromStdString(font->getName()) + u"\"/>"));
+                /// @todo append this based on whether symbol ends up being replaced or not.
+            }
         }
-        return false;
-    };
+        if (!prevFont || prevFont->fontSize != font->fontSize) {
+            endString.append(String(u"<font size=\""));
+            endString.append(String::number(font->fontSize) + String(u"\"/>'"));
+        }
+        if (!prevFont || prevFont->getEnigmaStyles() != font->getEnigmaStyles()) {
+            int finaleFontStyle = font->getEnigmaStyles();
+            std::vector<std::tuple<String, FontStyle, bool> > fontTags;
+            /// @todo: RGP: it might be a lot simpler to use the bool properties in FontInfo. Not sure.
 
-    while (rawString.size() > 0) {
-        if (rawString.front() == '^') {
-            rawString.erase(0, 1);
-            if (rawString.front() == '^') {
-                endString.append(u"^"); // add '^' to endString
-                rawString.erase(0, 1);  // remove from rawString
-            } else if (rawString.substr(0, 4) =="font") {
-                size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
-                    musx::util::EnigmaString::parseFontCommand("^" + rawString.subString(0, endBracketPos), *fontInfo.get());
-                    auto fontDefinition = m_doc->getOthers()->get<others::FontDefinition>(m_currentMusxPartId, Cmper(fontInfo.fontId));
-                    // When using musical fonts, don't actually set the font type since symbols are loaded separately.
-                    /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
-                    if (fontDefinition->name != "Maestro") {
-                        endString.append(String(u'<font face="' + String::fromStdString(fontDefinition->name) + u'"/>'));
-						/// @todo append this based on whether symbol ends up being replaced or not
-                    }
-                    rawString.erase(0, endBracketPos);
-                } else {
-                    // log error
-                    rawString.erase(0, 4);
+            // How this works:
+            // If Finale says the text is a certain style, we add a tag saying text should match the style.
+            // If MuseScore says the text is currently like that, we add a tag saying text should stop matching that style.
+            //    If Finale says to set a style, and MuseScore is currently not that style, we add a positive tag.
+            //    If MuseScore is currently a style and Finale does not re-tag it, we cancel that style with a negative tag.
+            //    If neither mention the style (it isn't currently active nor has it been set), do nothing.
+            //    If Finale and MuseScore contain it (meaning it's active currently AND was re-tagged, presumably due to
+            //     a different style changing), add a positive and negative tag. This ensures we won't end up with bad nesting.
+            // We then order the tags, and remove occuring duplicates, if the nesting allows it.
+            // Yes, this can result in a lot of excessive tags, but even native MuseScore is currently no different!
+
+            for (const auto& fontStyle : fontStyleMapper) {
+                auto [finaleInt, museScoreTag, museScoreEnum] = fontStyle;
+
+                if (finaleFontStyle & finaleInt) {
+                    fontTags.emplace_back(std::make_tuple(String(u"<" + museScoreTag + u">"), museScoreEnum, true));
                 }
-            } else if (testForTag(rawString, "size")) {
-                size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
-                    endString.append(String(u'<font size="'));
-                    endString.append(String::fromStdString(rawString.substr(1, endBracketPos - 1) + String(u'"/>'));
-                    rawString.erase(0, endBracketPos); // remove up to endbracketpos
-                } else {
-                    // log error
-                }
-            } else if (testForTag(rawString, "nfx")) {
-                size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
-                    // retrieve value in brackets
-                    int finaleFontStyle = String::fromStdString(rawString.substr(1, endBracketPos - 1).toInt();
-                    std::vector<std::tuple<String, FontStyle, bool> > fontTags;
-
-                    // How this works:
-                    // If Finale says the text is a certain style, we add a tag saying text should match the style.
-                    // If MuseScore says the text is currently like that, we add a tag saying text should stop matching that style.
-                    //    If Finale says to set a style, and MuseScore is currently not that style, we add a positive tag.
-                    //    If MuseScore is currently a style and Finale does not re-tag it, we cancel that style with a negative tag.
-                    //    If neither mention the style (it isn't currently active nor has it been set), do nothing.
-                    //    If Finale and MuseScore contain it (meaning it's active currently AND was re-tagged, presumably due to
-                    //     a different style changing), add a positive and negative tag. This ensures we won't end up with bad nesting.
-                    // We then order the tags, and remove occuring duplicates, if the nesting allows it.
-                    // Yes, this can result in a lot of excessive tags, but even native MuseScore is currently no different!
-
-                    for (const auto& fontStyle : fontStyleMapper) {
-                        auto [finaleInt, museScoreTag, museScoreEnum] = fontStyle;
-
-                        if (finaleFontStyle & finaleInt) {
-                            fontTags.emplace_back(std::make_tuple(String(u"<" + museScoreTag + u">"), museScoreEnum, true));
-                        }
-                        if (currFontStyle & museScoreEnum) {
-                            fontTags.emplace_back(std::make_tuple(String(u"</" + museScoreTag + u">"), museScoreEnum, false));
-                        }
-                    }
-                    if (!fontTags.empty()) {
-                        std::sort(fontTags.begin(), fontTags.end(),[] (const auto& a, const auto& b) {
-                            auto [tagA, msEnumA, addA] = a;
-                            auto [tagB, msEnumB, addB] = b;
-                            if (addA == addB) {
-                                return msEnumA < msEnumB == addA;
-                            }
-                            return addA;
-                        });
-
-                        // remove duplicate adjacent tags
-                        for (size_t i = 0; i < fontTags.size() - 1; ++i) {
-                            auto [tagA, msEnumA, addA] = fontTags[i];
-                            auto [tagB, msEnumB, addB] = fontTags[i + 1];
-                            if (msEnumA == msEnumB) {
-                                fontTags.erase(i, i + 1);
-                                i = 0; // reset so we can find new pairs made available by the removal
-                            }
-                        }
-
-                        // append the finished product
-                        for (const auto& fontTag : fontTags) {
-                            auto [tag, msEnum, add] = fontTag;
-                            endString.append(tag);
-                        }
-                    }
-                    rawString.erase(0, endBracketPos);
-                } else {
-                    // log error
-                }
-            } else if (testForTag(rawString, "page")) {
-                size_t endBracketPos = rawString.find(")");
-                if (rawString.front() == "(" && endBracketPos > 0) {
-                    // do something
-                    rawString.erase(0, endBracketPos);
-                } else {
-                    // log error
-                }
-            } else if (testForTag(rawString, "cprsym()")) {
-                endString.append(Char(u'\u00A9'));
-            } else if (testForTag(rawString, "partname()")) {
-                Excerpt* e = m_score->excerpt();
-                if (e && !m_score->isMaster()) {
-                    endString.append(e->name());
-                } else {
-                    endString.append(String(u"Score")); // Finale default (observed)
-                }
-            } else if (testForTag(rawString, "totpages()")) {
-                // header/footer should be handled differently
-                endString.append(String::number(m_score->pages().size()));
-            } else if (testForTag(rawString, "filename()")) {
-                 endString.append(m_score->masterScore()->name()); // correct behaviour apparently, + .mscz???
-            } else {
-                // Find and replace metaTags with their actual text value
-                for (const auto& metaTag : kEnigmaTags) {
-                    if (rawString.substr(0, metaTag.length) == metaTag) {
-                        rawString.insert(f, m_score->metaTag(FinaleTConv::metaTagFromTextComponent(metaTag)).toStdString());
-                        rawString.erase(0, metaTag.length);
-                    }
+                if (currFontStyle & museScoreEnum) {
+                    fontTags.emplace_back(std::make_tuple(String(u"</" + museScoreTag + u">"), museScoreEnum, false));
                 }
             }
-            continue;
+            if (!fontTags.empty()) {
+                std::sort(fontTags.begin(), fontTags.end(),[] (const auto& a, const auto& b) {
+                    auto [tagA, msEnumA, addA] = a;
+                    auto [tagB, msEnumB, addB] = b;
+                    if (addA == addB) {
+                        return msEnumA < msEnumB == addA;
+                    }
+                    return addA;
+                });
+
+                // remove duplicate adjacent tags
+                for (size_t i = 0; i < fontTags.size() - 1; ++i) {
+                    auto [tagA, msEnumA, addA] = fontTags[i];
+                    auto [tagB, msEnumB, addB] = fontTags[i + 1];
+                    if (msEnumA == msEnumB) {
+                        fontTags.erase(fontTags.begin() + i + 1);
+                        if (i >= 0) --i; // back up to recheck the new pair at this position
+                    }
+                }
+
+                // append the finished product
+                for (const auto& fontTag : fontTags) {
+                    auto [tag, msEnum, add] = fontTag;
+                    endString.append(tag);
+                }
+            }
         }
-        endString.append(FinaleTextConv::symIdFromFinaleChar(rawString.front()));
-        rawString.erase(0, 1);
-    }
+        prevFont = std::make_shared<FontInfo>(*font);
+        endString.append(String::fromStdString(nextChunk));
+        return true;
+    };
+
+    // The processCommand function sends back to the parser a subsitution string for the Enigma command.
+    // The command is parsed with the command in the first element and any parameters in subsequent elements.
+    // Return "" to remove the command from the processed string. Return std::nullopt to copy the command text into the processed string.
+    auto processCommand = [&](const std::vector<std::string>& parsedCommand) -> std::optional<std::string> {
+        if (parsedCommand.empty()) {
+            // log error
+            return std::nullopt;
+        }
+        /// @todo Perhaps add parse functions to classes like PageTextAssign to handle this automatically. But it also may be important
+        /// to handle it here for an intelligent import, if text can reference a page number offset in MuseScore.
+        if (parsedCommand[0] == "page") {
+            if (parsedCommand.size() < 2) {
+                // log error
+            }
+            // do something
+            return std::nullopt; // for now, just dump the command into the processed string
+        } else if (parsedCommand[0] == "cprsym") {
+            return String(u"\u00A9").toStdString();
+        } else if (parsedCommand[0] == "partname") {
+            /// @todo it may make more sense to get the partname from musx. Not sure. For now, not changing it.
+            Excerpt* e = m_score->excerpt();
+            if (e && !m_score->isMaster()) {
+                return e->name().toStdString();
+            } else {
+                return "Score"; /// @todo this string is stored in the musx options
+            }
+        } else if (parsedCommand[0] == "totpages") {
+            if (/*todo isHeaderOrFooter*/ false) {
+                return "$n";
+            }
+            return String::number(m_score->pages().size()).toStdString();
+        } else if (parsedCommand[0] ==  "filename") {
+            /// @todo Does the file have a name at import time?
+            return m_score->masterScore()->name().toStdString();
+        } else {
+            /// @todo strip unknown commands or embed them. Returning "" strips them. There are many more,
+            /// and some can probably be handled in the musx library by the entities that use them.
+            return "";
+        }
+    };
+
+    musx::util::EnigmaString::parseEnigmaText(m_doc, rawString, processTextChunk, processCommand,
+            musx::util::EnigmaString::AccidentalStyle::Unicode); /// @todo we may want eventually to be smarter here and use Smufl for Smufl fonts. Not sure.
+
     return endString;
 };
 
@@ -247,7 +233,7 @@ void FinaleParser::importTexts()
         // convert this to xmlText
         String pageXmlText = stringFromText(rawText);
 
-        const bool importAsHeaderFooter = [&]() {
+        [[maybe_unused]]const bool importAsHeaderFooter = [&]() {
             // if text is not at top or bottom, invisible,
             // not recurring, or not on page 1
             if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center
@@ -272,7 +258,7 @@ void FinaleParser::importTexts()
             //check for existing header/footer text in the same location of the same page(s). if so, don't import.
             return true; // dbg
         }();
-        const bool importAsFrameText = [&]() {
+        [[maybe_unused]]const bool importAsFrameText = [&]() {
             if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center) {
                 return false;
             }
@@ -289,4 +275,3 @@ void FinaleParser::importTexts()
 }
 
 }
-
