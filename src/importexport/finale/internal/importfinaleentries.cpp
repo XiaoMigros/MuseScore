@@ -85,8 +85,7 @@ void FinaleParser::mapLayers()
             if (emplaced) {
                 m_layer2Voice.emplace(layerIndex, idx);
                 // If direction is unspecified or mismatched, force stems
-                const bool stemUpVoice = (idx % 2 == 0); // voices 0,2
-                if (!layerAttr->freezeLayer || (layerAttr->freezeStemsUp != stemUpVoice)) {
+                if (!layerAttr->freezeLayer || (layerAttr->freezeStemsUp != isUpVoice(idx))) {
                     m_layerForceStems.insert(layerIndex);
                 }
                 return;
@@ -249,7 +248,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                 continue;
             }
             int newStaffMove = int(crossStaffIdx) - int(staffIdx);
-            // MuseScore doesn't support individual cross-staff notes, either move the whole chord or nothing
+            // MuseScore doesn't support individual cross-staff notes, either move the whole chord or nothing.
             // When moving, prioritise outermost staves
             if (std::abs(newStaffMove) > std::abs(crossStaffMove)) {
                 crossStaffMove = newStaffMove;
@@ -293,7 +292,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             if (!forceAccidental) {
                 int line = noteValToLine(nval, targetStaff, segment->tick());
                 bool error = false;
-                engraving::Note* startN = note->firstTiedNote() ? note->firstTiedNote() : note;
+                engraving::Note* startN = note->firstTiedNote();
                 if (Segment* startSegment = startN->chord()->segment()) {
                     AccidentalVal defaultAccVal = startSegment->measure()->findAccidental(startSegment, idx, line, error);
                     if (error) {
@@ -336,13 +335,13 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                     note->setTieBack(tie);
                 } else {
                     logger()->logInfo(String(u"Tie does not have starting note. Possibly a partial tie, currently unsupported."));
-                }           
+                }
             }
             m_noteInfoPtr2Note.emplace(noteInfoPtr, note);
         }
         if (currentEntry->freezeStem || currentEntry->voice2 || entryInfo->v2Launch
             || m_layerForceStems.find(entryInfo.getLayerIndex()) != m_layerForceStems.end()) {
-            /// @todo beams: this works for non-beamable notes, but beams appear to have their own up/down status
+            // Additionally, beams have their own vertical direction, which is set in processBeams.
             DirectionV dir = currentEntry->upStem ? DirectionV::UP : DirectionV::DOWN;
             chord->setStemDirection(dir);
         }
@@ -363,7 +362,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     int entrySize = entryInfo.calcEntrySize();
     if (entrySize <= musx::dom::MAX_CUE_PERCENTAGE) {
         double crMag = FinaleTConv::doubleFromPercent(entrySize);
-        if (crMag < m_score->style().styleD(Sid::smallNoteMag)) {
+        if (crMag <= m_score->style().styleD(Sid::smallNoteMag)) {
             if (m_smallNoteMagFound) {
                 logger()->logWarning(String(u"Inconsistent cue note sizes found. Using the smallest encountered."), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
             }
@@ -506,7 +505,7 @@ static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t
         // rather than not import the tremolo, force it to be a valid type
         tremoloBeamsNum = std::clamp(tremoloBeamsNum, int(TremoloType::C8), int(TremoloType::C64));
 
-        // now we have to set the correct duration for the chords to 
+        // now we have to set the correct duration for the chords to,
         // fill the space (and account for any tuplets they may be in)
         Fraction d = (c2->tick() - c1->tick()) * timeStretch;
         for (Tuplet* t = c1->tuplet(); t; t = t->tuplet()) {
@@ -617,6 +616,7 @@ void FinaleParser::importEntries()
     staff_idx_t lastStaffIdxInPart = 0;
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
         staff_idx_t curStaffIdx = muse::value(m_inst2Staff, InstCmper(musxScrollViewItem->staffId), muse::nidx);
+        track_idx_t staffTrackIdx = curStaffIdx * VOICES;
         IF_ASSERT_FAILED (curStaffIdx != muse::nidx) {
             logger()->logWarning(String(u"Add entries: Musx inst value not found."), m_doc, musxScrollViewItem->staffId, 1);
             continue;
@@ -666,7 +666,7 @@ void FinaleParser::importEntries()
                             continue;
                         }
 
-                        track_idx_t curTrackIdx = curStaffIdx * VOICES + voiceOff;
+                        track_idx_t curTrackIdx = staffTrackIdx + voiceOff;
 
                         // generate tuplet map, tremolo map and create tuplets
                         // trick: insert invalid 'tuplet' spanning the whole measure. useful for fallback
@@ -700,12 +700,12 @@ void FinaleParser::importEntries()
             logger()->logInfo(String(u"Fixing corruptions for measure at staff %1, tick %2").arg(String::number(curStaffIdx), currTick.toString()));
             measure->checkMeasure(curStaffIdx);
             // ...and make sure voice 1 exists.
-            if (!measure->hasVoice(curStaffIdx * VOICES)) {
+            if (!measure->hasVoice(staffTrackIdx)) {
                 Segment* segment = measure->getSegmentR(SegmentType::ChordRest, Fraction(0, 1));
                 Rest* rest = Factory::createRest(segment, TDuration(DurationType::V_MEASURE));
                 rest->setScore(m_score);
                 rest->setTicks(measure->timesig() * curStaff->timeStretch(measure->tick()));
-                rest->setTrack(curStaffIdx * VOICES);
+                rest->setTrack(staffTrackIdx);
                 segment->add(rest);
             }
         }
