@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_APIV1_TIE_H
-#define MU_ENGRAVING_APIV1_TIE_H
+#pragma once
 
 #include "engraving/dom/tie.h"
 
@@ -61,7 +60,4 @@ public:
     /// \endcond
 };
 
-extern Tie* tieWrap(mu::engraving::Tie* tie);
 }
-
-#endif

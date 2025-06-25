@@ -60,8 +60,6 @@ class Tie;
 class Tuplet;
 class Measure;
 
-extern Tie* tieWrap(mu::engraving::Tie* tie);
-
 //---------------------------------------------------------
 //   wrap
 //---------------------------------------------------------
@@ -895,8 +893,8 @@ public:
 
     bool isTrillCueNote() { return note()->isTrillCueNote(); }
 
-    apiv1::Tie* tieBack() const { return note()->tieBack() != nullptr ? tieWrap(note()->tieBack()) : nullptr; }
-    apiv1::Tie* tieForward() const { return note()->tieFor() != nullptr ? tieWrap(note()->tieFor()) : nullptr; }
+    apiv1::Tie* tieBack() const { return wrap<Tie>(note()->tieBack()); }
+    apiv1::Tie* tieForward() const { return wrap<Tie>(note()->tieFor()); }
 
     apiv1::Note* firstTiedNote() { return wrap<Note>(note()->firstTiedNote()); }
     apiv1::Note* lastTiedNote() { return wrap<Note>(note()->lastTiedNote()); }
