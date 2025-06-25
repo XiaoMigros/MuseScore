@@ -448,6 +448,8 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
 
     using mu::engraving::ElementType;
     switch (e->type()) {
+    case ElementType::TIE:
+        return wrap<Tie>(toTie(e), own);
     case ElementType::NOTE:
         return wrap<Note>(toNote(e), own);
     case ElementType::CHORD:
