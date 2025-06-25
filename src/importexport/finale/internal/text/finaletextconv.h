@@ -30,7 +30,7 @@
 #include "musx/musx.h"
 
 namespace mu::iex::finale {
-using CharacterMap = std::pair<char16_t, char16_t>;
+using CharacterMap = std::tuple<char16_t, char16_t, engraving::SymId, int>;
 
 class FinaleLogger;
 class FinaleTextConv
@@ -40,14 +40,14 @@ public:
 
     static bool init();
 
-    static String smuflCodeList(char c, std::string font);
-    static String symIdFromFinaleChar(char c, std::string font);
+    static engraving::String smuflCodeList(char c, const std::string& font);
+    static engraving::String symIdFromFinaleChar(char c, const std::string& font);
 
 private:
 
-    bool initConversionJson();
+    static bool initConversionJson();
 
-    std::unordered_map<std::string, std::vector<CharacterMap> > m_convertedFonts;
+    static inline std::unordered_map<std::string, std::vector<CharacterMap>> m_convertedFonts;
 };
 
 }
