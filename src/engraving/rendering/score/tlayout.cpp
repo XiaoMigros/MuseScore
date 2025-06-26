@@ -1399,36 +1399,50 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
     switch (item->bracketType()) {
     case BracketType::BRACE: {
         String musicalSymbolFont = conf.styleSt(Sid::musicalSymbolFont);
-        if (musicalSymbolFont == "Emmentaler" || musicalSymbolFont == "Gonville") {
+        if (musicalSymbolFont == "Emmentaler" || musicalSymbolFont == "Gonville" || musicalSymbolFont == "Finale Maestro") {
             ldata->braceSymbol = SymId::noSym;
             double w = conf.styleMM(Sid::akkoladeWidth);
             double h2 = ldata->bracketHeight * 0.5;
+            PainterPath path;
+            if (musicalSymbolFont == "Finale Maestro") {
+                double y = std::min(h2 * 0.125, item->spatium());
 
+#define XF(a) w * a
+#define YF(a, b) a + h2 + (b * y)
+
+                path.moveTo(XF(0), YF(0, 0));
+                path.cubicTo(XF(2.25), YF(0, 2), XF(-1.5), YF(h2, -4), XF(0.98), YF(h2, 0));
+                path.lineTo(XF(1), YF(h2, -0.3));
+                path.cubicTo(XF(-0.5), YF(h2, -3), XF(2.25), YF(0, 1.5), XF(0.15), YF(0, 0));
+                path.cubicTo(XF(2.25), YF(0, -1.5), XF(-0.5), YF(-h2, 3), XF(1), YF(-h2, 0.3));
+                path.lineTo(XF(0.98), YF(-h2, 0));
+                path.cubicTo(XF(-1.5), YF(-h2, 4), XF(2.25), YF(0, -2), XF(0), YF(0, 0));
+            } else {
 #define XM(a) (a + 700) * w / 700
 #define YM(a) (a + 7100) * h2 / 7100
 
-            PainterPath path;
-            path.moveTo(XM(-8), YM(-2048));
-            path.cubicTo(XM(-8), YM(-3192), XM(-360), YM(-4304), XM(-360), YM(-5400));                 // c 0
-            path.cubicTo(XM(-360), YM(-5952), XM(-264), YM(-6488), XM(32), YM(-6968));                 // c 1
-            path.cubicTo(XM(36), YM(-6974), XM(38), YM(-6984), XM(38), YM(-6990));                     // c 0
-            path.cubicTo(XM(38), YM(-7008), XM(16), YM(-7024), XM(0), YM(-7024));                      // c 0
-            path.cubicTo(XM(-8), YM(-7024), XM(-22), YM(-7022), XM(-32), YM(-7008));                   // c 1
-            path.cubicTo(XM(-416), YM(-6392), XM(-544), YM(-5680), XM(-544), YM(-4960));               // c 0
-            path.cubicTo(XM(-544), YM(-3800), XM(-168), YM(-2680), XM(-168), YM(-1568));               // c 0
-            path.cubicTo(XM(-168), YM(-1016), XM(-264), YM(-496), XM(-560), YM(-16));                  // c 1
-            path.lineTo(XM(-560), YM(0));                    //  l 1
-            path.lineTo(XM(-560), YM(16));                   //  l 1
-            path.cubicTo(XM(-264), YM(496), XM(-168), YM(1016), XM(-168), YM(1568));                   // c 0
-            path.cubicTo(XM(-168), YM(2680), XM(-544), YM(3800), XM(-544), YM(4960));                  // c 0
-            path.cubicTo(XM(-544), YM(5680), XM(-416), YM(6392), XM(-32), YM(7008));                   // c 1
-            path.cubicTo(XM(-22), YM(7022), XM(-8), YM(7024), XM(0), YM(7024));                        // c 0
-            path.cubicTo(XM(16), YM(7024), XM(38), YM(7008), XM(38), YM(6990));                        // c 0
-            path.cubicTo(XM(38), YM(6984), XM(36), YM(6974), XM(32), YM(6968));                        // c 1
-            path.cubicTo(XM(-264), YM(6488), XM(-360), YM(5952), XM(-360), YM(5400));                  // c 0
-            path.cubicTo(XM(-360), YM(4304), XM(-8), YM(3192), XM(-8), YM(2048));                      // c 0
-            path.cubicTo(XM(-8), YM(1320), XM(-136), YM(624), XM(-512), YM(0));                        // c 1
-            path.cubicTo(XM(-136), YM(-624), XM(-8), YM(-1320), XM(-8), YM(-2048));                    // c 0*/
+                path.moveTo(XM(-8), YM(-2048)); // almost the width, 5/7 the height
+                path.cubicTo(XM(-8), YM(-3192), XM(-360), YM(-4304), XM(-360), YM(-5400));                 // c 0
+                path.cubicTo(XM(-360), YM(-5952), XM(-264), YM(-6488), XM(32), YM(-6968));                 // c 1
+                path.cubicTo(XM(36), YM(-6974), XM(38), YM(-6984), XM(38), YM(-6990));                     // c 0
+                path.cubicTo(XM(38), YM(-7008), XM(16), YM(-7024), XM(0), YM(-7024));                      // c 0
+                path.cubicTo(XM(-8), YM(-7024), XM(-22), YM(-7022), XM(-32), YM(-7008));                   // c 1
+                path.cubicTo(XM(-416), YM(-6392), XM(-544), YM(-5680), XM(-544), YM(-4960));               // c 0
+                path.cubicTo(XM(-544), YM(-3800), XM(-168), YM(-2680), XM(-168), YM(-1568));               // c 0
+                path.cubicTo(XM(-168), YM(-1016), XM(-264), YM(-496), XM(-560), YM(-16));                  // c 1
+                path.lineTo(XM(-560), YM(0));                    //  l 1
+                path.lineTo(XM(-560), YM(16));                   //  l 1
+                path.cubicTo(XM(-264), YM(496), XM(-168), YM(1016), XM(-168), YM(1568));                   // c 0
+                path.cubicTo(XM(-168), YM(2680), XM(-544), YM(3800), XM(-544), YM(4960));                  // c 0
+                path.cubicTo(XM(-544), YM(5680), XM(-416), YM(6392), XM(-32), YM(7008));                   // c 1
+                path.cubicTo(XM(-22), YM(7022), XM(-8), YM(7024), XM(0), YM(7024));                        // c 0
+                path.cubicTo(XM(16), YM(7024), XM(38), YM(7008), XM(38), YM(6990));                        // c 0
+                path.cubicTo(XM(38), YM(6984), XM(36), YM(6974), XM(32), YM(6968));                        // c 1
+                path.cubicTo(XM(-264), YM(6488), XM(-360), YM(5952), XM(-360), YM(5400));                  // c 0
+                path.cubicTo(XM(-360), YM(4304), XM(-8), YM(3192), XM(-8), YM(2048));                      // c 0
+                path.cubicTo(XM(-8), YM(1320), XM(-136), YM(624), XM(-512), YM(0));                        // c 1
+                path.cubicTo(XM(-136), YM(-624), XM(-8), YM(-1320), XM(-8), YM(-2048));                    // c 0*/
+            }
             ldata->path = path;
             ldata->setBbox(path.boundingRect());
             ldata->shape.add(ldata->bbox());
@@ -1439,8 +1453,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
             }
             double h = ldata->bracketHeight;
             double w = item->symWidth(ldata->braceSymbol) * item->magx();
-            ldata->setBbox(RectF(0, 0, w, h));
-            ldata->shape.add(ldata->bbox());
+            ldata->setShape(RectF(0, 0, w, h));
             ldata->bracketWidth = w + conf.styleMM(Sid::akkoladeBarDistance);
         }
     }
@@ -1463,8 +1476,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
         double y = -w;
         double h = (ldata->bracketHeight * 0.5 + w) * 2;
         w += (.5 * item->spatium() + 3 * w);
-        ldata->setBbox(RectF(x, y, w, h));
-        ldata->shape.add(ldata->bbox());
+        ldata->setShape(RectF(x, y, w, h));
 
         ldata->bracketWidth = conf.styleMM(Sid::staffLineWidth) / 2 + 0.5 * item->spatium();
     }
@@ -1476,8 +1488,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
         double bd = _spatium * .25;
         double y = -bd;
         double h = (-y + ldata->bracketHeight * 0.5) * 2;
-        ldata->setBbox(RectF(x, y, w, h));
-        ldata->shape.add(ldata->bbox());
+        ldata->setShape(RectF(x, y, w, h));
 
         ldata->bracketWidth = 0.67 * conf.styleMM(Sid::bracketWidth) + conf.styleMM(Sid::bracketDistance);
     }
