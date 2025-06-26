@@ -1090,7 +1090,7 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
         { TextType::Description, u"description" }, // not native
         { TextType::Lyricist,    u"lyricist" },
         { TextType::Arranger,    u"arranger" },
-        { TextType::Subtitle,    u"subtitle" }, // not native
+        { TextType::Subtitle,    u"subtitle" },
     };
     return muse::value(metaTagTable, textType, String());
 }
@@ -1098,12 +1098,13 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
 String FinaleTConv::metaTagFromTextComponent(std::string component)
 {
     static const std::unordered_map<std::string, String> metaTagTable = {
-        { "title()",       u"workTitle" },
-        { "composer()",    u"composer" },
-        { "copyright()",   u"copyright" },
-        { "lyricist()",    u"lyricist" },
-        { "arranger()",    u"arranger" },
-        { "subtitle()",    u"subtitle" }, // not native
+        { "title",       u"workTitle" },
+        { "composer",    u"composer" },
+        { "copyright",   u"copyright" },
+        { "description", u"description" }, // not native
+        { "lyricist",    u"lyricist" },
+        { "arranger",    u"arranger" },
+        { "subtitle",    u"subtitle" },
     };
     return muse::value(metaTagTable, component, String());
 }
