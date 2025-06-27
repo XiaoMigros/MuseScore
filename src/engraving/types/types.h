@@ -246,6 +246,7 @@ using PainterPath = muse::draw::PainterPath; // P_TYPE::PATH
 using ScaleF = muse::ScaleF;              // P_TYPE::SCALE
 using PairF = muse::PairF;                // P_TYPE::PAIR_REAL
 using PolygonF = muse::PolygonF;
+using BracketPath = std::vector<std::tuple<int, PointF, PointF> >; // P_TYPE::BRACKET_PATH
 
 // --- Draw ---
 using Color = muse::draw::Color;        // P_TYPE::COLOR

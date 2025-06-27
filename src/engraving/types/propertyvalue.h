@@ -56,6 +56,7 @@ enum class P_TYPE : unsigned char {
     SPATIUM,
     MILLIMETRE,
     PAIR_REAL,
+    BRACKET_PATH,
 
     // Draw
     SYMID,
@@ -185,6 +186,9 @@ public:
 
     PropertyValue(const Millimetre& v)
         : m_type(P_TYPE::MILLIMETRE), m_data(make_data<Millimetre>(v)) {}
+
+    PropertyValue(const BracketPath& v)
+        : m_type(P_TYPE::BRACKET_PATH), m_data(make_data<BracketPath>(v)) {}
 
     // Draw
     PropertyValue(SymId v)

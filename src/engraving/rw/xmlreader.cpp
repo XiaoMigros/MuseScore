@@ -232,4 +232,32 @@ String XmlReader::readXml()
     }
     return s;
 }
+
+BracketPath XmlReader::readBracketPath()
+{
+    BracketPath path;
+    while (readNextStartElement()) {
+        const AsciiStringView nextTag(name());
+        if (nextTag == "point") {
+            int type;
+            PointF rel;
+            PointF abs;
+            while (readNextStartElement()) {
+                const AsciiStringView tag(name());
+                if (tag == "type") {
+                    type = readInt();
+                } else if (tag == "rel") {
+                    rel = readPoint();
+                } else if (tag == "abs") {
+                    abs = readPoint();
+                }
+            }
+            path.emplace_back(std::make_tuple(type, rel, abs));
+            // skipCurrentElement();
+        } else {
+            unknown();
+        }
+    }
+    return path;
+}
 }

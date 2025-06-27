@@ -109,6 +109,15 @@ QVariant PropertyValue::toQVariant() const
     case P_TYPE::SPATIUM:     return value<Spatium>().val();
     case P_TYPE::MILLIMETRE:  return value<Millimetre>().val();
     case P_TYPE::PAIR_REAL:   return QVariant::fromValue(value<PairF>());
+    case P_TYPE::BRACKET_PATH: {
+        QList<QVariantList> ml;
+        BracketPath nl = value<BracketPath>();
+        for (size_t i = 0; i < nl.size(); ++i) {
+            auto [pathType, relative, absolute] = nl.at(i);
+            ml.append(QVariantList({ pathType, relative.toQPointF(), absolute.toQPointF() }));
+        }
+        return QVariant::fromValue(ml);
+    } break;
 
     // Draw
     case P_TYPE::SYMID:       return static_cast<int>(value<SymId>());
@@ -224,6 +233,21 @@ PropertyValue PropertyValue::fromQVariant(const QVariant& v, P_TYPE type)
     case P_TYPE::SPATIUM:       return PropertyValue(Spatium(v.toReal()));
     case P_TYPE::MILLIMETRE:    return PropertyValue(Millimetre(v.toReal()));
     case P_TYPE::PAIR_REAL:     return PropertyValue(v.value<std::pair<double, double> >());
+    case P_TYPE::BRACKET_PATH: {
+        QList<QVariantList> ml = v.value<QList<QVariantList> >();
+        BracketPath nl;
+        for (int i = 0; i < ml.size(); ++i) {
+            IF_ASSERT_FAILED(ml.at(i).size() == 3) {
+                return PropertyValue();
+            }
+            nl.emplace_back(std::make_tuple(
+                                           ml.at(i).at(0).toInt(),
+                                           PointF::fromQPointF(ml.at(i).at(1).value<QPointF>()),
+                                           PointF::fromQPointF(ml.at(i).at(2).value<QPointF>())
+                           ));
+        }
+        return PropertyValue(nl);
+    }
 
     // Draw
     case P_TYPE::SYMID:         return PropertyValue(SymId(v.toInt()));
