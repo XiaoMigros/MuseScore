@@ -1761,8 +1761,8 @@ void SingleLayout::layout(TrillSegment* item, const Context& ctx)
         ldata->setPosY(0.0);
     }
 
-    bool accidentalGoesBelow = item->trill()->trillType() == TrillType::DOWNPRALL_LINE;
     Trill* trill = item->trill();
+    bool accidentalGoesBelow = trill->trillType() == TrillType::DOWNPRALL_LINE;
     Ornament* ornament = trill->ornament();
     if (ornament) {
         if (item->isSingleBeginType()) {
@@ -1780,7 +1780,7 @@ void SingleLayout::layout(TrillSegment* item, const Context& ctx)
     }
 
     if (item->isSingleType() || item->isBeginType()) {
-        switch (item->trill()->trillType()) {
+        switch (trill->trillType()) {
         case TrillType::TRILL_LINE:
             item->symbolLine(SymId::ornamentTrill, SymId::wiggleTrill);
             break;
@@ -1796,7 +1796,7 @@ void SingleLayout::layout(TrillSegment* item, const Context& ctx)
                              SymId::ornamentZigZagLineNoRightEnd, SymId::ornamentZigZagLineWithRightEnd);
             break;
         }
-        Accidental* a = item->trill()->accidental();
+        Accidental* a = trill->accidental();
         if (a) {
             double vertMargin = 0.35 * item->spatium();
             RectF box = item->symBbox(item->symbols().front());
@@ -1811,7 +1811,17 @@ void SingleLayout::layout(TrillSegment* item, const Context& ctx)
             a->setParent(item);
         }
     } else {
-        item->symbolLine(SymId::wiggleTrill, SymId::wiggleTrill);
+        switch (trill->trillType()) {
+        case TrillType::TRILL_LINE:
+        case TrillType::PRALLPRALL_LINE:
+            item->symbolLine(SymId::wiggleTrill, SymId::wiggleTrill);
+            break;
+        case TrillType::UPPRALL_LINE:
+        case TrillType::DOWNPRALL_LINE:
+            item->symbolLine(SymId::ornamentZigZagLineNoRightEnd,
+                             SymId::ornamentZigZagLineNoRightEnd, SymId::ornamentZigZagLineWithRightEnd);
+            break;
+        }
     }
 
     item->setOffset(PointF());
@@ -2026,9 +2036,7 @@ void SingleLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, const Co
         item->pointsRef()[0] = pp1;
         item->pointsRef()[1] = pp2;
         item->setLineLength(sqrt(PointF::dotProduct(pp2 - pp1, pp2 - pp1)));
-
-        item->setbbox(TextLineBaseSegment::boundingBoxOfLine(pp1, pp2, tl->absoluteFromSpatium(tl->lineWidth()) / 2,
-                                                             tl->lineStyle() == LineType::DOTTED));
+        ldata->setShape(item->createDiagonalLineShape(pp1, pp2, tl->absoluteFromSpatium(tl->lineWidth()), tl));
         return;
     }
 
@@ -2077,14 +2085,15 @@ void SingleLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, const Co
             y1 = h;
         }
     }
-    ldata->setBbox(x1, y1, x2 - x1, y2 - y1);
+    Shape shape = item->createDiagonalLineShape(PointF(x1, y1), PointF(x2, y2),
+                                                tl->absoluteFromSpatium(tl->lineWidth()), tl);
     if (!item->text()->empty()) {
-        ldata->addBbox(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
+        shape.add(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
     }
     // set end text position and extend bbox
     if (!item->endText()->empty()) {
         item->endText()->mutldata()->moveX(ldata->bbox().right());
-        ldata->addBbox(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
+        shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
     }
 
     if (tl->lineVisible()) {
@@ -2197,4 +2206,5 @@ void SingleLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, const Co
 
         item->setLineLength(sqrt(PointF::dotProduct(pp22 - pp1, pp22 - pp1)));
     }
+    ldata->setShape(shape);
 }

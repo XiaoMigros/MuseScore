@@ -47,6 +47,8 @@ NICE-TO-HAVE TODO:
 #include "system.h"
 #include "utils.h"
 
+#include "draw/fontmetrics.h"
+
 #include "log.h"
 
 using namespace mu;
@@ -464,5 +466,47 @@ PropertyValue Glissando::propertyDefault(Pid propertyId) const
         break;
     }
     return SLine::propertyDefault(propertyId);
+}
+
+Shape GlissandoSegment::shape() const
+{
+    Shape shape;
+
+    double _glissWidth = (glissando()->glissandoType() == GlissandoType::STRAIGHT)
+                         ? glissando()->absoluteFromSpatium(glissando()->lineWidth())
+                         : symBbox(SymId::wiggleTrill).height();
+    shape.add(createDiagonalLineShape(PointF(), pos2(), _glissWidth, glissando(), symBbox(SymId::wiggleTrill).width()));
+
+    if (glissando()->showText()) {
+        muse::draw::Font f(glissando()->fontFace(), muse::draw::Font::Type::Unknown);
+        f.setPointSizeF(glissando()->fontSize() * glissando()->spatium() / SPATIUM20);
+        f.setBold(glissando()->fontStyle() & FontStyle::Bold);
+        f.setItalic(glissando()->fontStyle() & FontStyle::Italic);
+        f.setUnderline(glissando()->fontStyle() & FontStyle::Underline);
+        f.setStrike(glissando()->fontStyle() & FontStyle::Strike);
+        muse::draw::FontMetrics fm(f);
+        RectF r = fm.boundingRect(glissando()->text());
+
+        double w     = pos2().x();
+        double h     = pos2().y();
+        double l     = sqrt(w * w + h * h);
+        // if text longer than available space, skip it
+        if (r.width() < l) {
+            auto rotatePoint = [](PointF point, double angle)
+            {
+                double cos = std::cos(angle);
+                double sin = std::sin(angle);
+                return PointF(point.x() * cos - point.y() * sin, point.x() * sin + point.y() * cos);
+            };
+            double wi    = asin(-h / l) /* * 180.0 / M_PI*/;
+            double yOffset = r.height() / 2 + r.y();             // find text descender height
+            // raise text slightly above line and slightly more with WAVY than with STRAIGHT
+            yOffset += glissando()->spatium() * (glissando()->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
+            PointF textStart = rotatePoint(PointF((l - r.width()) / 2, -yOffset), -wi);
+            PointF textEnd = rotatePoint(PointF((l + r.width()) / 2, -yOffset), -wi);
+            shape.add(createDiagonalLineShape(textStart, textEnd, r.height(), glissando()));
+        }
+    }
+    return shape;
 }
 }

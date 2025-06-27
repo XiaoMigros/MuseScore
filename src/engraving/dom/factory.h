@@ -233,9 +233,6 @@ public:
 
     static TripletFeel* createTripletFeel(Segment* parent, TripletFeelType type = TripletFeelType::NONE, bool isAccessibleEnabled = true);
 
-    static FretCircle* createFretCircle(Chord* parent, bool isAccessibleEnabled = true);
-    static FretCircle* copyFretCircle(const FretCircle& src);
-
     static Tuplet* createTuplet(Measure* parent, bool isAccessibleEnabled = true);
     static Tuplet* copyTuplet(const Tuplet& src);
 
@@ -266,6 +263,8 @@ public:
     static Marker* createMarker(EngravingItem* parent, bool isAccessibleEnabled = true);
 
     static Marker* createMarker(EngravingItem* parent, TextStyleType tid, bool isAccessibleEnabled = true);
+
+    static std::shared_ptr<Marker> makeMarker(EngravingItem* parent);
 
     static GradualTempoChange* createGradualTempoChange(EngravingItem* parent, bool isAccessibleEnabled = true);
 

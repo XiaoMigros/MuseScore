@@ -169,6 +169,7 @@
 #include "measurelayout.h"
 #include "tappinglayout.h"
 #include "harmonylayout.h"
+#include "markerlayout.h"
 
 using namespace muse;
 using namespace muse::draw;
@@ -330,7 +331,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
     case ElementType::PARTIAL_LYRICSLINE_SEGMENT: layoutLyricsLineSegment(item_cast<LyricsLineSegment*>(item), ctx);
         break;
     case ElementType::MARKER:
-        layoutMarker(item_cast<const Marker*>(item), static_cast<Marker::LayoutData*>(ldata));
+        layoutMarker(item_cast<const Marker*>(item), static_cast<Marker::LayoutData*>(ldata), ctx);
         break;
     case ElementType::MEASURE_NUMBER:
         layoutMeasureNumber(item_cast<const MeasureNumber*>(item), static_cast<MeasureNumber::LayoutData*>(ldata), ctx);
@@ -2864,9 +2865,7 @@ void TLayout::layoutGlissandoSegment(GlissandoSegment* item, LayoutContext&)
     if (item->staff()) {
         ldata->setMag(item->staff()->staffMag(item->tick()));
     }
-    RectF r = RectF(0.0, 0.0, item->pos2().x(), item->pos2().y()).normalized();
-    double lw = item->absoluteFromSpatium(item->lineWidth()) * .5;
-    item->setbbox(r.adjusted(-lw, -lw, lw, lw));
+    ldata->setShape(item->shape());
 }
 
 void TLayout::layoutGraceNotesGroup(GraceNotesGroup* item, LayoutContext& ctx)
@@ -3353,19 +3352,7 @@ void TLayout::layoutHammerOnPullOffText(HammerOnPullOffText* item, LayoutContext
 void TLayout::fillHairpinSegmentShape(const HairpinSegment* item, HairpinSegment::LayoutData* ldata)
 {
     LAYOUT_CALL_ITEM(item);
-    Shape sh;
-    switch (item->hairpin()->hairpinType()) {
-    case HairpinType::CRESC_HAIRPIN:
-    case HairpinType::DECRESC_HAIRPIN:
-        sh = Shape(item->ldata()->bbox(), item);
-        break;
-    case HairpinType::DECRESC_LINE:
-    case HairpinType::CRESC_LINE:
-    default:
-        sh = textLineBaseSegmentShape(item);
-    }
-
-    ldata->setShape(sh);
+    ldata->setShape(textLineBaseSegmentShape(item));
 }
 
 void TLayout::layoutHarpPedalDiagram(const HarpPedalDiagram* item, HarpPedalDiagram::LayoutData* ldata)
@@ -3958,27 +3945,11 @@ void TLayout::layoutLyricsLineSegment(LyricsLineSegment* item, LayoutContext& ct
     LyricsLayout::layout(item, ctx);
 }
 
-void TLayout::layoutMarker(const Marker* item, Marker::LayoutData* ldata)
+void TLayout::layoutMarker(const Marker* item, Marker::LayoutData* ldata, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    LD_CONDITION(item->parentItem()->ldata()->isSetBbox());
 
-    TLayout::layoutBaseTextBase(item, ldata);
-
-    // although normally laid out to parent (measure) width,
-    // force to center over barline if left-aligned
-    if (item->layoutToParentWidth() && item->align() == AlignH::LEFT) {
-        ldata->moveX(-ldata->bbox().width() * 0.5);
-    }
-
-    if (item->autoplace()) {
-        const Measure* m = toMeasure(item->explicitParent());
-        LD_CONDITION(ldata->isSetPos());
-        LD_CONDITION(ldata->isSetBbox());
-        LD_CONDITION(m->ldata()->isSetPos());
-    }
-
-    Autoplace::autoplaceMeasureElement(item, ldata);
+    MarkerLayout::layoutMarker(item, ldata, ctx);
 }
 
 void TLayout::layoutMeasureBase(MeasureBase* item, LayoutContext& ctx)
@@ -6089,13 +6060,44 @@ void TLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* ld
     Shape shape;
     double y = 0.0;
 
+    double maxBlockWidth = -DBL_MAX;
     // adjust the bounding box for the text item
     for (size_t i = 0; i < ldata->blocks.size(); ++i) {
         TextBlock& t = ldata->blocks[i];
         t.layout(item);
         y += t.lineSpacing();
         t.setY(y);
-        shape.add(t.shape().translated(PointF(0.0, y)));
+        if (!item->positionSeparateFromAlignment()) {
+            shape.add(t.shape().translated(PointF(0.0, y)));
+        }
+        maxBlockWidth = std::max(maxBlockWidth, t.boundingRect().width());
+    }
+
+    // ALIGN TEXT
+    // TODO - implement for all text items
+    if (item->positionSeparateFromAlignment()) {
+        for (size_t i = 0; i < ldata->blocks.size(); ++i) {
+            TextBlock& t = ldata->blocks[i];
+            double diff = maxBlockWidth - t.boundingRect().width();
+            if (muse::RealIsNull(diff)) {
+                shape.add(t.shape().translated(PointF(0.0, t.y())));
+                continue;
+            }
+            double rx = 0.0;
+            AlignH alignH = item->align().horizontal;
+            bool dynamicAlwaysCentered = item->isDynamic() && item->getProperty(Pid::CENTER_ON_NOTEHEAD).toBool();
+            if (alignH == AlignH::HCENTER || dynamicAlwaysCentered) {
+                rx = diff * 0.5;
+            } else if (alignH == AlignH::RIGHT) {
+                rx = diff;
+            }
+
+            for (TextFragment& f : t.fragments()) {
+                f.pos.rx() += rx;
+            }
+            t.shape().translate(PointF(rx, 0.0));
+            shape.add(t.shape().translated(PointF(0.0, t.y())));
+        }
     }
 
     RectF bb = shape.bbox();
@@ -6198,15 +6200,13 @@ Shape TLayout::textLineBaseSegmentShape(const TextLineBaseSegment* item)
     if (!item->endText()->empty()) {
         shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()), item->endText());
     }
-    double lw2 = 0.5 * item->absoluteFromSpatium(item->lineWidth());
-    bool isDottedLine = item->textLineBase()->lineStyle() == LineType::DOTTED;
+    double lw2 = item->absoluteFromSpatium(item->lineWidth());
     if (item->twoLines()) {     // hairpins
-        shape.add(item->boundingBoxOfLine(item->points()[0], item->points()[1], lw2, isDottedLine), item);
-        shape.add(item->boundingBoxOfLine(item->points()[2], item->points()[3], lw2, isDottedLine), item);
+        shape.add(item->createDiagonalLineShape(item->points()[0], item->points()[1], lw2, item->textLineBase()));
+        shape.add(item->createDiagonalLineShape(item->points()[2], item->points()[3], lw2, item->textLineBase()));
     } else {
         for (int i = 0; i < item->npoints() - 1; ++i) {
-            shape.add(item->boundingBoxOfLine(item->points()[i], item->points()[i + 1], lw2, isDottedLine), item,
-                      !item->textLineBase()->lineVisible());
+            shape.add(item->createDiagonalLineShape(item->points()[i], item->points()[i + 1], lw2, item->textLineBase()));
         }
     }
     return shape;
@@ -6361,9 +6361,7 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
         item->pointsRef()[0] = pp1;
         item->pointsRef()[1] = pp2;
         item->setLineLength(sqrt(PointF::dotProduct(pp2 - pp1, pp2 - pp1)));
-
-        item->setbbox(TextLineBaseSegment::boundingBoxOfLine(pp1, pp2, tl->absoluteFromSpatium(tl->lineWidth()) / 2,
-                                                             tl->lineStyle() == LineType::DOTTED));
+        ldata->setShape(item->createDiagonalLineShape(pp1, pp2, tl->absoluteFromSpatium(tl->lineWidth()), tl));
         return;
     }
 
@@ -6429,9 +6427,10 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
             y1 = h;
         }
     }
-    ldata->setBbox(x1, y1, x2 - x1, y2 - y1);
+    Shape shape = item->createDiagonalLineShape(PointF(x1, y1), PointF(x2, y2),
+                                                tl->absoluteFromSpatium(tl->lineWidth()), tl);
     if (!item->text()->empty()) {
-        ldata->addBbox(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
+        shape.add(item->text()->ldata()->bbox().translated(item->text()->pos()));      // DEBUG
     }
     // set end text position and extend bbox
     if (!item->endText()->empty()) {
@@ -6448,8 +6447,8 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
                 break;
             }
         }
-        item->endText()->mutldata()->moveX(ldata->bbox().right());
-        ldata->addBbox(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
+        item->endText()->mutldata()->moveX(shape.right());
+        shape.add(item->endText()->ldata()->bbox().translated(item->endText()->pos()));
     }
 
     if (tl->lineVisible() || !ctx.conf().isPrintingMode()) {
@@ -6532,6 +6531,7 @@ void TLayout::layoutTextLineBaseSegment(TextLineBaseSegment* item, LayoutContext
 
         item->setLineLength(sqrt(PointF::dotProduct(pp22 - pp1, pp22 - pp1)));
     }
+    ldata->setShape(shape);
 }
 
 void TLayout::layoutTie(Tie* item, LayoutContext&)

@@ -883,7 +883,7 @@ Shape BeamSegment::shape() const
     double horizontalStep = beamHorizontalLength / subBoxesCount;
     double verticalStep = beamHeightDiff / subBoxesCount;
     std::vector<PointF> pointsOnBeamLine;
-    pointsOnBeamLine.push_back(startPoint);
+    pointsOnBeamLine.push_back(startPoint + PointF(0.0, verticalStep / 2));
     for (int i = 0; i < subBoxesCount - 1; ++i) {
         PointF nextPoint = pointsOnBeamLine.back() + PointF(horizontalStep, verticalStep);
         pointsOnBeamLine.push_back(nextPoint);

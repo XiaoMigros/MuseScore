@@ -80,17 +80,6 @@ void TextLineBaseSegment::setSelected(bool f)
     m_endText->setSelected(f);
 }
 
-RectF TextLineBaseSegment::boundingBoxOfLine(const PointF& p1, const PointF& p2, double lw2, bool isDottedLine)
-{
-    if (isDottedLine) {
-        return RectF(p1, p2).normalized().adjusted(-lw2, -lw2, lw2, lw2);
-    }
-
-    PointF a = lw2 * (p2 - p1).normalized();
-    PointF b(-a.y(), a.x());
-    return RectF(p1 - b, p1 + b).normalized().united(RectF(p2 - b, p2 + b).normalized());
-}
-
 bool TextLineBaseSegment::setProperty(Pid id, const PropertyValue& v)
 {
     if (id == Pid::COLOR) {
