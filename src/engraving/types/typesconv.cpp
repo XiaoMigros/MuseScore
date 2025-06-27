@@ -574,9 +574,6 @@ static const std::array ELEMENT_TYPES {
     Item{ ElementType::GRACE_NOTES_GROUP, "GraceNotesGroup",
           TranslatableString::untranslatable("grace notes group"),
           TranslatableString::untranslatable("Grace notes group") },
-    Item{ ElementType::FRET_CIRCLE, "FretCircle",
-          TranslatableString::untranslatable("fret circle"),
-          TranslatableString::untranslatable("Fret circle") },
     Item{ ElementType::GUITAR_BEND, "GuitarBend",
           TranslatableString("engraving", "guitar bend(s)", nullptr, 1),
           TranslatableString("engraving", "Guitar bend(s)", nullptr, 1) },
@@ -3123,8 +3120,7 @@ struct ArticulationTextTypeItem {
     muse::TranslatableString name;
 };
 
-const std::array<ArticulationTextTypeItem, 3> ARTICULATIONTEXT_TYPES = { {
-    { ArticulationTextType::TAP,    "Tap",  String(u"T"),  muse::TranslatableString("engraving/sym", "Tap") },
+const std::array<ArticulationTextTypeItem, 2> ARTICULATIONTEXT_TYPES = { {
     { ArticulationTextType::SLAP,   "Slap", String(u"S"),  muse::TranslatableString("engraving/sym", "Slap") },
     { ArticulationTextType::POP,    "Pop",  String(u"P"),  muse::TranslatableString("engraving/sym", "Pop") }
 } };
