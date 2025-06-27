@@ -276,8 +276,8 @@ static void writePagePrefs(MStyle& style, const FinalePreferences& prefs)
     writeEvpuSpace(style, Sid::firstSystemIndentationValue, pagePrefs->firstSysMarginLeft);
 
     // Calculate Spatium
-    const double pagePercent = double(pagePrefs->pagePercent) / 100.0;
-    const double staffPercent = (double(pagePrefs->rawStaffHeight) / (EVPU_PER_SPACE * 4 * 16)) * (double(pagePrefs->sysPercent) / 100.0);
+    const double pagePercent = FinaleTConv::doubleFromPercent(pagePrefs->pagePercent);
+    const double staffPercent = (double(pagePrefs->rawStaffHeight) / (EVPU_PER_SPACE * 4 * 16)) * FinaleTConv::doubleFromPercent(pagePrefs->sysPercent);
     style.set(Sid::spatium, ((EVPU_PER_SPACE * staffPercent * pagePercent) / EVPU_PER_MM) * DPMM);
 
     // Calculate small staff size and small note size from first system, if any is there
@@ -348,7 +348,7 @@ void writeLineMeasurePrefs(MStyle& style, const FinalePreferences& prefs)
     style.set(Sid::startBarlineMultiple, prefs.barlineOptions->drawLeftBarlineMultipleStaves);
 
     style.set(Sid::bracketWidth, 0.5); // Hard-coded in Finale
-    writeEvpuSpace(style, Sid::bracketDistance, -(prefs.braceOptions->defBracketPos));
+    writeEvpuSpace(style, Sid::bracketDistance, -(prefs.braceOptions->defBracketPos) - 0.25 * EVPU_PER_SPACE); // Finale subtracts half the bracket width on layout (observed).
     writeEvpuSpace(style, Sid::akkoladeBarDistance, -prefs.braceOptions->defBracketPos);
 
     writeEvpuSpace(style, Sid::clefLeftMargin, prefs.clefOptions->clefFrontSepar);
@@ -380,7 +380,7 @@ void writeLineMeasurePrefs(MStyle& style, const FinalePreferences& prefs)
     writeEvpuSpace(style, Sid::keysigAccidentalDistance, (prefs.keyOptions->acciAdd + 4));  // Observed fudge factor
     writeEvpuSpace(style, Sid::keysigNaturalDistance, (prefs.keyOptions->acciAdd + 6));     // Observed fudge factor
 
-    style.set(Sid::smallClefMag, prefs.clefOptions->clefChangePercent / 100.0);
+    style.set(Sid::smallClefMag, FinaleTConv::doubleFromPercent(prefs.clefOptions->clefChangePercent));
     style.set(Sid::genClef, !prefs.clefOptions->showClefFirstSystemOnly);
     style.set(Sid::genKeysig, !prefs.keyOptions->showKeyFirstSystemOnly);
     style.set(Sid::genCourtesyTimesig, prefs.timeOptions->cautionaryTimeChanges);
@@ -431,7 +431,7 @@ void writeNoteRelatedPrefs(MStyle& style, const FinalePreferences& prefs)
     /// We need to add on the symbol width of one dot for the correct value.
     writeEvpuSpace(style, Sid::dotDotDistance, prefs.augDotOptions->dotOffset);
     style.set(Sid::articulationMag, museMagVal(prefs, options::FontOptions::FontType::Articulation));
-    style.set(Sid::graceNoteMag, prefs.graceOptions->gracePerc / 100.0);
+    style.set(Sid::graceNoteMag, FinaleTConv::doubleFromPercent(prefs.graceOptions->gracePerc));
     style.set(Sid::concertPitch, !prefs.partGlobals->showTransposed);
     style.set(Sid::multiVoiceRestTwoSpaceOffset, std::labs(prefs.layerOneAttributes->restOffset) >= 4);
     style.set(Sid::mergeMatchingRests, prefs.miscOptions->consolidateRestsAcrossLayers);
