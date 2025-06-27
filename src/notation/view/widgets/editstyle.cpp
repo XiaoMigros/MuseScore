@@ -772,6 +772,16 @@ EditStyle::EditStyle(QWidget* parent)
     }
 
     // ====================================================
+    // Brackets (QML)
+    // ====================================================
+
+    auto braceDesignerSection = createQmlWidget(
+        groupBox_systemBrackets,
+        QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/BraceDesignerSection.qml")));
+    braceDesignerSection.widget->setMinimumSize(400, 400);
+    groupBox_systemBrackets->layout()->addWidget(braceDesignerSection.widget);
+
+    // ====================================================
     // Notes (QML)
     // ====================================================
 

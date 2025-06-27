@@ -158,6 +158,8 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(bracketDistance,                            0.45_sp),
     styleDef(akkoladeWidth,                              1.5_sp),
     styleDef(akkoladeBarDistance,                        0.35_sp),
+    styleDef(useCustomPathForBraces,                     false),
+    styleDef(customPathForBraces,                        nullptr),
 
     styleDef(dividerLeft,                                false),
     styleDef(dividerLeftSym,                             String(u"systemDivider")),

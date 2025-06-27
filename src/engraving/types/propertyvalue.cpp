@@ -130,6 +130,19 @@ QVariant PropertyValue::toQVariant() const
     case P_TYPE::ORNAMENT_SHOW_ACCIDENTAL: return static_cast<int>(value<OrnamentShowAccidental>());
     case P_TYPE::GLISS_STYLE: return static_cast<int>(value<GlissandoStyle>());
     case P_TYPE::GLISS_TYPE: return static_cast<int>(value<GlissandoType>());
+    case P_TYPE::BRACKET_PATH: {
+        QList<QVariantMap> ml;
+        BracketPath nl = value<BracketPath>();
+        for (size_t i = 0; i < nl.size(); ++i) {
+            auto [pathType, relative, absolute] = nl.at(i);
+            QVariantMap map;
+            map["type"] = pathType;
+            map["relative"] = relative.toQPointF();
+            map["absolute"] = absolute.toQPointF();
+            ml.append(map);
+        }
+        return QVariant::fromValue(ml);
+    } break;
 
     // Layout
     case P_TYPE::ALIGN: {
@@ -263,6 +276,16 @@ PropertyValue PropertyValue::fromQVariant(const QVariant& v, P_TYPE type)
     case P_TYPE::ORNAMENT_SHOW_ACCIDENTAL: return PropertyValue(OrnamentShowAccidental(v.toInt()));
     case P_TYPE::GLISS_STYLE:   return PropertyValue(GlissandoStyle(v.toInt()));
     case P_TYPE::GLISS_TYPE:   return PropertyValue(GlissandoType(v.toInt()));
+    case P_TYPE::BRACKET_PATH: {
+        QList<QVariantMap> ml = v.value<QList<QVariantMap> >();
+        BracketPath nl;
+        for (int i = 0; i < ml.size(); ++i) {
+            QVariantMap map = ml.at(i);
+            nl.emplace_back(std::make_tuple(map["type"].toInt(), PointF::fromQPointF(map["relative"].value<QPointF>()),
+                                            PointF::fromQPointF(map["absolute"].value<QPointF>())));
+        }
+        return PropertyValue(nl);
+    }
 
     // Layout
     case P_TYPE::ALIGN: {
