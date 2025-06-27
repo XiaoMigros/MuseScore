@@ -224,6 +224,9 @@ bool MStyle::readProperties(XmlReader& e)
             case P_TYPE::RH_TAPPING_SYMBOL:
                 set(idx, TConv::fromXml(e.readAsciiText(), RHTappingSymbol::T));
                 break;
+            case P_TYPE::BRACKET_PATH:
+                set(idx, e.readBracketPath());
+                break;
             default:
                 ASSERT_X(u"unhandled type " + String::number(int(type)));
             }
@@ -693,6 +696,8 @@ void MStyle::save(XmlWriter& xml, bool optimize)
             xml.tag(st.name(), TConv::toXml(value(idx).value<LHTappingSymbol>()));
         } else if (P_TYPE::RH_TAPPING_SYMBOL == type) {
             xml.tag(st.name(), TConv::toXml(value(idx).value<RHTappingSymbol>()));
+        } else if (P_TYPE::BRACKET_PATH == type) {
+            xml.tagProperty(st.name(), value(idx).value<BracketPath>());
         } else {
             PropertyValue val = value(idx);
             //! NOTE for compatibility
