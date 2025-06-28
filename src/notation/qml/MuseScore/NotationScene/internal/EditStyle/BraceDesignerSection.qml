@@ -53,6 +53,12 @@ Rectangle {
         }
     }
 
+    QtObject {
+        id: prv
+
+        property string currentItemNavigationName: ""
+    }
+
     StyledGroupBox {
         id: braceDesignerBox
         anchors.top: useCustomPathBox.bottom
@@ -152,6 +158,7 @@ Rectangle {
         // add zoom in zoom out buttons at the bottom here
 
         ColumnLayout {
+            id: controlsColumn
             anchors.top: parent.top
             anchors.left: parent.horizontalCenter
             anchors.right: parent.right
@@ -198,6 +205,226 @@ Rectangle {
                 }
             }
             // values: % (rel) + sp (abs)
+        }
+        StyledFlickable {
+            id: flickable
+
+            anchors.top: controlsColumn.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.horizontalCenter
+            anchors.right: parent.right
+            anchors.leftMargin: 12
+            anchors.topMargin: 12
+
+            contentWidth: width
+            contentHeight: bracesDesignerPointTree.implicitHeight
+
+            TreeView {
+                id: bracesDesignerPointTree
+
+                readonly property real delegateHeight: 38
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                implicitHeight: flickableItem.contentHeight
+                flickableItem.interactive: false
+
+                visible: !braceDesignerCanvas.isEmpty
+
+                model: braceDesignerCanvas // does this work? do we need to declare 2 separate types after all?
+
+                selection: braceDesignerCanvas ? braceDesignerCanvas.selectionModel() : null
+
+                alternatingRowColors: true // false
+                backgroundVisible: false // maybe negates row colors? dont think so
+                headerVisible: false
+                frameVisible: false // if you want a frame, add it to the flickable
+
+                function scrollToFocusedItem(focusedIndex) {
+                    let targetScrollPosition = focusedIndex * bracesDesignerPointTree.delegateHeight
+                    let visibleAreaEnd = flickable.contentY + flickable.height
+
+                    if (targetScrollPosition + bracesDesignerPointTree.delegateHeight > visibleAreaEnd) {
+                        flickable.contentY = Math.min(targetScrollPosition + bracesDesignerPointTree.delegateHeight - flickable.height, flickable.contentHeight - flickable.height)
+                    } else if (targetScrollPosition < flickable.contentY) {
+                        flickable.contentY = Math.max(targetScrollPosition, 0)
+                    }
+                }
+
+                property NavigationPanel navigationTreePanel : NavigationPanel {
+                    name: "BraceDesignerPointTree"
+                    section: root.navigationSection
+                    direction: NavigationPanel.Both
+                    enabled: bracesDesignerPointTree.enabled && bracesDesignerPointTree.visible
+                    order: showGridLinesBox.navigation.order + 1
+
+                    onNavigationEvent: function(event) {
+                        if (event.type === NavigationEvent.AboutActive) {
+                            event.setData("controlName", prv.currentItemNavigationName)
+                        }
+                    }
+                }
+
+                TableViewColumn {
+                    role: "itemRole"
+                }
+
+                style: TreeViewStyle {
+                    indentation: 0
+
+                    frame: Item {}
+                    incrementControl: Item {}
+                    decrementControl: Item {}
+                    handle: Item {}
+                    scrollBarBackground: Item {}
+                    branchDelegate: Item {}
+
+                    backgroundColor: "transparent"
+
+                    rowDelegate: Item {
+                        height: bracesDesignerPointTree.delegateHeight
+                        width: parent.width
+                    }
+                }
+
+                itemDelegate: DropArea {
+                    id: dropArea
+
+                    Loader {
+                        id: PointDelegateLoader
+
+                        height: parent.height
+                        width: parent.width
+
+                        sourceComponent: BracePointItem {
+                            id: pointDelegate
+
+                            treeView: bracesDesignerPointTree
+                            item: model ? model.itemRole : null
+                            originalParent: PointDelegateLoader
+
+                            sideMargin: contentColumn.sideMargin
+                            popupAnchorItem: root
+
+                            navigation.name: model ? model.itemRole.title : "LayoutPanelItemDelegate"
+                            navigation.panel: bracesDesignerPointTree.navigationTreePanel
+                            navigation.row: model ? model.index : 0
+                            navigation.onActiveChanged: {
+                                if (navigation.active) {
+                                    prv.currentItemNavigationName = navigation.name
+                                    bracesDesignerPointTree.scrollToFocusedItem(model.index)
+                                }
+                            }
+
+                            onClicked: {
+                                if (pointDelegate.isSelectable) {
+                                    braceDesignerCanvas.selectRow(styleData.index)
+                                }
+                            }
+
+                            onDoubleClicked: {
+                                if (!isExpandable) {
+                                    return
+                                }
+
+                                if (!styleData.isExpanded) {
+                                    bracesDesignerPointTree.expand(styleData.index)
+                                } else {
+                                    bracesDesignerPointTree.collapse(styleData.index)
+                                }
+                            }
+
+                            onRemoveSelectionRequested: {
+                                braceDesignerCanvas.removeSelectedRows()
+                            }
+
+                            property real contentYBackup: 0
+
+                            onPopupOpened: function(popupX, popupY, popupHeight) {
+                                contentYBackup = flickable.contentY
+                                var mappedPopupY = mapToItem(flickable, popupX, popupY).y
+
+                                if (mappedPopupY + popupHeight < flickable.height - contentColumn.sideMargin) {
+                                    return
+                                }
+
+                                var hiddenPopupPartHeight = Math.abs(flickable.height - (mappedPopupY + popupHeight))
+                                flickable.contentY += hiddenPopupPartHeight + contentColumn.sideMargin
+                            }
+
+                            onPopupClosed: {
+                                flickable.contentY = contentYBackup
+                            }
+
+                            onChangeVisibilityOfSelectedRowsRequested: function(visible) {
+                                braceDesignerCanvas.changeVisibilityOfSelectedRows(visible);
+                            }
+
+                            onChangeVisibilityRequested: function(index, visible) {
+                                braceDesignerCanvas.changeVisibility(index, visible)
+                            }
+
+                            onDragStarted: {
+                                braceDesignerCanvas.startActiveDrag()
+                            }
+
+                            onDropped: {
+                                braceDesignerCanvas.endActiveDrag()
+                            }
+                        }
+                    }
+
+                    onEntered: function(drag) {
+                        if (styleData.index === drag.source.index || !styleData.value.canAcceptDrop(drag.source.item)) {
+                            return
+                        }
+
+                        braceDesignerCanvas.moveRows(drag.source.index.parent,
+                                                     drag.source.index.row,
+                                                     1,
+                                                     styleData.index.parent,
+                                                     styleData.index.row)
+                    }
+                }
+            }
+        }
+        Item {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+
+            RowLayout {
+                anchors.centerIn: parent
+                spacing: 4
+
+                FlatButton {
+                    id: addButton
+
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+
+                    icon: IconCode.PLUS
+                    onClicked: {
+                        for (let row = braceDesignerCanvas.rowCount() - 1; row >= 0 ; row--) {
+                            const index = braceDesignerCanvas.index(row, 0);
+                            if (index.isSelected) {
+                                return braceDesignerCanvas.insertNewItem(row);
+                            }
+                        }
+                        return braceDesignerCanvas.insertNewItem(braceDesignerCanvas.rowCount() - 1);
+                    }
+                }
+
+                StyledTextLabel {
+                    id: titleLabel
+                    width: implicitWidth
+
+                    text: qsTrc("notation", "Add point")
+                    horizontalAlignment: Text.AlignLeft
+                }
+            }
         }
     }
 }
