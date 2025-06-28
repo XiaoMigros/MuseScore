@@ -26,7 +26,8 @@
 
 #include <QPainter>
 #include <QVariant>
-#include <QAbstractItemModel>
+
+#include "bracedesignerpointsmodel.h"
 
 #include "async/asyncable.h"
 
@@ -37,15 +38,9 @@
 #include "ui/view/qmlaccessible.h"
 #include "context/iglobalcontext.h"
 
-Q_MOC_INCLUDE(< QItemSelectionModel >)
-
-namespace muse::uicomponents {
-class ItemMultiSelectionModel;
-}
-
-class QItemSelectionModel;
-
 namespace mu::notation {
+class BraceDesignerPointsModel;
+using PointsModelPtr = std::unique_ptr<BraceDesignerPointsModel>;
 class BracketDesignerTypes
 {
     Q_GADGET
@@ -149,7 +144,6 @@ public:
     explicit BraceDesignerCanvas(QQuickItem* parent = nullptr);
     ~BraceDesignerCanvas() override;
 
-    QModelIndex index(int row, int column, const QModelIndex& model) const override;
     QVariant pointList() const;
     QSizeF scale() const;
 
@@ -166,47 +160,25 @@ public:
     Q_INVOKABLE bool moveFocusedPointToUp();
     Q_INVOKABLE bool moveFocusedPointToDown();
 
+    Q_INVOKABLE QAbstractListModel* pointsModel() const; // define as BraceDesignerPointsModel instead?
+
     muse::ui::AccessibleItem* accessibleParent() const;
     void setAccessibleParent(muse::ui::AccessibleItem* parent);
 
-    Q_INVOKABLE void load();
-    int rowCount(const QModelIndex& parent) const override;
-    int columnCount(const QModelIndex& parent) const override;
-    QVariant data(const QModelIndex& index, int role) const override;
-    bool isMovingUpAvailable() const;
-    bool isMovingDownAvailable() const;
-    bool isRemovingAvailable() const;
-    Q_INVOKABLE void selectRow(const QModelIndex& rowIndex);
-    Q_INVOKABLE void clearSelection();
-    Q_INVOKABLE bool moveRows(const QModelIndex& sourceParent, int sourceRow, int count, const QModelIndex& destinationParent,
-                              int destinationChild) override;
-    Q_INVOKABLE QItemSelectionModel* selectionModel() const;
-
-    Q_INVOKABLE void startActiveDrag();
-    Q_INVOKABLE void endActiveDrag();
-    Q_INVOKABLE void moveSelectedRowsUp();
-    Q_INVOKABLE void moveSelectedRowsDown();
-    Q_INVOKABLE void removeSelectedRows();
-	Q_INVOKABLE void insertNewItem(int index);
-
 public slots:
-    void setPointList(QVariant pointList);
+    void setPointList(QVariant pointList, bool updateModel = false);
     void setScale(QSizeF scale);
     void setShowOutline(bool show);
 
 signals:
     void canvasChanged();
 
-    void pointListChanged(QVariant pointList);
+    void pointListChanged(QVariant pointList, bool fromCanvas = true);
     void scaleChanged(QSizeF scale);
 
     void showOutlineChanged(bool show);
 
     void accessibleParentChanged();
-    void isMovingUpAvailableChanged(bool isMovingUpAvailable);
-    void isMovingDownAvailableChanged(bool isMovingDownAvailable);
-    void isRemovingAvailableChanged(bool isRemovingAvailable);
-    void isEmptyChanged();
 
 private:
     void paint(QPainter* painter) override;
@@ -247,9 +219,6 @@ private:
     QList<muse::ui::AccessibleItem*> m_pointsAccessibleItems;
     muse::ui::AccessibleItem* m_accessibleParent = nullptr;
     bool m_needVoicePointName = false;
-    void setLoadingBlocked(bool blocked);
-    mu::notation::INotationPtr m_notation = nullptr;
-    bool m_notationChangedWhileLoadingWasBlocked = false;
 
     QSizeF m_scale;
 
@@ -261,28 +230,12 @@ private:
 
     bool m_canvasWasChanged = false;
 
-    bool removeRows(int row, int count, const QModelIndex& parent) override;
-    void clear();
-    void deleteItems();
-
-    void setIsMovingUpAvailable(bool isMovingUpAvailable);
-    void setIsMovingDownAvailable(bool isMovingDownAvailable);
-    void setIsRemovingAvailable(bool isRemovingAvailable);
-    void setItemsSelected(const QModelIndexList& indexes, bool selected);
-    QVariantMap modelIndexToItem(const QModelIndex& index) const;
-
-    bool m_isMovingUpAvailable = false;
-    bool m_isMovingDownAvailable = false;
-    bool m_isRemovingAvailable = false;
+    PointsModelPtr m_pointsModel = nullptr;
     bool m_isLoadingBlocked = false;
-    muse::uicomponents::ItemMultiSelectionModel* m_selectionModel = nullptr;
-    bool m_dragInProgress = false;
-    // we might need an enum Roles, even though we only use one role (ItemRole)!
-
-private slots:
-    // void updateRearrangementAvailability();
-    void updateMovingUpAvailability(bool isSelectionMovable, const QModelIndex& firstSelectedRowIndex = QModelIndex());
-    void updateMovingDownAvailability(bool isSelectionMovable, const QModelIndex& lastSelectedRowIndex = QModelIndex());
-    void updateRemovingAvailability();
+    bool m_notationChangedWhileLoadingWasBlocked = false;
+    void setLoadingBlocked(bool blocked);
+    mu::notation::INotationPtr m_notation = nullptr;
+    void onNotationChanged();
+    void onBeforeChangeNotation();
 };
 }
