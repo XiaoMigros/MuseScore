@@ -231,11 +231,11 @@ Rectangle {
                 implicitHeight: flickableItem.contentHeight
                 flickableItem.interactive: false
 
-                visible: !braceDesignerCanvas.isEmpty
+                visible: !model.isEmpty
 
-                model: braceDesignerCanvas // does this work? do we need to declare 2 separate types after all?
+                model: braceDesignerCanvas.pointsModel()
 
-                selection: braceDesignerCanvas ? braceDesignerCanvas.selectionModel() : null
+                selection: braceDesignerCanvas.pointsModel() ? braceDesignerCanvas.pointsModel().selectionModel() : null
 
                 alternatingRowColors: true // false
                 backgroundVisible: false // maybe negates row colors? dont think so
@@ -320,7 +320,7 @@ Rectangle {
 
                             onClicked: {
                                 if (pointDelegate.isSelectable) {
-                                    braceDesignerCanvas.selectRow(styleData.index)
+                                    braceDesignerCanvas.pointsModel().selectRow(styleData.index)
                                 }
                             }
 
@@ -337,7 +337,7 @@ Rectangle {
                             }
 
                             onRemoveSelectionRequested: {
-                                braceDesignerCanvas.removeSelectedRows()
+                                braceDesignerCanvas.pointsModel().removeSelectedRows()
                             }
 
                             property real contentYBackup: 0
@@ -359,19 +359,19 @@ Rectangle {
                             }
 
                             onChangeVisibilityOfSelectedRowsRequested: function(visible) {
-                                braceDesignerCanvas.changeVisibilityOfSelectedRows(visible);
+                                braceDesignerCanvas.pointsModel().changeVisibilityOfSelectedRows(visible);
                             }
 
                             onChangeVisibilityRequested: function(index, visible) {
-                                braceDesignerCanvas.changeVisibility(index, visible)
+                                braceDesignerCanvas.pointsModel().changeVisibility(index, visible)
                             }
 
                             onDragStarted: {
-                                braceDesignerCanvas.startActiveDrag()
+                                braceDesignerCanvas.pointsModel().startActiveDrag()
                             }
 
                             onDropped: {
-                                braceDesignerCanvas.endActiveDrag()
+                                braceDesignerCanvas.pointsModel().endActiveDrag()
                             }
                         }
                     }
@@ -381,7 +381,7 @@ Rectangle {
                             return
                         }
 
-                        braceDesignerCanvas.moveRows(drag.source.index.parent,
+                        braceDesignerCanvas.pointsModel().moveRows(drag.source.index.parent,
                                                      drag.source.index.row,
                                                      1,
                                                      styleData.index.parent,
@@ -407,13 +407,13 @@ Rectangle {
 
                     icon: IconCode.PLUS
                     onClicked: {
-                        for (let row = braceDesignerCanvas.rowCount() - 1; row >= 0 ; row--) {
-                            const index = braceDesignerCanvas.index(row, 0);
+                        for (let row = braceDesignerCanvas.pointsModel().rowCount() - 1; row >= 0 ; row--) {
+                            const index = braceDesignerCanvas.pointsModel().index(row, 0);
                             if (index.isSelected) {
-                                return braceDesignerCanvas.insertNewItem(row);
+                                return braceDesignerCanvas.pointsModel().insertNewItem(row);
                             }
                         }
-                        return braceDesignerCanvas.insertNewItem(braceDesignerCanvas.rowCount() - 1);
+                        return braceDesignerCanvas.pointsModel().insertNewItem(braceDesignerCanvas.pointsModel().rowCount() - 1);
                     }
                 }
 
