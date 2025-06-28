@@ -14,6 +14,8 @@ set(STYLEDIALOG_SRC
     ${CMAKE_CURRENT_LIST_DIR}/bendstyleselector.h
     ${CMAKE_CURRENT_LIST_DIR}/bracedesignersectionmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/bracedesignersectionmodel.h
+    ${CMAKE_CURRENT_LIST_DIR}/bracedesignerpointsmodel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/bracedesignerpointsmodel.h
     ${CMAKE_CURRENT_LIST_DIR}/bracedesignercanvas.cpp
     ${CMAKE_CURRENT_LIST_DIR}/bracedesignercanvas.h
     ${CMAKE_CURRENT_LIST_DIR}/tieplacementselector.cpp
