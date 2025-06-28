@@ -288,7 +288,6 @@ bool Harmony::isInFretBox() const
 const ElementStyle chordSymbolStyle {
     { Sid::harmonyPlacement, Pid::PLACEMENT },
     { Sid::minHarmonyDistance, Pid::MIN_DISTANCE },
-    { Sid::chordSymPosition, Pid::POSITION },
     { Sid::chordBassNoteScale, Pid::HARMONY_BASS_SCALE },
     { Sid::harmonyVoiceLiteral, Pid::HARMONY_VOICE_LITERAL },
     { Sid::harmonyVoicing, Pid::HARMONY_VOICING },
@@ -319,7 +318,6 @@ Harmony::Harmony(const Harmony& h)
     m_bassCase   = h.m_bassCase;
     m_leftParen  = h.m_leftParen;
     m_rightParen = h.m_rightParen;
-    m_noteheadAlign = h.m_noteheadAlign;
     m_bassScale = h.m_bassScale;
     m_degreeList = h.m_degreeList;
     m_harmonyType = h.m_harmonyType;
@@ -833,6 +831,11 @@ void Harmony::endEditTextual(EditData& ed)
             }
         }
     }
+}
+
+bool Harmony::isPlayable() const
+{
+    return !isInFretBox();
 }
 
 //---------------------------------------------------------
@@ -1922,8 +1925,6 @@ PropertyValue Harmony::getProperty(Pid pid) const
         return PropertyValue(m_play);
     case Pid::HARMONY_TYPE:
         return PropertyValue(int(m_harmonyType));
-    case Pid::POSITION:
-        return PropertyValue(m_noteheadAlign);
     case Pid::HARMONY_BASS_SCALE:
         return m_bassScale;
     case Pid::HARMONY_VOICE_LITERAL:
@@ -1949,10 +1950,6 @@ bool Harmony::setProperty(Pid pid, const PropertyValue& v)
         break;
     case Pid::HARMONY_TYPE:
         setHarmonyType(HarmonyType(v.toInt()));
-        break;
-    case Pid::POSITION:
-        setNoteheadAlign(v.value<AlignH>());
-        render();
         break;
     case Pid::HARMONY_BASS_SCALE:
         setBassScale(v.toDouble());
@@ -2015,9 +2012,6 @@ PropertyValue Harmony::propertyDefault(Pid id) const
         }
     }
     break;
-    case Pid::POSITION:
-        v = style().styleV(Sid::chordSymPosition).value<AlignH>();
-        break;
     case Pid::HARMONY_BASS_SCALE:
         v = style().styleV(Sid::chordBassNoteScale).toDouble();
         break;
@@ -2080,13 +2074,23 @@ double Harmony::mag() const
 
 void Harmony::undoMoveSegment(Segment* newSeg, Fraction tickDiff)
 {
+    IF_ASSERT_FAILED(parentItem()->isSegment()) {
+        return;
+    }
+
     if (newSeg->isTimeTickType()) {
         Measure* measure = newSeg->measure();
         Segment* chordRestSegAtSameTick = measure->undoGetSegment(SegmentType::ChordRest, newSeg->tick());
         newSeg = chordRestSegAtSameTick;
     }
 
+    Segment* oldSegment = toSegment(parent());
     TextBase::undoMoveSegment(newSeg, tickDiff);
+
+    oldSegment->checkEmpty();
+    if (oldSegment->empty()) {
+        score()->undoRemoveElement(oldSegment);
+    }
 }
 
 HarmonyInfo::HarmonyInfo(const HarmonyInfo& h)

@@ -24,21 +24,20 @@
 
 #include "box.h"
 #include "chord.h"
+#include "engravingitem.h"
 #include "fret.h"
 #include "guitarbend.h"
-#include "engravingitem.h"
-#include "lyrics.h"
 #include "hammeronpulloff.h"
+#include "harmony.h"
+#include "lyrics.h"
 #include "measure.h"
 #include "measurerepeat.h"
-#include "marker.h"
 #include "note.h"
-#include "rest.h"
 #include "score.h"
 #include "segment.h"
+#include "soundflag.h"
 #include "spanner.h"
 #include "staff.h"
-#include "soundflag.h"
 #include "tapping.h"
 
 using namespace mu;
@@ -991,6 +990,10 @@ EngravingItem* Score::prevElement()
                 return previousElement;
             }
 
+            if (previousElement->isFretDiagram()) {
+                return previousElement;
+            }
+
             auto boxChildren = toChildPairsSet(previousElement);
 
             if (boxChildren.size() > 0) {
@@ -1157,26 +1160,28 @@ EngravingItem* Score::prevElement()
                 const ElementList& diagrams = fretBox->el();
 
                 size_t index = muse::indexOf(diagrams, fretDiagram);
-                if (index != muse::nidx) {
-                    while (--index > 0) {
-                        FretDiagram* fretDiagramI = toFretDiagram(diagrams[index]);
-                        if (fretDiagramI->visible()) {
-                            return fretDiagramI;
-                        }
+                while (--index != muse::nidx) {
+                    FretDiagram* fretDiagramI = toFretDiagram(diagrams[index]);
+                    if (fretDiagramI->visible()) {
+                        return fretDiagramI;
                     }
                 }
 
                 return fretBox;
             } else if (harmony->explicitParent()->isFretDiagram()) {
-                // jump over fret diagram
-                e = harmony->getParentSeg();
-                continue;
+                EngravingItem* prev = harmony->getParentSeg()->prevAnnotation(toFretDiagram(harmony->explicitParent()));
+                if (prev) {
+                    return prev;
+                }
+
+                e = toFretDiagram(harmony->explicitParent());
             }
             break;
         }
         case ElementType::FRET_DIAGRAM: {
             FretDiagram* fretDiagram = toFretDiagram(e);
-            if (EngravingItem* harmony = fretDiagram->harmony()) {
+            EngravingItem* harmony = fretDiagram->harmony();
+            if (harmony) {
                 return harmony;
             }
             break;

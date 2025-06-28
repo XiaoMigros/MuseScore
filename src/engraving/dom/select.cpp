@@ -43,7 +43,9 @@
 #include "expression.h"
 #include "figuredbass.h"
 #include "fingering.h"
-#include "hairpin.h"
+#include "fret.h"
+#include "guitarbend.h"
+#include "harmony.h"
 #include "harppedaldiagram.h"
 #include "hook.h"
 #include "laissezvib.h"
@@ -59,20 +61,14 @@
 #include "score.h"
 #include "segment.h"
 #include "select.h"
-#include "sig.h"
 #include "staff.h"
 #include "stafftextbase.h"
 #include "stem.h"
 #include "stemslash.h"
 #include "sticking.h"
-#include "stringtunings.h"
-#include "text.h"
 #include "tie.h"
-#include "guitarbend.h"
-#include "fret.h"
-
-#include "tremolotwochord.h"
 #include "tremolosinglechord.h"
+#include "tremolotwochord.h"
 #include "tuplet.h"
 
 #include "log.h"
@@ -200,7 +196,7 @@ ChordRest* Selection::activeCR() const
     }
 }
 
-ChordRest* Selection::firstChordRestInRange(track_idx_t track) const
+ChordRest* Selection::firstChordRestInRange(track_idx_t preferredTrack) const
 {
     IF_ASSERT_FAILED(isRange()) {
         return nullptr;
@@ -212,12 +208,12 @@ ChordRest* Selection::firstChordRestInRange(track_idx_t track) const
         if (!currSeg->enabled() || !currSeg->isChordRestType()) {
             continue;
         }
-        if (track == muse::nidx) {
+        if (preferredTrack == muse::nidx) {
             // no track specified, use the first CR segment we find...
             firstCRSegment = currSeg;
             break;
         }
-        EngravingItem* e = currSeg->element(track);
+        EngravingItem* e = currSeg->element(preferredTrack);
         if (e && e->isChordRest()) {
             return toChordRest(e);
         }
@@ -236,7 +232,7 @@ ChordRest* Selection::firstChordRestInRange(track_idx_t track) const
     return nullptr;
 }
 
-ChordRest* Selection::lastChordRestInRange(track_idx_t track) const
+ChordRest* Selection::lastChordRestInRange(track_idx_t preferredTrack) const
 {
     IF_ASSERT_FAILED(isRange()) {
         return nullptr;
@@ -251,12 +247,12 @@ ChordRest* Selection::lastChordRestInRange(track_idx_t track) const
             currSeg = currSeg->prev1MM();
             continue;
         }
-        if (track == muse::nidx) {
+        if (preferredTrack == muse::nidx) {
             // no track specified, use the first CR segment we find...
             lastCRSegment = currSeg;
             break;
         }
-        EngravingItem* e = currSeg->element(track);
+        EngravingItem* e = currSeg->element(preferredTrack);
         if (e && e->isChordRest()) {
             return toChordRest(e);
         }

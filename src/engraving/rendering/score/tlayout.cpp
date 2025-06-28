@@ -169,6 +169,7 @@
 #include "measurelayout.h"
 #include "tappinglayout.h"
 #include "harmonylayout.h"
+#include "markerlayout.h"
 
 using namespace muse;
 using namespace muse::draw;
@@ -247,7 +248,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
         layoutExpression(item_cast<const Expression*>(item), static_cast<Expression::LayoutData*>(ldata));
         break;
     case ElementType::FERMATA:
-        layoutFermata(item_cast<const Fermata*>(item), static_cast<Fermata::LayoutData*>(ldata), ctx.conf());
+        layoutFermata(item_cast<const Fermata*>(item), static_cast<Fermata::LayoutData*>(ldata));
         break;
     case ElementType::FIGURED_BASS:
         layoutFiguredBass(item_cast<const FiguredBass*>(item), static_cast<FiguredBass::LayoutData*>(ldata), ctx);
@@ -330,7 +331,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
     case ElementType::PARTIAL_LYRICSLINE_SEGMENT: layoutLyricsLineSegment(item_cast<LyricsLineSegment*>(item), ctx);
         break;
     case ElementType::MARKER:
-        layoutMarker(item_cast<const Marker*>(item), static_cast<Marker::LayoutData*>(ldata));
+        layoutMarker(item_cast<const Marker*>(item), static_cast<Marker::LayoutData*>(ldata), ctx);
         break;
     case ElementType::MEASURE_NUMBER:
         layoutMeasureNumber(item_cast<const MeasureNumber*>(item), static_cast<MeasureNumber::LayoutData*>(ldata), ctx);
@@ -930,17 +931,6 @@ void TLayout::layoutArticulation(const Articulation* item, Articulation::LayoutD
     //! NOTE Must already be set previously
     LD_CONDITION(ldata->symId.has_value());
 
-    RectF bbox;
-
-    if (item->textType() == ArticulationTextType::NO_TEXT) {
-        bbox = item->symBbox(ldata->symId);
-    } else {
-        Font scaledFont(item->font());
-        scaledFont.setPointSizeF(item->font().pointSizeF() * item->magS());
-        FontMetrics fm(scaledFont);
-        bbox = fm.boundingRect(scaledFont, TConv::text(item->textType()));
-    }
-
     fillArticulationShape(item, ldata);
 }
 
@@ -964,8 +954,13 @@ void TLayout::fillArticulationShape(const Articulation* item, Articulation::Layo
         shape.add(tip, item);
         PointF translate(0.0, sym == SymId::articAccentAbove ? -height : 0.0);
         ldata->setShape(shape.translate(translate));
-    } else {
+    } else if (item->textType() == ArticulationTextType::NO_TEXT) {
         ldata->setShape(Shape(item->symBbox(sym), item));
+    } else {
+        Font scaledFont(item->font());
+        FontMetrics fontMetrics(scaledFont);
+        scaledFont.setPointSizeF(scaledFont.pointSizeF() * item->magS() * MScore::pixelRatio);
+        ldata->setShape(Shape(fontMetrics.boundingRect(TConv::text(item->textType())), item));
     }
 }
 
@@ -1129,7 +1124,7 @@ void TLayout::layoutBarLine(const BarLine* item, BarLine::LayoutData* ldata, con
     }
 
     if (Fermata* fermata = toFermata(item->segment()->findAnnotation(ElementType::FERMATA, item->track(), item->track() + VOICES))) {
-        layoutFermata(fermata, fermata->mutldata(), ctx.conf());
+        layoutFermata(fermata, fermata->mutldata());
     }
 }
 
@@ -2133,7 +2128,7 @@ void TLayout::layoutExpression(const Expression* item, Expression::LayoutData* l
     Autoplace::autoplaceSegmentElement(item, ldata);
 }
 
-void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata, const LayoutConfiguration& conf)
+void TLayout::layoutFermata(const Fermata* item, Fermata::LayoutData* ldata)
 {
     LAYOUT_CALL_ITEM(item);
     const StaffType* stType = item->staffType();
@@ -3958,27 +3953,11 @@ void TLayout::layoutLyricsLineSegment(LyricsLineSegment* item, LayoutContext& ct
     LyricsLayout::layout(item, ctx);
 }
 
-void TLayout::layoutMarker(const Marker* item, Marker::LayoutData* ldata)
+void TLayout::layoutMarker(const Marker* item, Marker::LayoutData* ldata, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    LD_CONDITION(item->parentItem()->ldata()->isSetBbox());
 
-    TLayout::layoutBaseTextBase(item, ldata);
-
-    // although normally laid out to parent (measure) width,
-    // force to center over barline if left-aligned
-    if (item->layoutToParentWidth() && item->align() == AlignH::LEFT) {
-        ldata->moveX(-ldata->bbox().width() * 0.5);
-    }
-
-    if (item->autoplace()) {
-        const Measure* m = toMeasure(item->explicitParent());
-        LD_CONDITION(ldata->isSetPos());
-        LD_CONDITION(ldata->isSetBbox());
-        LD_CONDITION(m->ldata()->isSetPos());
-    }
-
-    Autoplace::autoplaceMeasureElement(item, ldata);
+    MarkerLayout::layoutMarker(item, ldata, ctx);
 }
 
 void TLayout::layoutMeasureBase(MeasureBase* item, LayoutContext& ctx)
@@ -4856,15 +4835,16 @@ void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const Layout
         return;
     }
 
+    if (DeadSlapped* ds = item->deadSlapped()) {
+        LD_INDEPENDENT;
+        layoutDeadSlapped(ds, ds->mutldata());
+        return;
+    }
+
     //! NOTE The types are listed here explicitly to show what types there are (see Rest::add method)
     //! and accordingly show what depends on.
     for (EngravingItem* e : item->el()) {
         switch (e->type()) {
-        case ElementType::DEAD_SLAPPED: {
-            DeadSlapped* ds = item_cast<DeadSlapped*>(e);
-            LD_INDEPENDENT;
-            layoutDeadSlapped(ds, ds->mutldata());
-        } break;
         case ElementType::SYMBOL: {
             Symbol* s = item_cast<Symbol*>(e);
             // LD_X not clear yet
@@ -6089,13 +6069,44 @@ void TLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* ld
     Shape shape;
     double y = 0.0;
 
+    double maxBlockWidth = -DBL_MAX;
     // adjust the bounding box for the text item
     for (size_t i = 0; i < ldata->blocks.size(); ++i) {
         TextBlock& t = ldata->blocks[i];
         t.layout(item);
         y += t.lineSpacing();
         t.setY(y);
-        shape.add(t.shape().translated(PointF(0.0, y)));
+        if (!item->positionSeparateFromAlignment()) {
+            shape.add(t.shape().translated(PointF(0.0, y)));
+        }
+        maxBlockWidth = std::max(maxBlockWidth, t.boundingRect().width());
+    }
+
+    // ALIGN TEXT
+    // TODO - implement for all text items
+    if (item->positionSeparateFromAlignment()) {
+        for (size_t i = 0; i < ldata->blocks.size(); ++i) {
+            TextBlock& t = ldata->blocks[i];
+            double diff = maxBlockWidth - t.boundingRect().width();
+            if (muse::RealIsNull(diff)) {
+                shape.add(t.shape().translated(PointF(0.0, t.y())));
+                continue;
+            }
+            double rx = 0.0;
+            AlignH alignH = item->align().horizontal;
+            bool dynamicAlwaysCentered = item->isDynamic() && item->getProperty(Pid::CENTER_ON_NOTEHEAD).toBool();
+            if (alignH == AlignH::HCENTER || dynamicAlwaysCentered) {
+                rx = diff * 0.5;
+            } else if (alignH == AlignH::RIGHT) {
+                rx = diff;
+            }
+
+            for (TextFragment& f : t.fragments()) {
+                f.pos.rx() += rx;
+            }
+            t.shape().translate(PointF(rx, 0.0));
+            shape.add(t.shape().translated(PointF(0.0, t.y())));
+        }
     }
 
     RectF bb = shape.bbox();
@@ -7177,11 +7188,13 @@ double TLayout::voltaMidEndSegmentStartX(Volta* volta, System* system, LayoutCon
     }
 
     KeySig* keySig = toKeySig(refSeg->element(volta->track()));
-    if (!keySig->ldata()->keySymbols.empty()) {
-        KeySym keySym = keySig->ldata()->keySymbols.front();
-        double xCutout = ctx.engravingFont()->smuflAnchor(keySym.sym, SmuflAnchorId::cutOutNW, 1.0).x();
-        return keySig->x() + keySym.xPos + xCutout + refSeg->x() + firstMeasure->x();
+    if (keySig->ldata()->keySymbols.empty()) {
+        return 0.0;
     }
+
+    KeySym keySym = keySig->ldata()->keySymbols.front();
+    double xCutout = ctx.engravingFont()->smuflAnchor(keySym.sym, SmuflAnchorId::cutOutNW, 1.0).x();
+    return keySig->x() + keySym.xPos + xCutout + refSeg->x() + firstMeasure->x();
 }
 
 SpannerSegment* TLayout::layoutSystem(LyricsLine* line, System* system, LayoutContext& ctx)

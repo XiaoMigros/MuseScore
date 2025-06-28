@@ -56,7 +56,6 @@
 #include "dom/figuredbass.h"
 #include "dom/fingering.h"
 #include "dom/fret.h"
-#include "dom/fretcircle.h"
 
 #include "dom/glissando.h"
 #include "dom/gradualtempochange.h"
@@ -227,8 +226,6 @@ void TDraw::drawItem(const EngravingItem* item, Painter* painter)
     case ElementType::FINGERING:    draw(item_cast<const Fingering*>(item), painter);
         break;
     case ElementType::FRET_DIAGRAM: draw(item_cast<const FretDiagram*>(item), painter);
-        break;
-    case ElementType::FRET_CIRCLE:  draw(item_cast<const FretCircle*>(item), painter);
         break;
     case ElementType::FSYMBOL:      draw(item_cast<const FSymbol*>(item), painter);
         break;
@@ -1482,17 +1479,6 @@ void TDraw::draw(const FretDiagram* item, Painter* painter)
     }
 }
 
-void TDraw::draw(const FretCircle* item, Painter* painter)
-{
-    TRACE_DRAW_ITEM;
-    const FretCircle::LayoutData* ldata = item->ldata();
-    painter->save();
-    painter->setPen(Pen(item->curColor(), item->spatium() * FretCircle::CIRCLE_WIDTH));
-    painter->setBrush(BrushStyle::NoBrush);
-    painter->drawEllipse(ldata->rect);
-    painter->restore();
-}
-
 static void setDashAndGapLen(const SLine* line, double& dash, double& gap, Pen& pen)
 {
     static constexpr double DOTTED_DASH_LEN = 0.01;
@@ -2452,7 +2438,12 @@ void TDraw::draw(const Rest* item, Painter* painter)
     const Rest::LayoutData* ldata = item->ldata();
 
     painter->setPen(item->curColor());
-    item->drawSymbol(ldata->sym, painter);
+
+    if (DeadSlapped* ds = item->deadSlapped()) {
+        draw(ds, painter);
+    } else {
+        item->drawSymbol(ldata->sym, painter);
+    }
 }
 
 //! NOTE May be removed later (should be only single mode)

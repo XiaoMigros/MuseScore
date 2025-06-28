@@ -19,9 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#ifndef MU_ENGRAVING_APIV1_ELEMENTS_H
-#define MU_ENGRAVING_APIV1_ELEMENTS_H
+#pragma once
 
 #include "scoreelement.h"
 
@@ -43,7 +41,6 @@
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/accidental.h"
 #include "engraving/dom/undo.h"
-#include "engraving/dom/types.h"
 
 #include "playevent.h"
 
@@ -296,7 +293,6 @@ class EngravingItem : public apiv1::ScoreElement
     API_PROPERTY(timeStretch,             TIME_STRETCH)
     API_PROPERTY(ornamentStyle,           ORNAMENT_STYLE)
     API_PROPERTY(timesig,                 TIMESIG)
-    API_PROPERTY(timesigGlobal,           TIMESIG_GLOBAL)
     API_PROPERTY(timesigStretch,          TIMESIG_STRETCH)
     API_PROPERTY(timesigType,             TIMESIG_TYPE)
     API_PROPERTY(spannerTick,             SPANNER_TICK)
@@ -966,5 +962,3 @@ public:
 #undef API_PROPERTY_READ_ONLY
 #undef API_PROPERTY_READ_ONLY_T
 }
-
-#endif
