@@ -96,7 +96,7 @@ private:
     // texts
     void importTexts();
 
-    engraving::String stringFromText(std::shared_ptr<musx::dom::others::PageTextAssign> pageTextAssign,
+    engraving::String stringFromText(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign,
                                      bool isHeaderOrFooter = false);
 
     engraving::Score* m_score;
