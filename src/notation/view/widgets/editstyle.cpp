@@ -315,6 +315,10 @@ EditStyle::EditStyle(QWidget* parent)
     mmRestConstantWidth->addButton(mmRestWidthProportional, 0);
     mmRestConstantWidth->addButton(mmRestWidthConstant, 1);
 
+    QButtonGroup* partialSlurAngle = new QButtonGroup(this);
+    partialSlurAngle->addButton(partialSlursAngleNormal, 0);
+    partialSlurAngle->addButton(partialSlursAngleWeird, 1);
+
     // ====================================================
     // Style widgets
     // ====================================================
@@ -490,6 +494,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::slurMidWidth,            false, slurMidLineWidth,        resetSlurMidLineWidth },
         { StyleId::slurDottedWidth,         false, slurDottedLineWidth,     resetSlurDottedLineWidth },
         { StyleId::slurMinDistance,         false, slurMinDistance,         resetSlurMinDistance },
+        { StyleId::angleHangingSlursAwayFromStaff, false, partialSlurAngle, 0 },
         { StyleId::tieEndWidth,             false, tieEndLineWidth,         resetTieEndLineWidth },
         { StyleId::tieMidWidth,             false, tieMidLineWidth,         resetTieMidLineWidth },
         { StyleId::tieDottedWidth,          false, tieDottedLineWidth,      resetTieDottedLineWidth },
@@ -846,6 +851,16 @@ EditStyle::EditStyle(QWidget* parent)
         dividerLeftSym->addItem(un,  QVariant(QString(n.toQLatin1String())));
         dividerRightSym->addItem(un, QVariant(QString(n.toQLatin1String())));
     }
+
+    // ====================================================
+    // Brackets (QML)
+    // ====================================================
+
+    auto braceDesignerSection = createQmlWidget(
+        groupBox_systemBrackets,
+        QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/BraceDesignerSection.qml")));
+    braceDesignerSection.widget->setMinimumSize(400, 400);
+    groupBox_systemBrackets->layout()->addWidget(braceDesignerSection.widget);
 
     // ====================================================
     // Notes (QML)
@@ -2143,6 +2158,7 @@ bool EditStyle::isBoolStyleRepresentedByButtonGroup(StyleId id)
     case StyleId::genKeysig:
     case StyleId::singleMeasureMMRestUseNormalRest:
     case StyleId::mmRestConstantWidth:
+    case StyleId::angleHangingSlursAwayFromStaff:
         return true;
     default:
         return false;

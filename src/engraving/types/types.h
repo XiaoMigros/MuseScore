@@ -195,7 +195,6 @@ enum class ElementType : unsigned char {
     BAGPIPE_EMBELLISHMENT,
     STICKING,
     GRACE_NOTES_GROUP,
-    FRET_CIRCLE,
     GUITAR_BEND,
     GUITAR_BEND_SEGMENT,
     GUITAR_BEND_HOLD,
@@ -245,6 +244,7 @@ using PainterPath = muse::draw::PainterPath; // P_TYPE::PATH
 using ScaleF = muse::ScaleF;              // P_TYPE::SCALE
 using PairF = muse::PairF;                // P_TYPE::PAIR_REAL
 using PolygonF = muse::PolygonF;
+using BracketPath = std::vector<std::tuple<int, PointF, PointF> >; // P_TYPE::BRACKET_PATH
 
 // --- Draw ---
 using Color = muse::draw::Color;        // P_TYPE::COLOR
@@ -1066,7 +1066,6 @@ enum class VibratoType : unsigned char {
 
 enum class ArticulationTextType : unsigned char {
     NO_TEXT,
-    TAP,
     SLAP,
     POP
 };

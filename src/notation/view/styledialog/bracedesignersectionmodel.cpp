@@ -19,21 +19,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "bracedesignersectionmodel.h"
 
-#ifndef IMPORTMIDI_INSTRUMENT_NAMES_H
-#define IMPORTMIDI_INSTRUMENT_NAMES_H
+// #include "engraving/dom/mscore.h"
 
-#include <QString>
+using namespace mu::notation;
 
-namespace mu::iex::midi {
-struct MidiInstrument {
-    int type;
-    int hbank, lbank, patch;
-    int split;
-    const char* name;
-
-    static QString instrName(int type, int hbank, int lbank, int program);
-};
+BraceDesignerSectionModel::BraceDesignerSectionModel(QObject* parent)
+    : AbstractStyleDialogModel(parent, {
+    StyleId::useCustomPathForBraces,
+    StyleId::customPathForBraces })
+{
 }
 
-#endif // IMPORTMIDI_INSTRUMENT_NAMES_H
+StyleItem* BraceDesignerSectionModel::useCustomPath() const
+{
+    return styleItem(StyleId::useCustomPathForBraces);
+}
+
+StyleItem* BraceDesignerSectionModel::customPath() const
+{
+    return styleItem(StyleId::customPathForBraces);
+}
+
+void BraceDesignerSectionModel::resetPath()
+{
+    customPath()->value() = customPath()->defaultValue();
+}
+
+void BraceDesignerSectionModel::loadPreset(int preset)
+{
+    // do something
+}

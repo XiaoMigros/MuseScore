@@ -133,6 +133,7 @@ enum class Sid {
     lyricsOddFrameRound,
     lyricsOddFrameFgColor,
     lyricsOddFrameBgColor,
+    lyricsOddPosition,
 
     lyricsEvenFontFace,
     lyricsEvenFontSize,
@@ -147,6 +148,7 @@ enum class Sid {
     lyricsEvenFrameRound,
     lyricsEvenFrameFgColor,
     lyricsEvenFrameBgColor,
+    lyricsEvenPosition,
 
     figuredBassFontFamily,
     //      figuredBassFontSize,
@@ -173,6 +175,9 @@ enum class Sid {
     bracketDistance,
     akkoladeWidth,
     akkoladeBarDistance,
+    useCustomPathForBraces,
+    customPathForBraces,
+
     dividerLeft,
     dividerLeftSym,
     dividerLeftX,
@@ -306,6 +311,7 @@ enum class Sid {
     hairpinFrameRound,
     hairpinFrameFgColor,
     hairpinFrameBgColor,
+    hairpinPosition,
     hairpinText,
     hairpinCrescText,
     hairpinDecrescText,
@@ -340,6 +346,7 @@ enum class Sid {
     pedalFrameRound,
     pedalFrameFgColor,
     pedalFrameBgColor,
+    pedalPosition,
     pedalText,
     pedalHookText,
     pedalContinueText,
@@ -393,6 +400,7 @@ enum class Sid {
     chordSymbolAFrameRound,
     chordSymbolAFrameFgColor,
     chordSymbolAFrameBgColor,
+    // chordSymbolAPosition,
 
     chordSymbolBFontFace,
     chordSymbolBFontSize,
@@ -407,6 +415,7 @@ enum class Sid {
     chordSymbolBFrameRound,
     chordSymbolBFrameFgColor,
     chordSymbolBFrameBgColor,
+    // chordSymbolBPosition,
 
     romanNumeralFontFace,
     romanNumeralFontSize,
@@ -562,6 +571,7 @@ enum class Sid {
     slurEndWidth,
     slurMidWidth,
     slurDottedWidth,
+    angleHangingSlursAwayFromStaff,
     tieEndWidth,
     tieMidWidth,
     tieDottedWidth,
@@ -574,6 +584,7 @@ enum class Sid {
     laissezVibMinDistance,
     headerToLineStartDistance,   // determines start point of "dangling" lines (ties, gliss, lyrics...) when preceded by header clefs/timesigs/keysigs
     lineEndToBarlineDistance,  // determines end point of "dangling" lines (ties, gliss, lyrics...) in relation to barlines
+    barlineToLineStartDistance, // determines start point of incoming partial ties and slurs in relation to the preceding barline
 
     tiePlacementSingleNote,
     tiePlacementChord,
@@ -628,6 +639,7 @@ enum class Sid {
     voltaFrameRound,
     voltaFrameFgColor,
     voltaFrameBgColor,
+    voltaPosition,
 
     voltaAlignStartBeforeKeySig,
     voltaAlignEndLeftOfBarline,
@@ -689,6 +701,7 @@ enum class Sid {
     ottavaFrameRound,
     ottavaFrameFgColor,
     ottavaFrameBgColor,
+    ottavaPosition,
 
     tabClef,
 
@@ -735,6 +748,7 @@ enum class Sid {
     tupletFrameRound,
     tupletFrameFgColor,
     tupletFrameBgColor,
+    tupletPosition,
 
     scaleBarlines,
     barGraceDistance,
@@ -776,6 +790,7 @@ enum class Sid {
     textLineFrameRound,
     textLineFrameFgColor,
     textLineFrameBgColor,
+    textLinePosition,
 
     systemTextLinePlacement,
     systemTextLinePosAbove,
@@ -791,6 +806,7 @@ enum class Sid {
     systemTextLineFrameRound,
     systemTextLineFrameFgColor,
     systemTextLineFrameBgColor,
+    systemTextLinePosition,
 
     tremoloBarLineWidth,
     jumpPosAbove,
@@ -813,6 +829,7 @@ enum class Sid {
     defaultOffsetType,
     defaultSystemFlag,
     defaultText,
+    defaultPosition,
 
     titleFontFace,
     titleFontSize,
@@ -829,6 +846,7 @@ enum class Sid {
     titleFrameRound,
     titleFrameFgColor,
     titleFrameBgColor,
+    titlePosition,
 
     subTitleFontFace,
     subTitleFontSize,
@@ -845,6 +863,7 @@ enum class Sid {
     subTitleFrameRound,
     subTitleFrameFgColor,
     subTitleFrameBgColor,
+    subTitlePosition,
 
     composerFontFace,
     composerFontSize,
@@ -861,6 +880,7 @@ enum class Sid {
     composerFrameRound,
     composerFrameFgColor,
     composerFrameBgColor,
+    composerPosition,
 
     lyricistFontFace,
     lyricistFontSize,
@@ -877,6 +897,7 @@ enum class Sid {
     lyricistFrameRound,
     lyricistFrameFgColor,
     lyricistFrameBgColor,
+    lyricistPosition,
 
     fingeringFontFace,
     fingeringFontSize,
@@ -892,6 +913,7 @@ enum class Sid {
     fingeringFrameFgColor,
     fingeringFrameBgColor,
     fingeringOffset,
+    fingeringPosition,
 
     tabFretNumberFontFace,
     tabFretNumberFontSize,
@@ -922,6 +944,7 @@ enum class Sid {
     lhGuitarFingeringFrameFgColor,
     lhGuitarFingeringFrameBgColor,
     lhGuitarFingeringOffset,
+    lhGuitarFingeringPosition,
 
     rhGuitarFingeringFontFace,
     rhGuitarFingeringFontSize,
@@ -937,6 +960,7 @@ enum class Sid {
     rhGuitarFingeringFrameFgColor,
     rhGuitarFingeringFrameBgColor,
     rhGuitarFingeringOffset,
+    rhGuitarFingeringPosition,
 
     hammerOnPullOffTappingFontFace,
     hammerOnPullOffTappingFontSize,
@@ -952,6 +976,7 @@ enum class Sid {
     hammerOnPullOffTappingFrameFgColor,
     hammerOnPullOffTappingFrameBgColor,
     hammerOnPullOffTappingOffset,
+    hammerOnPullOffTappingPosition,
 
     hopoShowOnStandardStaves,
     hopoShowOnTabStaves,
@@ -981,6 +1006,7 @@ enum class Sid {
     stringNumberFrameFgColor,
     stringNumberFrameBgColor,
     stringNumberOffset,
+    stringNumberPosition,
     preferSameStringForTranspose,
 
     stringTuningsFontSize,
@@ -1004,6 +1030,7 @@ enum class Sid {
     harpPedalDiagramPosAbove,
     harpPedalDiagramPosBelow,
     harpPedalDiagramMinDistance,
+    harpPedalDiagramPosition,
 
     harpPedalTextDiagramFontFace,
     harpPedalTextDiagramFontSize,
@@ -1023,6 +1050,7 @@ enum class Sid {
     harpPedalTextDiagramPosAbove,
     harpPedalTextDiagramPosBelow,
     harpPedalTextDiagramMinDistance,
+    harpPedalTextDiagramPosition,
 
     longInstrumentFontFace,
     longInstrumentFontSize,
@@ -1038,6 +1066,7 @@ enum class Sid {
     longInstrumentFrameRound,
     longInstrumentFrameFgColor,
     longInstrumentFrameBgColor,
+    longInstrumentPosition,
 
     shortInstrumentFontFace,
     shortInstrumentFontSize,
@@ -1053,6 +1082,7 @@ enum class Sid {
     shortInstrumentFrameRound,
     shortInstrumentFrameFgColor,
     shortInstrumentFrameBgColor,
+    shortInstrumentPosition,
 
     partInstrumentFontFace,
     partInstrumentFontSize,
@@ -1068,6 +1098,7 @@ enum class Sid {
     partInstrumentFrameRound,
     partInstrumentFrameFgColor,
     partInstrumentFrameBgColor,
+    partInstrumentPosition,
 
     dynamicsFontFace,
     dynamicsFontSize,
@@ -1082,6 +1113,7 @@ enum class Sid {
     dynamicsFrameRound,
     dynamicsFrameFgColor,
     dynamicsFrameBgColor,
+    dynamicsPosition,
 
     expressionFontFace,
     expressionFontSize,
@@ -1101,6 +1133,7 @@ enum class Sid {
     expressionFrameFgColor,
     expressionFrameBgColor,
     expressionMinDistance,
+    expressionPosition,
 
     tempoFontFace,
     tempoFontSize,
@@ -1120,6 +1153,7 @@ enum class Sid {
     tempoFrameRound,
     tempoFrameFgColor,
     tempoFrameBgColor,
+    tempoPosition,
 
     tempoChangeFontFace,
     tempoChangeFontSize,
@@ -1139,6 +1173,7 @@ enum class Sid {
     tempoChangeFrameRound,
     tempoChangeFrameFgColor,
     tempoChangeFrameBgColor,
+    tempoChangePosition,
     tempoChangeLineWidth,
     tempoChangeLineStyle,
     tempoChangeDashLineLen,
@@ -1159,6 +1194,7 @@ enum class Sid {
     metronomeFrameRound,
     metronomeFrameFgColor,
     metronomeFrameBgColor,
+    metronomePosition,
 
     measureNumberFontFace,
     measureNumberFontSize,
@@ -1179,6 +1215,7 @@ enum class Sid {
     measureNumberFrameRound,
     measureNumberFrameFgColor,
     measureNumberFrameBgColor,
+    measureNumberPosition,
 
     mmRestShowMeasureNumberRange,
     mmRestRangeBracketType,
@@ -1200,6 +1237,7 @@ enum class Sid {
     mmRestRangeFrameRound,
     mmRestRangeFrameFgColor,
     mmRestRangeFrameBgColor,
+    mmRestRangePosition,
     mmRestRangeMinDistance,
 
     translatorFontFace,
@@ -1216,6 +1254,7 @@ enum class Sid {
     translatorFrameRound,
     translatorFrameFgColor,
     translatorFrameBgColor,
+    translatorPosition,
 
     systemTextFontFace,
     systemTextFontSize,
@@ -1235,6 +1274,7 @@ enum class Sid {
     systemTextFrameRound,
     systemTextFrameFgColor,
     systemTextFrameBgColor,
+    systemTextPosition,
 
     staffTextFontFace,
     staffTextFontSize,
@@ -1254,6 +1294,7 @@ enum class Sid {
     staffTextFrameRound,
     staffTextFrameFgColor,
     staffTextFrameBgColor,
+    staffTextPosition,
 
     fretDiagramFingeringFontFace,
     fretDiagramFingeringFontSize,
@@ -1269,6 +1310,7 @@ enum class Sid {
     fretDiagramFingeringFrameRound,
     fretDiagramFingeringFrameFgColor,
     fretDiagramFingeringFrameBgColor,
+    fretDiagramFingeringPosition,
 
     fretDiagramFretNumberFontFace,
     fretDiagramFretNumberFontSize,
@@ -1284,6 +1326,7 @@ enum class Sid {
     fretDiagramFretNumberFrameRound,
     fretDiagramFretNumberFrameFgColor,
     fretDiagramFretNumberFrameBgColor,
+    fretDiagramFretNumberPosition,
 
     rehearsalMarkFontFace,
     rehearsalMarkFontSize,
@@ -1298,6 +1341,7 @@ enum class Sid {
     rehearsalMarkFrameRound,
     rehearsalMarkFrameFgColor,
     rehearsalMarkFrameBgColor,
+    rehearsalMarkPosition,
     rehearsalMarkPlacement,
     rehearsalMarkPosAbove,
     rehearsalMarkPosBelow,
@@ -1317,6 +1361,7 @@ enum class Sid {
     repeatLeftFrameRound,
     repeatLeftFrameFgColor,
     repeatLeftFrameBgColor,
+    repeatLeftPosition,
 
     repeatRightFontFace,
     repeatRightFontSize,
@@ -1332,6 +1377,7 @@ enum class Sid {
     repeatRightFrameRound,
     repeatRightFrameFgColor,
     repeatRightFrameBgColor,
+    repeatRightPosition,
 
     frameFontFace,
     frameFontSize,
@@ -1347,6 +1393,7 @@ enum class Sid {
     frameFrameRound,
     frameFrameFgColor,
     frameFrameBgColor,
+    framePosition,
 
     textLineFontFace,
     textLineFontSize,
@@ -1380,6 +1427,7 @@ enum class Sid {
     noteLineFrameRound,
     noteLineFrameFgColor,
     noteLineFrameBgColor,
+    noteLinePosition,
 
     noteLineWidth,
     noteLineStyle,
@@ -1400,6 +1448,7 @@ enum class Sid {
     glissandoFrameRound,
     glissandoFrameFgColor,
     glissandoFrameBgColor,
+    glissandoPosition,
     glissandoLineWidth,
     glissandoText,
     glissandoStyle,
@@ -1425,6 +1474,7 @@ enum class Sid {
     bendFrameRound,
     bendFrameFgColor,
     bendFrameBgColor,
+    bendPosition,
     bendLineWidth,
     bendArrowWidth,
 
@@ -1451,6 +1501,7 @@ enum class Sid {
     headerFrameRound,
     headerFrameFgColor,
     headerFrameBgColor,
+    headerPosition,
 
     footerFontFace,
     footerFontSize,
@@ -1466,6 +1517,7 @@ enum class Sid {
     footerFrameRound,
     footerFrameFgColor,
     footerFrameBgColor,
+    footerPosition,
 
     copyrightFontFace,
     copyrightFontSize,
@@ -1481,6 +1533,7 @@ enum class Sid {
     copyrightFrameRound,
     copyrightFrameFgColor,
     copyrightFrameBgColor,
+    copyrightPosition,
 
     pageNumberFontFace,
     pageNumberFontSize,
@@ -1496,6 +1549,7 @@ enum class Sid {
     pageNumberFrameRound,
     pageNumberFrameFgColor,
     pageNumberFrameBgColor,
+    pageNumberPosition,
 
     instrumentChangeFontFace,
     instrumentChangeFontSize,
@@ -1515,6 +1569,7 @@ enum class Sid {
     instrumentChangeFrameRound,
     instrumentChangeFrameFgColor,
     instrumentChangeFrameBgColor,
+    instrumentChangePosition,
 
     stickingFontFace,
     stickingFontSize,
@@ -1534,6 +1589,7 @@ enum class Sid {
     stickingFrameRound,
     stickingFrameFgColor,
     stickingFrameBgColor,
+    stickingPosition,
 
     figuredBassFontFace,
     figuredBassFontSize,
@@ -1558,6 +1614,7 @@ enum class Sid {
     user1FrameRound,
     user1FrameFgColor,
     user1FrameBgColor,
+    user1Position,
 
     user2Name,
     user2FontFace,
@@ -1575,6 +1632,7 @@ enum class Sid {
     user2FrameRound,
     user2FrameFgColor,
     user2FrameBgColor,
+    user2Position,
 
     user3Name,
     user3FontFace,
@@ -1592,6 +1650,7 @@ enum class Sid {
     user3FrameRound,
     user3FrameFgColor,
     user3FrameBgColor,
+    user3Position,
 
     user4Name,
     user4FontFace,
@@ -1609,6 +1668,7 @@ enum class Sid {
     user4FrameRound,
     user4FrameFgColor,
     user4FrameBgColor,
+    user4Position,
 
     user5Name,
     user5FontFace,
@@ -1626,6 +1686,7 @@ enum class Sid {
     user5FrameRound,
     user5FrameFgColor,
     user5FrameBgColor,
+    user5Position,
 
     user6Name,
     user6FontFace,
@@ -1643,6 +1704,7 @@ enum class Sid {
     user6FrameRound,
     user6FrameFgColor,
     user6FrameBgColor,
+    user6Position,
 
     user7Name,
     user7FontFace,
@@ -1660,6 +1722,7 @@ enum class Sid {
     user7FrameRound,
     user7FrameFgColor,
     user7FrameBgColor,
+    user7Position,
 
     user8Name,
     user8FontFace,
@@ -1677,6 +1740,7 @@ enum class Sid {
     user8FrameRound,
     user8FrameFgColor,
     user8FrameBgColor,
+    user8Position,
 
     user9Name,
     user9FontFace,
@@ -1694,6 +1758,7 @@ enum class Sid {
     user9FrameRound,
     user9FrameFgColor,
     user9FrameBgColor,
+    user9Position,
 
     user10Name,
     user10FontFace,
@@ -1711,6 +1776,7 @@ enum class Sid {
     user10FrameRound,
     user10FrameFgColor,
     user10FrameBgColor,
+    user10Position,
 
     user11Name,
     user11FontFace,
@@ -1728,6 +1794,7 @@ enum class Sid {
     user11FrameRound,
     user11FrameFgColor,
     user11FrameBgColor,
+    user11Position,
 
     user12Name,
     user12FontFace,
@@ -1745,6 +1812,7 @@ enum class Sid {
     user12FrameRound,
     user12FrameFgColor,
     user12FrameBgColor,
+    user12Position,
 
     letRingFontFace,
     letRingFontSize,
@@ -1768,6 +1836,7 @@ enum class Sid {
     letRingFrameRound,
     letRingFrameFgColor,
     letRingFrameBgColor,
+    letRingPosition,
     letRingEndHookType,
 
     palmMuteFontFace,
@@ -1792,6 +1861,7 @@ enum class Sid {
     palmMuteFrameRound,
     palmMuteFrameFgColor,
     palmMuteFrameBgColor,
+    palmMutePosition,
     palmMuteEndHookType,
 
     fermataPosAbove,

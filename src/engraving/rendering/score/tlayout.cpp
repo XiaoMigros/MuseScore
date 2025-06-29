@@ -169,6 +169,7 @@
 #include "measurelayout.h"
 #include "tappinglayout.h"
 #include "harmonylayout.h"
+#include "markerlayout.h"
 
 using namespace muse;
 using namespace muse::draw;
@@ -330,7 +331,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
     case ElementType::PARTIAL_LYRICSLINE_SEGMENT: layoutLyricsLineSegment(item_cast<LyricsLineSegment*>(item), ctx);
         break;
     case ElementType::MARKER:
-        layoutMarker(item_cast<const Marker*>(item), static_cast<Marker::LayoutData*>(ldata));
+        layoutMarker(item_cast<const Marker*>(item), static_cast<Marker::LayoutData*>(ldata), ctx);
         break;
     case ElementType::MEASURE_NUMBER:
         layoutMeasureNumber(item_cast<const MeasureNumber*>(item), static_cast<MeasureNumber::LayoutData*>(ldata), ctx);
@@ -1639,36 +1640,50 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
     switch (item->bracketType()) {
     case BracketType::BRACE: {
         String musicalSymbolFont = conf.styleSt(Sid::musicalSymbolFont);
-        if (musicalSymbolFont == "Emmentaler" || musicalSymbolFont == "Gonville") {
+        if (musicalSymbolFont == "Emmentaler" || musicalSymbolFont == "Gonville" || musicalSymbolFont == "Finale Maestro") {
             ldata->braceSymbol = SymId::noSym;
             double w = conf.styleMM(Sid::akkoladeWidth);
             double h2 = ldata->bracketHeight * 0.5;
+            PainterPath path;
+            if (musicalSymbolFont == "Finale Maestro") {
+                double y = std::min(h2 * 0.125, item->spatium());
 
+#define XF(a) w * a
+#define YF(a, b) a + h2 + (b * y)
+
+                path.moveTo(XF(0), YF(0, 0));
+                path.cubicTo(XF(2.25), YF(0, 2), XF(-1.5), YF(h2, -4), XF(0.98), YF(h2, 0));
+                path.lineTo(XF(1), YF(h2, -0.3));
+                path.cubicTo(XF(-0.5), YF(h2, -3), XF(2.25), YF(0, 1.5), XF(0.15), YF(0, 0));
+                path.cubicTo(XF(2.25), YF(0, -1.5), XF(-0.5), YF(-h2, 3), XF(1), YF(-h2, 0.3));
+                path.lineTo(XF(0.98), YF(-h2, 0));
+                path.cubicTo(XF(-1.5), YF(-h2, 4), XF(2.25), YF(0, -2), XF(0), YF(0, 0));
+            } else {
 #define XM(a) (a + 700) * w / 700
 #define YM(a) (a + 7100) * h2 / 7100
 
-            PainterPath path;
-            path.moveTo(XM(-8), YM(-2048));
-            path.cubicTo(XM(-8), YM(-3192), XM(-360), YM(-4304), XM(-360), YM(-5400));                 // c 0
-            path.cubicTo(XM(-360), YM(-5952), XM(-264), YM(-6488), XM(32), YM(-6968));                 // c 1
-            path.cubicTo(XM(36), YM(-6974), XM(38), YM(-6984), XM(38), YM(-6990));                     // c 0
-            path.cubicTo(XM(38), YM(-7008), XM(16), YM(-7024), XM(0), YM(-7024));                      // c 0
-            path.cubicTo(XM(-8), YM(-7024), XM(-22), YM(-7022), XM(-32), YM(-7008));                   // c 1
-            path.cubicTo(XM(-416), YM(-6392), XM(-544), YM(-5680), XM(-544), YM(-4960));               // c 0
-            path.cubicTo(XM(-544), YM(-3800), XM(-168), YM(-2680), XM(-168), YM(-1568));               // c 0
-            path.cubicTo(XM(-168), YM(-1016), XM(-264), YM(-496), XM(-560), YM(-16));                  // c 1
-            path.lineTo(XM(-560), YM(0));                    //  l 1
-            path.lineTo(XM(-560), YM(16));                   //  l 1
-            path.cubicTo(XM(-264), YM(496), XM(-168), YM(1016), XM(-168), YM(1568));                   // c 0
-            path.cubicTo(XM(-168), YM(2680), XM(-544), YM(3800), XM(-544), YM(4960));                  // c 0
-            path.cubicTo(XM(-544), YM(5680), XM(-416), YM(6392), XM(-32), YM(7008));                   // c 1
-            path.cubicTo(XM(-22), YM(7022), XM(-8), YM(7024), XM(0), YM(7024));                        // c 0
-            path.cubicTo(XM(16), YM(7024), XM(38), YM(7008), XM(38), YM(6990));                        // c 0
-            path.cubicTo(XM(38), YM(6984), XM(36), YM(6974), XM(32), YM(6968));                        // c 1
-            path.cubicTo(XM(-264), YM(6488), XM(-360), YM(5952), XM(-360), YM(5400));                  // c 0
-            path.cubicTo(XM(-360), YM(4304), XM(-8), YM(3192), XM(-8), YM(2048));                      // c 0
-            path.cubicTo(XM(-8), YM(1320), XM(-136), YM(624), XM(-512), YM(0));                        // c 1
-            path.cubicTo(XM(-136), YM(-624), XM(-8), YM(-1320), XM(-8), YM(-2048));                    // c 0*/
+                path.moveTo(XM(-8), YM(-2048)); // almost the width, 5/7 the height
+                path.cubicTo(XM(-8), YM(-3192), XM(-360), YM(-4304), XM(-360), YM(-5400));                 // c 0
+                path.cubicTo(XM(-360), YM(-5952), XM(-264), YM(-6488), XM(32), YM(-6968));                 // c 1
+                path.cubicTo(XM(36), YM(-6974), XM(38), YM(-6984), XM(38), YM(-6990));                     // c 0
+                path.cubicTo(XM(38), YM(-7008), XM(16), YM(-7024), XM(0), YM(-7024));                      // c 0
+                path.cubicTo(XM(-8), YM(-7024), XM(-22), YM(-7022), XM(-32), YM(-7008));                   // c 1
+                path.cubicTo(XM(-416), YM(-6392), XM(-544), YM(-5680), XM(-544), YM(-4960));               // c 0
+                path.cubicTo(XM(-544), YM(-3800), XM(-168), YM(-2680), XM(-168), YM(-1568));               // c 0
+                path.cubicTo(XM(-168), YM(-1016), XM(-264), YM(-496), XM(-560), YM(-16));                  // c 1
+                path.lineTo(XM(-560), YM(0));                    //  l 1
+                path.lineTo(XM(-560), YM(16));                   //  l 1
+                path.cubicTo(XM(-264), YM(496), XM(-168), YM(1016), XM(-168), YM(1568));                   // c 0
+                path.cubicTo(XM(-168), YM(2680), XM(-544), YM(3800), XM(-544), YM(4960));                  // c 0
+                path.cubicTo(XM(-544), YM(5680), XM(-416), YM(6392), XM(-32), YM(7008));                   // c 1
+                path.cubicTo(XM(-22), YM(7022), XM(-8), YM(7024), XM(0), YM(7024));                        // c 0
+                path.cubicTo(XM(16), YM(7024), XM(38), YM(7008), XM(38), YM(6990));                        // c 0
+                path.cubicTo(XM(38), YM(6984), XM(36), YM(6974), XM(32), YM(6968));                        // c 1
+                path.cubicTo(XM(-264), YM(6488), XM(-360), YM(5952), XM(-360), YM(5400));                  // c 0
+                path.cubicTo(XM(-360), YM(4304), XM(-8), YM(3192), XM(-8), YM(2048));                      // c 0
+                path.cubicTo(XM(-8), YM(1320), XM(-136), YM(624), XM(-512), YM(0));                        // c 1
+                path.cubicTo(XM(-136), YM(-624), XM(-8), YM(-1320), XM(-8), YM(-2048));                    // c 0*/
+            }
             ldata->path = path;
             ldata->setBbox(path.boundingRect());
             ldata->shape.add(ldata->bbox());
@@ -1679,8 +1694,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
             }
             double h = ldata->bracketHeight;
             double w = item->symWidth(ldata->braceSymbol) * item->magx();
-            ldata->setBbox(RectF(0, 0, w, h));
-            ldata->shape.add(ldata->bbox());
+            ldata->setShape(RectF(0, 0, w, h));
             ldata->bracketWidth = w + conf.styleMM(Sid::akkoladeBarDistance);
         }
     }
@@ -1703,8 +1717,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
         double y = -w;
         double h = (ldata->bracketHeight * 0.5 + w) * 2;
         w += (.5 * item->spatium() + 3 * w);
-        ldata->setBbox(RectF(x, y, w, h));
-        ldata->shape.add(ldata->bbox());
+        ldata->setShape(RectF(x, y, w, h));
 
         ldata->bracketWidth = conf.styleMM(Sid::staffLineWidth) / 2 + 0.5 * item->spatium();
     }
@@ -1716,8 +1729,7 @@ void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, con
         double bd = _spatium * .25;
         double y = -bd;
         double h = (-y + ldata->bracketHeight * 0.5) * 2;
-        ldata->setBbox(RectF(x, y, w, h));
-        ldata->shape.add(ldata->bbox());
+        ldata->setShape(RectF(x, y, w, h));
 
         ldata->bracketWidth = 0.67 * conf.styleMM(Sid::bracketWidth) + conf.styleMM(Sid::bracketDistance);
     }
@@ -3958,27 +3970,11 @@ void TLayout::layoutLyricsLineSegment(LyricsLineSegment* item, LayoutContext& ct
     LyricsLayout::layout(item, ctx);
 }
 
-void TLayout::layoutMarker(const Marker* item, Marker::LayoutData* ldata)
+void TLayout::layoutMarker(const Marker* item, Marker::LayoutData* ldata, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    LD_CONDITION(item->parentItem()->ldata()->isSetBbox());
 
-    TLayout::layoutBaseTextBase(item, ldata);
-
-    // although normally laid out to parent (measure) width,
-    // force to center over barline if left-aligned
-    if (item->layoutToParentWidth() && item->align() == AlignH::LEFT) {
-        ldata->moveX(-ldata->bbox().width() * 0.5);
-    }
-
-    if (item->autoplace()) {
-        const Measure* m = toMeasure(item->explicitParent());
-        LD_CONDITION(ldata->isSetPos());
-        LD_CONDITION(ldata->isSetBbox());
-        LD_CONDITION(m->ldata()->isSetPos());
-    }
-
-    Autoplace::autoplaceMeasureElement(item, ldata);
+    MarkerLayout::layoutMarker(item, ldata, ctx);
 }
 
 void TLayout::layoutMeasureBase(MeasureBase* item, LayoutContext& ctx)
@@ -6089,13 +6085,44 @@ void TLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* ld
     Shape shape;
     double y = 0.0;
 
+    double maxBlockWidth = -DBL_MAX;
     // adjust the bounding box for the text item
     for (size_t i = 0; i < ldata->blocks.size(); ++i) {
         TextBlock& t = ldata->blocks[i];
         t.layout(item);
         y += t.lineSpacing();
         t.setY(y);
-        shape.add(t.shape().translated(PointF(0.0, y)));
+        if (!item->positionSeparateFromAlignment()) {
+            shape.add(t.shape().translated(PointF(0.0, y)));
+        }
+        maxBlockWidth = std::max(maxBlockWidth, t.boundingRect().width());
+    }
+
+    // ALIGN TEXT
+    // TODO - implement for all text items
+    if (item->positionSeparateFromAlignment()) {
+        for (size_t i = 0; i < ldata->blocks.size(); ++i) {
+            TextBlock& t = ldata->blocks[i];
+            double diff = maxBlockWidth - t.boundingRect().width();
+            if (muse::RealIsNull(diff)) {
+                shape.add(t.shape().translated(PointF(0.0, t.y())));
+                continue;
+            }
+            double rx = 0.0;
+            AlignH alignH = item->align().horizontal;
+            bool dynamicAlwaysCentered = item->isDynamic() && item->getProperty(Pid::CENTER_ON_NOTEHEAD).toBool();
+            if (alignH == AlignH::HCENTER || dynamicAlwaysCentered) {
+                rx = diff * 0.5;
+            } else if (alignH == AlignH::RIGHT) {
+                rx = diff;
+            }
+
+            for (TextFragment& f : t.fragments()) {
+                f.pos.rx() += rx;
+            }
+            t.shape().translate(PointF(rx, 0.0));
+            shape.add(t.shape().translated(PointF(0.0, t.y())));
+        }
     }
 
     RectF bb = shape.bbox();

@@ -224,6 +224,9 @@ bool MStyle::readProperties(XmlReader& e)
             case P_TYPE::RH_TAPPING_SYMBOL:
                 set(idx, TConv::fromXml(e.readAsciiText(), RHTappingSymbol::T));
                 break;
+            case P_TYPE::BRACKET_PATH:
+                set(idx, e.readBracketPath());
+                break;
             default:
                 ASSERT_X(u"unhandled type " + String::number(int(type)));
             }
@@ -598,13 +601,20 @@ void MStyle::read(XmlReader& e, compat::ReadChordListHook* readChordListHook)
     }
 
     if (m_version < 460) {
-        AlignH horizontalAlign = value(Sid::chordSymbolAAlign).value<Align>().horizontal;
-        set(Sid::chordSymPosition, (int)horizontalAlign);
         bool verticalChordAlign = value(Sid::maxChordShiftAbove).value<Spatium>() != Spatium(0.0)
                                   || value(Sid::maxChordShiftBelow).value<Spatium>() != Spatium(0.0)
                                   || value(Sid::maxFretShiftAbove).value<Spatium>() != Spatium(0.0)
                                   || value(Sid::maxFretShiftBelow).value<Spatium>() != Spatium(0.0);
         set(Sid::verticallyAlignChordSymbols, verticalChordAlign);
+        // Make sure new position styles are initially the same as align values
+        for (const StyleDef::StyleValue& st : StyleDef::styleValues) {
+            Sid positionSid = compat::CompatUtils::positionStyleFromAlign(st.styleIdx());
+            if (positionSid == Sid::NOSTYLE) {
+                continue;
+            }
+            AlignH val = value(st.styleIdx()).value<Align>().horizontal;
+            set(positionSid, val);
+        }
     }
 
     if (m_version < 450) {
@@ -686,6 +696,8 @@ void MStyle::save(XmlWriter& xml, bool optimize)
             xml.tag(st.name(), TConv::toXml(value(idx).value<LHTappingSymbol>()));
         } else if (P_TYPE::RH_TAPPING_SYMBOL == type) {
             xml.tag(st.name(), TConv::toXml(value(idx).value<RHTappingSymbol>()));
+        } else if (P_TYPE::BRACKET_PATH == type) {
+            xml.tagProperty(st.name(), value(idx).value<BracketPath>());
         } else {
             PropertyValue val = value(idx);
             //! NOTE for compatibility
