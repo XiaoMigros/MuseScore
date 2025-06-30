@@ -775,7 +775,7 @@ public:
     /// \}
     /// \endcond
 
-    /// All children for a given element. If \p all is true, children of children are counted too.
+    /// All children for a given element. If \p all is true, children of children are included too.
     /// \param all whether to include children of children
     Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all = false);
 
