@@ -79,12 +79,8 @@ QRectF EngravingItem::bbox() const
 
 QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
 {
-    mu::engraving::EngravingItemList list = element()->childrenItems(all);
-    std::vector<mu::engraving::EngravingItem*> eList;
-    for (mu::engraving::EngravingItem* el : list) {
-        eList.emplace_back(el);
-    }
-    return wrapContainerProperty<EngravingItem>(this, eList);
+    const mu::engraving::EngravingItemList childrenList = element()->childrenItems(all);
+    return wrapContainerProperty<EngravingItem>(this, childrenList);
 }
 
 bool EngravingItem::up() const
