@@ -82,7 +82,8 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
 
     // The processTextChunk function process each chunk of processed text with font information. It is only
     // called when the font information changes.
-    auto processTextChunk = [&](const std::string& nextChunk, const std::shared_ptr<FontInfo>& font) -> bool {
+    auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles& styles) -> bool {
+        const std::shared_ptr<FontInfo>& font = styles.font;
         if (!prevFont || prevFont->fontId != font->fontId) {
             // When using musical fonts, don't actually set the font type since symbols are loaded separately.
             /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
@@ -238,8 +239,7 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
         return "";
     };
 
-    musx::util::EnigmaString::parseEnigmaText(m_doc, rawString, processTextChunk, processCommand,
-            musx::util::EnigmaString::AccidentalStyle::Unicode); /// @todo we may want eventually to be smarter here and use Smufl for Smufl fonts. Not sure. Probably better to import as symid
+    musx::util::EnigmaString::parseEnigmaText(m_doc, rawString, processTextChunk, processCommand);
 
     return endString;
 };
@@ -336,7 +336,7 @@ void FinaleParser::importTexts()
             std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
             std::string rawText = pageTextBlock->getRawTextBlock()->text;
             String endString;
-            auto processTextChunk = [&](const std::string& nextChunk, const std::shared_ptr<FontInfo>& font) -> bool {
+            auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles&) -> bool {
                 endString.append(String::fromStdString(nextChunk));
                 return true;
             };
