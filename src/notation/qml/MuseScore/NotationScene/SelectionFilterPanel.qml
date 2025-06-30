@@ -36,8 +36,8 @@ Item {
     property NavigationSection navigationSection: null
     property int navigationOrderStart: 0
 
-    readonly property bool isAllSelected: voicesModel.isAllSelected && notesInChordModel.isAllSelected && elementsModel.isAllSelected
-    readonly property bool isNoneSelected: voicesModel.isNoneSelected && notesInChordModel.isNoneSelected && elementsModel.isNoneSelected
+    readonly property bool isAllSelected: notesInChordModel.isAllSelected && elementsModel.isAllSelected
+    readonly property bool isNoneSelected: notesInChordModel.isNoneSelected && elementsModel.isNoneSelected
 
     StyledFlickable {
         id: flickable
@@ -273,7 +273,7 @@ Item {
             enabled: !root.isNoneSelected
 
             onClicked: {
-                voicesModel.clearAll()
+                //! NOTE: By design voicesModel is exempt from clear/select all
                 notesInChordModel.clearAll()
                 elementsModel.clearAll()
             }
@@ -292,7 +292,7 @@ Item {
             enabled: !root.isAllSelected
 
             onClicked: {
-                voicesModel.selectAll()
+                //! NOTE: By design voicesModel is exempt from clear/select all
                 notesInChordModel.selectAll()
                 elementsModel.selectAll()
             }

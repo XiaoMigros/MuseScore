@@ -20,13 +20,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_SELECT_H
-#define MU_ENGRAVING_SELECT_H
+#pragma once
 
 #include "durationtype.h"
 #include "mscore.h"
 #include "pitchspelling.h"
-#include "types.h"
+#include "../types/types.h"
 
 #include "selectionfilter.h"
 
@@ -173,15 +172,13 @@ private:
     bool canSelectNoteIdx(size_t noteIdx, size_t totalNotesInChord, bool rangeContainsMultiNoteChords) const;
     bool canSelectVoice(track_idx_t track) const { return selectionFilter().canSelectVoice(track); }
     void appendFiltered(EngravingItem* e);
+    void appendFiltered(const std::unordered_set<EngravingItem*>& elems);
     void appendChordRest(ChordRest* cr);
-    void appendChord(Chord* chord);
-    void appendChordFilteredExtras(Chord* chord);
-    void appendNoteFilteredExtras(Note* note);
     void appendTupletHierarchy(Tuplet* innermostTuplet);
     void appendGuitarBend(GuitarBend* guitarBend);
 
-    ChordRest* firstChordRestInRange(track_idx_t track = muse::nidx) const;
-    ChordRest* lastChordRestInRange(track_idx_t track = muse::nidx) const;
+    ChordRest* firstChordRestInRange(track_idx_t preferredTrack = muse::nidx) const;
+    ChordRest* lastChordRestInRange(track_idx_t preferredTrack = muse::nidx) const;
 
     Score* m_score = nullptr;
     SelState m_state = SelState::NONE;
@@ -208,4 +205,3 @@ private:
     String m_lockReason;
 };
 } // namespace mu::engraving
-#endif

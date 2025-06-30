@@ -297,6 +297,12 @@ static bool readTextProperties(XmlReader& e, ReadContext& ctx, TextBase* t, Engr
     }
     t->setOffset(PointF());       // ignore user offsets
     t->setAutoplace(true);
+
+    t->setPosition(t->align().horizontal);
+    if (t->position() != t->propertyDefault(Pid::POSITION).value<AlignH>()) {
+        t->setPropertyFlags(Pid::POSITION, PropertyFlags::UNSTYLED);
+    }
+
     return true;
 }
 
@@ -1453,11 +1459,6 @@ static void readHarmony114(XmlReader& e, ReadContext& ctx, Harmony* h)
 
     h->addChord(info);
 
-    h->setNoteheadAlign(h->align().horizontal);
-    if ((int)h->noteheadAlign() != h->propertyDefault(Pid::POSITION).toInt()) {
-        h->setPropertyFlags(Pid::POSITION, PropertyFlags::UNSTYLED);
-    }
-
     h->afterRead();
 }
 
@@ -2047,7 +2048,8 @@ static void readMeasure(Measure* m, int staffIdx, XmlReader& e, ReadContext& ctx
         } else if (tag == "measureNumberMode") {
             m->setMeasureNumberMode(MeasureNumberMode(e.readInt()));
         } else if (tag == "irregular") {
-            m->setIrregular(e.readBool());
+            m->setIrregular(true);
+            e.skipCurrentElement();
         } else if (tag == "breakMultiMeasureRest") {
             m->setBreakMultiMeasureRest(e.readBool());
         } else if (tag == "sysInitBarLineType") {

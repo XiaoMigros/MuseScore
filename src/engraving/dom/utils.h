@@ -23,7 +23,6 @@
 #pragma once
 
 #include "../types/types.h"
-#include "types.h"
 
 #include "interval.h"
 
@@ -32,6 +31,7 @@
 namespace mu::engraving {
 class Score;
 class Chord;
+class ChordRest;
 class EngravingItem;
 class KeySig;
 class Note;
@@ -39,6 +39,7 @@ class Rest;
 class Measure;
 class Score;
 class Segment;
+class Spanner;
 class System;
 class Staff;
 class Tuplet;
@@ -75,7 +76,6 @@ extern Segment* nextSeg1(Segment* s);
 extern Segment* prevSeg1(Segment* seg);
 
 extern Note* searchTieNote(const Note* note, const Segment* nextSegment = nullptr, const bool disableOverRepeats = true);
-extern Note* searchTieNote114(Note* note);
 
 extern int absStep(int pitch);
 extern int absStep(int tpc, int pitch);
@@ -102,6 +102,11 @@ extern bool moveDownWhenAddingStaves(EngravingItem* item, staff_idx_t startStaff
 extern void collectChordsAndRest(Segment* segment, staff_idx_t staffIdx, std::vector<Chord*>& chords, std::vector<Rest*>& rests);
 extern void collectChordsOverlappingRests(Segment* segment, staff_idx_t staffIdx, std::vector<Chord*>& chords);
 extern std::vector<EngravingItem*> collectSystemObjects(const Score* score, const std::vector<Staff*>& staves = {});
+extern std::unordered_set<EngravingItem*> collectElementsAnchoredToChordRest(const ChordRest* cr);
+extern std::unordered_set<EngravingItem*> collectElementsAnchoredToNote(const Note* cr, bool includeForwardTiesSpanners,
+                                                                        bool includeBackwardTiesSpanners);
+
+extern bool noteAnchoredSpannerIsInRange(const Spanner*, const Fraction& rangeStart, const Fraction& rangeEnd);
 
 extern Interval ornamentIntervalToGeneralInterval(OrnamentInterval interval);
 

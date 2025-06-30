@@ -6532,7 +6532,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/project/internal/projectuiactions.cpp" line="75"/>
         <source>Save se&amp;lection…</source>
-        <translation>Aus&amp;wahl speichern…</translation>
+        <translation>A&amp;uswahl speichern…</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/projectuiactions.cpp" line="76"/>
@@ -9080,7 +9080,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="145"/>
         <source>Se&amp;lection filter</source>
-        <translation>Auswah&amp;lfilter</translation>
+        <translation>A&amp;uswahlfilter</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="146"/>
@@ -28972,7 +28972,7 @@ fehlgeschlagen.</translation>
     <message>
         <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1879"/>
         <source>Open</source>
-        <translation>Offen</translation>
+        <translation>Öffnen</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/projectconfiguration.cpp" line="129"/>

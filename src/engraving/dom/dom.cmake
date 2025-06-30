@@ -109,8 +109,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/factory.h
     ${CMAKE_CURRENT_LIST_DIR}/fermata.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fermata.h
-    ${CMAKE_CURRENT_LIST_DIR}/fretcircle.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/fretcircle.h
     ${CMAKE_CURRENT_LIST_DIR}/figuredbass.cpp
     ${CMAKE_CURRENT_LIST_DIR}/figuredbass.h
     ${CMAKE_CURRENT_LIST_DIR}/fingering.cpp
@@ -369,7 +367,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/tuplet.cpp
     ${CMAKE_CURRENT_LIST_DIR}/tuplet.h
     ${CMAKE_CURRENT_LIST_DIR}/tupletmap.h
-    ${CMAKE_CURRENT_LIST_DIR}/types.h
     ${CMAKE_CURRENT_LIST_DIR}/undo.cpp
     ${CMAKE_CURRENT_LIST_DIR}/undo.h
     ${CMAKE_CURRENT_LIST_DIR}/unrollrepeats.cpp

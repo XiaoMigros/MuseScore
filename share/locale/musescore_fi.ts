@@ -3095,7 +3095,7 @@ viivaston ensimmäisessä nuotissa</translation>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="8487"/>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="8490"/>
         <source>Override score font</source>
-        <translation>Ohita partituurin fontti</translation>
+        <translation>Partituurin fontin ohitus</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="8454"/>
@@ -15438,12 +15438,12 @@ Otenauha %1 kielissä %2</translation>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2447"/>
         <source>Square Click</source>
-        <translation>Square Click</translation>
+        <translation>Neliöklikkaus</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2448"/>
         <source>Metronome Click</source>
-        <translation>Metronominapsautus</translation>
+        <translation>Metronomin klikkaus</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2449"/>
@@ -22893,7 +22893,7 @@ kohotahti</translation>
         <location filename="../../src/instrumentsscene/view/layoutpaneltreemodel.cpp" line="987"/>
         <source>Are you sure you want to delete the selected %n instrument(s)?</source>
         <extracomment>Please omit `%n` in the translation in this case; it's only there so that you have the possibility to provide translations with the correct numerus form, i.e. to show &quot;instrument&quot; or &quot;instruments&quot; as appropriate.</extracomment>
-        <translation><numerusform>Haluatko varmasti poistaa valitun %n instrumentin?</numerusform><numerusform>Haluatko varmasti poistaa valitut %n instrumenttia?</numerusform></translation>
+        <translation><numerusform>Haluatko varmasti poistaa valitun %n instrumentin?</numerusform><numerusform>Haluatko varmasti poistaa valitut %n soitinta?</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/instrumentsscene/view/layoutpaneltreemodel.cpp" line="992"/>
@@ -28486,7 +28486,7 @@ kirjoitus epäonnistui.</translation>
     <message>
         <location filename="../../src/playback/view/internal/mixerchannelitem.cpp" line="685"/>
         <source>Sound flags on this instrument may be reset, but staff text will remain. This action can’t be undone.</source>
-        <translation>Tämän instrumentin ääniliput voidaan nollata, mutta viivastoteksti säilyy. Tätä toimintoa ei voi kumota.</translation>
+        <translation>Tämän soittimen ääniliput voidaan nollata, mutta viivastoteksti säilyy. Tätä toimintoa ei voi kumota.</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/SoundProfilesDialog.qml" line="33"/>
@@ -30414,7 +30414,7 @@ Haluatko korvata sen?</translation>
     <message>
         <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1466"/>
         <source>Please add at least one instrument to enable saving.</source>
-        <translation>Lisää vähintään yksi instrumentti tallennuksen mahdollistamiseksi.</translation>
+        <translation>Lisää vähintään yksi soitin tallennuksen mahdollistamiseksi.</translation>
     </message>
     <message>
         <location filename="../../src/framework/cloud/view/cloudsmodel.cpp" line="196"/>
@@ -31101,7 +31101,7 @@ Haluatko korvata sen?</translation>
         <location filename="../../src/engraving/devtools/corruptscoredevtoolsmodel.cpp" line="44"/>
         <source>Corrupt score</source>
         <extracomment>&quot;Corrupt&quot; is used as a verb here, i.e. &quot;Make the current score corrupted&quot; (for testing purposes).</extracomment>
-        <translation>Korruptoi partituuri</translation>
+        <translation>Korruptoitunut partituuri</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/cmd.cpp" line="2842"/>

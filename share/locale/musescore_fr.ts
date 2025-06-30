@@ -7242,7 +7242,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/palette/internal/paletteuiactions.cpp" line="40"/>
         <source>&amp;Master palette</source>
-        <translation>Pa&amp;lette principale</translation>
+        <translation>P&amp;alette principale</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/paletteuiactions.cpp" line="41"/>
@@ -9195,7 +9195,7 @@ text x-height):</source>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="131"/>
         <source>&amp;Layout</source>
-        <translation>Dispositio&amp;n</translation>
+        <translation>Dispositi&amp;on</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="132"/>
@@ -30525,7 +30525,7 @@ a échoué.</translation>
     <message>
         <location filename="../../src/framework/shortcuts/qml/Muse/Shortcuts/internal/MidiMappingBottomPanel.qml" line="55"/>
         <source>Assign MIDI mapping…</source>
-        <translation>Assigner une affectation MIDI…</translation>
+        <translation>Assigner un contrôle MIDI…</translation>
     </message>
     <message>
         <location filename="../../src/framework/shortcuts/qml/Muse/Shortcuts/internal/ShortcutsBottomPanel.qml" line="45"/>

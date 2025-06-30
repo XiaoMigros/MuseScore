@@ -38,14 +38,14 @@
 
 #include "engraving/dom/figuredbass.h"
 #include "engraving/dom/masterscore.h"
-#include "engraving/dom/realizedharmony.h"
+#include "engraving/dom/mmrestrange.h"
 #include "engraving/dom/stafftype.h"
 #include "engraving/dom/text.h"
 #include "engraving/dom/textline.h"
 #include "engraving/style/textstyle.h"
 #include "engraving/types/symnames.h"
-#include "engraving/types/typesconv.h"
 #include "engraving/types/types.h"
+#include "engraving/types/typesconv.h"
 
 #include "ui/view/widgetstatestore.h"
 #include "ui/view/widgetutils.h"
@@ -315,6 +315,10 @@ EditStyle::EditStyle(QWidget* parent)
     mmRestConstantWidth->addButton(mmRestWidthProportional, 0);
     mmRestConstantWidth->addButton(mmRestWidthConstant, 1);
 
+    QButtonGroup* partialSlurAngle = new QButtonGroup(this);
+    partialSlurAngle->addButton(partialSlursAngleNormal, 0);
+    partialSlurAngle->addButton(partialSlursAngleWeird, 1);
+
     // ====================================================
     // Style widgets
     // ====================================================
@@ -490,6 +494,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::slurMidWidth,            false, slurMidLineWidth,        resetSlurMidLineWidth },
         { StyleId::slurDottedWidth,         false, slurDottedLineWidth,     resetSlurDottedLineWidth },
         { StyleId::slurMinDistance,         false, slurMinDistance,         resetSlurMinDistance },
+        { StyleId::angleHangingSlursAwayFromStaff, false, partialSlurAngle, 0 },
         { StyleId::tieEndWidth,             false, tieEndLineWidth,         resetTieEndLineWidth },
         { StyleId::tieMidWidth,             false, tieMidLineWidth,         resetTieMidLineWidth },
         { StyleId::tieDottedWidth,          false, tieDottedLineWidth,      resetTieDottedLineWidth },
@@ -828,7 +833,7 @@ EditStyle::EditStyle(QWidget* parent)
     musicalSymbolFont->clear();
     dynamicsFont->clear();
     musicalTextFont->clear();
-    for (auto i : engravingFonts()->fonts()) {
+    for (const auto& i : engravingFonts()->fonts()) {
         QString fontDisplayName = QString::fromStdString(i->name());
         QString fontFamilyName = QString::fromStdString(i->family());
         musicalSymbolFont->addItem(fontDisplayName, fontDisplayName);
@@ -998,7 +1003,7 @@ EditStyle::EditStyle(QWidget* parent)
     auto voltasPage = createQmlWidget(
         voltasPageWidget,
         QUrl(QString::fromUtf8("qrc:/qml/MuseScore/NotationScene/internal/EditStyle/VoltasPage.qml")));
-    voltasPage.widget->setMinimumSize(224, 400);
+    voltasPage.widget->setMinimumSize(504, 400);
     voltasPageWidget->layout()->addWidget(voltasPage.widget);
 
     // ====================================================
@@ -1159,7 +1164,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::FontFace);
     });
     connect(textStyleFontFace, &QFontComboBox::currentFontChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::FontFace, QVariant(textStyleFontFace->currentFont().family()));
+        textStyleValueChanged(TextStylePropertyType::FontFace, textStyleFontFace->currentFont().family());
     });
 
     // font size
@@ -1168,7 +1173,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::FontSize);
     });
     connect(textStyleFontSize, &QDoubleSpinBox::valueChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::FontSize, QVariant(textStyleFontSize->value()));
+        textStyleValueChanged(TextStylePropertyType::FontSize, textStyleFontSize->value());
     });
 
     // musical symbols scale
@@ -1177,7 +1182,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::MusicalSymbolsScale);
     });
     connect(textStyleMusicalSymbolsScale, &QDoubleSpinBox::valueChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::MusicalSymbolsScale, QVariant(textStyleMusicalSymbolsScale->value()));
+        textStyleValueChanged(TextStylePropertyType::MusicalSymbolsScale, textStyleMusicalSymbolsScale->value());
     });
 
     // line spacing
@@ -1186,7 +1191,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::LineSpacing);
     });
     connect(textStyleLineSpacing, &QDoubleSpinBox::valueChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::LineSpacing, QVariant(textStyleLineSpacing->value()));
+        textStyleValueChanged(TextStylePropertyType::LineSpacing, textStyleLineSpacing->value());
     });
 
     // font style
@@ -1195,7 +1200,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::FontStyle);
     });
     connect(textStyleFontStyle, &FontStyleSelect::fontStyleChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::FontStyle, QVariant(int(textStyleFontStyle->fontStyle())));
+        textStyleValueChanged(TextStylePropertyType::FontStyle, int(textStyleFontStyle->fontStyle()));
     });
 
     // align
@@ -1204,7 +1209,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::TextAlign);
     });
     connect(textStyleAlign, &AlignSelect::alignChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::TextAlign, PropertyValue(textStyleAlign->align()).toQVariant());
+        textStyleValueChanged(TextStylePropertyType::TextAlign, textStyleAlign->align());
     });
 
     // offset
@@ -1213,7 +1218,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::Offset);
     });
     connect(textStyleOffset, &OffsetSelect::offsetChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::Offset, QVariant(textStyleOffset->offset()));
+        textStyleValueChanged(TextStylePropertyType::Offset, textStyleOffset->offset());
     });
 
     // spatium dependent
@@ -1262,7 +1267,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::FrameBorderColor);
     });
     connect(textStyleFrameForeground, &Awl::ColorLabel::colorChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::FrameBorderColor, textStyleFrameForeground->color());
+        textStyleValueChanged(TextStylePropertyType::FrameBorderColor, Color::fromQColor(textStyleFrameForeground->color()));
     });
 
     WidgetUtils::setWidgetIcon(resetTextStyleFrameBackground, IconCode::Code::UNDO);
@@ -1270,7 +1275,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::FrameFillColor);
     });
     connect(textStyleFrameBackground, &Awl::ColorLabel::colorChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::FrameFillColor, textStyleFrameBackground->color());
+        textStyleValueChanged(TextStylePropertyType::FrameFillColor, Color::fromQColor(textStyleFrameBackground->color()));
     });
 
     WidgetUtils::setWidgetIcon(resetTextStyleColor, IconCode::Code::UNDO);
@@ -1278,7 +1283,7 @@ EditStyle::EditStyle(QWidget* parent)
         resetTextStyle(TextStylePropertyType::Color);
     });
     connect(textStyleColor, &Awl::ColorLabel::colorChanged, this, [=]() {
-        textStyleValueChanged(TextStylePropertyType::Color, textStyleColor->color());
+        textStyleValueChanged(TextStylePropertyType::Color, Color::fromQColor(textStyleColor->color()));
     });
 
     connect(textStyles, &QListWidget::currentRowChanged, this, &EditStyle::textStyleChanged);
@@ -2143,6 +2148,7 @@ bool EditStyle::isBoolStyleRepresentedByButtonGroup(StyleId id)
     case StyleId::genKeysig:
     case StyleId::singleMeasureMMRestUseNormalRest:
     case StyleId::mmRestConstantWidth:
+    case StyleId::angleHangingSlursAwayFromStaff:
         return true;
     default:
         return false;
@@ -2234,9 +2240,8 @@ PropertyValue EditStyle::getValue(StyleId idx)
             QDoubleSpinBox* dsb = qobject_cast<QDoubleSpinBox*>(sw.widget);
             return PointF(0.0, dsb->value());
         }
-        OffsetSelect* cb = qobject_cast<OffsetSelect*>(sw.widget);
-        if (cb) {
-            return PointF::fromQPointF(cb->offset());
+        if (OffsetSelect* cb = qobject_cast<OffsetSelect*>(sw.widget)) {
+            return cb->offset();
         } else {
             ASSERT_X("unhandled muse::PointF");
         }
@@ -2383,7 +2388,7 @@ void EditStyle::setValues()
         case P_TYPE::POINT: {
             OffsetSelect* as = qobject_cast<OffsetSelect*>(sw.widget);
             if (as) {
-                as->setOffset(val.value<muse::PointF>().toQPointF());
+                as->setOffset(val.value<muse::PointF>());
             }
         } break;
         default: {
@@ -2814,7 +2819,7 @@ void EditStyle::textStyleChanged(int row)
             break;
 
         case TextStylePropertyType::Offset:
-            textStyleOffset->setOffset(styleValue(a.sid).value<PointF>().toQPointF());
+            textStyleOffset->setOffset(styleValue(a.sid).value<PointF>());
             resetTextStyleOffset->setEnabled(styleValue(a.sid) != defaultStyleValue(a.sid));
             break;
 
@@ -2883,7 +2888,7 @@ void EditStyle::textStyleChanged(int row)
 //   textStyleValueChanged
 //---------------------------------------------------------
 
-void EditStyle::textStyleValueChanged(TextStylePropertyType type, QVariant value)
+void EditStyle::textStyleValueChanged(TextStylePropertyType type, const PropertyValue& value)
 {
     TextStyleType tid = TextStyleType(textStyles->currentItem()->data(Qt::UserRole).toInt());
     const TextStyle* ts = textStyle(tid);
@@ -2891,9 +2896,9 @@ void EditStyle::textStyleValueChanged(TextStylePropertyType type, QVariant value
     for (const auto& a : *ts) {
         if (a.type == type) {
             if (type == TextStylePropertyType::MusicalSymbolsScale) {
-                setStyleQVariantValue(a.sid, value.toDouble() / 100);
+                setStyleValue(a.sid, value.toDouble() / 100);
             } else {
-                setStyleQVariantValue(a.sid, value);
+                setStyleValue(a.sid, value);
             }
             break;
         }
