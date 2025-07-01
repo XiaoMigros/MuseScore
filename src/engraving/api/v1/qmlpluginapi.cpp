@@ -34,7 +34,6 @@
 #include "instrument.h"
 #include "cursor.h"
 #include "elements.h"
-#include "tie.h"
 #include "selection.h"
 
 #include "log.h"

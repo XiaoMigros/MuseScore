@@ -41,13 +41,13 @@
 #include "engraving/dom/stemslash.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/tuplet.h"
+#include "engraving/dom/tie.h"
 #include "engraving/dom/accidental.h"
 #include "engraving/dom/undo.h"
 
 #include "playevent.h"
 
 Q_MOC_INCLUDE("engraving/api/v1/part.h")
-Q_MOC_INCLUDE("engraving/api/v1/tie.h")
 
 namespace mu::engraving::apiv1 {
 class FractionWrapper;
@@ -1478,6 +1478,41 @@ public:
     QQmlListProperty<EngravingItem> brackets() { return wrapContainerProperty<EngravingItem>(this, staff()->brackets()); }
 
     Part* part();
+    /// \endcond
+};
+
+//---------------------------------------------------------
+//   Tie
+///  Provides access to internal mu::engraving::Tie objects.
+///  \since MuseScore 3.3
+//---------------------------------------------------------
+
+class Tie : public EngravingItem
+{
+    Q_OBJECT
+    /// The starting note of the tie.
+    /// \since MuseScore 3.3
+    Q_PROPERTY(apiv1::Note * startNote READ startNote)
+    /// The ending note of the tie.
+    /// \since MuseScore 3.3
+    Q_PROPERTY(apiv1::Note * endNote READ endNote)
+    /// Whether the placement is inside.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool isInside READ isInside)
+
+    /// \cond MS_INTERNAL
+
+public:
+    Tie(mu::engraving::Tie* tie, Ownership own = Ownership::PLUGIN)
+        : apiv1::EngravingItem(tie, own) {}
+
+    mu::engraving::Tie* tie() { return toTie(e); }
+    const mu::engraving::Tie* tie() const { return toTie(e); }
+
+    Note* startNote() const { return wrap<Note>(tie()->startNote()); }
+    Note* endNote() const { return wrap<Note>(tie()->startNote()); }
+    bool isInside() const { return tie()->isInside(); }
+
     /// \endcond
 };
 
