@@ -192,6 +192,7 @@ public:
 
     Q_INVOKABLE void rewind(RewindMode mode);
     Q_INVOKABLE void rewindToTick(int tick);
+    Q_INVOKABLE void expandVoice(apiv1::Segment* _segment = nullptr, int _track = -1);
 
     Q_INVOKABLE bool next();
     Q_INVOKABLE bool nextMeasure();

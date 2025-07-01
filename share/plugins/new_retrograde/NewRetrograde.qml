@@ -32,6 +32,7 @@ MuseScore {
         var sendObjs = []
         var parsedTuplets = []
         var parsedCRs = []
+        var firstSegment = curScore.lastSegment
         for (var i in curScore.selection.elements) {
             var el = curScore.selection.elements[i]
             if (!el || getType(el) == "unknown") {
@@ -75,6 +76,9 @@ MuseScore {
             console.log("logging " + sendObj.type + ": Tick " + sendObj.startTick + ", voice " + (sendObj.track % 4 + 1) + ", staff "
                 + Math.ceil((sendObj.track + 1) / 4) + ", duration: " + sendObj.duration.numerator + "/" + sendObj.duration.denominator)
             sendObjs.push(sendObj)
+            if (sendObj.startTick < firstSegment.tick) {
+                firstSegment = getSegment(el)
+            }
         }
 
         sendObjs.sort(retrogradeSort)
@@ -86,7 +90,22 @@ MuseScore {
             if (el.track != curTrack) {
                 curTrack = el.track
                 cursor.track = curTrack
-                cursor.rewindToTick(sendObjs[sendObjs.length-1].startTick)
+                cursor.rewindToTick(firstSegment.tick)
+                if (cursor.segment != firstSegment) {
+                    var dontRewind = cursor.prev()
+                    cursor.expandVoice(firstSegment)
+                    if (dontRewind) {
+                        cursor.next()
+                    } else {
+                        cursor.rewindToTick(firstSegment.parent.tick)
+                    }
+                    while (cursor.tick < firstSegment.tick) {
+                        if (cursor.element.type == Element.REST) {
+                            cursor.element.gap = true
+                        }
+                        cursor.next()
+                    }
+                }
                 if (sendObjs[sendObjs.length-1].startTick != cursor.measure.firstSegment.tick) cursor.rewindToTick(sendObjs[sendObjs.length-1].startTick)
             }
             if (cursor.element && cursor.element.tuplet) {
