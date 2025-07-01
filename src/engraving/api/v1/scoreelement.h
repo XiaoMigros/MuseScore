@@ -66,6 +66,10 @@ class ScoreElement : public QObject
      * element name suitable for usage in a user interface.
      */
     Q_PROPERTY(QString name READ name)
+    /**
+     * The size of a spatium for a given element.
+     */
+    Q_PROPERTY(qreal spatium READ spatium)
 
     Ownership m_ownership;
 
