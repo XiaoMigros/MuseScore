@@ -35,6 +35,7 @@
 
 // api
 #include "cursor.h"
+#include "fraction.h"
 #include "elements.h"
 
 using namespace mu::engraving::apiv1;
@@ -156,9 +157,9 @@ Segment* Score::firstSegment(mu::engraving::SegmentType segmentType)
     return wrap<Segment>(score()->firstSegment(segmentType), Ownership::SCORE);
 }
 
-Measure* Score::tick2measure()
+Measure* Score::tick2measure(FractionWrapper* f)
 {
-    return wrap<Measure>(score()->tick2measure(mu::engraving::Fraction::fromTicks(tick));
+    return wrap<Measure>(score()->tick2measure(f->fraction()));
 }
 
 //---------------------------------------------------------
