@@ -173,6 +173,28 @@ void Cursor::rewindToTick(int tick)
 }
 
 //---------------------------------------------------------
+//   expandVoice
+///   Fill a measure and voice with rests where there are
+///   'gaps' in the music up to the given segment, and from
+///   the segment until the next chord or rest in the measure and voice.
+///   Existing notes are not replaced, rests are.
+///   \param segment Determines the measure to fill and the break
+///   point for the rests.
+///   \param track Determines the track (staff and voice) to fill.
+///   \since MuseScore 4.6
+//---------------------------------------------------------
+
+void Cursor::expandVoice(Segment* _segment, int _track)
+{
+    mu::engraving::Segment* s = _segment ? _segment->segment() : segment();
+    track_idx_t t = static_cast<track_idx_t>(_track > 0 ? _track : track());
+    if (t >= _score->ntracks()) {
+        return;
+    }
+    _score->expandVoice(s, t);
+}
+
+//---------------------------------------------------------
 //   prev
 ///   Move the cursor to the previous segment.
 ///   \return \p false if the beginning of the score is
