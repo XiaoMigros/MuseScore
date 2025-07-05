@@ -230,7 +230,7 @@ private:
 
     bool m_canvasWasChanged = false;
 
-    PointsModelPtr m_pointsModel = nullptr;
+    BraceDesignerPointsModel* m_pointsModel = nullptr;
     bool m_isLoadingBlocked = false;
     bool m_notationChangedWhileLoadingWasBlocked = false;
     void setLoadingBlocked(bool blocked);

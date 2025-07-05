@@ -48,11 +48,11 @@ static constexpr int INVALID_INDEX = -1;
 static constexpr int STEP_SIZE = 10;
 
 BraceDesignerCanvas::BraceDesignerCanvas(QQuickItem* parent)
-    : muse::uicomponents::QuickPaintedView(parent)
+    : muse::uicomponents::QuickPaintedView(parent)//, muse::Injectable(muse::iocCtxForQmlObject(this))
 {
-    m_pointsModel = std::make_unique<BraceDesignerPointsModel>(this);
+    m_pointsModel = new BraceDesignerPointsModel(this);
 
-    connect(m_pointsModel, &PointsModelPtr::selectedPointsChanged,
+    connect(m_pointsModel, &BraceDesignerPointsModel::selectedPointsChanged,
             this, [this](int selectedIndex) {
         if (isPointIndexValid(selectedIndex)) {
             m_currentPointIndex = selectedIndex;
@@ -62,12 +62,12 @@ BraceDesignerCanvas::BraceDesignerCanvas(QQuickItem* parent)
         update();
     });
 
-    connect(m_pointsModel, &PointsModelPtr::pointListChanged,
+    connect(m_pointsModel, &BraceDesignerPointsModel::pointListChanged,
             this, [this](QVariant pointList) {
         setPointList(pointList, true);
     });
 
-    connect(m_pointsModel, &PointsModelPtr::insertNewPoint,
+    connect(m_pointsModel, &BraceDesignerPointsModel::insertNewPoint,
             this, [this](int index) {
         ++index;
         BracePoint p = isPointIndexValid(index) ? m_points.at(index) : BracePoint(BracePoint::PointType::Move, QPointF(), QPointF());

@@ -234,7 +234,7 @@ void NotationModule::registerUiTypes()
 
     qmlRegisterUncreatableType<StyleItem>("MuseScore.NotationScene", 1, 0, "StyleItem", "Cannot create StyleItem from QML");
     qmlRegisterType<BraceDesignerSectionModel>("MuseScore.NotationScene", 1, 0, "BraceDesignerSectionModel");
-    qmlRegisterType<BracePointItem>("MuseScore.NotationScene", 1, 0, "BracePointItem");
+    // qmlRegisterType<BracePointItem>("MuseScore.NotationScene", 1, 0, "BracePointItem");
     qmlRegisterType<BraceDesignerCanvas>("MuseScore.NotationScene", 1, 0, "BraceDesignerCanvas");
     qmlRegisterType<NotesPageModel>("MuseScore.NotationScene", 1, 0, "NotesPageModel");
     qmlRegisterType<RestsPageModel>("MuseScore.NotationScene", 1, 0, "RestsPageModel");
