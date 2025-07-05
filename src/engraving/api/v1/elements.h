@@ -1516,6 +1516,24 @@ public:
     /// \endcond
 };
 
+class QmlChildrenListAccess : public QQmlListProperty<EngravingItem>
+{
+public:
+    QmlChildrenListAccess(QObject* obj, engraving::EngravingItemList& container)
+        : QQmlListProperty<EngravingItem>(obj, &container, &count, &at) {}
+
+    static qsizetype count(QQmlListProperty<EngravingItem>* l) { return static_cast<engraving::EngravingItemList*>(l->data)->size(); }
+    static EngravingItem* at(QQmlListProperty<EngravingItem>* l, qsizetype i)
+    {
+        return wrap(static_cast<engraving::EngravingItemList*>(l->data)->at(i), Ownership::SCORE);
+    }
+};
+
+/** \cond PLUGIN_API \private \endcond */
+inline QmlChildrenListAccess wrapChildrenContainerProperty(QObject* obj, engraving::EngravingItemList& c)
+{
+    return QmlChildrenListAccess(obj, c);
+}
 #undef API_PROPERTY
 #undef API_PROPERTY_T
 #undef API_PROPERTY_READ_ONLY

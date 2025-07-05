@@ -85,8 +85,8 @@ void EngravingItem::setEID(QString eid)
 
 QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
 {
-    const mu::engraving::EngravingItemList childrenList = element()->childrenItems(all);
-    return wrapContainerProperty<EngravingItem>(this, childrenList);
+    mu::engraving::EngravingItemList childrenList = element()->childrenItems(all);
+    return wrapChildrenContainerProperty(this, childrenList);
 }
 
 bool EngravingItem::up() const
