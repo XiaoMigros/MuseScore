@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_APIV1_SCOREELEMENT_H
-#define MU_ENGRAVING_APIV1_SCOREELEMENT_H
+#pragma once
 
 #include <QQmlEngine>
 #include <QQmlListProperty>
@@ -192,5 +191,3 @@ QmlListAccess<T, Container> wrapContainerProperty(QObject* obj, Container& c)
     return QmlListAccess<T, Container>(obj, c);
 }
 }
-
-#endif
