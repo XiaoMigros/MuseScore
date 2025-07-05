@@ -48,6 +48,7 @@ class EngravingItem;
 class Measure;
 class Segment;
 class Score;
+class Staff;
 
 //---------------------------------------------------------
 //   @@ Cursor
@@ -67,8 +68,13 @@ class Cursor : public QObject
     Q_OBJECT
     /** Current track */
     Q_PROPERTY(int track READ track WRITE setTrack)
-    /** Current staff (#track / 4) */
+    /** Current staff number (#track / 4) */
     Q_PROPERTY(int staffIdx READ staffIdx WRITE setStaffIdx)
+    /**
+     * Current \ref Staff the cursor is on.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(apiv1::Staff * staff READ staff WRITE setStaff)
     /** Current voice (#track % 4) */
     Q_PROPERTY(int voice READ voice WRITE setVoice)
     /**
@@ -81,10 +87,24 @@ class Cursor : public QObject
      */
     Q_PROPERTY(int filter READ filter WRITE setFilter)
 
-    /** MIDI tick position, read only */
-    Q_PROPERTY(int tick READ tick)           // FIXME: fraction transition
-    /** Time at tick position, read only */
-    Q_PROPERTY(double time READ time)
+    /** MIDI tick position, read only
+     * As of MuseScore 4.6, this property is deprecated and should
+     * not be used to read the cursor position. Use \ref cursor.fraction
+     * instead. However, this property can still sometimes be useful to
+     * compare position values using operators.
+     */
+    Q_PROPERTY(int tick READ tick)
+    /**
+     * MIDI tick position, accounting for repeats.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(int utick READ utick)
+     /**
+     * Time position in this score, measured as a fraction of a
+     * whole note (the same units MuseScore's code uses internally).
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ qmlFraction)
 
     /** Tempo at current tick, read only */
     Q_PROPERTY(qreal tempo READ tempo)
@@ -95,7 +115,7 @@ class Cursor : public QObject
     Q_PROPERTY(apiv1::Score * score READ score WRITE setScore)
 
     /** Current element at track, read only */
-    Q_PROPERTY(apiv1::EngravingItem * element READ element)
+    Q_PROPERTY(apiv1::EngravingItem * element READ element) //todo set
     /** Current segment, read only */
     Q_PROPERTY(apiv1::Segment * segment READ qmlSegment)
     /** Current measure, read only */
@@ -132,11 +152,11 @@ private:
      */
     Q_PROPERTY(InputStateMode inputStateMode READ inputStateMode WRITE setInputStateMode)
 
-    mu::engraving::Score* _score = nullptr;
-//       bool _expandRepeats; // used?
-    engraving::SegmentType _filter;
+    mu::engraving::Score* m_score = nullptr;
+//       bool m_expandRepeats; // used?
+    engraving::SegmentType m_filter;
     std::unique_ptr<engraving::InputState> is;
-    InputStateMode _inputStateMode = INPUT_STATE_INDEPENDENT;
+    InputStateMode m_inputStateMode = INPUT_STATE_INDEPENDENT;
 
     // utility methods
     void prevInTrack();
@@ -149,6 +169,8 @@ private:
 
     mu::engraving::Segment* segment() const;
     void setSegment(mu::engraving::Segment* seg);
+
+    mu::engraving::Fraction fraction() const;
 
     int inputStateString() const;
     void setInputStateString(int);
@@ -167,13 +189,16 @@ public:
     int staffIdx() const;
     void setStaffIdx(int v);
 
+    Staff* staff() const;
+    void setStaff(Staff* s);
+
     int voice() const;
     void setVoice(int v);
 
-    int filter() const { return int(_filter); }
-    void setFilter(int f) { _filter = engraving::SegmentType(f); }
+    int filter() const { return int(m_filter); }
+    void setFilter(int f) { m_filter = engraving::SegmentType(f); }
 
-    InputStateMode inputStateMode() const { return _inputStateMode; }
+    InputStateMode inputStateMode() const { return m_inputStateMode; }
     void setInputStateMode(InputStateMode val);
 
     EngravingItem* element() const;
@@ -181,7 +206,8 @@ public:
     Measure* measure() const;
 
     int tick();
-    double time();
+    int utick();
+    FractionWrapper* qmlFraction() const;
     qreal tempo();
 
     int qmlKeySignature();
@@ -189,6 +215,8 @@ public:
 
     Q_INVOKABLE void rewind(RewindMode mode);
     Q_INVOKABLE void rewindToTick(int tick);
+    Q_INVOKABLE void rewindToFraction(apiv1::FractionWrapper* f);
+    Q_INVOKABLE double time(bool includeRepeats = false);
 
     Q_INVOKABLE bool next();
     Q_INVOKABLE bool nextMeasure();
