@@ -443,3 +443,19 @@ void BraceDesignerPointsModel::setSelectedIndex(int row)
     QModelIndex index = createIndex(row, 0);
     selectRow(index);
 }
+
+QModelIndex BraceDesignerPointsModel::parent(const QModelIndex& child) const
+{
+    // if (!child.isValid()) {
+        return QModelIndex();
+    // }
+
+    // QVariantMap childItem = modelIndexToItem(child);
+    // AbstractLayoutPanelTreeItem* parentItem = childItem->parentItem();
+
+    // if (parentItem == m_rootItem) {
+        // return QModelIndex();
+    // }
+
+    // return createIndex(parentItem->row(), 0, parentItem);
+}

@@ -63,6 +63,7 @@ public:
     QVariant pointList;
 
     QModelIndex index(int row, int column, const QModelIndex& model = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex& child) const override;
     Q_INVOKABLE void load();
     int rowCount(const QModelIndex& parent) const override;
     int columnCount(const QModelIndex& parent) const override;
