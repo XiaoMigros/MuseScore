@@ -177,7 +177,7 @@ void FinaleParser::importParts()
     std::unordered_map<InstCmper, QString> inst2Part;
     int partNumber = 0;
     for (const std::shared_ptr<others::InstrumentUsed>& item : scrollView) {
-        std::shared_ptr<others::Staff> staff = item->getStaff();
+        std::shared_ptr<others::Staff> staff = item->getStaffInstance();
         IF_ASSERT_FAILED(staff) {
             continue; // safety check
         }
@@ -293,8 +293,8 @@ void FinaleParser::importBrackets()
             logger()->logWarning(String(u"Group info encountered without start or end slot information"));
             continue;
         }
-        auto musxStartStaff = others::InstrumentUsed::getStaffAtIndex(scrollView, Cmper(groupInfo.info.startSlot.value()));
-        auto musxEndStaff = others::InstrumentUsed::getStaffAtIndex(scrollView, Cmper(groupInfo.info.endSlot.value()));
+        auto musxStartStaff = others::InstrumentUsed::getStaffInstanceAtIndex(scrollView, Cmper(groupInfo.info.startSlot.value()));
+        auto musxEndStaff = others::InstrumentUsed::getStaffInstanceAtIndex(scrollView, Cmper(groupInfo.info.endSlot.value()));
         IF_ASSERT_FAILED(musxStartStaff && musxEndStaff) {
             logger()->logWarning(String(u"Group info encountered missing start or end staff information"));
             continue;
