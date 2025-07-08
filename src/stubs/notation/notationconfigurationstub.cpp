@@ -527,6 +527,36 @@ muse::async::Channel<int> NotationConfigurationStub::notePlayDurationMillisecond
     return ch;
 }
 
+double NotationConfigurationStub::largeNudgeStep() const
+{
+    return 1.0;
+}
+
+void NotationConfigurationStub::setLargeNudgeStep(double)
+{
+}
+
+muse::async::Channel<double> NotationConfigurationStub::largeNudgeStepChanged() const
+{
+    static muse::async::Channel<double> ch;
+    return ch;
+}
+
+double NotationConfigurationStub::smallNudgeStep() const
+{
+    return 0.1;
+}
+
+void NotationConfigurationStub::setSmallNudgeStep(double)
+{
+}
+
+muse::async::Channel<double> NotationConfigurationStub::smallNudgeStepChanged() const
+{
+    static muse::async::Channel<double> ch;
+    return ch;
+}
+
 void NotationConfigurationStub::setTemplateModeEnabled(std::optional<bool>)
 {
 }
@@ -569,9 +599,9 @@ void NotationConfigurationStub::setIsSnappedToGrid(muse::Orientation, bool)
 {
 }
 
-int NotationConfigurationStub::gridSizeSpatium(muse::Orientation) const
+qreal NotationConfigurationStub::gridSizeSpatium(muse::Orientation) const
 {
-    return 20;
+    return 0.25;
 }
 
 void NotationConfigurationStub::setGridSize(muse::Orientation, int)

@@ -54,7 +54,6 @@
 #include "view/selectionfilter/notesinchordselectionfiltermodel.h"
 #include "view/selectionfilter/elementsselectionfiltermodel.h"
 
-#include "view/editgridsizedialogmodel.h"
 #include "view/editpercussionshortcutmodel.h"
 #include "view/paintedengravingitem.h"
 
@@ -172,7 +171,6 @@ void NotationModule::resolveImports()
 
         ir->registerQmlUri(Uri("musescore://notation/parts"), "MuseScore/NotationScene/PartsDialog.qml");
         ir->registerQmlUri(Uri("musescore://notation/selectmeasurescount"), "MuseScore/NotationScene/SelectMeasuresCountDialog.qml");
-        ir->registerQmlUri(Uri("musescore://notation/editgridsize"), "MuseScore/NotationScene/EditGridSizeDialog.qml");
         ir->registerQmlUri(Uri("musescore://notation/percussionpanelpadswap"), "MuseScore/NotationScene/PercussionPanelPadSwapDialog.qml");
 
         ir->registerQmlUri(Uri("musescore://notation/editpercussionshortcut"), "MuseScore/NotationScene/EditPercussionShortcutDialog.qml");
@@ -203,7 +201,6 @@ void NotationModule::registerUiTypes()
     qmlRegisterType<ElementsSelectionFilterModel>("MuseScore.NotationScene", 1, 0, "ElementsSelectionFilterModel");
     qmlRegisterType<VoicesSelectionFilterModel>("MuseScore.NotationScene", 1, 0, "VoicesSelectionFilterModel");
     qmlRegisterType<NotesInChordSelectionFilterModel>("MuseScore.NotationScene", 1, 0, "NotesInChordSelectionFilterModel");
-    qmlRegisterType<EditGridSizeDialogModel>("MuseScore.NotationScene", 1, 0, "EditGridSizeDialogModel");
     qmlRegisterType<EditPercussionShortcutModel>("MuseScore.NotationScene", 1, 0, "EditPercussionShortcutModel");
     qmlRegisterType<PianoKeyboardView>("MuseScore.NotationScene", 1, 0, "PianoKeyboardView");
     qmlRegisterType<PianoKeyboardPanelContextMenuModel>("MuseScore.NotationScene", 1, 0, "PianoKeyboardPanelContextMenuModel");

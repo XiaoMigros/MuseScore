@@ -42,6 +42,9 @@ class CanvasPreferencesModel : public QObject, public muse::Injectable, public m
 
     Q_PROPERTY(int selectionProximity READ selectionProximity WRITE setSelectionProximity NOTIFY selectionProximityChanged)
 
+    Q_PROPERTY(double largeNudgeStep READ largeNudgeStep WRITE setLargeNudgeStep NOTIFY largeNudgeStepChanged)
+    Q_PROPERTY(double smallNudgeStep READ smallNudgeStep WRITE setSmallNudgeStep NOTIFY smallNudgeStepChanged)
+
     muse::Inject<notation::INotationConfiguration> notationConfiguration = { this };
 
 public:
@@ -61,6 +64,9 @@ public:
 
     int selectionProximity() const;
 
+    double largeNudgeStep() const;
+    double smallNudgeStep() const;
+
 public slots:
     void setMouseZoomPrecision(int precision);
 
@@ -69,12 +75,17 @@ public slots:
 
     void setSelectionProximity(int proximity);
 
+    void setLargeNudgeStep(double step);
+    void setSmallNudgeStep(double step);
+
 signals:
     void defaultZoomChanged();
     void mouseZoomPrecisionChanged();
     void scrollPagesOrientationChanged();
     void limitScrollAreaChanged();
     void selectionProximityChanged(int selectionProximity);
+    void largeNudgeStepChanged(double step);
+    void smallNudgeStepChanged(double step);
 
 private:
     void setupConnections();

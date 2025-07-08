@@ -148,22 +148,7 @@ RectF BSymbol::drag(EditData& ed)
         r.unite(e->canvasBoundingRect());
     }
 
-    double x = ed.delta.x();
-    double y = ed.delta.y();
-
-    double _spatium = spatium();
-    if (ed.hRaster) {
-        double hRaster = _spatium / MScore::hRaster();
-        int n = lrint(x / hRaster);
-        x = hRaster * n;
-    }
-    if (ed.vRaster) {
-        double vRaster = _spatium / MScore::vRaster();
-        int n = lrint(y / vRaster);
-        y = vRaster * n;
-    }
-
-    setOffset(PointF(x, y));
+    setOffset(ed.gridSnapped(ed.delta, spatium()));
 
     r.unite(canvasBoundingRect());
     for (const EngravingItem* e : m_leafs) {

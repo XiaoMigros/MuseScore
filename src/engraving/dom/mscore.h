@@ -176,7 +176,7 @@ struct MScoreError {
 
 class MScore
 {
-    static int _hRaster, _vRaster;
+    static double _hRaster, _vRaster;
     static bool _verticalOrientation;
 
 public:
@@ -187,8 +187,8 @@ public:
 
     static double hRaster() { return _hRaster; }
     static double vRaster() { return _vRaster; }
-    static void setHRaster(int val) { _hRaster = val; }
-    static void setVRaster(int val) { _vRaster = val; }
+    static void setHRaster(double val) { _hRaster = val; }
+    static void setVRaster(double val) { _vRaster = val; }
     static void setNudgeStep(double val) { nudgeStep = val; }
     static void setNudgeStep10(double val) { nudgeStep10 = val; }
     static void setNudgeStep50(double val) { nudgeStep50 = val; }

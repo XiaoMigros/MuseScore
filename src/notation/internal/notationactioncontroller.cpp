@@ -315,7 +315,6 @@ void NotationActionController::init()
     registerAction("staff-text-properties", &Controller::openStaffTextPropertiesDialog);
     registerAction("system-text-properties", &Controller::openStaffTextPropertiesDialog);
     registerAction("measure-properties", &Controller::openMeasurePropertiesDialog);
-    registerAction("config-raster", &Controller::openEditGridSizeDialog);
     registerAction("realize-chord-symbols", &Controller::openRealizeChordSymbolsDialog);
     registerAction("add-fretboard-diagram", &Controller::addFretboardDiagram, &Interaction::canAddFretboardDiagram);
 
@@ -2127,11 +2126,6 @@ void NotationActionController::openMeasurePropertiesDialog()
     }
 }
 
-void NotationActionController::openEditGridSizeDialog()
-{
-    interactive()->open("musescore://notation/editgridsize?sync=false");
-}
-
 void NotationActionController::openRealizeChordSymbolsDialog()
 {
     interactive()->open("musescore://notation/realizechordsymbols?sync=false");
@@ -2267,7 +2261,7 @@ const mu::engraving::Harmony* NotationActionController::editedChordSymbol() cons
 
 bool NotationActionController::elementHasPopup(const EngravingItem* e) const
 {
-    return AbstractElementPopupModel::supportsPopup(e);
+    return AbstractElementPopupModel::hasElementEditPopup(e);
 }
 
 bool NotationActionController::canUndo() const

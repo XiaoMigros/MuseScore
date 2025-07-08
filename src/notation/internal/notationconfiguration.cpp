@@ -101,6 +101,8 @@ static const Settings::Key IS_SNAPPED_TO_VERTICAL_GRID_KEY(module_name,  "ui/app
 static const Settings::Key IS_SNAPPED_TO_HORIZONTAL_GRID_KEY(module_name,  "ui/application/raster/isSnappedToHorizontalGrid");
 static const Settings::Key HORIZONTAL_GRID_SIZE_KEY(module_name,  "ui/application/raster/horizontal");
 static const Settings::Key VERTICAL_GRID_SIZE_KEY(module_name,  "ui/application/raster/vertical");
+static const Settings::Key LARGE_NUDGE_STEP(module_name, "ui/application/raster/largeStep");
+static const Settings::Key SMALL_NUDGE_STEP(module_name, "ui/application/raster/smallStep");
 
 static const Settings::Key NEED_TO_SHOW_ADD_TEXT_ERROR_MESSAGE_KEY(module_name,  "ui/dialogs/needToShowAddTextErrorMessage");
 static const Settings::Key NEED_TO_SHOW_ADD_FIGURED_BASS_ERROR_MESSAGE_KEY(module_name,  "ui/dialogs/needToShowAddFiguredBassErrorMessage");
@@ -117,7 +119,7 @@ static const Settings::Key PERCUSSION_PANEL_MOVE_MIDI_NOTES_AND_SHORTCUTS(module
 
 static const Settings::Key STYLE_FILE_IMPORT_PATH_KEY(module_name, "import/style/styleFile");
 
-static constexpr int DEFAULT_GRID_SIZE_SPATIUM = 2;
+static constexpr qreal DEFAULT_GRID_SIZE_SPATIUM = 0.25;
 
 static const std::string BY_NOTE_NAME_INPUT_METHOD("BY_NOTE_NAME");
 
@@ -307,6 +309,14 @@ void NotationConfiguration::init()
     settings()->valueChanged(NOTE_DEFAULT_PLAY_DURATION).onReceive(this, [this](const Val& val) {
         m_notePlayDurationMillisecondsChanged.send(val.toInt());
     });
+    settings()->setDefaultValue(LARGE_NUDGE_STEP, Val(1.0));
+    settings()->valueChanged(LARGE_NUDGE_STEP).onReceive(this, [this](const Val& val) {
+        m_largeNudgeStepChanged.send(val.toDouble());
+    });
+    settings()->setDefaultValue(SMALL_NUDGE_STEP, Val(0.05));
+    settings()->valueChanged(SMALL_NUDGE_STEP).onReceive(this, [this](const Val& val) {
+        m_smallNudgeStepChanged.send(val.toDouble());
+    });
 
     settings()->setDefaultValue(STYLE_FILE_IMPORT_PATH_KEY, Val(""));
     settings()->valueChanged(STYLE_FILE_IMPORT_PATH_KEY).onReceive(this, [this](const Val& val) {
@@ -392,8 +402,11 @@ void NotationConfiguration::init()
     mu::engraving::MScore::warnGuitarBends = warnGuitarBends();
     mu::engraving::MScore::defaultPlayDuration = notePlayDurationMilliseconds();
 
-    mu::engraving::MScore::setHRaster(DEFAULT_GRID_SIZE_SPATIUM);
-    mu::engraving::MScore::setVRaster(DEFAULT_GRID_SIZE_SPATIUM);
+    mu::engraving::MScore::setNudgeStep(DEFAULT_GRID_SIZE_SPATIUM);  // cursor key when moving elements or grips
+    mu::engraving::MScore::setNudgeStep10(largeNudgeStep());         // Ctrl + cursor key
+    mu::engraving::MScore::setNudgeStep50(smallNudgeStep());         // Alt  + cursor key
+    mu::engraving::MScore::setHRaster(gridSizeSpatium(muse::Orientation::Horizontal));
+    mu::engraving::MScore::setVRaster(gridSizeSpatium(muse::Orientation::Vertical));
 
     context()->currentProjectChanged().onNotify(this, [this]() {
         resetStyleDialogPageIndices();
@@ -1030,6 +1043,38 @@ async::Channel<int> NotationConfiguration::notePlayDurationMillisecondsChanged()
     return m_notePlayDurationMillisecondsChanged;
 }
 
+double NotationConfiguration::largeNudgeStep() const
+{
+    return settings()->value(LARGE_NUDGE_STEP).toDouble();
+}
+
+void NotationConfiguration::setLargeNudgeStep(double step)
+{
+    mu::engraving::MScore::nudgeStep10 = step;
+    settings()->setSharedValue(LARGE_NUDGE_STEP, Val(step));
+}
+
+async::Channel<double> NotationConfiguration::largeNudgeStepChanged() const
+{
+    return m_largeNudgeStepChanged;
+}
+
+double NotationConfiguration::smallNudgeStep() const
+{
+    return settings()->value(SMALL_NUDGE_STEP).toDouble();
+}
+
+void NotationConfiguration::setSmallNudgeStep(double step)
+{
+    mu::engraving::MScore::nudgeStep50 = step;
+    settings()->setSharedValue(SMALL_NUDGE_STEP, Val(step));
+}
+
+async::Channel<double> NotationConfiguration::smallNudgeStepChanged() const
+{
+    return m_smallNudgeStepChanged;
+}
+
 void NotationConfiguration::setTemplateModeEnabled(std::optional<bool> enabled)
 {
     mu::engraving::MScore::saveTemplateMode = enabled ? enabled.value() : false;
@@ -1114,17 +1159,19 @@ void NotationConfiguration::setIsSnappedToGrid(muse::Orientation gridOrientation
     }
 }
 
-int NotationConfiguration::gridSizeSpatium(muse::Orientation gridOrientation) const
+qreal NotationConfiguration::gridSizeSpatium(muse::Orientation gridOrientation) const
 {
     switch (gridOrientation) {
-    case muse::Orientation::Horizontal: return settings()->value(HORIZONTAL_GRID_SIZE_KEY).toInt();
-    case muse::Orientation::Vertical: return settings()->value(VERTICAL_GRID_SIZE_KEY).toInt();
+    case muse::Orientation::Horizontal:
+        return static_cast<qreal>(settings()->value(HORIZONTAL_GRID_SIZE_KEY).toDouble());
+    case muse::Orientation::Vertical:
+        return static_cast<qreal>(settings()->value(VERTICAL_GRID_SIZE_KEY).toDouble());
     }
 
     return DEFAULT_GRID_SIZE_SPATIUM;
 }
 
-void NotationConfiguration::setGridSize(muse::Orientation gridOrientation, int sizeSpatium)
+void NotationConfiguration::setGridSize(muse::Orientation gridOrientation, qreal sizeSpatium)
 {
     switch (gridOrientation) {
     case muse::Orientation::Horizontal:

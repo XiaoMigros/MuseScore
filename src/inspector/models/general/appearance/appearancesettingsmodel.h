@@ -42,6 +42,11 @@ class AppearanceSettingsModel : public AbstractInspectorModel
     Q_PROPERTY(bool isSnappedToGrid READ isSnappedToGrid WRITE setIsSnappedToGrid NOTIFY isSnappedToGridChanged)
     Q_PROPERTY(bool isVerticalOffsetAvailable READ isVerticalOffsetAvailable NOTIFY isVerticalOffsetAvailableChanged)
 
+    Q_PROPERTY(
+        qreal verticalGridSizeSpatium READ verticalGridSizeSpatium WRITE setVerticalGridSizeSpatium NOTIFY verticalGridSizeSpatiumChanged)
+    Q_PROPERTY(
+        qreal horizontalGridSizeSpatium READ horizontalGridSizeSpatium WRITE setHorizontalGridSizeSpatium NOTIFY horizontalGridSizeSpatiumChanged)
+
 public:
     explicit AppearanceSettingsModel(QObject* parent, IElementRepositoryService* repository);
 
@@ -49,8 +54,6 @@ public:
     Q_INVOKABLE void pushForwardsInOrder();
     Q_INVOKABLE void pushToBackInOrder();
     Q_INVOKABLE void pushToFrontInOrder();
-
-    Q_INVOKABLE void configureGrid();
 
     void createProperties() override;
     void requestElements() override;
@@ -68,13 +71,22 @@ public:
 
     bool isVerticalOffsetAvailable() const;
 
+    qreal verticalGridSizeSpatium() const;
+    qreal horizontalGridSizeSpatium() const;
+
 public slots:
     void setIsSnappedToGrid(bool isSnapped);
     void setIsVerticalOffsetAvailable(bool isAvailable);
 
+    void setVerticalGridSizeSpatium(qreal size);
+    void setHorizontalGridSizeSpatium(qreal size);
+
 signals:
     void isSnappedToGridChanged(bool isSnappedToGrid);
     void isVerticalOffsetAvailableChanged(bool isVerticalOffsetAvailable);
+
+    void verticalGridSizeSpatiumChanged(qreal size);
+    void horizontalGridSizeSpatiumChanged(qreal size);
 
 private:
     void onNotationChanged(const mu::engraving::PropertyIdSet& changedPropertyIdSet,
@@ -98,6 +110,9 @@ private:
 
     QList<engraving::EngravingItem*> m_elementsForOffsetProperty;
     QList<engraving::EngravingItem*> m_elementsForArrangeProperty;
+
+    qreal m_verticalGridSizeSpatium = 0.0;
+    qreal m_horizontalGridSizeSpatium = 0.0;
 };
 }
 

@@ -54,6 +54,12 @@ void CanvasPreferencesModel::setupConnections()
     notationConfiguration()->selectionProximityChanged().onReceive(this, [this](int selectionProximity) {
         emit selectionProximityChanged(selectionProximity);
     });
+    notationConfiguration()->largeNudgeStepChanged().onReceive(this, [this](double step) {
+        emit largeNudgeStepChanged(step);
+    });
+    notationConfiguration()->smallNudgeStepChanged().onReceive(this, [this](double step) {
+        emit smallNudgeStepChanged(step);
+    });
 }
 
 QVariantList CanvasPreferencesModel::zoomTypes() const
@@ -97,6 +103,16 @@ bool CanvasPreferencesModel::limitScrollArea() const
 int CanvasPreferencesModel::selectionProximity() const
 {
     return notationConfiguration()->selectionProximity();
+}
+
+double CanvasPreferencesModel::largeNudgeStep() const
+{
+    return notationConfiguration()->largeNudgeStep();
+}
+
+double CanvasPreferencesModel::smallNudgeStep() const
+{
+    return notationConfiguration()->smallNudgeStep();
 }
 
 void CanvasPreferencesModel::setDefaultZoomType(int zoomType)
@@ -157,6 +173,26 @@ void CanvasPreferencesModel::setSelectionProximity(int proximity)
 
     notationConfiguration()->setSelectionProximity(proximity);
     emit selectionProximityChanged(proximity);
+}
+
+void CanvasPreferencesModel::setLargeNudgeStep(double step)
+{
+    if (largeNudgeStep() == step) {
+        return;
+    }
+
+    notationConfiguration()->setLargeNudgeStep(step);
+    emit largeNudgeStepChanged(step); // needed?
+}
+
+void CanvasPreferencesModel::setSmallNudgeStep(double step)
+{
+    if (smallNudgeStep() == step) {
+        return;
+    }
+
+    notationConfiguration()->setSmallNudgeStep(step);
+    emit smallNudgeStepChanged(step); // needed?
 }
 
 ZoomType CanvasPreferencesModel::defaultZoomType() const

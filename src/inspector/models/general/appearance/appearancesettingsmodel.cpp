@@ -156,6 +156,8 @@ void AppearanceSettingsModel::loadProperties(const PropertyIdSet& propertyIdSet)
     }
 
     emit isSnappedToGridChanged(isSnappedToGrid());
+    emit verticalGridSizeSpatiumChanged(verticalGridSizeSpatium());
+    emit horizontalGridSizeSpatiumChanged(horizontalGridSizeSpatium());
 }
 
 Page* AppearanceSettingsModel::page() const
@@ -240,11 +242,6 @@ void AppearanceSettingsModel::pushToFrontInOrder()
     }
 }
 
-void AppearanceSettingsModel::configureGrid()
-{
-    dispatcher()->dispatch("config-raster");
-}
-
 PropertyItem* AppearanceSettingsModel::leadingSpace() const
 {
     return m_leadingSpace;
@@ -275,17 +272,27 @@ PropertyItem* AppearanceSettingsModel::offset() const
     return m_offset;
 }
 
-bool AppearanceSettingsModel::isVerticalOffsetAvailable() const
-{
-    return m_isVerticalOffsetAvailable;
-}
-
 bool AppearanceSettingsModel::isSnappedToGrid() const
 {
     bool isSnapped = notationConfiguration()->isSnappedToGrid(muse::Orientation::Horizontal);
     isSnapped &= notationConfiguration()->isSnappedToGrid(muse::Orientation::Vertical);
 
     return isSnapped;
+}
+
+bool AppearanceSettingsModel::isVerticalOffsetAvailable() const
+{
+    return m_isVerticalOffsetAvailable;
+}
+
+qreal AppearanceSettingsModel::verticalGridSizeSpatium() const
+{
+    return notationConfiguration()->gridSizeSpatium(muse::Orientation::Vertical);
+}
+
+qreal AppearanceSettingsModel::horizontalGridSizeSpatium() const
+{
+    return notationConfiguration()->gridSizeSpatium(muse::Orientation::Horizontal);
 }
 
 void AppearanceSettingsModel::setIsSnappedToGrid(bool isSnapped)
@@ -308,6 +315,26 @@ void AppearanceSettingsModel::setIsVerticalOffsetAvailable(bool isAvailable)
 
     m_isVerticalOffsetAvailable = isAvailable;
     emit isVerticalOffsetAvailableChanged(m_isVerticalOffsetAvailable);
+}
+
+void AppearanceSettingsModel::setVerticalGridSizeSpatium(qreal size)
+{
+    if (verticalGridSizeSpatium() == size) {
+        return;
+    }
+
+    notationConfiguration()->setGridSize(muse::Orientation::Vertical, size);
+    emit verticalGridSizeSpatiumChanged(horizontalGridSizeSpatium());
+}
+
+void AppearanceSettingsModel::setHorizontalGridSizeSpatium(qreal size)
+{
+    if (horizontalGridSizeSpatium() == size) {
+        return;
+    }
+
+    notationConfiguration()->setGridSize(muse::Orientation::Horizontal, size);
+    emit horizontalGridSizeSpatiumChanged(horizontalGridSizeSpatium());
 }
 
 void AppearanceSettingsModel::updateIsVerticalOffsetAvailable()

@@ -324,6 +324,38 @@ void SlurSegment::editDrag(EditData& ed)
     triggerLayout();
 }
 
+RectF SlurSegment::drag(EditData& ed)
+{
+    Grip g = ed.curGrip;
+    if (g == Grip::NO_GRIP) {
+        return canvasBoundingRect();
+    }
+
+    switch (g) {
+    case Grip::START:
+    case Grip::END:
+    case Grip::BEZIER1:
+    case Grip::BEZIER2:
+        ups(g).off = ed.gridSnapped(ups(g).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
+        break;
+    case Grip::SHOULDER:
+        ups(Grip::BEZIER1).off = ed.gridSnapped(ups(Grip::BEZIER1).off + ed.delta, spatium());
+        ups(Grip::BEZIER2).off = ed.gridSnapped(ups(Grip::BEZIER2).off + ed.delta, spatium());
+        renderer()->computeBezier(this);
+        break;
+    case Grip::DRAG:
+        ups(g).off = PointF();
+        setOffset(ed.gridSnapped(offset() + ed.delta, spatium()));
+        break;
+    case Grip::NO_GRIP:
+    case Grip::GRIPS:
+        break;
+    }
+
+    return canvasBoundingRect();
+}
+
 //---------------------------------------------------------
 //   isEdited
 //---------------------------------------------------------

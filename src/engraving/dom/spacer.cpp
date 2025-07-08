@@ -96,6 +96,38 @@ void Spacer::editDrag(EditData& ed)
 }
 
 //---------------------------------------------------------
+//   startDrag
+//---------------------------------------------------------
+
+void Spacer::startDrag(EditData& ed)
+{
+    ElementEditDataPtr eed = ed.getData(this);
+    eed->pushProperty(Pid::SPACE);
+}
+
+//---------------------------------------------------------
+//   drag
+//---------------------------------------------------------
+
+RectF Spacer::drag(EditData& ed)
+{
+    double s = ed.delta.y();
+
+    switch (spacerType()) {
+    case SpacerType::DOWN:
+    case SpacerType::FIXED:
+        m_gap = Spatium::fromMM(ed.gridSnapped(PointF(0.0, absoluteFromSpatium(m_gap) + s), spatium()).y(), spatium());
+        break;
+    case SpacerType::UP:
+        m_gap = Spatium::fromMM(ed.gridSnapped(PointF(0.0, absoluteFromSpatium(m_gap) - s), spatium()).y(), spatium());
+        break;
+    }
+    m_gap = std::max(m_gap, Spatium(2.0));
+    renderer()->layoutItem(this);
+    return canvasBoundingRect();
+}
+
+//---------------------------------------------------------
 //   gripsPositions
 //---------------------------------------------------------
 

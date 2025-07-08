@@ -178,6 +178,14 @@ public:
     void setNotePlayDurationMilliseconds(int durationMs)  override;
     muse::async::Channel<int> notePlayDurationMillisecondsChanged() const override;
 
+    double largeNudgeStep() const override;
+    void setLargeNudgeStep(double step) override;
+    muse::async::Channel<double> largeNudgeStepChanged() const override;
+
+    double smallNudgeStep() const override;
+    void setSmallNudgeStep(double step) override;
+    muse::async::Channel<double> smallNudgeStepChanged() const override;
+
     void setTemplateModeEnabled(std::optional<bool> enabled) override;
     void setTestModeEnabled(std::optional<bool> enabled) override;
 
@@ -192,7 +200,7 @@ public:
     bool isSnappedToGrid(muse::Orientation gridOrientation) const override;
     void setIsSnappedToGrid(muse::Orientation gridOrientation, bool isSnapped)  override;
 
-    int gridSizeSpatium(muse::Orientation gridOrientation) const override;
+    qreal gridSizeSpatium(muse::Orientation gridOrientation) const override;
     void setGridSize(muse::Orientation gridOrientation, int sizeSpatium)  override;
 
     bool needToShowAddTextErrorMessage() const override;

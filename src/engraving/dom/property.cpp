@@ -271,13 +271,14 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::FRET_OFFSET,             true,  "fretOffset",            P_TYPE::INT,                PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "fret offset") },
     { Pid::FRET_NUM_POS,            true,  "fretNumPos",            P_TYPE::INT,                PropertyGroup::POSITION,        DUMMY_QT_TR_NOOP("propertyName", "fret number position") },
     { Pid::ORIENTATION,             true,  "orientation",           P_TYPE::ORIENTATION,        PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "orientation") },
-    { Pid::FRET_SHOW_FINGERINGS,     true,  "fretShowFingering",     P_TYPE::BOOL       ,        PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "fretShowFingering") },
+    { Pid::FRET_SHOW_FINGERINGS,    true,  "fretShowFingering",     P_TYPE::BOOL       ,        PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "fretShowFingering") },
     { Pid::FRET_FINGERING,          true,  "fretFingering",         P_TYPE::INT_VEC,            PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "fretFingering") },
 
     { Pid::HARMONY_VOICE_LITERAL,   true,  "harmonyVoiceLiteral",   P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "harmony voice literal") },
     { Pid::HARMONY_VOICING,         true,  "harmonyVoicing",        P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "harmony voicing") },
     { Pid::HARMONY_DURATION,        true,  "harmonyDuration",       P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "harmony duration") },
     { Pid::HARMONY_BASS_SCALE,      true,  "harmonyBassScale",      P_TYPE::REAL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "harmony bass scale") },
+    { Pid::HARMONY_DO_NOT_STACK_MODIFIERS,      true,  "harmonyDoNotStackModifiers",      P_TYPE::BOOL,               PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "harmony do not stack modifiers") },
 
     { Pid::SYSTEM_BRACKET,          false, "type",                  P_TYPE::INT,                PropertyGroup::APPEARANCE,      DUMMY_QT_TR_NOOP("propertyName", "type") },
     { Pid::GAP,                     false, 0,                       P_TYPE::BOOL,               PropertyGroup::NONE,      DUMMY_QT_TR_NOOP("propertyName", "gap") },

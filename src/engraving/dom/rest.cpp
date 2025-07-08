@@ -154,7 +154,7 @@ RectF Rest::drag(EditData& ed)
     if (std::fabs(s.x()) > xDragRange) {
         s.rx() = xDragRange * (s.x() < 0 ? -1.0 : 1.0);
     }
-    setOffset(PointF(s.x(), s.y()));
+    setOffset(ed.gridSnapped(PointF(s.x(), s.y()), spatium()));
 
     renderer()->layoutItem(this);
 

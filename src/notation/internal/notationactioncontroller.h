@@ -159,7 +159,6 @@ private:
     void openTupletOtherDialog();
     void openStaffTextPropertiesDialog();
     void openMeasurePropertiesDialog();
-    void openEditGridSizeDialog();
     void openRealizeChordSymbolsDialog();
     muse::io::path_t selectStyleFile(bool forLoad);
     void loadStyle();

@@ -189,12 +189,19 @@ std::vector<LineF> LineSegment::gripAnchorLines(Grip grip) const
 
 void LineSegment::startDrag(EditData& ed)
 {
-    SpannerSegment::startDrag(ed);
-    ElementEditDataPtr eed = ed.getData(this);
-    if (!eed) {
+    if (!isMovable()) {
         return;
     }
+    std::shared_ptr<ElementEditData> eed = std::make_shared<ElementEditData>();
+    eed->e = this;
+    eed->pushProperty(Pid::OFFSET);
+    eed->pushProperty(Pid::AUTOPLACE);
     eed->pushProperty(Pid::OFFSET2);
+    eed->initOffset = ed.curGrip == Grip::END ? userOff2() : offset();
+    ed.addData(eed);
+    if (ed.modifiers & AltModifier) {
+        setAutoplace(false);
+    }
 }
 
 //---------------------------------------------------------
@@ -777,8 +784,7 @@ void LineSegment::editDrag(EditData& ed)
         break;
     case Grip::MIDDLE: {         // Move the element (middle grip)
         // Only for moving, no y limitation
-        const PointF deltaMove(ed.evtDelta);
-        setOffset(offset() + deltaMove);
+        setOffset(offset() + ed.evtDelta);
         setOffsetChanged(true);
         if (isStyled(Pid::OFFSET)) {
             setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
@@ -874,15 +880,31 @@ std::vector<LineF> LineSegment::dragAnchorLines() const
 
 RectF LineSegment::drag(EditData& ed)
 {
-    setOffset(offset() + ed.evtDelta);
-    setOffsetChanged(true);
-
-    if (isStyled(Pid::OFFSET)) {
-        setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
+    const ElementEditDataPtr eed = ed.getData(this);
+    PointF deltaResize = ed.moveDelta + eed->initOffset;
+    if (!line()->diagonal() && !(ed.curGrip == Grip::MIDDLE)) {
+        deltaResize = PointF(deltaResize.x(), eed->initOffset.y());
     }
+    //const PointF deltaResize(ed.evtDelta.x(), line()->diagonal() ? ed.evtDelta.y() : 0.0);
+    deltaResize = ed.gridSnapped(deltaResize, spatium());
 
-    rebaseAnchors(ed, Grip::MIDDLE);
-
+    switch (ed.curGrip) {
+    case Grip::START:         // Resize the begin of element (left grip)
+        setOffset(deltaResize);
+        m_offset2 = m_offset2 - deltaResize;
+        break;
+    case Grip::END:         // Resize the end of element (right grip)
+        m_offset2 = deltaResize;
+        break;
+    case Grip::MIDDLE:        // Move the element (middle grip)
+        // Only for moving, no y limitation
+        setOffset(deltaResize);
+	    break;
+    default:
+        break;
+    }
+    rebaseAnchors(ed, ed.isStartEndGrip() ? ed.curGrip : Grip::MIDDLE);
+    setOffsetChanged(true);
     return canvasBoundingRect();
 }
 
@@ -1178,13 +1200,13 @@ Note* SLine::guessFinalNote(Note* startNote)
         chord = toChord(chord->parent());
     } else {
         std::vector<Chord*> graces = chord->graceNotesAfter();
-        if (graces.size() > 0) {
+        if (!graces.empty()) {
             return graces.front()->upNote();
         }
     }
 
     if (!chord->explicitParent()->isSegment()) {
-        return 0;
+        return nullptr;
     }
 
     Segment* segm = chord->score()->tick2rightSegment(chord->tick() + chord->actualTicks());
@@ -1211,9 +1233,9 @@ Note* SLine::guessFinalNote(Note* startNote)
         }
     }
 
-    if (target && target->notes().size() > 0) {
+    if (target && !target->notes().empty()) {
         const std::vector<Chord*>& graces = target->graceNotesBefore();
-        if (graces.size() > 0) {
+        if (!graces.empty()) {
             return graces.front()->upNote();
         }
         // normal case: try to return the note in the next chord that is in the

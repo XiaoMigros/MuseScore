@@ -29,7 +29,6 @@
 #include "harmony.h"
 #include "layoutbreak.h"
 #include "masterscore.h"
-#include "mscore.h"
 #include "score.h"
 #include "stafftext.h"
 #include "system.h"
@@ -97,21 +96,13 @@ void Box::editDrag(EditData& ed)
 {
     const double sp = sizeIsSpatiumDependent() ? spatium() : style().defaultSpatium();
     if (isVBox()) {
+        // m_boxHeight = Spatium(ed.gridSnapped(PointF(0.0, absoluteFromSpatium(m_boxHeight) + ed.delta.y())).y() / sp);
         m_boxHeight += Spatium(ed.delta.y() / sp);
-        if (ed.vRaster) {
-            double vRaster = 1.0 / MScore::vRaster();
-            int n = lrint(m_boxHeight.val() / vRaster);
-            m_boxHeight = Spatium(vRaster * n);
-        }
         mutldata()->setBbox(0.0, 0.0, system()->width(), absoluteFromSpatium(boxHeight()));
         system()->setHeight(height());
     } else {
+        // m_boxWidth = Spatium(ed.gridSnapped(PointF(absoluteFromSpatium(m_boxWidth) + ed.delta.x(), 0.0)).x() / sp);
         m_boxWidth += Spatium(ed.delta.x() / sp);
-        if (ed.hRaster) {
-            double hRaster = 1.0 / MScore::hRaster();
-            int n = lrint(m_boxWidth.val() / hRaster);
-            m_boxWidth = Spatium(hRaster * n);
-        }
     }
     triggerLayout();
 }
@@ -347,7 +338,7 @@ EngravingItem* Box::drop(EditData& data)
 {
     EngravingItem* e = data.dropElement;
     if (e->flag(ElementFlag::ON_STAFF)) {
-        return 0;
+        return nullptr;
     }
     if (MScore::debugMode) {
         LOGD("<%s>", e->typeName());
@@ -421,9 +412,9 @@ EngravingItem* Box::drop(EditData& data)
         score()->undoAddElement(e);
         return e;
     default:
-        return 0;
+        break;
     }
-    return 0;
+    return nullptr;
 }
 
 void Box::manageExclusionFromParts(bool exclude)
@@ -523,8 +514,8 @@ void Box::manageExclusionFromParts(bool exclude)
 RectF HBox::drag(EditData& data)
 {
     RectF r(canvasBoundingRect());
-    double diff = data.evtDelta.x();
-    double x1   = offset().x() + diff;
+    const double sp = sizeIsSpatiumDependent() ? spatium() : style().defaultSpatium();
+    double x1 = data.gridSnapped(PointF(offset().x() + data.evtDelta.x(), 0.0), sp).x();
     if (explicitParent()->type() == ElementType::VBOX) {
         VBox* vb = toVBox(explicitParent());
         double x2 = parentItem()->width() - width() - (vb->leftMargin() + vb->rightMargin()) * DPMM;

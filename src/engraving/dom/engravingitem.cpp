@@ -2122,24 +2122,8 @@ RectF EngravingItem::drag(EditData& ed)
     const RectF r0(canvasBoundingRect());
 
     const ElementEditDataPtr eed = ed.getData(this);
-
     const PointF offset0 = ed.moveDelta + eed->initOffset;
-    double x = offset0.x();
-    double y = offset0.y();
-
-    double _spatium = spatium();
-    if (ed.hRaster) {
-        double hRaster = _spatium / MScore::hRaster();
-        int n = lrint(x / hRaster);
-        x = hRaster * n;
-    }
-    if (ed.vRaster) {
-        double vRaster = _spatium / MScore::vRaster();
-        int n = lrint(y / vRaster);
-        y = vRaster * n;
-    }
-
-    setOffset(PointF(x, y));
+    setOffset(ed.gridSnapped(offset0, spatium()));
     setOffsetChanged(true);
 //      setGenerated(false);
 
@@ -2148,7 +2132,7 @@ RectF EngravingItem::drag(EditData& ed)
         // restrict move to page boundaries
         //
         const RectF r(canvasBoundingRect());
-        Page* p = 0;
+        Page* p = nullptr;
         EngravingItem* e = this;
         while (e) {
             if (e->isPage()) {
@@ -2160,6 +2144,8 @@ RectF EngravingItem::drag(EditData& ed)
         if (p) {
             bool move = false;
             RectF pr(p->canvasBoundingRect());
+            double x = offset0.x();
+            double y = offset0.y();
             if (r.right() > pr.right()) {
                 x -= r.right() - pr.right();
                 move = true;

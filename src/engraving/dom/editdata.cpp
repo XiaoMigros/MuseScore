@@ -22,7 +22,10 @@
 
 #include "editdata.h"
 
+#include "realfn.h"
+
 #include "engravingitem.h"
+#include "mscore.h"
 
 using namespace mu::engraving;
 
@@ -38,7 +41,7 @@ std::shared_ptr<ElementEditData> EditData::getData(const EngravingItem* e) const
             return ed;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 bool EditData::control(bool textEditing) const
@@ -48,4 +51,28 @@ bool EditData::control(bool textEditing) const
     } else {
         return modifiers & ControlModifier;
     }
+}
+
+PointF EditData::gridSnapped(PointF p, double spatium) const
+{
+    if (modifiers & AltModifier) {
+        return p;
+    }
+
+    double x = p.x();
+    double y = p.y();
+
+    if (hRaster && !muse::RealIsEqual(x, 0.0) && true) { // true: decide which elements can later
+        double h = spatium * MScore::hRaster();
+        int n = lrint(x / h);
+        x = h * n;
+    }
+
+    if (vRaster && !muse::RealIsEqual(y, 0.0) && true) { // vRaster already set in notationinteraction->drag
+        double v = spatium * MScore::vRaster();
+        int n = lrint(y / v);
+        y = v * n;
+    }
+
+    return PointF(x, y);
 }

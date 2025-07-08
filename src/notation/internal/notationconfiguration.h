@@ -200,6 +200,14 @@ public:
     void setNotePlayDurationMilliseconds(int durationMs) override;
     muse::async::Channel<int> notePlayDurationMillisecondsChanged() const override;
 
+    double largeNudgeStep() const override;
+    void setLargeNudgeStep(double step) override;
+    muse::async::Channel<double> largeNudgeStepChanged() const override;
+
+    double smallNudgeStep() const override;
+    void setSmallNudgeStep(double step) override;
+    muse::async::Channel<double> smallNudgeStepChanged() const override;
+
     void setTemplateModeEnabled(std::optional<bool> enabled) override;
     void setTestModeEnabled(std::optional<bool> enabled) override;
 
@@ -216,8 +224,8 @@ public:
     bool isSnappedToGrid(muse::Orientation gridOrientation) const override;
     void setIsSnappedToGrid(muse::Orientation gridOrientation, bool isSnapped) override;
 
-    int gridSizeSpatium(muse::Orientation gridOrientation) const override;
-    void setGridSize(muse::Orientation gridOrientation, int sizeSpatium) override;
+    qreal gridSizeSpatium(muse::Orientation gridOrientation) const override;
+    void setGridSize(muse::Orientation gridOrientation, qreal sizeSpatium) override;
 
     bool needToShowAddTextErrorMessage() const override;
     void setNeedToShowAddTextErrorMessage(bool show) override;
@@ -301,6 +309,8 @@ private:
     muse::async::Channel<bool> m_warnGuitarBendsChanged;
     muse::async::Channel<int> m_delayBetweenNotesInRealTimeModeMillisecondsChanged;
     muse::async::Channel<int> m_notePlayDurationMillisecondsChanged;
+    muse::async::Channel<double> m_largeNudgeStepChanged;
+    muse::async::Channel<double> m_smallNudgeStepChanged;
     muse::async::Channel<std::string> m_styleFileImportPathChanged;
     muse::async::Notification m_isPlayRepeatsChanged;
     muse::async::Notification m_isPlayChordSymbolsChanged;

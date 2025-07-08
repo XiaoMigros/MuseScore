@@ -196,6 +196,14 @@ public:
     virtual void setNotePlayDurationMilliseconds(int durationMs) = 0;
     virtual muse::async::Channel<int> notePlayDurationMillisecondsChanged() const = 0;
 
+    virtual double largeNudgeStep() const = 0;
+    virtual void setLargeNudgeStep(double step) = 0;
+    virtual muse::async::Channel<double> largeNudgeStepChanged() const = 0;
+
+    virtual double smallNudgeStep() const = 0;
+    virtual void setSmallNudgeStep(double step) = 0;
+    virtual muse::async::Channel<double> smallNudgeStepChanged() const = 0;
+
     virtual void setTemplateModeEnabled(std::optional<bool> enabled) = 0;
     virtual void setTestModeEnabled(std::optional<bool> enabled) = 0;
 
@@ -212,8 +220,8 @@ public:
     virtual bool isSnappedToGrid(muse::Orientation gridOrientation) const = 0;
     virtual void setIsSnappedToGrid(muse::Orientation gridOrientation, bool isSnapped) = 0;
 
-    virtual int gridSizeSpatium(muse::Orientation gridOrientation) const = 0;
-    virtual void setGridSize(muse::Orientation gridOrientation, int sizeSpatium) = 0;
+    virtual qreal gridSizeSpatium(muse::Orientation gridOrientation) const = 0;
+    virtual void setGridSize(muse::Orientation gridOrientation, qreal sizeSpatium) = 0;
 
     virtual bool needToShowAddTextErrorMessage() const = 0;
     virtual void setNeedToShowAddTextErrorMessage(bool show) = 0;

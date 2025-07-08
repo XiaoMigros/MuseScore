@@ -116,7 +116,7 @@ static mu::engraving::KeyboardModifier keyboardModifier(Qt::KeyboardModifiers km
     return mu::engraving::KeyboardModifier(int(km));
 }
 
-static qreal nudgeDistance(const mu::engraving::EditData& editData)
+static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster = 0)
 {
     qreal spatium = editData.element->spatium();
 
@@ -136,20 +136,7 @@ static qreal nudgeDistance(const mu::engraving::EditData& editData)
         return spatium * mu::engraving::MScore::nudgeStep50;
     }
 
-    return spatium * mu::engraving::MScore::nudgeStep;
-}
-
-static qreal nudgeDistance(const mu::engraving::EditData& editData, qreal raster)
-{
-    qreal distance = nudgeDistance(editData);
-    if (raster > 0) {
-        raster = editData.element->spatium() / raster;
-        if (distance < raster) {
-            distance = raster;
-        }
-    }
-
-    return distance;
+    return spatium * (raster > 0 ? raster : mu::engraving::MScore::nudgeStep);
 }
 
 static PointF bindCursorPosToText(const PointF& cursorPos, const EngravingItem* text)
@@ -874,6 +861,68 @@ void NotationInteraction::selectTopOrBottomOfChord(MoveDirection d)
     showItem(target);
 }
 
+void NotationInteraction::findAndSelectChordRest(const Fraction& tick)
+{
+    IF_ASSERT_FAILED(selection() && score()) {
+        return;
+    }
+
+    Segment* startSeg = score()->tick2leftSegment(tick, /*useMMrest*/ false, SegmentType::ChordRest);
+    IF_ASSERT_FAILED(startSeg && startSeg->isChordRestType()) {
+        return;
+    }
+
+    staff_idx_t lastSelectedStaffIdx = 0;
+    voice_idx_t lastSelectedVoiceIdx = 0;
+    if (selection()->isRange()) {
+        lastSelectedStaffIdx = selection()->range()->startStaffIndex();
+    } else if (!selection()->elements().empty()) {
+        const EngravingItem* lastSelectedItem = selection()->elements().back();
+        if (lastSelectedItem) {
+            lastSelectedStaffIdx = lastSelectedItem->staffIdx();
+            lastSelectedVoiceIdx = lastSelectedItem->voice();
+        }
+    }
+
+    // startSeg could be a CR segment in any staff. The idea of this method is to select the CR in the last selected
+    // staff (or the top staff if none was selected). The following outer loop iterates backwards through previous CR
+    // segments until a valid CR is found in the desired staff...
+    EngravingItem* toSelect = nullptr;
+    for (Segment* currSeg = startSeg; currSeg && !toSelect; currSeg = currSeg->prev(SegmentType::ChordRest)) {
+        toSelect = currSeg->element(staff2track(lastSelectedStaffIdx, lastSelectedVoiceIdx));
+        if (toSelect && toSelect->isChordRest()) {
+            break;
+        }
+        toSelect = nullptr;
+        // Inner loop: Couldn't find a valid CR in the last selected voice - try other voices in the same staff...
+        for (voice_idx_t currVoice = 0; currVoice < VOICES; ++currVoice) {
+            if (currVoice == lastSelectedVoiceIdx) {
+                // Already tried this...
+                continue;
+            }
+            toSelect = currSeg->element(staff2track(lastSelectedStaffIdx, currVoice));
+            if (toSelect && toSelect->isChordRest()) {
+                break;
+            }
+            toSelect = nullptr;
+        }
+    }
+
+    IF_ASSERT_FAILED(toSelect) {
+        return;
+    }
+
+    std::vector<EngravingItem*> itemsToSelect;
+    if (toSelect->isChord()) {
+        const std::vector<Note*>& notes = toChord(toSelect)->notes();
+        itemsToSelect.insert(itemsToSelect.end(), notes.begin(), notes.end());
+    } else {
+        itemsToSelect = { toSelect };
+    }
+
+    select(itemsToSelect, SelectType::REPLACE);
+}
+
 void NotationInteraction::select(const std::vector<EngravingItem*>& elements, SelectType type, staff_idx_t staffIndex)
 {
     TRACEFUNC;
@@ -1064,7 +1113,7 @@ INotationSelectionFilterPtr NotationInteraction::selectionFilter() const
 
 bool NotationInteraction::isDragStarted() const
 {
-    if (m_dragData.dragGroups.size() > 0) {
+    if (!m_dragData.dragGroups.empty()) {
         return true;
     }
 
@@ -1216,6 +1265,9 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
             bool isLeftGrip = dynamic->hasLeftGrip() ? m_editData.curGrip == Grip::LEFT : false;
             addHairpinOnGripDrag(m_editData, isLeftGrip);
         }
+        for (auto& group : m_dragData.dragGroups) {
+            score()->addRefresh(group->drag(m_dragData.ed));
+        }
     } else {
         if (m_editData.element) {
             m_editData.element->editDrag(m_dragData.ed);
@@ -1237,7 +1289,7 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
         updateDragAnchorLines();
     }
 
-    if (m_dragData.elements.size() == 0) {
+    if (m_dragData.elements.empty()) {
         doDragLasso(toPos);
     }
 
@@ -2846,7 +2898,7 @@ void NotationInteraction::doAddSlur(const Slur* slurTemplate)
         bool firstCrTrill = firstItem && firstItem->isChord() && toChord(firstItem)->isTrillCueNote();
         bool secondCrTrill = secondItem && secondItem->isChord() && toChord(secondItem)->isTrillCueNote();
 
-        if (firstItem && !(firstCrTrill || secondCrTrill)) {
+        if (firstItem && secondItem && (firstItem->isChordRest() || secondItem->isChordRest()) && !(firstCrTrill || secondCrTrill)) {
             doAddSlur(firstItem, secondItem, slurTemplate);
         }
     }
@@ -2868,22 +2920,27 @@ void NotationInteraction::doAddSlur(EngravingItem* firstItem, EngravingItem* sec
         const EngravingItem* otherElement = outgoing ? secondItem : firstItem;
         ChordRest* cr = outgoing ? toChordRest(firstItem) : toChordRest(secondItem);
 
-        const bool hasAdjacentJump = (outgoing && cr->hasFollowingJumpItem()) || (!outgoing && cr->hasPrecedingJumpItem());
-        const bool isNextToBarline = (outgoing ? cr->tick() + cr->actualTicks() : cr->tick()) == otherElement->tick();
+        // Check that cr and otherElement are part of the same repeat section
+        Segment* seg1 = toSegment(firstItem->findAncestor(ElementType::SEGMENT));
+        Segment* seg2 = toSegment(secondItem->findAncestor(ElementType::SEGMENT));
 
-        if (!cr || (!header && (!isNextToBarline || !hasAdjacentJump))) {
+        if (!cr || (!header && segmentsAreInDifferentRepeatSegments(seg1, seg2))) {
             return;
         }
 
         Slur* partialSlur = slurTemplate ? slurTemplate->clone() : Factory::createSlur(score()->dummy());
         if (outgoing) {
             partialSlur->undoSetOutgoing(true);
-            firstChordRest = toChordRest(firstItem);
-            secondChordRest = toChordRest(cr);
+            firstChordRest = toChordRest(cr);
+            const Measure* endMeas = otherElement->findMeasure();
+            ChordRest* endCr = endMeas->lastChordRest(0);
+            secondChordRest = endCr;
         } else {
             partialSlur->undoSetIncoming(true);
-            firstChordRest = toChordRest(cr);
-            secondChordRest = toChordRest(secondItem);
+            secondChordRest = toChordRest(cr);
+            const Measure* startMeas = otherElement->findMeasure();
+            ChordRest* startCr = startMeas->firstChordRest(0);
+            firstChordRest = startCr;
         }
         slurTemplate = partialSlur;
     } else {
@@ -4068,8 +4125,8 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
 
     startEdit(TranslatableString("undoableAction", "Nudge element"));
 
-    qreal step = quickly ? mu::engraving::MScore::nudgeStep10 : mu::engraving::MScore::nudgeStep;
-    step = step * el->spatium();
+    qreal step = el->spatium();
+    PointF addOffset = PointF();
 
     switch (d) {
     case MoveDirection::Undefined:
@@ -4078,18 +4135,18 @@ void NotationInteraction::nudge(MoveDirection d, bool quickly)
         }
         break;
     case MoveDirection::Left:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() - PointF(step, 0.0), mu::engraving::PropertyFlags::UNSTYLED);
-        break;
     case MoveDirection::Right:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + PointF(step, 0.0), mu::engraving::PropertyFlags::UNSTYLED);
+        step *= quickly ? mu::engraving::MScore::nudgeStep10 : nudgeDistance(m_editData, mu::engraving::MScore::hRaster());
+        addOffset = PointF(step * (d == MoveDirection::Left ? -1.0 : 1.0), 0.0);
         break;
     case MoveDirection::Up:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() - PointF(0.0, step), mu::engraving::PropertyFlags::UNSTYLED);
-        break;
     case MoveDirection::Down:
-        el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + PointF(0.0, step), mu::engraving::PropertyFlags::UNSTYLED);
+        step *= quickly ? mu::engraving::MScore::nudgeStep10 : nudgeDistance(m_editData, mu::engraving::MScore::vRaster());
+        addOffset = PointF(step * (d == MoveDirection::Up ? -1.0 : 1.0), 0.0);
         break;
     }
+
+    el->undoChangeProperty(mu::engraving::Pid::OFFSET, el->offset() + addOffset, mu::engraving::PropertyFlags::UNSTYLED);
 
     apply();
 

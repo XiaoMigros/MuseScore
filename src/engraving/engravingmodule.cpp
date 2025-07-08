@@ -267,10 +267,6 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
     Drumset::initDrumset();
     FiguredBass::readConfigFile(String());
 
-    MScore::setNudgeStep(0.1);     // cursor key (default 0.1)
-    MScore::setNudgeStep10(1.0);     // Ctrl + cursor key (default 1.0)
-    MScore::setNudgeStep50(0.01);     // Alt  + cursor key (default 0.01)
-
     // Palette
     {
 #ifndef ENGRAVING_NO_ACCESSIBILITY
