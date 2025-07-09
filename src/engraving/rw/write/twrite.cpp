@@ -1790,6 +1790,7 @@ void TWrite::write(const Harmony* item, XmlWriter& xml, WriteContext& ctx)
         }
     }
 
+    writeProperty(item, xml, Pid::HARMONY_DO_NOT_STACK_MODIFIERS);
     writeProperties(static_cast<const TextBase*>(item), xml, ctx, false);
     //Pid::HARMONY_VOICE_LITERAL, Pid::HARMONY_VOICING, Pid::HARMONY_DURATION
     //written by the above function call because they are part of element style
@@ -2910,7 +2911,7 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
         }
         xml.tag("fretUseTextStyle", item->fretUseTextStyle());
         if (item->fretUseTextStyle()) {
-            xml.tag("fretTextStyle", int(item->fretTextStyle()));
+            xml.tag("fretTextStyle", TConv::toXml(item->fretTextStyle()));
         } else {
             xml.tag("fretPresetIdx", item->fretPresetIdx());
             xml.tag("fretFontSize",  item->fretFontSize());
