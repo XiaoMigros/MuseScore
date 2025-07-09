@@ -728,6 +728,9 @@ public:
     /// \since MuseScore 4.6
     Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all = false);
 
+    /// Returns if an element has a given flag
+    Q_INVOKABLE bool flag(mu::engraving::ElementFlag f) { return element()->flag(f); }
+
     /// Create a copy of the element
     Q_INVOKABLE apiv1::EngravingItem* clone() const { return wrap(element()->clone(), Ownership::PLUGIN); }
 

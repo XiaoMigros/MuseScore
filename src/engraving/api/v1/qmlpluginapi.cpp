@@ -125,6 +125,7 @@ Enum* PluginAPI::noteSpellingTypeEnum = nullptr;
 Enum* PluginAPI::keyEnum = nullptr;
 Enum* PluginAPI::updateModeEnum = nullptr;
 Enum* PluginAPI::layoutFlagEnum = nullptr;
+Enum* PluginAPI::elementFlagEnum = nullptr;
 Enum* PluginAPI::symIdEnum = nullptr;
 Enum* PluginAPI::cursorEnum = nullptr;
 
