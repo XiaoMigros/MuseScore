@@ -307,3 +307,8 @@ void Score::endCmd(bool rollback)
 
     notation()->notationChanged().notify();
 }
+
+void Score::doLayout(FractionWrapper* startTick, FractionWrapper* endTick)
+{
+    score()->doLayoutRange(startTick->fraction(), endTick->fraction());
+}

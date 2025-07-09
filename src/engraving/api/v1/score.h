@@ -283,6 +283,18 @@ public:
      */
     Q_INVOKABLE void createPlayEvents();
 
+    /// \brief Force the score to layout itself.
+    /// The score is laid out automatically at the end of a command,
+    /// however this method can be called to layout mid-command.
+    /// Layout the whole score with:
+    /// \code
+    /// curScore.doLayout(fraction(0, 1), fraction(-1, 1))
+    /// \endcode
+    /// \param startTick Fraction from which to start the layout
+    /// \param endTick Fraction at which to end the layout
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void doLayout(apiv1::FractionWrapper* startTick, apiv1::FractionWrapper* endTick);
+
     /// \cond MS_INTERNAL
     QString mscoreVersion() { return score()->mscoreVersion(); }
     QString mscoreRevision() { return QString::number(score()->mscoreRevision(), /* base */ 16); }
