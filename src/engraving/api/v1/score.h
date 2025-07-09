@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_APIV1_SCORE_H
-#define MU_ENGRAVING_APIV1_SCORE_H
+#pragma once
 
 #include "scoreelement.h"
 
@@ -32,7 +31,7 @@
 
 // api
 #include "excerpt.h"
-#include "fraction.h"
+#include "apistructs.h"
 #include "style.h"
 #include "part.h"
 #include "excerpt.h"
@@ -287,5 +286,3 @@ private:
     mu::notation::INotationUndoStackPtr undoStack() const;
 };
 }
-
-#endif
