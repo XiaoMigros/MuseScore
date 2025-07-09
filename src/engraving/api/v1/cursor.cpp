@@ -368,28 +368,44 @@ void Cursor::add(EngravingItem* wrapped)
     }
 
     // To be added to a segment (clef subtype)
-    case ElementType::CLEF:
+    case ElementType::CLEF: {
+        mu::engraving::Clef* clef = toClef(s);
+        if (clef->clefType() == mu::engraving::ClefType::INVALID) {
+            clef->setClefType(mu::engraving::ClefType::G);
+        }
+        mu::engraving::SegmentType st = SegmentType::Clef;
+        mu::engraving::Measure* measure = _segment->measure();
+        mu::engraving::Fraction rt = _segment->rtick();
+        if (rt == Fraction(0, 1)) {
+            mu::engraving::Measure* prevMeasure = measure->prevMeasure();
+            if (prevMeasure && !prevMeasure->sectionBreak()) {
+                measure = measure->prevMeasure();
+                rt      = measure->ticks();
+            } else {
+                st = SegmentType::HeaderClef;
+            }
+        }
+        mu::engraving::Segment* destSeg = measure->undoGetSegmentR(st, rt);
+        clef->setParent(destSeg);
+        clef->setTrack(m_track);
+        clef->setIsHeader(st == SegmentType::HeaderClef);
+        m_score->undoAddElement(clef);
+        break;
+    }
+    // To be added to a segment (clef subtype)
     case ElementType::AMBITUS: {
-        mu::engraving::EngravingItem* parent = nullptr;
         // Find backwards first measure containing a clef
+        mu::engraving::Segment* parent = nullptr;
         for (mu::engraving::Measure* m = _segment->measure(); m; m = m->prevMeasure()) {
             mu::engraving::Segment* seg = m->findSegment(SegmentType::Clef | SegmentType::HeaderClef, m->tick());
             if (!seg) {
                 continue;
             }
-            parent = m->undoGetSegmentR(s->isAmbitus() ? SegmentType::Ambitus : seg->segmentType(), Fraction(0, 1));
-            break;
-        }
-        if (parent && parent->isSegment()) {
-            if (s->isClef()) {
-                mu::engraving::Clef* clef = toClef(s);
-                if (clef->clefType() == mu::engraving::ClefType::INVALID) {
-                    clef->setClefType(mu::engraving::ClefType::G);
-                }
-            }
+            parent = m->undoGetSegmentR(SegmentType::Ambitus, Fraction(0, 1));
             s->setParent(parent);
             s->setTrack(m_track);
             m_score->undoAddElement(s);
+            break;
         }
         break;
     }
