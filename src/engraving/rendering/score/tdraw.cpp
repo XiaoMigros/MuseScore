@@ -1862,8 +1862,8 @@ void TDraw::draw(const Harmony* item, Painter* painter)
         pen.setWidthF(item->style().styleS(Sid::polychordDividerThickness).toMM(item->spatium()));
         pen.setColor(color);
         painter->setPen(pen);
-        for (LineF line : ldata->polychordDividerLines.value()) {
-            painter->drawLine(line);
+        for (const LineF& line : ldata->polychordDividerLines.value()) {
+            painter->drawLine(line.translated(PointF(0.0, ldata->polychordDividerOffset)));
         }
     }
 }
@@ -2217,7 +2217,7 @@ void TDraw::draw(const Note* item, Painter* painter)
         Font f(tab->fretFont());
         f.setPointSizeF(f.pointSizeF() * item->magS() * MScore::pixelRatio);
         painter->setFont(f);
-        painter->setPen(tab->fretColor());
+        painter->setPen(c);
         double startPosX = ldata->bbox().x();
 
         double yOffset = tab->fretFontYOffset();
