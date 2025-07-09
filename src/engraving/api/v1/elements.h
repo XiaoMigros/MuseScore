@@ -911,16 +911,12 @@ class DurationElement : public EngravingItem
     /// \since MuseScore 3.5
     Q_PROPERTY(apiv1::Tuplet * tuplet READ parentTuplet)
 
-    /**
-    * Outermost tuplet which this element belongs to. If there is no parent tuplet, returns null.
-    * \since MuseScore 4.6
-    */
+    /// Outermost tuplet which this element belongs to. If there is no parent tuplet, returns null.
+    /// \since MuseScore 4.6
     Q_PROPERTY(apiv1::Tuplet * topTuplet READ topTuplet)
 
-    /**
-    * Measure which this element belongs to.
-    * \since MuseScore 4.6
-    */
+    /// Measure which this element belongs to.
+    /// \since MuseScore 4.6
     Q_PROPERTY(apiv1::Measure * measure READ parentMeasure)
 
 public:
@@ -994,10 +990,8 @@ class ChordRest : public DurationElement
     /// Beam which covers this chord/rest, if such exists.
     /// \since MuseScore 3.6
     Q_PROPERTY(apiv1::EngravingItem * beam READ beam)
-    /**
-    * Whether this element is a full measure rest.
-    * \since MuseScore 4.6
-    */
+    /// Whether this element is a full measure rest.
+    /// \since MuseScore 4.6
     Q_PROPERTY(bool isWholeRest READ isWholeRest)
 
     API_PROPERTY_T(int, staffMove,        STAFF_MOVE)
@@ -1121,14 +1115,12 @@ class Segment : public EngravingItem
     /// \see \ref ticklength
     Q_PROPERTY(int tick READ tick)                               // TODO: revise engraving (or this API):
                                                                  // Pid::TICK is relative or absolute in different contexts
-    /**
-     * \brief Current tick fraction for this element
-     * \returns Tick of this element, i.e. fraction of ticks from the beginning
-     * of the score to this element. Not valid for all elements.
-     * For the integer value, call \ref fraction.ticks
-     * \see \ref ticklength
-     * \since MuseScore 4.6
-     */
+    /// \brief Current tick fraction for this element
+    /// \returns Tick of this element, i.e. fraction of ticks from the beginning
+    /// of the score to this element. Not valid for all elements.
+    /// For the integer value, call \ref fraction.ticks
+    /// \see \ref ticklength
+    /// \since MuseScore 4.6
     Q_PROPERTY(apiv1::FractionWrapper * fraction READ fraction)
 
 public:
@@ -1165,25 +1157,21 @@ class MeasureBase : public EngravingItem
 {
     Q_OBJECT
 
-    /**
-     * \brief Measure number, counting from 1.
-     * Number of this measure in the score counting from 1, i.e.
-     * for the first measure its \p no value will be equal to 1.
-     * User-visible measure number can be calculated as
-     * \code
-     * measure.no + measure.noOffset
-     * \endcode
-     * where \p measure is the relevant \ref Measure object.
-     * \since MuseScore 4.6
-     * \see ScoreElement::noOffset
-     */
+    /// \brief Measure number, counting from 1.
+    /// Number of this measure in the score counting from 1, i.e.
+    /// for the first measure its \p no value will be equal to 1.
+    /// User-visible measure number can be calculated as
+    /// \code
+    /// measure.no + measure.noOffset
+    /// \endcode
+    /// where \p measure is the relevant \ref Measure object.
+    /// \since MuseScore 4.6
+    /// \see ScoreElement::noOffset
     Q_PROPERTY(int no READ no)
-    /**
-     * \brief Current tick for this measure
-     * \returns Tick of this measure, i.e. number of ticks from the beginning
-     * of the score to this measure.
-     * \see \ref ticklength
-     */
+    /// \brief Current tick for this measure
+    /// \returns Tick of this measure, i.e. number of ticks from the beginning
+    /// of the score to this measure.
+    /// \see \ref ticklength
     Q_PROPERTY(apiv1::FractionWrapper * fraction READ tick)
     /// List of measure-related elements: layout breaks, jump/repeat markings etc.
     /// For frames (since MuseScore 4.6), contains their text elements.
@@ -1250,19 +1238,6 @@ class Measure : public MeasureBase
     /// \since MuseScore 3.6
     Q_PROPERTY(apiv1::Measure * prevMeasureMM READ prevMeasureMM)
 
-    /**
-     * \brief Measure number, counting from 1.
-     * Number of this measure in the score counting from 1, i.e.
-     * for the first measure its \p no value will be equal to 1.
-     * The user-visible measure number can be calculated as
-     * \code
-     * measure.no + measure.noOffset
-     * \endcode
-     * where \p measure is the relevant \ref Measure object.
-     * \since MuseScore 4.6
-     * \see ScoreElement::noOffset
-     */
-    Q_PROPERTY(int no READ no)
     /// List of measure-related elements: layout breaks, jump/repeat markings etc.
     /// \since MuseScore 3.3
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
