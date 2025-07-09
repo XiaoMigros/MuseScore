@@ -162,6 +162,28 @@ Measure* Score::tick2measure(FractionWrapper* f)
     return wrap<Measure>(score()->tick2measure(f->fraction()));
 }
 
+Segment* Score::getSegmentAtTick(int segmentType, FractionWrapper* f)
+{
+    const mu::engraving::Fraction tick = f->fraction();
+    if (!tick.isValid() || tick.negative()) {
+        return;
+    }
+    Measure* measure = score()->tick2measure(tick);
+    Segment* segment = measure->undoGetSegment(engraving::SegmentType(segmentType), tick);
+    return segment ? wrap<Segment>(segment, Ownership::SCORE) : nullptr;
+}
+
+Segment* Score::findSegmentAtTick(int segmentTypes, FractionWrapper* f)
+{
+    const mu::engraving::Fraction tick = f->fraction();
+    if (!tick.isValid() || tick.negative()) {
+        return;
+    }
+    Measure* measure = score()->tick2measure(tick);
+    Segment* segment = measure->findSegment(engraving::SegmentType(segmentTypes), tick);
+    return segment ? wrap<Segment>(segment, Ownership::SCORE) : nullptr;
+}
+
 //---------------------------------------------------------
 //   Score::lastSegment
 //---------------------------------------------------------

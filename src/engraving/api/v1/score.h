@@ -221,8 +221,27 @@ public:
     Measure* lastMeasureMM();
 
     /// The measure at a given tick in the score.
+    /// \param tick Tick to search for the measure
     /// \since MuseScore 4.6
-    Q_INVOKABLE apiv1::Measure* tick2measure(apiv1::FractionWrapper* f);
+    Q_INVOKABLE apiv1::Measure* tick2measure(apiv1::FractionWrapper* tick);
+
+    /// Looks for a segment of a given type at a given tick.
+    /// If no segment is found, one is created.
+    /// \param type Determines the type of segment to look for.
+    /// \param tick Determines where to look for the segment
+    /// \returns A segment with the given criteria.
+    /// \see \ref mu::plugins::api::Segment::segmentType
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Segment* getSegmentAtTick(int type, apiv1::FractionWrapper* tick);
+
+    /// Looks for a segment of a given type at a given tick.
+    /// Does not create a segment or modify the score.
+    /// \param types Determines the types of segments to look for.
+    /// \param tick Determines where to look for the segment
+    /// \returns A segment with the given criteria, if such exists.
+    /// \see \ref mu::plugins::api::Segment::segmentType
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Segment* findSegmentAtTick(int types, apiv1::FractionWrapper* tick);
 
     QString name() const;
     void setName(const QString& name);
