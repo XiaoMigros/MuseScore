@@ -946,8 +946,9 @@ class DurationElement : public EngravingItem
     /**
     * Nominal duration of this element.
     * The duration is represented as a fraction of whole note length.
+    * This property can be modified for chords and rests since MuseScore 4.6
     */
-    API_PROPERTY_READ_ONLY(duration, DURATION)
+    Q_PROPERTY(apiv1::FractionWrapper * duration READ ticks WRITE changeCRlen)
 
     /**
     * Global duration of this element, taking into account ratio of
@@ -989,6 +990,8 @@ public:
     mu::engraving::DurationElement* durationElement() { return toDurationElement(e); }
     const mu::engraving::DurationElement* durationElement() const { return toDurationElement(e); }
 
+    FractionWrapper* ticks() const;
+    void changeCRlen(FractionWrapper* len);
     FractionWrapper* globalDuration() const;
     FractionWrapper* actualDuration() const;
 
