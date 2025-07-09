@@ -723,7 +723,9 @@ public:
     /// \endcond
 
     /// All children for a given element. If \p all is true, children of children are included too.
-    /// \param all whether to include children of children
+    /// \param all Whether to include children of children
+    /// \returns The list of child elements for a given element.
+    /// \since MuseScore 4.6
     Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all = false);
 
     /// Create a copy of the element
