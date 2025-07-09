@@ -22,12 +22,21 @@
 
 #include "elements.h"
 
+#include "engraving/dom/guitarbend.h"
+#include "engraving/dom/measure.h"
 #include "engraving/dom/property.h"
+#include "engraving/dom/slur.h"
+#include "engraving/dom/spacer.h"
+#include "engraving/dom/system.h"
+#include "engraving/dom/tremolotwochord.h"
 #include "engraving/dom/undo.h"
+
+#include <QQmlListProperty>
 
 // api
 #include "fraction.h"
 #include "part.h"
+#include "scoreelement.h"
 
 #include "log.h"
 
@@ -53,6 +62,11 @@ void EngravingItem::setOffsetY(qreal offY)
     set(mu::engraving::Pid::OFFSET, QPointF(offX, offY));
 }
 
+static QRectF scaleRect(const mu::engraving::RectF& rect, double spatium)
+{
+    return QRectF(rect.x() / spatium, rect.y() / spatium, rect.width() / spatium, rect.height() / spatium);
+}
+
 //---------------------------------------------------------
 //   EngravingItem::bbox
 //   return the element bbox in spatium units, rather than in raster units as stored internally
@@ -60,9 +74,50 @@ void EngravingItem::setOffsetY(qreal offY)
 
 QRectF EngravingItem::bbox() const
 {
-    RectF bbox = element()->ldata()->bbox();
-    qreal spatium = element()->spatium();
-    return QRectF(bbox.x() / spatium, bbox.y() / spatium, bbox.width() / spatium, bbox.height() / spatium);
+    return scaleRect(element()->ldata()->bbox(), element()->spatium());
+}
+
+void EngravingItem::setEID(QString eid)
+{
+    EID id = EID::fromStdString(eid.toStdString());
+    element()->setEID(id);
+}
+
+QQmlListProperty<EngravingItem> EngravingItem::children(bool all)
+{
+    mu::engraving::EngravingItemList childrenList = element()->childrenItems(all);
+    return wrapChildrenContainerProperty(this, childrenList);
+}
+
+bool EngravingItem::up() const
+{
+    if (element()->isChordRest()) {
+        return toChordRest(element())->ldata()->up;
+    } else if (element()->isStem()) {
+        return toStem(element())->up();
+    } else if (element()->isSlur()) {
+        return toSlur(element())->up();
+    } else if (element()->isTie()) {
+        return toTie(element())->up();
+    } else if (element()->isSlurTieSegment()) {
+        return toSlurTieSegment(element())->slurTie()->up();
+    } else if (element()->isArticulation()) {
+        return toArticulation(element())->ldata()->up;
+    } else if (element()->isGuitarBend()) {
+        return toGuitarBend(element())->ldata()->up();
+    } else if (element()->isGuitarBendSegment()) {
+        return toGuitarBendSegment(element())->guitarBend()->ldata()->up();
+    } else if (element()->isBeam()) {
+        return toBeam(element())->up();
+    } else if (element()->type() == mu::engraving::ElementType::TREMOLO_TWOCHORD) {
+        return item_cast<const TremoloTwoChord*>(element())->up();
+    }
+    return false;
+}
+
+FractionWrapper* EngravingItem::tick() const
+{
+    return wrap(element()->tick());
 }
 
 //---------------------------------------------------------
@@ -76,6 +131,11 @@ EngravingItem* Segment::elementAt(int track)
         return nullptr;
     }
     return wrap(el, Ownership::SCORE);
+}
+
+FractionWrapper* Segment::fraction() const
+{
+    return wrap(segment()->tick());
 }
 
 //---------------------------------------------------------
@@ -113,9 +173,13 @@ bool Note::isChildAllowed(mu::engraving::ElementType elementType)
     case ElementType::TEXT:
     case ElementType::BEND:
     case ElementType::TIE:
+    case ElementType::PARTIAL_TIE:
+    case ElementType::LAISSEZ_VIB:
     case ElementType::ACCIDENTAL:
     case ElementType::TEXTLINE:
+    case ElementType::NOTELINE:
     case ElementType::GLISSANDO:
+    case ElementType::HAMMER_ON_PULL_OFF:
         return true;
     default:
         return false;
@@ -180,6 +244,33 @@ void Note::remove(apiv1::EngravingItem* wrapped)
     } else {
         LOGD("Note::remove() not impl. %s", s->typeName());
     }
+}
+
+//---------------------------------------------------------
+//   DurationElement::ticks
+//---------------------------------------------------------
+
+FractionWrapper* DurationElement::ticks() const
+{
+    return wrap(durationElement()->ticks());
+}
+
+//---------------------------------------------------------
+//   DurationElement::changeCRlen
+//---------------------------------------------------------
+
+void DurationElement::changeCRlen(FractionWrapper* len)
+{
+    if (!durationElement()->isChordRest()) {
+        LOGW("DurationElement::changeCRlen: can only change length for chords or rests");
+        return;
+    }
+    const mu::engraving::Fraction f = len->fraction()
+    if (!f.isValid() || f.isZero() || f.negative()) {
+        LOGW("DurationElement::changeCRlen: invalid parameter values: %s", qPrintable(f.toString()));
+        return;
+    }
+    durationElement()->score()->changeCRlen(toChordRest(durationElement()), f);
 }
 
 //---------------------------------------------------------
@@ -261,15 +352,6 @@ void Chord::addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingIte
 }
 
 //---------------------------------------------------------
-//   Page::pagenumber
-//---------------------------------------------------------
-
-int Page::pagenumber() const
-{
-    return static_cast<int>(page()->no());
-}
-
-//---------------------------------------------------------
 //   Chord::remove
 //---------------------------------------------------------
 
@@ -285,6 +367,89 @@ void Chord::remove(apiv1::EngravingItem* wrapped)
     } else {
         chord()->score()->deleteItem(s);     // Create undo op and remove the element.
     }
+}
+
+EngravingItem* Measure::vspacerUp(int staffIdx)
+{
+    mu::engraving::EngravingItem* el = measure()->vspacerUp(static_cast<staff_idx_t>(staffIdx));
+    return el ? wrap(el, Ownership::SCORE) : nullptr;
+}
+
+EngravingItem* Measure::vspacerDown(int staffIdx)
+{
+    mu::engraving::EngravingItem* el = measure()->vspacerDown(static_cast<staff_idx_t>(staffIdx));
+    return el ? wrap(el, Ownership::SCORE) : nullptr;
+}
+
+FractionWrapper* MeasureBase::tick() const
+{
+    return wrap(measureBase()->tick());
+}
+
+void MeasureBase::add(apiv1::EngravingItem* wrapped)
+{
+    mu::engraving::EngravingItem* s = wrapped ? wrapped->element() : nullptr;
+    if (s) {
+        // Ensure that the object has the expected ownership
+        if (wrapped->ownership() == Ownership::SCORE) {
+            LOGW("MeasureBase::add: Cannot add this element. The element is already part of the score.");
+            return;              // Don't allow operation.
+        }
+        // Score now owns the object.
+        wrapped->setOwnership(Ownership::SCORE);
+
+        addInternal(measureBase(), s);
+    }
+}
+
+void MeasureBase::addInternal(mu::engraving::MeasureBase* measureBase, mu::engraving::EngravingItem* s)
+{
+    s->setScore(measureBase->score());
+    s->setParent(measureBase);
+    measureBase->score()->undoAddElement(s);
+}
+
+//---------------------------------------------------------
+//   Chord::remove
+//---------------------------------------------------------
+
+void MeasureBase::remove(apiv1::EngravingItem* wrapped)
+{
+    mu::engraving::EngravingItem* s = wrapped->element();
+    if (!s) {
+        LOGW("PluginAPI::MeasureBase::remove: Unable to retrieve element. %s", qPrintable(wrapped->name()));
+    } else if (s->explicitParent() != measureBase()) {
+        LOGW("PluginAPI::MeasureBase::remove: The element is not a child of this measure base. Use removeElement() instead.");
+    } else {
+        measureBase()->score()->deleteItem(s);     // Create undo op and remove the element.
+    }
+}
+
+QRectF System::bbox(int staffIdx)
+{
+    mu::engraving::SysStaff* ss = muse::value(system()->staves(), static_cast<staff_idx_t>(staffIdx));
+    return ss ? scaleRect(ss->bbox(), system()->spatium()) : QRectF();
+}
+
+qreal System::yOffset(int staffIdx)
+{
+    mu::engraving::SysStaff* ss = muse::value(system()->staves(), static_cast<staff_idx_t>(staffIdx));
+    return ss ? ss->yOffset() / system()->spatium() : 0.0;
+}
+
+bool System::show(int staffIdx)
+{
+    mu::engraving::SysStaff* ss = muse::value(system()->staves(), static_cast<staff_idx_t>(staffIdx));
+    return ss ? ss->show() : false;
+}
+
+//---------------------------------------------------------
+//   Page::pagenumber
+//---------------------------------------------------------
+
+int Page::pagenumber() const
+{
+    return static_cast<int>(page()->no());
 }
 
 //---------------------------------------------------------
@@ -311,6 +476,8 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
 
     using mu::engraving::ElementType;
     switch (e->type()) {
+    case ElementType::TIE:
+        return wrap<Tie>(toTie(e), own);
     case ElementType::NOTE:
         return wrap<Note>(toNote(e), own);
     case ElementType::CHORD:
@@ -321,6 +488,13 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
         return wrap<Segment>(toSegment(e), own);
     case ElementType::MEASURE:
         return wrap<Measure>(toMeasure(e), own);
+    case ElementType::HBOX:
+    case ElementType::VBOX:
+    case ElementType::TBOX:
+    case ElementType::FBOX:
+        return wrap<MeasureBase>(toMeasureBase(e), own);
+    case ElementType::SYSTEM:
+        return wrap<System>(toSystem(e), own);
     case ElementType::PAGE:
         return wrap<Page>(toPage(e), own);
     default:

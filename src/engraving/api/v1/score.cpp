@@ -31,8 +31,11 @@
 #include "engraving/dom/segment.h"
 #include "engraving/dom/text.h"
 
+#include "engraving/types/typesconv.h"
+
 // api
 #include "cursor.h"
+#include "fraction.h"
 #include "elements.h"
 
 using namespace mu::engraving::apiv1;
@@ -44,36 +47,26 @@ Cursor* Score::newCursor()
 
 //---------------------------------------------------------
 //   Score::addText
-///   \brief Adds a header text to the score.
-///   \param type One of the following values:
+///   \brief Adds a header text to the score, and a title frame if needed.
+///   \param type The text style for the text, for example:
 ///   - "title"
 ///   - "subtitle"
 ///   - "composer"
 ///   - "lyricist"
-///   - Any other value corresponds to default text style.
 ///   \param txt Text to be added.
 //---------------------------------------------------------
 
 void Score::addText(const QString& type, const QString& txt)
 {
-    MeasureBase* measure = score()->first();
-    if (!measure || !measure->isVBox()) {
-        score()->insertBox(ElementType::VBOX, measure);
-        measure = score()->first();
+    mu::engraving::MeasureBase* mb = score()->first();
+    if (!mb || !mb->isVBox()) {
+        score()->insertBox(ElementType::VBOX, mb);
+        mb = score()->first();
     }
-    mu::engraving::TextStyleType tid = mu::engraving::TextStyleType::DEFAULT;
-    if (type == "title") {
-        tid = mu::engraving::TextStyleType::TITLE;
-    } else if (type == "subtitle") {
-        tid = mu::engraving::TextStyleType::SUBTITLE;
-    } else if (type == "composer") {
-        tid = mu::engraving::TextStyleType::COMPOSER;
-    } else if (type == "lyricist") {
-        tid = mu::engraving::TextStyleType::LYRICIST;
-    }
-
-    mu::engraving::Text* text = mu::engraving::Factory::createText(measure, tid);
-    text->setParent(measure);
+    AsciiStringView t(String::fromQString(type).toStdString());
+    mu::engraving::TextStyleType tid = mu::engraving::TConv::fromXml(t, mu::engraving::TextStyleType::DEFAULT);
+    mu::engraving::Text* text = mu::engraving::Factory::createText(mb, tid);
+    text->setParent(mb);
     text->setXmlText(txt);
     score()->undoAddElement(text);
 }
@@ -159,9 +152,14 @@ void Score::appendPartByMusicXmlId(const QString& instrumentMusicXmlId)
 //   Score::firstSegment
 //---------------------------------------------------------
 
-Segment* Score::firstSegment()
+Segment* Score::firstSegment(mu::engraving::SegmentType segmentType)
 {
-    return wrap<Segment>(score()->firstSegment(mu::engraving::SegmentType::All), Ownership::SCORE);
+    return wrap<Segment>(score()->firstSegment(segmentType), Ownership::SCORE);
+}
+
+Measure* Score::tick2measure(FractionWrapper* f)
+{
+    return wrap<Measure>(score()->tick2measure(f->fraction()));
 }
 
 //---------------------------------------------------------
@@ -231,6 +229,24 @@ void Score::createPlayEvents()
 QQmlListProperty<Staff> Score::staves()
 {
     return wrapContainerProperty<Staff>(this, score()->staves());
+}
+
+//---------------------------------------------------------
+//   Score::pages
+//---------------------------------------------------------
+
+QQmlListProperty<Page> Score::pages()
+{
+    return wrapContainerProperty<Page>(this, score()->pages());
+}
+
+//---------------------------------------------------------
+//   Score::systems
+//---------------------------------------------------------
+
+QQmlListProperty<System> Score::systems()
+{
+    return wrapContainerProperty<System>(this, score()->systems());
 }
 
 //---------------------------------------------------------

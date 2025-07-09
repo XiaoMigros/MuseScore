@@ -32,6 +32,7 @@
 
 // api
 #include "excerpt.h"
+#include "fraction.h"
 #include "style.h"
 #include "part.h"
 #include "excerpt.h"
@@ -47,6 +48,8 @@ namespace mu::engraving::apiv1 {
 class Cursor;
 class Segment;
 class Measure;
+class Page;
+class System;
 class Selection;
 class Score;
 class Staff;
@@ -137,6 +140,16 @@ class Score : public apiv1::ScoreElement, public muse::Injectable
      * \since MuseScore 3.6.3
      */
     Q_PROPERTY(QQmlListProperty<apiv1::Staff> staves READ staves)
+    /**
+     * List of pages in this score.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::Page> pages READ pages)
+    /**
+     * List of systems in this score.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::System> systems READ systems)
 
     muse::Inject<mu::context::IGlobalContext> context = { this };
 
@@ -196,7 +209,10 @@ public:
     /// Creates and returns a cursor to be used to navigate in the score
     Q_INVOKABLE apiv1::Cursor* newCursor();
 
-    Q_INVOKABLE apiv1::Segment* firstSegment();   // TODO: segment type
+    /// The first segment of a given type in the score.
+    /// Before MuseScore 4.6, the type could not be specified.
+    /// \param segmentType If not specified, defaults to all types.
+    Q_INVOKABLE apiv1::Segment* firstSegment(mu::engraving::SegmentType segmentType = mu::engraving::SegmentType::All);
     /// \cond MS_INTERNAL
     Segment* lastSegment();
 
@@ -204,6 +220,10 @@ public:
     Measure* firstMeasureMM();
     Measure* lastMeasure();
     Measure* lastMeasureMM();
+
+    /// The measure at a given tick in the score.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Measure* tick2measure(apiv1::FractionWrapper* f);
 
     QString name() const;
     void setName(const QString& name);
@@ -219,22 +239,18 @@ public:
     /// \endcond
 
     /**
-     * For "dock" type plugins: to be used before score
-     * modifications to make them undoable.
+     * For MuseScore 4 and for "dock" type plugins: to be used before score
+     * modifications to make them undoable, and to avoid corruptions or crashes.
      * Starts an undoable command. Must be accompanied by
-     * a corresponding endCmd() call. Should be used at
-     * least once by "dock" type plugins in case they
-     * modify the score.
+     * a corresponding endCmd() call.
      * \param qActionName - Optional action name that appears in Undo/Redo
      * menus, palettes, and lists.
      */
     Q_INVOKABLE void startCmd(const QString& qActionName = {});
     /**
-     * For "dock" type plugins: to be used after score
-     * modifications to make them undoable.
-     * Ends an undoable command. Should be used at least
-     * once by "dock" type plugins in case they modify
-     * the score.
+     * For MuseScore 4 and for "dock" type plugins: to be used after score
+     * modifications to make them undoable, and to avoid corruptions or crashes.
+     * Ends an undoable command.
      * \param rollback If true, reverts all the changes
      * made since the last startCmd() invocation.
      */
@@ -260,6 +276,8 @@ public:
     }
 
     QQmlListProperty<apiv1::Staff> staves();
+    QQmlListProperty<apiv1::Page> pages();
+    QQmlListProperty<apiv1::System> systems();
 
     static const mu::engraving::InstrumentTemplate* instrTemplateFromName(const QString& name);   // used by PluginAPI::newScore()
     /// \endcond
