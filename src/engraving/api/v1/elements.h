@@ -1148,7 +1148,7 @@ public:
     QQmlListProperty<EngravingItem> annotations() { return wrapContainerProperty<EngravingItem>(this, segment()->annotations()); }
     /// \endcond
 
-    /// \return EngravingItem at the given \p track (null if there is no such an element)
+    /// \returns EngravingItem at the given \p track (null if there is no such an element)
     /// \param track track number
     Q_INVOKABLE apiv1::EngravingItem* elementAt(int track);
 };
