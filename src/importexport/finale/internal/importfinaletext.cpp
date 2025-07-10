@@ -234,12 +234,11 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
                 return tagValue;
             }
         }
-        /// @todo strip unknown commands or embed them. Returning "" strips them. There are many more,
-        /// and some can probably be handled in the musx library by the entities that use them.
-        return "";
+        // Returning std::nullopt allows the musx library to fill in any we have not handled.
+        return std::nullopt;
     };
 
-    musx::util::EnigmaString::parseEnigmaText(m_doc, rawString, processTextChunk, processCommand);
+    musx::util::EnigmaString::parseEnigmaText(m_doc, m_currentMusxPartId, rawString, processTextChunk, processCommand);
 
     return endString;
 };
@@ -271,7 +270,7 @@ void FinaleParser::importTexts()
     for (std::shared_ptr<texts::FileInfoText> fileInfoText : fileInfoTexts) {
         String metaTag = FinaleTConv::metaTagFromFileInfo(fileInfoText->getTextType());
         std::shared_ptr<others::TextBlock> fileInfoTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, Cmper(fileInfoText->getTextType()));
-        std::string fileInfoValue = fileInfoTextBlock ? fileInfoTextBlock->getText(/*trimTags*/ true, musx::util::EnigmaString::AccidentalStyle::Unicode) : std::string();
+        std::string fileInfoValue = fileInfoTextBlock ? fileInfoTextBlock->getText(m_currentMusxPartId, /*trimTags*/ true, musx::util::EnigmaString::AccidentalStyle::Unicode) : std::string();
         if (!metaTag.empty() && !fileInfoValue.empty()) {
             m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
         }
@@ -364,7 +363,7 @@ void FinaleParser::importTexts()
                 return "false";
             };
 
-            musx::util::EnigmaString::parseEnigmaText(m_doc, rawText, processTextChunk, processCommand,
+            musx::util::EnigmaString::parseEnigmaText(m_doc, m_currentMusxPartId, rawText, processTextChunk, processCommand,
                     musx::util::EnigmaString::AccidentalStyle::Unicode);
             if (endString != String(u"true")) {
                 hf.showFirstPage = false;
