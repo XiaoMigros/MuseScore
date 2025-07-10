@@ -134,6 +134,12 @@ class Score : public apiv1::ScoreElement, public muse::Injectable
      */
     Q_PROPERTY(int pageNumberOffset READ pageNumberOffset WRITE setPageNumberOffset)
 
+    /// The current layout mode, a PluginAPI::LayoutMode value.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(int layoutMode READ layoutMode WRITE setLayoutMode)
+    /// Whether vertical frames are visible in the current layout mode.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showVerticalFrames READ isShowVBox WRITE setShowVBox)
     /**
      * List of staves in this score.
      * \since MuseScore 3.6.3
@@ -174,6 +180,11 @@ public:
 
     int pageNumberOffset() const { return score()->pageNumberOffset(); }
     void setPageNumberOffset(int offset) { score()->undoChangePageNumberOffset(offset); }
+
+    int layoutMode() const { return int(score()->layoutMode()); }
+    void setLayoutMode(int mode) { score()->setLayoutMode(mu::engraving::LayoutMode(mode)); }
+    bool isShowVBox() { return score()->layoutOptions().isShowVBox; }
+    void setShowVBox(bool show) { score()->setShowVBox(show); }
 
     /// \endcond
 
