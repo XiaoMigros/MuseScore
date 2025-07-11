@@ -271,7 +271,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     }
 
     if (!entryInfo.calcDisplaysAsRest()) {
-        Chord* chord = Factory::createChord(segment);
+        engraving::Chord* chord = Factory::createChord(segment);
 
         for (size_t i = 0; i < currentEntry->notes.size(); ++i) {
             NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, i);
@@ -493,8 +493,8 @@ static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t
     /// @todo account for invalid durations
     Fraction timeStretch = measure->score()->staff(track2staff(curTrackIdx))->timeStretch(measure->tick());
     for (ReadableTuplet tuplet : tremoloMap) {
-        Chord* c1 = measure->findChord(measure->tick() + tuplet.startTick, curTrackIdx); // timestretch?
-        Chord* c2 = measure->findChord(measure->tick() + ((tuplet.startTick + tuplet.endTick) / 2), curTrackIdx);
+        engraving::Chord* c1 = measure->findChord(measure->tick() + tuplet.startTick, curTrackIdx); // timestretch?
+        engraving::Chord* c2 = measure->findChord(measure->tick() + ((tuplet.startTick + tuplet.endTick) / 2), curTrackIdx);
         IF_ASSERT_FAILED(c1 && c2 && c1->ticks() == c2->ticks()) {
             continue;
         }

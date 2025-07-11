@@ -177,7 +177,7 @@ void FinaleParser::importParts()
     std::unordered_map<InstCmper, QString> inst2Part;
     int partNumber = 0;
     for (const std::shared_ptr<others::InstrumentUsed>& item : scrollView) {
-        std::shared_ptr<others::Staff> staff = item->getStaff();
+        std::shared_ptr<others::Staff> staff = item->getStaffInstance();
         IF_ASSERT_FAILED(staff) {
             continue; // safety check
         }
@@ -293,8 +293,8 @@ void FinaleParser::importBrackets()
             logger()->logWarning(String(u"Group info encountered without start or end slot information"));
             continue;
         }
-        auto musxStartStaff = others::InstrumentUsed::getStaffAtIndex(scrollView, Cmper(groupInfo.info.startSlot.value()));
-        auto musxEndStaff = others::InstrumentUsed::getStaffAtIndex(scrollView, Cmper(groupInfo.info.endSlot.value()));
+        auto musxStartStaff = others::InstrumentUsed::getStaffInstanceAtIndex(scrollView, Cmper(groupInfo.info.startSlot.value()));
+        auto musxEndStaff = others::InstrumentUsed::getStaffInstanceAtIndex(scrollView, Cmper(groupInfo.info.endSlot.value()));
         IF_ASSERT_FAILED(musxStartStaff && musxEndStaff) {
             logger()->logWarning(String(u"Group info encountered missing start or end staff information"));
             continue;
@@ -694,7 +694,7 @@ void FinaleParser::importPageLayout()
                 /// @todo handle blank page??
                 continue;
             }
-            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystem);
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
             IF_ASSERT_FAILED(firstPageSystem) {
                 break;
             }
@@ -797,7 +797,7 @@ void FinaleParser::importPageLayout()
                 /// @todo handle blank page???
                 continue;
             }
-            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystem);
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
             Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
             // the last staff system in the score can't be compared to the startTick of the preceding page -
             // account for that here too, but don't add a page break
