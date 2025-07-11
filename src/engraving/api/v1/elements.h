@@ -986,7 +986,7 @@ class ChordRest : public DurationElement
     Q_PROPERTY(apiv1::EngravingItem * beam READ beam)
     /// Whether this element is a full measure rest.
     /// \since MuseScore 4.6
-    Q_PROPERTY(bool isWholeRest READ isWholeRest)
+    Q_PROPERTY(bool isFullMeasureRest READ isFullMeasureRest)
 
     API_PROPERTY_T(int, staffMove,        STAFF_MOVE)
     API_PROPERTY(durationTypeWithDots,    DURATION_TYPE_WITH_DOTS)
@@ -997,6 +997,11 @@ class ChordRest : public DurationElement
     /// \param beamRests Whether to beam over rests
     /// \since MuseScore 4.6
     Q_INVOKABLE int actualBeamMode(bool beamRests = false);
+
+    /// List of elements attached to this chord or rest,
+    /// such as fermatas or chord lines.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
 
 public:
     /// \cond MS_INTERNAL
@@ -1009,7 +1014,9 @@ public:
     QQmlListProperty<EngravingItem> lyrics() { return wrapContainerProperty<EngravingItem>(this, chordRest()->lyrics()); }   // TODO: special type for Lyrics?
     EngravingItem* beam() { return wrap(chordRest()->beam()); }
 
-    bool isWholeRest() { return chordRest()->isRest() ? toRest(chordRest())->isWholeRest() : false; }
+    bool isFullMeasureRest() { return chordRest()->isFullMeasureRest(); }
+
+    QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, chordRest()->el()); }
     /// \endcond
 };
 
