@@ -22,6 +22,7 @@
 
 #include "elements.h"
 
+#include "engraving/dom/chord.h"
 #include "engraving/dom/guitarbend.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/property.h"
@@ -117,6 +118,30 @@ bool EngravingItem::up() const
 FractionWrapper* EngravingItem::tick() const
 {
     return wrap(element()->tick());
+}
+
+//---------------------------------------------------------
+//   ChordRest::actualBeamMode
+//---------------------------------------------------------
+
+int ChordRest::actualBeamMode(bool beamRests)
+{
+    if (chordRest()->isRest() && !beamRests && chordRest()->beamMode() == mu::engraving::BeamMode::AUTO) {
+        return int(mu::engraving::BeamMode::NONE);
+    }
+    mu::engraving::ChordRest* prev = nullptr;
+    if (!(chordRest()->isChord() && toChord(chordRest())->isGrace())) {
+        mu::engraving::Segment* seg = chordRest()->segment();
+        mu::engraving::Measure* m = seg->measure();
+        while (seg && seg->measure()->system() == m->system()) {
+            seg = seg->prev1(mu::engraving::SegmentType::ChordRest);
+            if (seg->element(chordRest()->track())) {
+                prev = toChordRest(seg->element(chordRest()->track()));
+                break;
+            }
+        }
+    }
+    return int(mu::engraving::Groups::endBeam(chordRest(), prev));
 }
 
 //---------------------------------------------------------

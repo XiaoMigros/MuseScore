@@ -992,6 +992,12 @@ class ChordRest : public DurationElement
     API_PROPERTY(durationTypeWithDots,    DURATION_TYPE_WITH_DOTS)
     API_PROPERTY(beamMode,                BEAM_MODE)
 
+    /// The actual beam mode for this element, as determined by
+    /// user settings and the current time signature.
+    /// \param beamRests Whether to beam over rests
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int actualBeamMode(bool beamRests = false);
+
 public:
     /// \cond MS_INTERNAL
     ChordRest(mu::engraving::ChordRest* c = nullptr, Ownership own = Ownership::PLUGIN)
