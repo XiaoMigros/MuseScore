@@ -1292,7 +1292,7 @@ class System : public EngravingItem
     /// The last measure of this system
     Q_PROPERTY(apiv1::Measure * lastMeasure READ lastMeasure)
     /// Indicates whether this system is locked
-    Q_PROPERTY(bool isLocked READ isLocked)
+    Q_PROPERTY(bool isLocked READ isLocked WRITE setIsLocked)
     /// Indicates whether this system has a page break
     Q_PROPERTY(bool pageBreak READ pageBreak)
     /// The left system divider for this system, if it exists.
@@ -1323,6 +1323,7 @@ public:
     Measure* firstMeasure() { return wrap<Measure>(system()->firstMeasure(), Ownership::SCORE); }
     Measure* lastMeasure() { return wrap<Measure>(system()->lastMeasure(), Ownership::SCORE); }
     bool isLocked() { return system()->isLocked(); }
+    void setIsLocked(bool locked);
     bool pageBreak() { return system()->pageBreak(); }
     EngravingItem* systemDividerLeft() { return wrap<EngravingItem>(system()->systemDividerLeft(), Ownership::SCORE); }
     EngravingItem* systemDividerRight() { return wrap<EngravingItem>(system()->systemDividerRight(), Ownership::SCORE); }

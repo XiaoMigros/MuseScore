@@ -306,6 +306,21 @@ public:
     /// \since MuseScore 4.6
     Q_INVOKABLE void doLayout(apiv1::FractionWrapper* startTick, apiv1::FractionWrapper* endTick);
 
+    /// Add or remove system locks to the current selection.
+    /// \param interval Specifies after how many measures locks should be added.
+    /// \param lock If \p true, adds locks, else removes them.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void addRemoveSystemLocks(int interval, bool lock) { score()->addRemoveSystemLocks(interval, lock); }
+
+    /// Create a (locked) system from two \ref MeasureBase objects.
+    /// \param first The first MeasureBase in the system.
+    /// \param last The last MeasureBase in the system.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void makeIntoSystem(apiv1::MeasureBase* first, apiv1::MeasureBase* last)
+    {
+        score()->makeIntoSystem(first->measureBase(), last->measureBase());
+    }
+
     /// \cond MS_INTERNAL
     QString mscoreVersion() { return score()->mscoreVersion(); }
     QString mscoreRevision() { return QString::number(score()->mscoreRevision(), /* base */ 16); }

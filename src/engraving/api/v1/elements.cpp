@@ -442,6 +442,19 @@ bool System::show(int staffIdx)
     return ss ? ss->show() : false;
 }
 
+void System::setIsLocked(bool locked)
+{
+    if (locked == isLocked()) {
+        return;
+    }
+    const mu::engraving::SystemLock* currentLock = system()->systemLock();
+    if (currentLock && !locked) {
+        system()->score()->undoRemoveSystemLock(currentLock);
+    } else if (!currentLock && locked) {
+        system()->score()->undoAddSystemLock(new mu::engraving::SystemLock(system()->first(), system()->last()));
+    }
+}
+
 //---------------------------------------------------------
 //   Page::pagenumber
 //---------------------------------------------------------
