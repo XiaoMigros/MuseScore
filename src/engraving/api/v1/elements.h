@@ -41,6 +41,7 @@
 #include "engraving/dom/stem.h"
 #include "engraving/dom/stemslash.h"
 #include "engraving/dom/system.h"
+#include "engraving/dom/systemdivider.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/tie.h"
 #include "engraving/dom/accidental.h"
@@ -1307,6 +1308,10 @@ class System : public EngravingItem
     Q_PROPERTY(bool isLocked READ isLocked)
     /// Indicates whether this system has a page break
     Q_PROPERTY(bool pageBreak READ pageBreak)
+    /// The left system divider for this system, if it exists.
+    Q_PROPERTY(apiv1::EngravingItem * systemDividerLeft READ systemDividerLeft)
+    /// The right system divider for this system, if it exists.
+    Q_PROPERTY(apiv1::EngravingItem * systemDividerRight READ systemDividerRight)
     /// Bounding box for a given staff.
     /// \param staffIdx staff number
     Q_INVOKABLE QRectF bbox(int staffIdx);
@@ -1332,6 +1337,8 @@ public:
     Measure* lastMeasure() { return wrap<Measure>(system()->lastMeasure(), Ownership::SCORE); }
     bool isLocked() { return system()->isLocked(); }
     bool pageBreak() { return system()->pageBreak(); }
+    EngravingItem* systemDividerLeft() { return wrap<EngravingItem>(system()->systemDividerLeft(), Ownership::SCORE); }
+    EngravingItem* systemDividerRight() { return wrap<EngravingItem>(system()->systemDividerRight(), Ownership::SCORE); }
     /// \endcond
 };
 
