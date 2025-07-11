@@ -26,6 +26,7 @@
 #include <QQmlListProperty>
 
 #include "engraving/dom/engravingitem.h"
+#include "engraving/dom/arpeggio.h"
 #include "engraving/dom/beam.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/hook.h"
@@ -43,6 +44,8 @@
 #include "engraving/dom/stemslash.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/systemdivider.h"
+#include "engraving/dom/tremolosinglechord.h"
+#include "engraving/dom/tremolotwochord.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/tie.h"
 #include "engraving/dom/accidental.h"
@@ -1030,6 +1033,12 @@ class Chord : public ChordRest
     Q_OBJECT
     /// List of grace notes (grace chords) belonging to this chord.
     Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotes READ graceNotes)
+    /// List of grace notes (grace chords) placed before this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotesBefore READ graceNotesBefore)
+    /// List of grace notes (grace chords) placed after this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotesAfter READ graceNotesAfter)
     /// List of notes belonging to this chord.
     Q_PROPERTY(QQmlListProperty<apiv1::Note> notes READ notes)
     /// List of articulations belonging to this chord.
@@ -1054,6 +1063,33 @@ class Chord : public ChordRest
     API_PROPERTY_T(bool, showStemSlash,   SHOW_STEM_SLASH)
     ///\since MuseScore 4.6
     API_PROPERTY(combineVoice,            COMBINE_VOICE)
+    /// If the note is a trill cue note (used in ornaments and trills)
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool isTrillCueNote READ isTrillCueNote)
+    /// The top note in this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Note * upNote READ upNote)
+    /// The bottom note in this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Note * downNote READ downNote)
+    /// The arpeggio attached to this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * arpeggio READ arpeggio)
+    /// The cross-voice arpeggio for this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * spanArpeggio READ spanArpeggio)
+    /// The single-chord tremolo for this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * tremoloSingleChord READ tremoloTwoChord)
+    /// The two-chord tremolo for this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * tremoloTwoChord READ tremoloSingleChord)
+    /// List of spanners (trill segments, slurs) starting on this chord.
+    /// \since MuseScore 4.6
+    // Q_PROPERTY(QQmlListProperty<apiv1::Spanner> startingSpanners READ startingSpanners)
+    /// List of spanners (trill segments, slurs) ending on this chord.
+    /// \since MuseScore 4.6
+    // Q_PROPERTY(QQmlListProperty<apiv1::Spanner> endingSpanners READ endingSpanners)
 
 public:
     /// \cond MS_INTERNAL
@@ -1064,6 +1100,8 @@ public:
     const mu::engraving::Chord* chord() const { return toChord(e); }
 
     QQmlListProperty<Chord> graceNotes() { return wrapContainerProperty<Chord>(this, chord()->graceNotes()); }
+    QQmlListProperty<Chord> graceNotesBefore() { return wrapContainerProperty<Chord>(this, chord()->graceNotesBefore()); }
+    QQmlListProperty<Chord> graceNotesAfter() { return wrapContainerProperty<Chord>(this, chord()->graceNotesAfter()); }
     QQmlListProperty<Note> notes() { return wrapContainerProperty<Note>(this, chord()->notes()); }
     QQmlListProperty<EngravingItem> articulations() { return wrapContainerProperty<EngravingItem>(this, chord()->articulations()); }
     EngravingItem* stem() { return wrap(chord()->stem()); }
@@ -1072,6 +1110,25 @@ public:
     mu::engraving::NoteType noteType() { return chord()->noteType(); }
     mu::engraving::PlayEventType playEventType() { return chord()->playEventType(); }
     void setPlayEventType(mu::engraving::PlayEventType v);
+
+    bool isTrillCueNote() { return chord()->isTrillCueNote(); }
+
+    Note* upNote() { return wrap<Note>(chord()->upNote()); }
+    Note* downNote() { return wrap<Note>(chord()->downNote()); }
+    EngravingItem* arpeggio() { return wrap(chord()->arpeggio()); }
+    EngravingItem* spanArpeggio() { return wrap(chord()->spanArpeggio()); }
+    EngravingItem* tremoloSingleChord() { return wrap(chord()->tremoloTwoChord()); }
+    EngravingItem* tremoloTwoChord() { return wrap(chord()->tremoloSingleChord()); }
+
+    // QQmlListProperty<Spanner> startingSpanners()
+    // {
+    //     return wrapContainerProperty<Spanner>(this, chord()->startingSpanners());
+    // }
+
+    // QQmlListProperty<Spanner> endingSpanners()
+    // {
+    //     return wrapContainerProperty<Spanner>(this, chord()->endingSpanners());
+    // }
 
     static void addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingItem* el);
     /// \endcond
