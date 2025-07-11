@@ -694,7 +694,7 @@ void FinaleParser::importPageLayout()
                 /// @todo handle blank page??
                 continue;
             }
-            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystem);
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
             IF_ASSERT_FAILED(firstPageSystem) {
                 break;
             }
@@ -797,7 +797,7 @@ void FinaleParser::importPageLayout()
                 /// @todo handle blank page???
                 continue;
             }
-            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystem);
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
             Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
             // the last staff system in the score can't be compared to the startTick of the preceding page -
             // account for that here too, but don't add a page break
