@@ -140,6 +140,27 @@ class Score : public apiv1::ScoreElement, public muse::Injectable
     /// Whether vertical frames are visible in the current layout mode.
     /// \since MuseScore 4.6
     Q_PROPERTY(bool showVerticalFrames READ isShowVBox WRITE setShowVBox)
+    /// Whether invisible elements are shown in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showInvisible READ isShowInvisible WRITE setShowInvisible)
+    /// Whether formatting elements are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showUnprintable READ showUnprintable WRITE setShowUnprintable)
+    /// Whether frames are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showFrames READ showFrames WRITE setShowFrames)
+    /// Whether page borders are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showPageborders READ showPageborders WRITE setShowPageborders)
+    /// Whether sound flags are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showSoundFlags READ showSoundFlags WRITE setShowSoundFlags)
+    /// Whether corrupted measures are marked in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool markIrregularMeasures READ showSoundFlags WRITE setMarkIrregularMeasures)
+    /// Whether instrument names are displayed
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showInstrumentNames READ showInstrumentNames WRITE setShowInstrumentNames)
     /**
      * List of staves in this score.
      * \since MuseScore 3.6.3
@@ -181,7 +202,22 @@ public:
     int pageNumberOffset() const { return score()->pageNumberOffset(); }
     void setPageNumberOffset(int offset) { score()->undoChangePageNumberOffset(offset); }
 
-    int layoutMode() const { return int(score()->layoutMode()); }
+    bool isShowInvisible() { return score()->isShowInvisible(); }
+    void setShowInvisible(bool v) { score()->setShowInvisible(v); }
+    bool showUnprintable() { return score()->showUnprintable(); }
+    void setShowUnprintable(bool v) { score()->setShowUnprintable(v); }
+    bool showFrames() { return score()->showFrames(); }
+    void setShowFrames(bool v) { score()->setShowFrames(v); }
+    bool showPageborders() { return score()->showPageborders(); }
+    void setShowPageborders(bool v) { score()->setShowPageborders(v); }
+    bool showSoundFlags() { return score()->showSoundFlags(); }
+    void setShowSoundFlags(bool v) { score()->setShowSoundFlags(v); }
+    bool markIrregularMeasures() { return score()->markIrregularMeasures(); }
+    void setMarkIrregularMeasures(bool v) { score()->setMarkIrregularMeasures(v); }
+    bool showInstrumentNames() { return score()->showInstrumentNames(); }
+    void setShowInstrumentNames(bool v) { score()->setShowInstrumentNames(v); }
+
+    int layoutMode() { return int(score()->layoutMode()); }
     void setLayoutMode(int mode) { score()->setLayoutMode(mu::engraving::LayoutMode(mode)); }
     bool isShowVBox() { return score()->layoutOptions().isShowVBox; }
     void setShowVBox(bool show) { score()->setShowVBox(show); }
