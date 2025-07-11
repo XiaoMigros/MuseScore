@@ -216,6 +216,11 @@ void ScoreElement::reset(mu::engraving::Pid pid)
     }
 }
 
+QQmlListProperty<ScoreElement> linkList()
+{
+    return wrapContainerProperty<ScoreElement>(this, element()->linkList());
+}
+
 //---------------------------------------------------------
 //   wrap
 ///   \cond PLUGIN_API \private \endcond

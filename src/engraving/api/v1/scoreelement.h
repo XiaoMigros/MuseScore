@@ -71,6 +71,11 @@ class ScoreElement : public QObject
      */
     Q_PROPERTY(qreal spatium READ spatium)
 
+    /// The list of linked objects for a given element,
+    /// i.e. elements connected through linked staves or other means.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::ScoreElement> linkList READ linkList)
+
     Ownership m_ownership;
 
     qreal spatium() const;
@@ -100,6 +105,8 @@ public:
     QVariant get(mu::engraving::Pid pid) const;
     void set(mu::engraving::Pid pid, const QVariant& val);
     void reset(mu::engraving::Pid pid);
+
+    QQmlListProperty<ScoreElement> linkList();
     /// \endcond
 
     Q_INVOKABLE QString userName() const;
