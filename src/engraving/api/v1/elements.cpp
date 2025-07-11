@@ -507,6 +507,12 @@ EngravingItem* mu::engraving::apiv1::wrap(mu::engraving::EngravingItem* e, Owner
             }
             return wrap<DurationElement>(toDurationElement(e), own);
         }
+        if (e->isSpannerSegment()) {
+            return wrap<SpannerSegment>(toSpannerSegment(e), own);
+        }
+        if (e->isSpanner()) {
+            return wrap<Spanner>(toSpanner(e), own);
+        }
         break;
     }
     return wrap<EngravingItem>(e, own);

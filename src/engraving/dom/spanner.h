@@ -163,6 +163,8 @@ public:
     virtual EngravingObject* scanParent() const override;
     virtual EngravingObjectList scanChildren() const override;
 
+    Spanner* clone() const override { return new Spanner(*this); }
+
     virtual double mag() const override;
 
     virtual void setScore(Score* s) override;
