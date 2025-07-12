@@ -320,7 +320,7 @@ static void writeLyricsPrefs(MStyle& style, const FinalePreferences& prefs)
          }) {
         auto verseText = prefs.document->getTexts()->get<texts::LyricsVerse>(Cmper(verseNumber));
         if (verseText && !verseText->text.empty()) {
-            auto font = verseText->parseFirstFontInfo();
+            auto font = verseText->getRawTextCtx(prefs.forPartId).parseFirstFontInfo();
             if (font) {
                 fontInfo = font;
             }
