@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_APIV1_SCOREELEMENT_H
-#define MU_ENGRAVING_APIV1_SCOREELEMENT_H
+#pragma once
 
 #include <QQmlEngine>
 #include <QQmlListProperty>
@@ -66,8 +65,18 @@ class ScoreElement : public QObject
      * element name suitable for usage in a user interface.
      */
     Q_PROPERTY(QString name READ name)
+    /**
+     * The size of a spatium for a given element.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(qreal spatium READ spatium)
 
-    Ownership _ownership;
+    /// The list of linked objects for a given element,
+    /// i.e. elements connected through linked staves or other means.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::ScoreElement> linkList READ linkList)
+
+    Ownership m_ownership;
 
     qreal spatium() const;
 
@@ -78,14 +87,14 @@ protected:
 
 public:
     /// \cond MS_INTERNAL
-    ScoreElement(mu::engraving::EngravingObject* _e = nullptr, Ownership own = Ownership::PLUGIN)
-        : QObject(), _ownership(own), e(_e) {}
+    ScoreElement(mu::engraving::EngravingObject* m_e = nullptr, Ownership own = Ownership::PLUGIN)
+        : QObject(), m_ownership(own), e(m_e) {}
     ScoreElement(const ScoreElement&) = delete;
     ScoreElement& operator=(const ScoreElement&) = delete;
     virtual ~ScoreElement();
 
-    Ownership ownership() const { return _ownership; }
-    void setOwnership(Ownership o) { _ownership = o; }
+    Ownership ownership() const { return m_ownership; }
+    void setOwnership(Ownership o) { m_ownership = o; }
 
     mu::engraving::EngravingObject* element() { return e; }
     const mu::engraving::EngravingObject* element() const { return e; }
@@ -95,11 +104,18 @@ public:
 
     QVariant get(mu::engraving::Pid pid) const;
     void set(mu::engraving::Pid pid, const QVariant& val);
+    void reset(mu::engraving::Pid pid);
+
+    QQmlListProperty<ScoreElement> linkList();
     /// \endcond
 
     Q_INVOKABLE QString userName() const;
     /// Checks whether two variables represent the same object. \since MuseScore 3.3
     Q_INVOKABLE bool is(apiv1::ScoreElement* other) { return other && element() == other->element(); }
+    /// Checks whether two variables represent the same object. \since MuseScore 4.6
+    bool operator ==(apiv1::ScoreElement* other) { return other && element() == other->element(); }
+    /// Checks whether two variables represent different objects. \since MuseScore 4.6
+    bool operator !=(apiv1::ScoreElement* other) { return !operator ==(other); }
 };
 
 //---------------------------------------------------------
@@ -182,5 +198,3 @@ QmlListAccess<T, Container> wrapContainerProperty(QObject* obj, Container& c)
     return QmlListAccess<T, Container>(obj, c);
 }
 }
-
-#endif

@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_APIV1_SCORE_H
-#define MU_ENGRAVING_APIV1_SCORE_H
+#pragma once
 
 #include "scoreelement.h"
 
@@ -32,6 +31,7 @@
 
 // api
 #include "excerpt.h"
+#include "apistructs.h"
 #include "style.h"
 #include "part.h"
 #include "excerpt.h"
@@ -47,6 +47,8 @@ namespace mu::engraving::apiv1 {
 class Cursor;
 class Segment;
 class Measure;
+class Page;
+class System;
 class Selection;
 class Score;
 class Staff;
@@ -132,11 +134,48 @@ class Score : public apiv1::ScoreElement, public muse::Injectable
      */
     Q_PROPERTY(int pageNumberOffset READ pageNumberOffset WRITE setPageNumberOffset)
 
+    /// The current layout mode, a PluginAPI::LayoutMode value.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(int layoutMode READ layoutMode WRITE setLayoutMode)
+    /// Whether vertical frames are visible in the current layout mode.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showVerticalFrames READ isShowVBox WRITE setShowVBox)
+    /// Whether invisible elements are shown in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showInvisible READ isShowInvisible WRITE setShowInvisible)
+    /// Whether formatting elements are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showUnprintable READ showUnprintable WRITE setShowUnprintable)
+    /// Whether frames are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showFrames READ showFrames WRITE setShowFrames)
+    /// Whether page borders are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showPageborders READ showPageborders WRITE setShowPageborders)
+    /// Whether sound flags are displayed in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showSoundFlags READ showSoundFlags WRITE setShowSoundFlags)
+    /// Whether corrupted measures are marked in the score.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool markIrregularMeasures READ showSoundFlags WRITE setMarkIrregularMeasures)
+    /// Whether instrument names are displayed
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showInstrumentNames READ showInstrumentNames WRITE setShowInstrumentNames)
     /**
      * List of staves in this score.
      * \since MuseScore 3.6.3
      */
     Q_PROPERTY(QQmlListProperty<apiv1::Staff> staves READ staves)
+    /**
+     * List of pages in this score.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::Page> pages READ pages)
+    /**
+     * List of systems in this score.
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(QQmlListProperty<apiv1::System> systems READ systems)
 
     muse::Inject<mu::context::IGlobalContext> context = { this };
 
@@ -162,6 +201,26 @@ public:
 
     int pageNumberOffset() const { return score()->pageNumberOffset(); }
     void setPageNumberOffset(int offset) { score()->undoChangePageNumberOffset(offset); }
+
+    bool isShowInvisible() { return score()->isShowInvisible(); }
+    void setShowInvisible(bool v) { score()->setShowInvisible(v); }
+    bool showUnprintable() { return score()->showUnprintable(); }
+    void setShowUnprintable(bool v) { score()->setShowUnprintable(v); }
+    bool showFrames() { return score()->showFrames(); }
+    void setShowFrames(bool v) { score()->setShowFrames(v); }
+    bool showPageborders() { return score()->showPageborders(); }
+    void setShowPageborders(bool v) { score()->setShowPageborders(v); }
+    bool showSoundFlags() { return score()->showSoundFlags(); }
+    void setShowSoundFlags(bool v) { score()->setShowSoundFlags(v); }
+    bool markIrregularMeasures() { return score()->markIrregularMeasures(); }
+    void setMarkIrregularMeasures(bool v) { score()->setMarkIrregularMeasures(v); }
+    bool showInstrumentNames() { return score()->showInstrumentNames(); }
+    void setShowInstrumentNames(bool v) { score()->setShowInstrumentNames(v); }
+
+    int layoutMode() { return int(score()->layoutMode()); }
+    void setLayoutMode(int mode) { score()->setLayoutMode(mu::engraving::LayoutMode(mode)); }
+    bool isShowVBox() { return score()->layoutOptions().isShowVBox; }
+    void setShowVBox(bool show) { score()->setShowVBox(show); }
 
     /// \endcond
 
@@ -196,7 +255,10 @@ public:
     /// Creates and returns a cursor to be used to navigate in the score
     Q_INVOKABLE apiv1::Cursor* newCursor();
 
-    Q_INVOKABLE apiv1::Segment* firstSegment();   // TODO: segment type
+    /// The first segment of a given type in the score.
+    /// Before MuseScore 4.6, the type could not be specified.
+    /// \param segmentType If not specified, defaults to all types.
+    Q_INVOKABLE apiv1::Segment* firstSegment(int segmentType = int(mu::engraving::SegmentType::All));
     /// \cond MS_INTERNAL
     Segment* lastSegment();
 
@@ -204,6 +266,29 @@ public:
     Measure* firstMeasureMM();
     Measure* lastMeasure();
     Measure* lastMeasureMM();
+
+    /// The measure at a given tick in the score.
+    /// \param tick Tick to search for the measure
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Measure* tick2measure(apiv1::FractionWrapper* tick);
+
+    /// Looks for a segment of a given type at a given tick.
+    /// If no segment is found, one is created.
+    /// \param type Determines the type of segment to look for.
+    /// \param tick Determines where to look for the segment
+    /// \returns A segment with the given criteria.
+    /// \see \ref mu::plugins::api::Segment::segmentType
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Segment* getSegmentAtTick(int type, apiv1::FractionWrapper* tick);
+
+    /// Looks for a segment of a given type at a given tick.
+    /// Does not create a segment or modify the score.
+    /// \param types Determines the types of segments to look for.
+    /// \param tick Determines where to look for the segment
+    /// \returns A segment with the given criteria, if such exists.
+    /// \see \ref mu::plugins::api::Segment::segmentType
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::Segment* findSegmentAtTick(int types, apiv1::FractionWrapper* tick);
 
     QString name() const;
     void setName(const QString& name);
@@ -219,22 +304,18 @@ public:
     /// \endcond
 
     /**
-     * For "dock" type plugins: to be used before score
-     * modifications to make them undoable.
+     * For MuseScore 4 and for "dock" type plugins: to be used before score
+     * modifications to make them undoable, and to avoid corruptions or crashes.
      * Starts an undoable command. Must be accompanied by
-     * a corresponding endCmd() call. Should be used at
-     * least once by "dock" type plugins in case they
-     * modify the score.
+     * a corresponding endCmd() call.
      * \param qActionName - Optional action name that appears in Undo/Redo
      * menus, palettes, and lists.
      */
     Q_INVOKABLE void startCmd(const QString& qActionName = {});
     /**
-     * For "dock" type plugins: to be used after score
-     * modifications to make them undoable.
-     * Ends an undoable command. Should be used at least
-     * once by "dock" type plugins in case they modify
-     * the score.
+     * For MuseScore 4 and for "dock" type plugins: to be used after score
+     * modifications to make them undoable, and to avoid corruptions or crashes.
+     * Ends an undoable command.
      * \param rollback If true, reverts all the changes
      * made since the last startCmd() invocation.
      */
@@ -249,6 +330,33 @@ public:
      */
     Q_INVOKABLE void createPlayEvents();
 
+    /// \brief Force the score to layout itself.
+    /// The score is laid out automatically at the end of a command,
+    /// however this method can be called to layout mid-command.
+    /// Layout the whole score with:
+    /// \code
+    /// curScore.doLayout(fraction(0, 1), fraction(-1, 1))
+    /// \endcode
+    /// \param startTick Fraction from which to start the layout
+    /// \param endTick Fraction at which to end the layout
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void doLayout(apiv1::FractionWrapper* startTick, apiv1::FractionWrapper* endTick);
+
+    /// Add or remove system locks to the current selection.
+    /// \param interval Specifies after how many measures locks should be added.
+    /// \param lock If \p true, adds locks, else removes them.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void addRemoveSystemLocks(int interval, bool lock) { score()->addRemoveSystemLocks(interval, lock); }
+
+    /// Create a (locked) system from two \ref MeasureBase objects.
+    /// \param first The first MeasureBase in the system.
+    /// \param last The last MeasureBase in the system.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void makeIntoSystem(apiv1::MeasureBase* first, apiv1::MeasureBase* last)
+    {
+        score()->makeIntoSystem(first->measureBase(), last->measureBase());
+    }
+
     /// \cond MS_INTERNAL
     QString mscoreVersion() { return score()->mscoreVersion(); }
     QString mscoreRevision() { return QString::number(score()->mscoreRevision(), /* base */ 16); }
@@ -260,6 +368,8 @@ public:
     }
 
     QQmlListProperty<apiv1::Staff> staves();
+    QQmlListProperty<apiv1::Page> pages();
+    QQmlListProperty<apiv1::System> systems();
 
     static const mu::engraving::InstrumentTemplate* instrTemplateFromName(const QString& name);   // used by PluginAPI::newScore()
     /// \endcond
@@ -269,5 +379,3 @@ private:
     mu::notation::INotationUndoStackPtr undoStack() const;
 };
 }
-
-#endif

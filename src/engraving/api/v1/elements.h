@@ -26,6 +26,7 @@
 #include <QQmlListProperty>
 
 #include "engraving/dom/engravingitem.h"
+#include "engraving/dom/arpeggio.h"
 #include "engraving/dom/beam.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/hook.h"
@@ -33,29 +34,40 @@
 #include "engraving/dom/measure.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/notedot.h"
+#include "engraving/dom/ornament.h"
 #include "engraving/dom/page.h"
+#include "engraving/dom/rest.h"
 #include "engraving/dom/segment.h"
+#include "engraving/dom/spanner.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stem.h"
 #include "engraving/dom/stemslash.h"
+#include "engraving/dom/system.h"
+#include "engraving/dom/systemdivider.h"
+#include "engraving/dom/timesig.h"
+#include "engraving/dom/tremolosinglechord.h"
+#include "engraving/dom/tremolotwochord.h"
 #include "engraving/dom/tuplet.h"
+#include "engraving/dom/tie.h"
 #include "engraving/dom/accidental.h"
 #include "engraving/dom/undo.h"
 
 #include "playevent.h"
 
 Q_MOC_INCLUDE("engraving/api/v1/part.h")
-Q_MOC_INCLUDE("engraving/api/v1/tie.h")
 
 namespace mu::engraving::apiv1 {
 class FractionWrapper;
+class IntervalWrapper;
 class EngravingItem;
+class Page;
 class Part;
+class Spanner;
 class Staff;
-class Tie;
+class System;
 class Tuplet;
-
-extern Tie* tieWrap(mu::engraving::Tie* tie);
+class Tie;
+class Measure;
 
 //---------------------------------------------------------
 //   wrap
@@ -63,12 +75,11 @@ extern Tie* tieWrap(mu::engraving::Tie* tie);
 
 extern EngravingItem* wrap(mu::engraving::EngravingItem* se, Ownership own = Ownership::SCORE);
 
-// TODO: add RESET functions
 #define API_PROPERTY(name, pid) \
-    Q_PROPERTY(QVariant name READ get_##name WRITE set_##name) \
-    QVariant get_##name() const { return get(mu::engraving::Pid::pid); \
-    }  \
-    void set_##name(QVariant val) { set(mu::engraving::Pid::pid, val); }
+    Q_PROPERTY(QVariant name READ get_##name WRITE set_##name RESET reset_##name) \
+    QVariant get_##name() const { return get(mu::engraving::Pid::pid); }  \
+    void set_##name(QVariant val) { set(mu::engraving::Pid::pid, val); }  \
+    void reset_##name() { reset(mu::engraving::Pid::pid); }
 
 /**
  * API_PROPERTY flavor which allows to define the property type.
@@ -77,9 +88,10 @@ extern EngravingItem* wrap(mu::engraving::EngravingItem* se, Ownership own = Own
  * value to be exposed to QML in case of invalid property.
  */
 #define API_PROPERTY_T(type, name, pid) \
-    Q_PROPERTY(type name READ get_##name WRITE set_##name) \
+    Q_PROPERTY(type name READ get_##name WRITE set_##name RESET reset_##name) \
     type get_##name() const { return get(mu::engraving::Pid::pid).value<type>(); }  \
-    void set_##name(type val) { set(mu::engraving::Pid::pid, QVariant::fromValue(val)); }
+    void set_##name(type val) { set(mu::engraving::Pid::pid, QVariant::fromValue(val)); }  \
+    void reset_##name() { reset(mu::engraving::Pid::pid); }
 
 #define API_PROPERTY_READ_ONLY(name, pid) \
     Q_PROPERTY(QVariant name READ get_##name) \
@@ -98,131 +110,111 @@ class EngravingItem : public apiv1::ScoreElement
 {
     Q_OBJECT
 
-    /**
-     * Parent element for this element.
-     * \since 3.3
-     */
+    /// Parent element for this element.
+    /// \since 3.3
     Q_PROPERTY(apiv1::EngravingItem * parent READ parent)
-    /**
-     * Staff which this element belongs to.
-     * \since MuseScore 3.5
-     */
+    /// Staff which this element belongs to.
+    /// \since MuseScore 3.5
     Q_PROPERTY(apiv1::Staff * staff READ staff)
-    /**
-     * X-axis offset from a reference position in spatium units.
-     * \see EngravingItem::offset
-     */
+    /// X-axis offset from a reference position in spatium units.
+    /// \see EngravingItem::offset
     Q_PROPERTY(qreal offsetX READ offsetX WRITE setOffsetX)
-    /**
-     * Y-axis offset from a reference position in spatium units.
-     * \see EngravingItem::offset
-     */
+    /// Y-axis offset from a reference position in spatium units.
+    /// \see EngravingItem::offset
     Q_PROPERTY(qreal offsetY READ offsetY WRITE setOffsetY)
-    /**
-     * Reference position of this element relative to its parent element.
-     *
-     * This is an offset from the parent object that is determined by the
-     * autoplace feature. It includes any other offsets applied to the
-     * element. You can use this value to accurately position other elements
-     * related to the same parent.
-     *
-     * This value is in spatium units for compatibility with EngravingItem.offsetX.
-     * \since MuseScore 3.3
-     */
+    /// Reference position of this element relative to its parent element.
+    ///
+    /// This is an offset from the parent object that is determined by the
+    /// autoplace feature. It includes any other offsets applied to the
+    /// element. You can use this value to accurately position other elements
+    /// related to the same parent.
+    ///
+    /// This value is in spatium units for compatibility with EngravingItem.offsetX.
+    /// \since MuseScore 3.3
     Q_PROPERTY(qreal posX READ posX)
-    /**
-     * Reference position of this element relative to its parent element.
-     *
-     * This is an offset from the parent object that is determined by the
-     * autoplace feature. It includes any other offsets applied to the
-     * element. You can use this value to accurately position other elements
-     * related to the same parent.
-     *
-     * This value is in spatium units for compatibility with EngravingItem.offsetY.
-     * \since MuseScore 3.3
-     */
+    /// Reference position of this element relative to its parent element.
+    ///
+    /// This is an offset from the parent object that is determined by the
+    /// autoplace feature. It includes any other offsets applied to the
+    /// element. You can use this value to accurately position other elements
+    /// related to the same parent.
+    ///
+    /// This value is in spatium units for compatibility with EngravingItem.offsetY.
+    /// \since MuseScore 3.3
     Q_PROPERTY(qreal posY READ posY)
-    /**
-     * Position of this element in page coordinates, in spatium units.
-     * \since MuseScore 3.5
-     */
+    /// Position of this element in page coordinates, in spatium units.
+    /// \since MuseScore 3.5
     Q_PROPERTY(QPointF pagePos READ pagePos)
-
     /**
-     * Bounding box of this element.
-     *
-     * This value is in spatium units for compatibility with other EngravingItem positioning properties.
-     * \since MuseScore 3.3.1
-     */
-    Q_PROPERTY(QRectF bbox READ bbox)
-
-    /**
-     * Subtype of this element.
+     * Position of this element relative to the canvas (user interface), in spatium units.
      * \since MuseScore 4.6
      */
+    Q_PROPERTY(QPointF canvasPos READ canvasPos)
+
+    /// Bounding box of this element.
+    ///
+    /// This value is in spatium units for compatibility with other EngravingItem positioning properties.
+    /// \since MuseScore 3.3.1
+    Q_PROPERTY(QRectF bbox READ bbox)
+
+    /// Subtype of this element.
+    /// \since MuseScore 4.6
     Q_PROPERTY(int subtype READ subtype)
-    /**
-     * Unlike the name might suggest, this property no longer returns the subtype and is scarcely used.
-     * Named 'subtype' prior to MuseScore 4.6
-     */
+    /// Unlike the name might suggest, this property no longer returns the subtype and is scarcely used.
+    /// Named 'subtype' prior to MuseScore 4.6
     API_PROPERTY(subType,                 SUBTYPE)
     API_PROPERTY_READ_ONLY_T(bool, selected, SELECTED)
     API_PROPERTY_READ_ONLY_T(bool, generated, GENERATED)
-    /**
-     * EngravingItem color. See https://doc.qt.io/qt-5/qml-color.html
-     * for the reference on color type in QML.
-     */
+    /// EngravingItem color. See https://doc.qt.io/qt-5/qml-color.html
+    /// for the reference on color type in QML.
     API_PROPERTY_T(QColor, color,         COLOR)
     API_PROPERTY_T(bool,   visible,       VISIBLE)
-    /** Stacking order of this element */
+    /// Stacking order of this element
     API_PROPERTY_T(int,    z,             Z)
-    API_PROPERTY(small,                   SMALL)
+    API_PROPERTY_T(bool,   small,         SMALL)
     API_PROPERTY(showCourtesy,            SHOW_COURTESY)
+    ///\since MuseScore 4.6
+    API_PROPERTY(keysig_mode,             KEYSIG_MODE)
     API_PROPERTY(lineType,                SLUR_STYLE_TYPE)
-    API_PROPERTY(line,                    LINE)
-    API_PROPERTY(fixed,                   FIXED)
-    API_PROPERTY(fixedLine,               FIXED_LINE)
-    /** Notehead type, one of PluginAPI::PluginAPI::NoteHeadType values */
+
+    /// Notehead type, one of PluginAPI::PluginAPI::NoteHeadType values
     API_PROPERTY(headType,                HEAD_TYPE)
-    /**
-     * Notehead scheme, one of PluginAPI::PluginAPI::NoteHeadScheme values.
-     * \since MuseScore 3.5
-     */
-    API_PROPERTY(headScheme,              HEAD_SCHEME)
-    /** Notehead group, one of PluginAPI::PluginAPI::NoteHeadGroup values */
+    /// Notehead group, one of PluginAPI::PluginAPI::NoteHeadGroup values
     API_PROPERTY(headGroup,               HEAD_GROUP)
     API_PROPERTY(articulationAnchor,      ARTICULATION_ANCHOR)
+
     API_PROPERTY(direction,               DIRECTION)
+    ///\since MuseScore 4.6
+    API_PROPERTY(horizontalDirection,     HORIZONTAL_DIRECTION)
     API_PROPERTY(stemDirection,           STEM_DIRECTION)
-    API_PROPERTY(noStem,                  NO_STEM)
     API_PROPERTY(slurDirection,           SLUR_DIRECTION)
     API_PROPERTY(leadingSpace,            LEADING_SPACE)
     API_PROPERTY(mirrorHead,              MIRROR_HEAD)
     API_PROPERTY(dotPosition,             DOT_POSITION)
-    API_PROPERTY(tuning,                  TUNING)
-    API_PROPERTY(pause,                   PAUSE)
+    API_PROPERTY_T(qreal,  pause,         PAUSE)
+
     API_PROPERTY(barlineType,             BARLINE_TYPE)
     API_PROPERTY(barlineSpan,             BARLINE_SPAN)
-    API_PROPERTY(barlineSpanFrom,         BARLINE_SPAN_FROM)
-    API_PROPERTY(barlineSpanTo,           BARLINE_SPAN_TO)
-    /**
-     * Offset from a reference position in spatium units.
-     * Use `Qt.point(x, y)` to create a point value which can be
-     * assigned to this property.
-     * \see EngravingItem::offsetX
-     * \see EngravingItem::offsetY
-     */
+    API_PROPERTY_T(int, barlineSpanFrom,  BARLINE_SPAN_FROM)
+    API_PROPERTY_T(int, barlineSpanTo,    BARLINE_SPAN_TO)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, barlineShowTips, BARLINE_SHOW_TIPS)
+
+    /// Offset from a reference position in spatium units.
+    /// Use `Qt.point(x, y)` to create a point value which can be
+    /// assigned to this property.
+    /// \see EngravingItem::offsetX
+    /// \see EngravingItem::offsetY
     API_PROPERTY_T(QPointF, offset,       OFFSET)
-    API_PROPERTY(fret,                    FRET)
-    API_PROPERTY(string,                  STRING)
-    API_PROPERTY(ghost,                   GHOST)
-    API_PROPERTY(play,                    PLAY)
-    API_PROPERTY(timesigNominal,          TIMESIG_NOMINAL)
-    API_PROPERTY(timesigActual,           TIMESIG_ACTUAL)
+    API_PROPERTY_T(bool, ghost,           GHOST)
+    API_PROPERTY_T(bool, play,            PLAY)
     API_PROPERTY(growLeft,                GROW_LEFT)
     API_PROPERTY(growRight,               GROW_RIGHT)
+
     API_PROPERTY(boxHeight,               BOX_HEIGHT)
     API_PROPERTY(boxWidth,                BOX_WIDTH)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, boxAutoSize,     BOX_AUTOSIZE)
     API_PROPERTY(topGap,                  TOP_GAP)
     API_PROPERTY(bottomGap,               BOTTOM_GAP)
     API_PROPERTY(leftMargin,              LEFT_MARGIN)
@@ -230,175 +222,452 @@ class EngravingItem : public apiv1::ScoreElement
     API_PROPERTY(topMargin,               TOP_MARGIN)
     API_PROPERTY(bottomMargin,            BOTTOM_MARGIN)
     API_PROPERTY(layoutBreakType,         LAYOUT_BREAK)
-    API_PROPERTY(autoscale,               AUTOSCALE)
+    API_PROPERTY_T(bool, autoscale,       AUTOSCALE)
     API_PROPERTY(size,                    SIZE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, imageHeight,    IMAGE_HEIGHT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, imageWidth,     IMAGE_WIDTH)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, imageFramed,     IMAGE_FRAMED)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, fretFrameTextScale, FRET_FRAME_TEXT_SCALE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, fretFrameDiagramScale, FRET_FRAME_DIAGRAM_SCALE)
+    ///\since MuseScore 4.6
+    API_PROPERTY(fretFrameColumnGap,      FRET_FRAME_COLUMN_GAP)
+    ///\since MuseScore 4.6
+    API_PROPERTY(fretFrameRowGap,         FRET_FRAME_ROW_GAP)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fretFrameChordPerRow, FRET_FRAME_CHORDS_PER_ROW)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fretFrameHAlign,  FRET_FRAME_H_ALIGN)
+
     API_PROPERTY(scale,                   SCALE)
-    API_PROPERTY(lockAspectRatio,         LOCK_ASPECT_RATIO)
-    API_PROPERTY(sizeIsSpatium,           SIZE_IS_SPATIUM)
+    API_PROPERTY_T(bool, lockAspectRatio, LOCK_ASPECT_RATIO)
+    API_PROPERTY_T(bool, sizeIsSpatium,   SIZE_IS_SPATIUM)
     API_PROPERTY(text,                    TEXT)
+    ///\since MuseScore 4.6
+    API_PROPERTY(htmlText,                HTML_TEXT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, userModified,    USER_MODIFIED)
     API_PROPERTY(beamPos,                 BEAM_POS)
-    API_PROPERTY(beamMode,                BEAM_MODE)
-    API_PROPERTY(beamNoSlope,             BEAM_NO_SLOPE)
+    API_PROPERTY_T(bool, beamNoSlope,     BEAM_NO_SLOPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, crossStaffMove,   BEAM_CROSS_STAFF_MOVE)
     API_PROPERTY(userLen,                 USER_LEN)
-    /** For spacers: amount of space between staves. */
+
+    /// For spacers: amount of space between staves.
     API_PROPERTY(space,                   SPACE)
     API_PROPERTY(tempo,                   TEMPO)
-    API_PROPERTY(tempoFollowText,         TEMPO_FOLLOW_TEXT)
-    API_PROPERTY(accidentalBracket,       ACCIDENTAL_BRACKET)
+    API_PROPERTY_T(bool, tempoFollowText, TEMPO_FOLLOW_TEXT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, tempoAlignRightOfRehearsalMark, TEMPO_ALIGN_RIGHT_OF_REHEARSAL_MARK)
+    API_PROPERTY_T(int, accidentalBracket, ACCIDENTAL_BRACKET)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, accidentalType,   ACCIDENTAL_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, stackingOrderOffset, ACCIDENTAL_STACKING_ORDER_OFFSET)
     API_PROPERTY(numeratorString,         NUMERATOR_STRING)
     API_PROPERTY(denominatorString,       DENOMINATOR_STRING)
-    API_PROPERTY(fbprefix,                FBPREFIX)
-    API_PROPERTY(fbdigit,                 FBDIGIT)
-    API_PROPERTY(fbsuffix,                FBSUFFIX)
-    API_PROPERTY(fbcontinuationline,      FBCONTINUATIONLINE)
-    API_PROPERTY(ottavaType,              OTTAVA_TYPE)
-    API_PROPERTY(numbersOnly,             NUMBERS_ONLY)
-    API_PROPERTY(trillType,               TRILL_TYPE)
-    API_PROPERTY(vibratoType,             VIBRATO_TYPE)
-    API_PROPERTY(hairpinCircledTip,       HAIRPIN_CIRCLEDTIP)
-    API_PROPERTY(hairpinType,             HAIRPIN_TYPE)
+    API_PROPERTY_T(int, fbprefix,         FBPREFIX)
+    API_PROPERTY_T(int, fbdigit,          FBDIGIT)
+    API_PROPERTY_T(int, fbsuffix,         FBSUFFIX)
+    API_PROPERTY_T(int, fbcontinuationline, FBCONTINUATIONLINE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fbparenthesis1,   FBPARENTHESIS1)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fbparenthesis2,   FBPARENTHESIS2)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fbparenthesis3,   FBPARENTHESIS3)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fbparenthesis4,   FBPARENTHESIS4)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fbparenthesis5,   FBPARENTHESIS5)
+
+    API_PROPERTY_T(int, ottavaType,       OTTAVA_TYPE)
+    API_PROPERTY_T(bool, numbersOnly,     NUMBERS_ONLY)
+    API_PROPERTY_T(int, trillType,        TRILL_TYPE)
+    API_PROPERTY_T(int, vibratoType,      VIBRATO_TYPE)
+    API_PROPERTY_T(bool, hairpinCircledTip, HAIRPIN_CIRCLEDTIP)
+
+    API_PROPERTY_T(int, hairpinType,      HAIRPIN_TYPE)
     API_PROPERTY(hairpinHeight,           HAIRPIN_HEIGHT)
     API_PROPERTY(hairpinContHeight,       HAIRPIN_CONT_HEIGHT)
-    API_PROPERTY(veloChange,              VELO_CHANGE)
-    API_PROPERTY(singleNoteDynamics,      SINGLE_NOTE_DYNAMICS)
+    API_PROPERTY_T(int, veloChange,       VELO_CHANGE)
     API_PROPERTY(veloChangeMethod,        VELO_CHANGE_METHOD)
     API_PROPERTY(veloChangeSpeed,         VELO_CHANGE_SPEED)
-    API_PROPERTY(dynamicRange,            END) // obsolete
-    /**
-     *    The way a ramp interpolates between values.
-     *    \since MuseScore 3.5
-     */
+    ///\since MuseScore 4.6
+    API_PROPERTY(dynamicType,             DYNAMIC_TYPE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, singleNoteDynamics, SINGLE_NOTE_DYNAMICS)
+    ///    The way a ramp interpolates between values.
+    ///    \since MuseScore 3.5
     API_PROPERTY(changeMethod,            CHANGE_METHOD)
     API_PROPERTY(placement,               PLACEMENT)
-    API_PROPERTY(velocity,                VELOCITY)
+    ///\since MuseScore 4.6
+    API_PROPERTY(hPlacement,              HPLACEMENT)
+    API_PROPERTY_T(int, mmRestRangeBracketType, MMREST_RANGE_BRACKET_TYPE)
+    API_PROPERTY_T(int, velocity,         VELOCITY)
     API_PROPERTY(jumpTo,                  JUMP_TO)
     API_PROPERTY(playUntil,               PLAY_UNTIL)
     API_PROPERTY(continueAt,              CONTINUE_AT)
     API_PROPERTY(label,                   LABEL)
-    API_PROPERTY(markerType,              MARKER_TYPE)
+    API_PROPERTY_T(int, markerType,       MARKER_TYPE)
     API_PROPERTY(arpUserLen1,             ARP_USER_LEN1)
     API_PROPERTY(arpUserLen2,             ARP_USER_LEN2)
-    API_PROPERTY(measureNumberMode,       MEASURE_NUMBER_MODE)
-    API_PROPERTY(glissType,               GLISS_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, repeatEnd,       REPEAT_END)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, repeatStart,     REPEAT_START)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, repeatJump,      REPEAT_JUMP)
+
+    API_PROPERTY_T(int, glissType,        GLISS_TYPE)
     API_PROPERTY(glissText,               GLISS_TEXT)
-    API_PROPERTY(glissShowText,           GLISS_SHOW_TEXT)
+    API_PROPERTY_T(bool, glissShowText,   GLISS_SHOW_TEXT)
     API_PROPERTY(glissandoStyle,          GLISS_STYLE)
-    API_PROPERTY(glissEaseIn,             GLISS_EASEIN)
-    API_PROPERTY(glissEaseOut,            GLISS_EASEOUT)
-    API_PROPERTY(diagonal,                DIAGONAL)
+    API_PROPERTY_T(int, glissEaseIn,      GLISS_EASEIN)
+    API_PROPERTY_T(int, glissEaseOut,     GLISS_EASEOUT)
+    API_PROPERTY_T(bool, diagonal,        DIAGONAL)
     API_PROPERTY(groups,                  GROUP_NODES)
     API_PROPERTY(lineStyle,               LINE_STYLE)
     API_PROPERTY(lineColor,               COLOR)
     API_PROPERTY(lineWidth,               LINE_WIDTH)
-    API_PROPERTY(timeStretch,             TIME_STRETCH)
+    API_PROPERTY_T(qreal, timeStretch,    TIME_STRETCH)
     API_PROPERTY(ornamentStyle,           ORNAMENT_STYLE)
+    ///\since MuseScore 4.6
+    API_PROPERTY(intervalAbove,           INTERVAL_ABOVE)
+    ///\since MuseScore 4.6
+    API_PROPERTY(intervalBelow,           INTERVAL_BELOW)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, ornamentShowAccidental, ORNAMENT_SHOW_ACCIDENTAL)
+    ///\since MuseScore 4.6
+    API_PROPERTY(ornamentShowCueNote,     ORNAMENT_SHOW_CUE_NOTE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, startOnUpperNote, START_ON_UPPER_NOTE)
+
     API_PROPERTY(timesig,                 TIMESIG)
     API_PROPERTY(timesigStretch,          TIMESIG_STRETCH)
-    API_PROPERTY(timesigType,             TIMESIG_TYPE)
+    API_PROPERTY_T(int, timesigType,      TIMESIG_TYPE)
     API_PROPERTY(spannerTick,             SPANNER_TICK)
     API_PROPERTY(spannerTicks,            SPANNER_TICKS)
-    API_PROPERTY(spannerTrack2,           SPANNER_TRACK2)
-    API_PROPERTY(userOff2,                OFFSET2)
-    API_PROPERTY(breakMmr,                BREAK_MMR)
-    API_PROPERTY(repeatCount,             REPEAT_COUNT)
-    API_PROPERTY(userStretch,             USER_STRETCH)
-    API_PROPERTY(noOffset,                NO_OFFSET)
-    API_PROPERTY(irregular,               IRREGULAR)
-    API_PROPERTY(anchor,                  ANCHOR)
-    API_PROPERTY(slurUoff1,               SLUR_UOFF1)
-    API_PROPERTY(slurUoff2,               SLUR_UOFF2)
-    API_PROPERTY(slurUoff3,               SLUR_UOFF3)
-    API_PROPERTY(slurUoff4,               SLUR_UOFF4)
-    API_PROPERTY(staffMove,               STAFF_MOVE)
-    API_PROPERTY(verse,                   VERSE)
-    API_PROPERTY(syllabic,                SYLLABIC)
+    API_PROPERTY_T(int, spannerTrack2,    SPANNER_TRACK2)
+    API_PROPERTY_T(QPointF, userOff2,     OFFSET2)
+    ///\since MuseScore 4.6
+    API_PROPERTY(mmRestNumberPos,         MMREST_NUMBER_POS)
+    ///\since MuseScore 4.6
+    API_PROPERTY(mmRestNumberOffset,      MMREST_NUMBER_OFFSET)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, mmRestNumberVisible, MMREST_NUMBER_VISIBLE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(measureRepeatNumberPos,  MEASURE_REPEAT_NUMBER_POS)
+
+    API_PROPERTY_T(int, noOffset,         NO_OFFSET)
+    API_PROPERTY_T(bool, irregular,       IRREGULAR)
+    API_PROPERTY_T(int, anchor,           ANCHOR)
+    API_PROPERTY_T(QPointF, slurUoff1,    SLUR_UOFF1)
+    API_PROPERTY_T(QPointF, slurUoff2,    SLUR_UOFF2)
+    API_PROPERTY_T(QPointF, slurUoff3,    SLUR_UOFF3)
+    API_PROPERTY_T(QPointF, slurUoff4,    SLUR_UOFF4)
+    API_PROPERTY_T(int, verse,            VERSE)
+
+    API_PROPERTY_T(int, syllabic,         SYLLABIC)
     API_PROPERTY(lyricTicks,              LYRIC_TICKS)
     API_PROPERTY(volta_ending,            VOLTA_ENDING)
-    API_PROPERTY(lineVisible,             LINE_VISIBLE)
-    API_PROPERTY(mag,                     MAG)
-    API_PROPERTY(useDrumset,              USE_DRUMSET)
-    API_PROPERTY(durationType,            DURATION_TYPE_WITH_DOTS)
+    API_PROPERTY_T(bool, lineVisible,     LINE_VISIBLE)
+    API_PROPERTY_T(qreal, mag,            MAG)
+    API_PROPERTY_T(int, useDrumset,       USE_DRUMSET)
     API_PROPERTY(role,                    ACCIDENTAL_ROLE)
-    API_PROPERTY_T(int, track,            TRACK)
-    API_PROPERTY(fretStrings,             FRET_STRINGS)
-    API_PROPERTY(fretFrets,               FRET_FRETS)
+    API_PROPERTY_T(int, track,            TRACK) // does conversion work from P_TYPE::SIZE_T ?
+
+    API_PROPERTY_T(int, fretStrings,      FRET_STRINGS)
+    API_PROPERTY_T(int, fretFrets,        FRET_FRETS)
     /*API_PROPERTY( fretBarre,               FRET_BARRE                )*/
-    API_PROPERTY(fretOffset,              FRET_OFFSET)
-    API_PROPERTY(fretNumPos,              FRET_NUM_POS)
-    API_PROPERTY(systemBracket,           SYSTEM_BRACKET)
-    API_PROPERTY(gap,                     GAP)
-    /** Whether this element participates in autoplacement */
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, showNut,         FRET_NUT)
+    API_PROPERTY_T(int, fretOffset,       FRET_OFFSET)
+    API_PROPERTY_T(int, fretNumPos,       FRET_NUM_POS)
+    ///\since MuseScore 4.6
+    API_PROPERTY(orientation,             ORIENTATION)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, fretShowFingering, FRET_SHOW_FINGERINGS)
+    ///\since MuseScore 4.6
+    API_PROPERTY(fretFingering,           FRET_FINGERING)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(harmonyVoiceLiteral,     HARMONY_VOICE_LITERAL)
+    ///\since MuseScore 4.6
+    API_PROPERTY(harmonyVoicing,          HARMONY_VOICING)
+    ///\since MuseScore 4.6
+    API_PROPERTY(harmonyDuration,         HARMONY_DURATION)
+    ///\since MuseScore 4.6
+    API_PROPERTY(harmonyBassScale,        HARMONY_BASS_SCALE)
+
+    API_PROPERTY_T(int, systemBracket,    SYSTEM_BRACKET)
+    API_PROPERTY_T(bool, gap,             GAP)
+    /// Whether this element participates in autoplacement
     API_PROPERTY_T(bool, autoplace,       AUTOPLACE)
-    API_PROPERTY(dashLineLen,             DASH_LINE_LEN)
-    API_PROPERTY(dashGapLen,              DASH_GAP_LEN)
+    API_PROPERTY_T(qreal, dashLineLen,    DASH_LINE_LEN)
+    API_PROPERTY_T(qreal, dashGapLen,     DASH_GAP_LEN)
 //       API_PROPERTY_READ_ONLY( tick,          TICK                      ) // wasn't available in 2.X, disabled due to fractions transition
-    /**
-     * Symbol ID of this element (if appropriate),
-     * one of PluginAPI::PluginAPI::SymId values.
-     */
+    /// Symbol ID of this element (if appropriate),
+    /// one of PluginAPI::PluginAPI::SymId values.
     API_PROPERTY(symbol,                  SYMBOL)
-    API_PROPERTY(playRepeats,             PLAY_REPEATS)
-    API_PROPERTY(createSystemHeader,      CREATE_SYSTEM_HEADER)
-    API_PROPERTY(staffLines,              STAFF_LINES)
+    API_PROPERTY_T(bool, playRepeats,     PLAY_REPEATS)
+    API_PROPERTY_T(bool, createSystemHeader, CREATE_SYSTEM_HEADER)
+    API_PROPERTY_T(int, staffLines,       STAFF_LINES)
     API_PROPERTY(lineDistance,            LINE_DISTANCE)
-    API_PROPERTY(stepOffset,              STEP_OFFSET)
-    API_PROPERTY(staffShowBarlines,       STAFF_SHOW_BARLINES)
-    API_PROPERTY(staffShowLedgerlines,    STAFF_SHOW_LEDGERLINES)
-    API_PROPERTY(staffStemless,           STAFF_STEMLESS)
-    API_PROPERTY(staffGenClef,            STAFF_GEN_CLEF)
-    API_PROPERTY(staffGenTimesig,         STAFF_GEN_TIMESIG)
-    API_PROPERTY(staffGenKeysig,          STAFF_GEN_KEYSIG)
+    API_PROPERTY_T(int, stepOffset,       STEP_OFFSET)
+    API_PROPERTY_T(bool, staffShowBarlines, STAFF_SHOW_BARLINES)
+    API_PROPERTY_T(bool, staffShowLedgerlines, STAFF_SHOW_LEDGERLINES)
+    API_PROPERTY_T(bool, staffStemless,   STAFF_STEMLESS)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, staffInvisible,  STAFF_INVISIBLE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(QColor, staffColor,    STAFF_COLOR)
+
+    /// Notehead scheme, one of PluginAPI::PluginAPI::NoteHeadScheme values.
+    /// \since MuseScore 3.5
+    API_PROPERTY(headScheme,              HEAD_SCHEME)
+    API_PROPERTY_T(bool, staffGenClef,    STAFF_GEN_CLEF)
+    API_PROPERTY_T(bool, staffGenTimesig, STAFF_GEN_TIMESIG)
+    API_PROPERTY_T(bool, staffGenKeysig,  STAFF_GEN_KEYSIG)
     API_PROPERTY(staffYoffset,            STAFF_YOFFSET)
-    API_PROPERTY(bracketSpan,             BRACKET_SPAN)
-    API_PROPERTY(bracketColumn,           BRACKET_COLUMN)
-    API_PROPERTY(inameLayoutPosition,     INAME_LAYOUT_POSITION)
+    API_PROPERTY_T(int, bracketSpan,      BRACKET_SPAN)
+
+    API_PROPERTY_T(int, bracketColumn,    BRACKET_COLUMN)
+    API_PROPERTY_T(int, inameLayoutPosition, INAME_LAYOUT_POSITION)
     API_PROPERTY(subStyle,                TEXT_STYLE)
     API_PROPERTY(fontFace,                FONT_FACE)
-    API_PROPERTY(fontSize,                FONT_SIZE)
-    API_PROPERTY(fontStyle,               FONT_STYLE)
-    API_PROPERTY(frameType,               FRAME_TYPE)
+    API_PROPERTY_T(qreal, fontSize,       FONT_SIZE)
+    API_PROPERTY_T(int, fontStyle,        FONT_STYLE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, lineSpacing,    TEXT_LINE_SPACING)
+
+    API_PROPERTY_T(int, frameType,        FRAME_TYPE)
     API_PROPERTY(frameWidth,              FRAME_WIDTH)
     API_PROPERTY(framePadding,            FRAME_PADDING)
-    API_PROPERTY(frameRound,              FRAME_ROUND)
-    API_PROPERTY(frameFgColor,            FRAME_FG_COLOR)
-    API_PROPERTY(frameBgColor,            FRAME_BG_COLOR)
-    API_PROPERTY(sizeSpatiumDependent,    SIZE_SPATIUM_DEPENDENT)
+    API_PROPERTY_T(int, frameRound,       FRAME_ROUND)
+    API_PROPERTY_T(QColor, frameFgColor,  FRAME_FG_COLOR)
+    API_PROPERTY_T(QColor, frameBgColor,  FRAME_BG_COLOR)
+    API_PROPERTY_T(bool, sizeSpatiumDependent, SIZE_SPATIUM_DEPENDENT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, textSizeSpatiumDependent, TEXT_SIZE_SPATIUM_DEPENDENT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, musicalSymbolsScale, MUSICAL_SYMBOLS_SCALE)
     API_PROPERTY(align,                   ALIGN)
-    API_PROPERTY(systemFlag,              SYSTEM_FLAG)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, textScriptAlign,  TEXT_SCRIPT_ALIGN)
+    API_PROPERTY_T(bool, systemFlag,      SYSTEM_FLAG)
+
     API_PROPERTY(beginText,               BEGIN_TEXT)
     API_PROPERTY(beginTextAlign,          BEGIN_TEXT_ALIGN)
     API_PROPERTY(beginTextPlace,          BEGIN_TEXT_PLACE)
     API_PROPERTY(beginHookType,           BEGIN_HOOK_TYPE)
     API_PROPERTY(beginHookHeight,         BEGIN_HOOK_HEIGHT)
     API_PROPERTY(beginFontFace,           BEGIN_FONT_FACE)
-    API_PROPERTY(beginFontSize,           BEGIN_FONT_SIZE)
-    API_PROPERTY(beginFontStyle,          BEGIN_FONT_STYLE)
-    API_PROPERTY(beginTextOffset,         BEGIN_TEXT_OFFSET)
+    API_PROPERTY_T(qreal, beginFontSize,  BEGIN_FONT_SIZE)
+    API_PROPERTY_T(int, beginFontStyle,   BEGIN_FONT_STYLE)
+    API_PROPERTY_T(QPointF, beginTextOffset, BEGIN_TEXT_OFFSET)
+    ///\since MuseScore 4.6
+    API_PROPERTY(gapBetweenTextAndLine,   GAP_BETWEEN_TEXT_AND_LINE)
+
     API_PROPERTY(continueText,            CONTINUE_TEXT)
     API_PROPERTY(continueTextAlign,       CONTINUE_TEXT_ALIGN)
     API_PROPERTY(continueTextPlace,       CONTINUE_TEXT_PLACE)
     API_PROPERTY(continueFontFace,        CONTINUE_FONT_FACE)
-    API_PROPERTY(continueFontSize,        CONTINUE_FONT_SIZE)
-    API_PROPERTY(continueFontStyle,       CONTINUE_FONT_STYLE)
-    API_PROPERTY(continueTextOffset,      CONTINUE_TEXT_OFFSET)
+    API_PROPERTY_T(qreal, continueFontSize, CONTINUE_FONT_SIZE)
+    API_PROPERTY_T(int, continueFontStyle, CONTINUE_FONT_STYLE)
+    API_PROPERTY_T(QPointF, continueTextOffset, CONTINUE_TEXT_OFFSET)
+
     API_PROPERTY(endText,                 END_TEXT)
     API_PROPERTY(endTextAlign,            END_TEXT_ALIGN)
     API_PROPERTY(endTextPlace,            END_TEXT_PLACE)
     API_PROPERTY(endHookType,             END_HOOK_TYPE)
     API_PROPERTY(endHookHeight,           END_HOOK_HEIGHT)
     API_PROPERTY(endFontFace,             END_FONT_FACE)
-    API_PROPERTY(endFontSize,             END_FONT_SIZE)
-    API_PROPERTY(endFontStyle,            END_FONT_STYLE)
-    API_PROPERTY(endTextOffset,           END_TEXT_OFFSET)
+    API_PROPERTY_T(qreal, endFontSize,    END_FONT_SIZE)
+    API_PROPERTY_T(int, endFontStyle,     END_FONT_STYLE)
+    API_PROPERTY_T(QPointF, endTextOffset, END_TEXT_OFFSET)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(notelinePlacement,       NOTELINE_PLACEMENT)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, avoidBarLines,   AVOID_BARLINES)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, dynamicsSize,   DYNAMICS_SIZE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, centerOnNotehead, CENTER_ON_NOTEHEAD)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, anchorToEndOfPrevious, ANCHOR_TO_END_OF_PREVIOUS)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, snapToDynamics,  SNAP_TO_DYNAMICS)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, snapBefore,      SNAP_BEFORE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, snapAfter,       SNAP_AFTER)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(voiceAssignment,         VOICE_ASSIGNMENT)
+    ///\since MuseScore 4.6
+    API_PROPERTY(centerBetweenStaves,     CENTER_BETWEEN_STAVES)
+
     API_PROPERTY(posAbove,                POS_ABOVE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, locationStaves,   LOCATION_STAVES)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, locationVoices,   LOCATION_VOICES)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, locationMeasures, LOCATION_MEASURES)
+    ///\since MuseScore 4.6
+    API_PROPERTY(locationFractions,       LOCATION_FRACTIONS)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, locationGrace,    LOCATION_GRACE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, locationNote,     LOCATION_NOTE)
+
     API_PROPERTY_T(int, voice,            VOICE)
+
     API_PROPERTY(position,                POSITION)
-    /**
-     * For chord symbols, chord symbol type, one of
-     * PluginAPI::PluginAPI::HarmonyType values.
-     * \since MuseScore 3.6
-     */
-    API_PROPERTY(harmonyType,             HARMONY_TYPE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(concertClefType,         CLEF_TYPE_CONCERT)
+    ///\since MuseScore 4.6
+    API_PROPERTY(transposingClefType,     CLEF_TYPE_TRANSPOSING)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, clefToBarlinePos, CLEF_TO_BARLINE_POS)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, isHeader,        IS_HEADER)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, concertKey,       KEY_CONCERT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, actualKey,        KEY)
+    ///\since MuseScore 4.6
+    API_PROPERTY(action,                  ACTION)
+    ///\since MuseScore 4.6
+    API_PROPERTY(minDistance,             MIN_DISTANCE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, arpeggioType,     ARPEGGIO_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, chordLineType,    CHORD_LINE_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, chordLineStraight, CHORD_LINE_STRAIGHT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, chordLineWavy,   CHORD_LINE_WAVY)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, tremoloType,      TREMOLO_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, tremoloStrokeStyle, TREMOLO_STYLE)
+    /// For chord symbols, chord symbol type, one of
+    /// PluginAPI::PluginAPI::HarmonyType values.
+    /// \since MuseScore 3.6
+    API_PROPERTY_T(int, harmonyType,      HARMONY_TYPE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, arpeggioSpan,     ARPEGGIO_SPAN)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, bendType,         BEND_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY(bendCurve,               BEND_CURVE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(QPointF, bendVertexOffset, BEND_VERTEX_OFF)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, bendShowHoldLine, BEND_SHOW_HOLD_LINE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, bendStartTimeFactor, BEND_START_TIME_FACTOR)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, bendEndTimeFactor, BEND_END_TIME_FACTOR)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, tremoloBarType,   TREMOLOBAR_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY(tremoloBarCurve,         TREMOLOBAR_CURVE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, startWithLongNames, START_WITH_LONG_NAMES)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, startWithMeasureOne, START_WITH_MEASURE_ONE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, firstSystemIndentation, FIRST_SYSTEM_INDENTATION)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(path,                    PATH)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, preferSharpFlat,  PREFER_SHARP_FLAT)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(playTechType,            PLAY_TECH_TYPE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(tempoChangeType,         TEMPO_CHANGE_TYPE)
+    ///\since MuseScore 4.6
+    API_PROPERTY(tempoEasingMethod,       TEMPO_EASING_METHOD)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, tempoChangeFactor, TEMPO_CHANGE_FACTOR)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, isDiagram,       HARP_IS_DIAGRAM)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, active,          ACTIVE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, fretPosition,     CAPO_FRET_POSITION)
+    ///\since MuseScore 4.6
+    API_PROPERTY(ignoredStrings,          CAPO_IGNORED_STRINGS)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, generateText,    CAPO_GENERATE_TEXT)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(tiePlacement,            TIE_PLACEMENT)
+    ///\since MuseScore 4.6
+    API_PROPERTY(minLength,               MIN_LENGTH)
+    ///\since MuseScore 4.6
+    API_PROPERTY(partialSpannerDirection, PARTIAL_SPANNER_DIRECTION)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, positionLinkedToMaster, POSITION_LINKED_TO_MASTER)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, appearanceLinkedToMaster, APPEARANCE_LINKED_TO_MASTER)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, textLinkedToMaster, TEXT_LINKED_TO_MASTER)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, excludeFromParts,  EXCLUDE_FROM_OTHER_PARTS)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, stringsCount,     STRINGTUNINGS_STRINGS_COUNT)
+    ///\since MuseScore 4.6
+    API_PROPERTY(preset,                  STRINGTUNINGS_PRESET)
+    ///\since MuseScore 4.6
+    API_PROPERTY(visibleStrings,          STRINGTUNINGS_VISIBLE_STRINGS)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY(scoreFont,               SCORE_FONT)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, symbolsSize,    SYMBOLS_SIZE)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(qreal, symbolAngle,    SYMBOL_ANGLE)
+
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, applyToAllStaves, APPLY_TO_ALL_STAVES)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, isCourtesy,      IS_COURTESY)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, excludeVerticalAlign, EXCLUDE_VERTICAL_ALIGN)
+
+    //  API_PROPERTY(end,                     END)
 
     qreal offsetX() const { return element()->offset().x() / element()->spatium(); }
     qreal offsetY() const { return element()->offset().y() / element()->spatium(); }
@@ -409,6 +678,7 @@ class EngravingItem : public apiv1::ScoreElement
     qreal posY() const { return element()->pos().y() / element()->spatium(); }
 
     QPointF pagePos() const { return PointF(element()->pagePos() / element()->spatium()).toQPointF(); }
+    QPointF canvasPos() const { return PointF(element()->canvasPos() / element()->spatium()).toQPointF(); }
 
     apiv1::EngravingItem* parent() const { return wrap(element()->parentItem()); }
     Staff* staff() { return wrap<Staff>(element()->staff()); }
@@ -416,6 +686,23 @@ class EngravingItem : public apiv1::ScoreElement
     QRectF bbox() const;
 
     int subtype() const { return element()->subtype(); }
+
+    /**
+    * If the element points upwards.
+    * Valid for: Chords, stems, beams, ties, slurs, guitar bends, tremolos, articulations
+    * \since MuseScore 4.6
+    */
+    Q_PROPERTY(bool up READ up)
+    bool up() const;
+    /**
+     * \brief Current tick for this element
+     * \returns Tick of this element, i.e. fraction of ticks from the beginning
+     * of the score to this element. Not valid for all elements.
+     * For the integer value, call \ref fraction.ticks
+     * \see \ref ticklength
+     * \since MuseScore 4.6
+     */
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ tick)
 
 public:
     /// \cond MS_INTERNAL
@@ -429,12 +716,23 @@ public:
     /// \}
     /// \endcond
 
+    /// All children for a given element. If \p all is true, children of children are included too.
+    /// \param all Whether to include children of children
+    /// \returns The list of child elements for a given element.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE QQmlListProperty<apiv1::EngravingItem> children(bool all = false);
+
+    /// Returns if an element has a given flag
+    Q_INVOKABLE bool flag(mu::engraving::ElementFlag f) { return element()->flag(f); }
+
     /// Create a copy of the element
     Q_INVOKABLE apiv1::EngravingItem* clone() const { return wrap(element()->clone(), Ownership::PLUGIN); }
 
     Q_INVOKABLE QString subtypeName() const { return element()->translatedSubtypeUserName().toQString(); }
     /// Deprecated: same as ScoreElement::name. Left for compatibility purposes.
     Q_INVOKABLE QString _name() const { return name(); }
+
+    FractionWrapper* tick() const;
 };
 
 //---------------------------------------------------------
@@ -447,10 +745,10 @@ class Note : public EngravingItem
     Q_OBJECT
     Q_PROPERTY(apiv1::EngravingItem * accidental READ accidental)
     Q_PROPERTY(mu::engraving::AccidentalType accidentalType READ accidentalType WRITE setAccidentalType)
-    /** List of dots attached to this note */
+    /// List of dots attached to this note
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> dots READ dots)
 //       Q_PROPERTY(int                            dotsCount         READ qmlDotsCount)
-    /** List of other elements attached to this note: fingerings, symbols, bends etc. */
+    /// List of other elements attached to this note: fingerings, symbols, bends etc.
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
     /// List of PlayEvents associated with this note.
     /// Important: You must call Score.createPlayEvents()
@@ -495,33 +793,40 @@ class Note : public EngravingItem
     /// \since MuseScore 3.2.1
     Q_PROPERTY(mu::engraving::NoteType noteType READ noteType)
 
-    /**
-     * MIDI pitch of this note
-     * \see \ref pitch
-     */
-    API_PROPERTY_T(int, pitch,                   PITCH)
-    /**
-     * Concert pitch of the note
-     * \see \ref tpc
-     */
+    /// MIDI pitch of this note
+    /// \see \ref pitch
+    API_PROPERTY_T(int, pitch,            PITCH)
+    /// Concert pitch of the note
+    /// \see \ref tpc
     API_PROPERTY_T(int, tpc1,             TPC1)
-    /**
-     * Transposing pitch of the note
-     * \see \ref tpc
-     */
+    /// Transposing pitch of the note
+    /// \see \ref tpc
     API_PROPERTY_T(int, tpc2,             TPC2)
-    /**
-     * Concert or transposing pitch of this note,
-     * as per current "Concert Pitch" setting value.
-     * \see \ref tpc
-     */
+    /// Concert or transposing pitch of this note,
+    /// as per current "Concert Pitch" setting value.
+    /// \see \ref tpc
     Q_PROPERTY(int tpc READ tpc WRITE setTpc)
 //       Q_PROPERTY(qreal                          tuning            READ tuning             WRITE undoSetTuning)
 //       Q_PROPERTY(mu::engraving::MScore::Direction          userDotPosition   READ userDotPosition    WRITE undoSetUserDotPosition)
 //       Q_PROPERTY(mu::engraving::DirectionH         userMirror        READ userMirror         WRITE undoSetUserMirror)
-    /** See PluginAPI::PluginAPI::NoteValueType */
+    /// See PluginAPI::PluginAPI::NoteValueType
     API_PROPERTY(veloType,                VELO_TYPE)
-    API_PROPERTY_T(int, userVelocity,       USER_VELOCITY)
+    API_PROPERTY_T(int,    userVelocity,  USER_VELOCITY)
+    API_PROPERTY_T(qreal,  tuning,        TUNING)
+
+    API_PROPERTY_T(int,    line,          LINE)
+    API_PROPERTY_T(bool,   fixed,         FIXED)
+    API_PROPERTY_T(int,    fixedLine,     FIXED_LINE)
+
+    API_PROPERTY_T(int, fret,             FRET)
+    API_PROPERTY_T(int, string,           STRING)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, dead,            DEAD)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, headHasParentheses, HEAD_HAS_PARENTHESES)
+    /// If the note is a trill cue note (used in ornaments and trills)
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool isTrillCueNote READ isTrillCueNote)
 
 public:
     /// \cond MS_INTERNAL
@@ -534,9 +839,10 @@ public:
     int tpc() const { return note()->tpc(); }
     void setTpc(int val);
 
-    apiv1::Tie* tieBack() const { return note()->tieBack() != nullptr ? tieWrap(note()->tieBack()) : nullptr; }
+    bool isTrillCueNote() { return note()->isTrillCueNote(); }
 
-    apiv1::Tie* tieForward() const { return note()->tieFor() != nullptr ? tieWrap(note()->tieFor()) : nullptr; }
+    apiv1::Tie* tieBack() const { return wrap<Tie>(note()->tieBack()); }
+    apiv1::Tie* tieForward() const { return wrap<Tie>(note()->tieFor()); }
 
     apiv1::Note* firstTiedNote() { return wrap<Note>(note()->firstTiedNote()); }
     apiv1::Note* lastTiedNote() { return wrap<Note>(note()->lastTiedNote()); }
@@ -585,31 +891,32 @@ class DurationElement : public EngravingItem
 {
     Q_OBJECT
 
-    /**
-    * Nominal duration of this element.
-    * The duration is represented as a fraction of whole note length.
-    */
-    API_PROPERTY_READ_ONLY(duration, DURATION)
+    /// Nominal duration of this element.
+    /// The duration is represented as a fraction of whole note length.
+    /// This property can be modified for chords and rests since MuseScore 4.6
+    Q_PROPERTY(apiv1::FractionWrapper * duration READ ticks WRITE changeCRlen)
 
-    /**
-    * Global duration of this element, taking into account ratio of
-    * parent tuplets if there are any.
-    * \since MuseScore 3.5
-    */
+    /// Global duration of this element, taking into account ratio of
+    /// parent tuplets if there are any.
+    /// \since MuseScore 3.5
     Q_PROPERTY(apiv1::FractionWrapper * globalDuration READ globalDuration)
 
-    /**
-    * Actual duration of this element, taking into account ratio of
-    * parent tuplets and local time signatures if there are any.
-    * \since MuseScore 3.5
-    */
+    /// Actual duration of this element, taking into account ratio of
+    /// parent tuplets and local time signatures if there are any.
+    /// \since MuseScore 3.5
     Q_PROPERTY(apiv1::FractionWrapper * actualDuration READ actualDuration)
 
-    /**
-    * Tuplet which this element belongs to. If there is no parent tuplet, returns null.
-    * \since MuseScore 3.5
-    */
+    /// Tuplet which this element belongs to. If there is no parent tuplet, returns null.
+    /// \since MuseScore 3.5
     Q_PROPERTY(apiv1::Tuplet * tuplet READ parentTuplet)
+
+    /// Outermost tuplet which this element belongs to. If there is no parent tuplet, returns null.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Tuplet * topTuplet READ topTuplet)
+
+    /// Measure which this element belongs to.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Measure * measure READ parentMeasure)
 
 public:
     /// \cond MS_INTERNAL
@@ -619,10 +926,15 @@ public:
     mu::engraving::DurationElement* durationElement() { return toDurationElement(e); }
     const mu::engraving::DurationElement* durationElement() const { return toDurationElement(e); }
 
+    FractionWrapper* ticks() const;
+    void changeCRlen(FractionWrapper* len);
     FractionWrapper* globalDuration() const;
     FractionWrapper* actualDuration() const;
 
     Tuplet* parentTuplet();
+    Tuplet* topTuplet() { return wrap<Tuplet>(durationElement()->topTuplet(), Ownership::SCORE); }
+
+    Measure* parentMeasure() { return wrap<Measure>(durationElement()->measure(), Ownership::SCORE); }
     /// \endcond
 };
 
@@ -634,25 +946,21 @@ class Tuplet : public DurationElement
 {
     Q_OBJECT
 
-    API_PROPERTY(numberType, NUMBER_TYPE)
-    API_PROPERTY(bracketType, BRACKET_TYPE)
+    API_PROPERTY_T(int, numberType, NUMBER_TYPE)
+    API_PROPERTY_T(int, bracketType, BRACKET_TYPE)
 
-    /** Actual number of notes of base nominal length in this tuplet. */
+    /// Actual number of notes of base nominal length in this tuplet.
     API_PROPERTY_READ_ONLY_T(int, actualNotes, ACTUAL_NOTES)
 
-    /**
-    * Number of "normal" notes of base nominal length which correspond
-    * to this tuplet's duration.
-    */
+    /// Number of "normal" notes of base nominal length which correspond
+    /// to this tuplet's duration.
     API_PROPERTY_READ_ONLY_T(int, normalNotes, NORMAL_NOTES)
 
-    API_PROPERTY(p1, P1)
-    API_PROPERTY(p2, P2)
+    API_PROPERTY_T(QPointF, p1, P1)
+    API_PROPERTY_T(QPointF, p2, P2)
 
-    /**
-    * List of elements which belong to this tuplet.
-    * \since MuseScore 3.5
-    */
+    /// List of elements which belong to this tuplet.
+    /// \since MuseScore 3.5
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
 
 public:
@@ -675,16 +983,30 @@ public:
 class ChordRest : public DurationElement
 {
     Q_OBJECT
-    /**
-     * Lyrics corresponding to this chord or rest, if any.
-     * Before 3.6 version this property was only available for \ref Chord objects.
-     */
+    /// Lyrics corresponding to this chord or rest, if any.
+    /// Before 3.6 version this property was only available for \ref Chord objects.
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> lyrics READ lyrics)
-    /**
-     * Beam which covers this chord/rest, if such exists.
-     * \since MuseScore 3.6
-     */
+    /// Beam which covers this chord/rest, if such exists.
+    /// \since MuseScore 3.6
     Q_PROPERTY(apiv1::EngravingItem * beam READ beam)
+    /// Whether this element is a full measure rest.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool isFullMeasureRest READ isFullMeasureRest)
+
+    API_PROPERTY_T(int, staffMove,        STAFF_MOVE)
+    API_PROPERTY(durationTypeWithDots,    DURATION_TYPE_WITH_DOTS)
+    API_PROPERTY(beamMode,                BEAM_MODE)
+
+    /// The actual beam mode for this element, as determined by
+    /// user settings and the current time signature.
+    /// \param beamRests Whether to beam over rests
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int actualBeamMode(bool beamRests = false);
+
+    /// List of elements attached to this chord or rest,
+    /// such as fermatas or chord lines.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
 
 public:
     /// \cond MS_INTERNAL
@@ -692,9 +1014,14 @@ public:
         : DurationElement(c, own) {}
 
     mu::engraving::ChordRest* chordRest() { return toChordRest(e); }
+    const mu::engraving::ChordRest* chordRest() const { return toChordRest(e); }
 
     QQmlListProperty<EngravingItem> lyrics() { return wrapContainerProperty<EngravingItem>(this, chordRest()->lyrics()); }   // TODO: special type for Lyrics?
     EngravingItem* beam() { return wrap(chordRest()->beam()); }
+
+    bool isFullMeasureRest() { return chordRest()->isFullMeasureRest(); }
+
+    QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, chordRest()->el()); }
     /// \endcond
 };
 
@@ -708,6 +1035,12 @@ class Chord : public ChordRest
     Q_OBJECT
     /// List of grace notes (grace chords) belonging to this chord.
     Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotes READ graceNotes)
+    /// List of grace notes (grace chords) placed before this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotesBefore READ graceNotesBefore)
+    /// List of grace notes (grace chords) placed after this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::Chord> graceNotesAfter READ graceNotesAfter)
     /// List of notes belonging to this chord.
     Q_PROPERTY(QQmlListProperty<apiv1::Note> notes READ notes)
     /// List of articulations belonging to this chord.
@@ -727,6 +1060,39 @@ class Chord : public ChordRest
     /// \since MuseScore 3.3
     Q_PROPERTY(mu::engraving::PlayEventType playEventType READ playEventType WRITE setPlayEventType)
 
+    API_PROPERTY(noStem,                  NO_STEM)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, showStemSlash,   SHOW_STEM_SLASH)
+    ///\since MuseScore 4.6
+    API_PROPERTY(combineVoice,            COMBINE_VOICE)
+    /// If the note is a trill cue note (used in ornaments and trills)
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool isTrillCueNote READ isTrillCueNote)
+    /// The top note in this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Note * upNote READ upNote)
+    /// The bottom note in this chord.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Note * downNote READ downNote)
+    /// The arpeggio attached to this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * arpeggio READ arpeggio)
+    /// The cross-voice arpeggio for this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * spanArpeggio READ spanArpeggio)
+    /// The single-chord tremolo for this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * tremoloSingleChord READ tremoloTwoChord)
+    /// The two-chord tremolo for this chord, if it exists.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::EngravingItem * tremoloTwoChord READ tremoloSingleChord)
+    /// List of spanners (trill segments, slurs) starting on this chord.
+    /// \since MuseScore 4.6
+    // Q_PROPERTY(QQmlListProperty<apiv1::Spanner> startingSpanners READ startingSpanners)
+    /// List of spanners (trill segments, slurs) ending on this chord.
+    /// \since MuseScore 4.6
+    // Q_PROPERTY(QQmlListProperty<apiv1::Spanner> endingSpanners READ endingSpanners)
+
 public:
     /// \cond MS_INTERNAL
     Chord(mu::engraving::Chord* c = nullptr, Ownership own = Ownership::PLUGIN)
@@ -736,6 +1102,8 @@ public:
     const mu::engraving::Chord* chord() const { return toChord(e); }
 
     QQmlListProperty<Chord> graceNotes() { return wrapContainerProperty<Chord>(this, chord()->graceNotes()); }
+    QQmlListProperty<Chord> graceNotesBefore() { return wrapContainerProperty<Chord>(this, chord()->graceNotesBefore()); }
+    QQmlListProperty<Chord> graceNotesAfter() { return wrapContainerProperty<Chord>(this, chord()->graceNotesAfter()); }
     QQmlListProperty<Note> notes() { return wrapContainerProperty<Note>(this, chord()->notes()); }
     QQmlListProperty<EngravingItem> articulations() { return wrapContainerProperty<EngravingItem>(this, chord()->articulations()); }
     EngravingItem* stem() { return wrap(chord()->stem()); }
@@ -744,6 +1112,25 @@ public:
     mu::engraving::NoteType noteType() { return chord()->noteType(); }
     mu::engraving::PlayEventType playEventType() { return chord()->playEventType(); }
     void setPlayEventType(mu::engraving::PlayEventType v);
+
+    bool isTrillCueNote() { return chord()->isTrillCueNote(); }
+
+    Note* upNote() { return wrap<Note>(chord()->upNote()); }
+    Note* downNote() { return wrap<Note>(chord()->downNote()); }
+    EngravingItem* arpeggio() { return wrap(chord()->arpeggio()); }
+    EngravingItem* spanArpeggio() { return wrap(chord()->spanArpeggio()); }
+    EngravingItem* tremoloSingleChord() { return wrap(chord()->tremoloTwoChord()); }
+    EngravingItem* tremoloTwoChord() { return wrap(chord()->tremoloSingleChord()); }
+
+    // QQmlListProperty<Spanner> startingSpanners()
+    // {
+    //     return wrapContainerProperty<Spanner>(this, chord()->startingSpanners());
+    // }
+
+    // QQmlListProperty<Spanner> endingSpanners()
+    // {
+    //     return wrapContainerProperty<Spanner>(this, chord()->endingSpanners());
+    // }
 
     static void addInternal(mu::engraving::Chord* chord, mu::engraving::EngravingItem* el);
     /// \endcond
@@ -764,10 +1151,8 @@ public:
 class Segment : public EngravingItem
 {
     Q_OBJECT
-    /**
-     * The list of annotations. Articulations, staff/system/expression
-     * text are examples of what is considered to be segment annotations.
-     */
+    /// The list of annotations. Articulations, staff/system/expression
+    /// text are examples of what is considered to be segment annotations.
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> annotations READ annotations)
     /// \brief Next segment in this measure
     /// \returns The next segment in this segment's measure.
@@ -789,15 +1174,20 @@ class Segment : public EngravingItem
     // Allowing plugins to change random segments types doesn't seem to be a
     // good idea though.
     /// Type of this segment, one of PluginAPI::PluginAPI::Segment values.
-    Q_PROPERTY(mu::engraving::SegmentType segmentType READ segmentType)
-    /**
-     * \brief Current tick for this segment
-     * \returns Tick of this segment, i.e. number of ticks from the beginning
-     * of the score to this segment.
-     * \see \ref ticklength
-     */
+    Q_PROPERTY(int segmentType READ segmentType)
+    /// \brief Current tick for this segment
+    /// \returns Tick of this segment, i.e. number of ticks from the beginning
+    /// of the score to this segment.
+    /// \see \ref ticklength
     Q_PROPERTY(int tick READ tick)                               // TODO: revise engraving (or this API):
                                                                  // Pid::TICK is relative or absolute in different contexts
+    /// \brief Current tick fraction for this element
+    /// \returns Tick of this element, i.e. fraction of ticks from the beginning
+    /// of the score to this element. Not valid for all elements.
+    /// For the integer value, call \ref fraction.ticks
+    /// \see \ref ticklength
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ fraction)
 
 public:
     /// \cond MS_INTERNAL
@@ -808,8 +1198,9 @@ public:
     const mu::engraving::Segment* segment() const { return toSegment(e); }
 
     int tick() const { return segment()->tick().ticks(); }
+    FractionWrapper* fraction() const;
 
-    mu::engraving::SegmentType segmentType() const { return segment()->segmentType(); }
+    int segmentType() const { return int(segment()->segmentType()); }
 
     Segment* nextInScore() { return wrap<Segment>(segment()->next1()); }
     Segment* nextInMeasure() { return wrap<Segment>(segment()->next()); }
@@ -818,7 +1209,7 @@ public:
     QQmlListProperty<EngravingItem> annotations() { return wrapContainerProperty<EngravingItem>(this, segment()->annotations()); }
     /// \endcond
 
-    /// \return EngravingItem at the given \p track (null if there is no such an element)
+    /// \returns EngravingItem at the given \p track (null if there is no such an element)
     /// \param track track number
     Q_INVOKABLE apiv1::EngravingItem* elementAt(int track);
 };
@@ -828,7 +1219,61 @@ public:
 //    Measure wrapper
 //---------------------------------------------------------
 
-class Measure : public EngravingItem
+class MeasureBase : public EngravingItem
+{
+    Q_OBJECT
+
+    /// \brief Measure number, counting from 1.
+    /// Number of this measure in the score counting from 1, i.e.
+    /// for the first measure its \p no value will be equal to 1.
+    /// User-visible measure number can be calculated as
+    /// \code
+    /// measure.no + measure.noOffset
+    /// \endcode
+    /// where \p measure is the relevant \ref Measure object.
+    /// \since MuseScore 4.6
+    /// \see ScoreElement::noOffset
+    Q_PROPERTY(int no READ no)
+    /// \brief Current tick for this measure
+    /// \returns Tick of this measure, i.e. number of ticks from the beginning
+    /// of the score to this measure.
+    /// \see \ref ticklength
+    Q_PROPERTY(apiv1::FractionWrapper * fraction READ tick)
+    /// List of measure-related elements: layout breaks, jump/repeat markings etc.
+    /// For frames (since MuseScore 4.6), contains their text elements.
+    /// \since MuseScore 3.3
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
+
+public:
+    /// \cond MS_INTERNAL
+    MeasureBase(mu::engraving::MeasureBase* mb = nullptr, Ownership own = Ownership::SCORE)
+        : EngravingItem(mb, own) {}
+
+    mu::engraving::MeasureBase* measureBase() { return toMeasureBase(e); }
+    const mu::engraving::MeasureBase* measureBase() const { return toMeasureBase(e); }
+
+    int no() { return measureBase()->no(); }
+
+    FractionWrapper* tick() const;
+
+    QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measureBase()->el()); }
+
+    static void addInternal(mu::engraving::MeasureBase* measureBase, mu::engraving::EngravingItem* el);
+    /// \endcond
+
+    /// Add to a MeasureBases's elements.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void add(apiv1::EngravingItem* wrapped);
+    /// Remove a MeasureBase's element.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE void remove(apiv1::EngravingItem* wrapped);
+};
+//---------------------------------------------------------
+//   Measure
+//    Measure wrapper
+//---------------------------------------------------------
+
+class Measure : public MeasureBase
 {
     Q_OBJECT
     /// The first segment of this measure
@@ -863,10 +1308,30 @@ class Measure : public EngravingItem
     /// \since MuseScore 3.3
     Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> elements READ elements)
 
+    API_PROPERTY(timesigNominal,          TIMESIG_NOMINAL)
+    API_PROPERTY(timesigActual,           TIMESIG_ACTUAL)
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(int, measureNumberMode, MEASURE_NUMBER_MODE)
+    API_PROPERTY_T(bool, breakMmr,        BREAK_MMR)
+    API_PROPERTY_T(int, repeatCount,      REPEAT_COUNT)
+    API_PROPERTY_T(qreal, userStretch,    USER_STRETCH)
+
+    /// Up spacer for a given staff.
+    /// \param staffIdx staff to retrieve the spacer from
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::EngravingItem* vspacerUp(int staffIdx);
+    /// Down spacer for a given staff.
+    /// \param staffIdx staff to retrieve the spacer from
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::EngravingItem* vspacerDown(int staffIdx);
+    /// List of segments in the measure.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::Segment> segments READ segments)
+
 public:
     /// \cond MS_INTERNAL
     Measure(mu::engraving::Measure* m = nullptr, Ownership own = Ownership::SCORE)
-        : EngravingItem(m, own) {}
+        : MeasureBase(m, own) {}
 
     mu::engraving::Measure* measure() { return toMeasure(e); }
     const mu::engraving::Measure* measure() const { return toMeasure(e); }
@@ -880,7 +1345,60 @@ public:
     Measure* prevMeasureMM() { return wrap<Measure>(measure()->prevMeasureMM(), Ownership::SCORE); }
     Measure* nextMeasureMM() { return wrap<Measure>(measure()->nextMeasureMM(), Ownership::SCORE); }
 
-    QQmlListProperty<EngravingItem> elements() { return wrapContainerProperty<EngravingItem>(this, measure()->el()); }
+    QQmlListProperty<Segment> segments() { return wrapContainerProperty<Segment>(this, measure()->segments()); }
+    /// \endcond
+};
+
+//---------------------------------------------------------
+//   System
+///    \since MuseScore 4.6
+//---------------------------------------------------------
+
+class System : public EngravingItem
+{
+    Q_OBJECT
+    /// List of measures and frames in this system.
+    Q_PROPERTY(QQmlListProperty<apiv1::MeasureBase> measures READ measures)
+    /// The first measure of this system
+    Q_PROPERTY(apiv1::Measure * firstMeasure READ firstMeasure)
+    /// The last measure of this system
+    Q_PROPERTY(apiv1::Measure * lastMeasure READ lastMeasure)
+    /// Indicates whether this system is locked
+    Q_PROPERTY(bool isLocked READ isLocked WRITE setIsLocked)
+    /// Indicates whether this system has a page break
+    Q_PROPERTY(bool pageBreak READ pageBreak)
+    /// The left system divider for this system, if it exists.
+    Q_PROPERTY(apiv1::EngravingItem * systemDividerLeft READ systemDividerLeft)
+    /// The right system divider for this system, if it exists.
+    Q_PROPERTY(apiv1::EngravingItem * systemDividerRight READ systemDividerRight)
+    /// Bounding box for a given staff.
+    /// \param staffIdx staff number
+    Q_INVOKABLE QRectF bbox(int staffIdx);
+    /// Y position of the bbox relative to the top staff line.
+    /// \param staffIdx staff number
+    Q_INVOKABLE qreal yOffset(int staffIdx);
+    /// Whether the given staff is visible for this system.
+    /// This can differ from \ref Staff.show (e.g. due to 'hide when empty' rules).
+    /// \param staffIdx staff number
+    Q_INVOKABLE bool show(int staffIdx);
+
+public:
+    /// \cond MS_INTERNAL
+    System(mu::engraving::System* sys = nullptr, Ownership own = Ownership::SCORE)
+        : EngravingItem(sys, own) {}
+
+    mu::engraving::System* system() { return toSystem(e); }
+    const mu::engraving::System* system() const { return toSystem(e); }
+
+    QQmlListProperty<MeasureBase> measures() { return wrapContainerProperty<MeasureBase>(this, system()->measures()); }
+
+    Measure* firstMeasure() { return wrap<Measure>(system()->firstMeasure(), Ownership::SCORE); }
+    Measure* lastMeasure() { return wrap<Measure>(system()->lastMeasure(), Ownership::SCORE); }
+    bool isLocked() { return system()->isLocked(); }
+    void setIsLocked(bool locked);
+    bool pageBreak() { return system()->pageBreak(); }
+    EngravingItem* systemDividerLeft() { return wrap<EngravingItem>(system()->systemDividerLeft(), Ownership::SCORE); }
+    EngravingItem* systemDividerRight() { return wrap<EngravingItem>(system()->systemDividerRight(), Ownership::SCORE); }
     /// \endcond
 };
 
@@ -891,18 +1409,16 @@ public:
 class Page : public EngravingItem
 {
     Q_OBJECT
-    /**
-     * \brief Page number, counting from 0.
-     * Number of this page in the score counting from 0, i.e.
-     * for the first page its \p pagenumber value will be equal to 0.
-     * User-visible page number can be calculated as
-     * \code
-     * page.pagenumber + 1 + score.pageNumberOffset
-     * \endcode
-     * where \p score is the relevant \ref Score object.
-     * \since MuseScore 3.5
-     * \see Score::pageNumberOffset
-     */
+    /// \brief Page number, counting from 0.
+    /// Number of this page in the score counting from 0, i.e.
+    /// for the first page its \p pagenumber value will be equal to 0.
+    /// User-visible page number can be calculated as
+    /// \code
+    /// page.pagenumber + 1 + score.pageNumberOffset
+    /// \endcode
+    /// where \p score is the relevant \ref Score object.
+    /// \since MuseScore 3.5
+    /// \see Score::pageNumberOffset
     Q_PROPERTY(int pagenumber READ pagenumber)
 
 public:
@@ -914,6 +1430,38 @@ public:
     const mu::engraving::Page* page() const { return toPage(e); }
 
     int pagenumber() const;
+
+    QQmlListProperty<System> systems() { return wrapContainerProperty<System>(this, page()->systems()); }
+    /// \endcond
+};
+
+//---------------------------------------------------------
+//   Ornament
+///    \since MuseScore 4.6
+//---------------------------------------------------------
+
+class Ornament : public EngravingItem
+{
+    Q_OBJECT
+    Q_PROPERTY(bool hasIntervalAbove READ hasIntervalAbove)
+    Q_PROPERTY(bool hasIntervalBelow READ hasIntervalBelow)
+    Q_PROPERTY(bool showCueNote READ showCueNote)
+    Q_PROPERTY(apiv1::EngravingItem * accidentalAbove READ accidentalAbove)
+    Q_PROPERTY(apiv1::EngravingItem * accidentalBelow READ accidentalBelow)
+
+public:
+    /// \cond MS_INTERNAL
+    Ornament(mu::engraving::Ornament* o = nullptr, Ownership own = Ownership::SCORE)
+        : EngravingItem(o, own) {}
+
+    mu::engraving::Ornament* ornament() { return toOrnament(e); }
+    const mu::engraving::Ornament* ornament() const { return toOrnament(e); }
+
+    bool hasIntervalAbove() const { return ornament()->hasIntervalAbove(); }
+    bool hasIntervalBelow() const { return ornament()->hasIntervalBelow(); }
+    bool showCueNote() { return ornament()->showCueNote(); }
+    EngravingItem* accidentalAbove() const { return wrap<EngravingItem>(ornament()->accidentalAbove()); }
+    EngravingItem* accidentalBelow() const { return wrap<EngravingItem>(ornament()->accidentalBelow()); }
     /// \endcond
 };
 
@@ -928,11 +1476,9 @@ class Staff : public ScoreElement
 
     API_PROPERTY_T(bool, small,           SMALL)
     API_PROPERTY_T(qreal, mag,            MAG)
-    /**
-     * Staff color. See https://doc.qt.io/qt-5/qml-color.html
-     * for the reference on color type in QML.
-     */
-    API_PROPERTY_T(QColor, color,         COLOR)
+    /// Staff color. See https://doc.qt.io/qt-5/qml-color.html
+    /// for the reference on color type in QML.
+    API_PROPERTY_T(QColor, color,         STAFF_COLOR)
 
     /** Whether voice 1 participates in playback. */
     API_PROPERTY_T(bool, playbackVoice1,  PLAYBACK_VOICE1)
@@ -947,17 +1493,51 @@ class Staff : public ScoreElement
     API_PROPERTY_T(int, staffBarlineSpanFrom, STAFF_BARLINE_SPAN_FROM)
     API_PROPERTY_T(int, staffBarlineSpanTo,   STAFF_BARLINE_SPAN_TO)
 
-    /**
-     * User-defined amount of additional space before this staff.
-     * It is recommended to consider adding a spacer instead as it
-     * allows adjusting staff spacing locally as opposed to this
-     * property.
-     * \see \ref EngravingItem.space
-     */
+    /// Controls whether the staff lines are visible.
+    ///\since MuseScore 4.6
+    API_PROPERTY_T(bool, staffInvisible,  STAFF_INVISIBLE)
+
+    /// User-defined amount of additional space before this staff.
+    /// It is recommended to consider adding a spacer instead as it
+    /// allows adjusting staff spacing locally as opposed to this
+    /// property.
+    /// \see \ref EngravingItem.space
     API_PROPERTY_T(qreal, staffUserdist,  STAFF_USERDIST)
 
-    /** Part which this staff belongs to. */
+    /// Part which this staff belongs to.
     Q_PROPERTY(apiv1::Part * part READ part);
+    /// List of bracket items for this staff.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> brackets READ brackets)
+
+    /// Whether the staff is visible.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool show READ show)
+    /// Whether this is a cutaway staff, which hides itself
+    /// mid-system when measures are empty.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool cutaway READ cutaway)
+    /// Whether to not hide if the system is empty.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool showIfEmpty READ showIfEmpty)
+    /// Whether to display the system barline (leftmost barline).
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool hideSystemBarLine READ hideSystemBarLine)
+    /// Whether to hide this staff when empty (on a per-system basis).
+    /// One of PluginAPI::PluginAPI::HideMode values.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(int hideWhenEmpty READ hideWhenEmpty)
+    /// Whether to merge matching rests across voices.
+    /// One of PluginAPI::PluginAPI::AutoOnOff values.
+    /// If Auto, determined by the global style setting \p mergeMatchingRests .
+    /// \since MuseScore 4.6
+    Q_PROPERTY(int mergeMatchingRests READ mergeMatchingRests)
+    /// Whether matching rests are to be merged.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool shouldMergeMatchingRests READ shouldMergeMatchingRests)
+    /// The primary (not linked) staff of this staff.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(apiv1::Staff * primaryStaff READ primaryStaff)
 
 public:
     /// \cond MS_INTERNAL
@@ -967,10 +1547,243 @@ public:
     mu::engraving::Staff* staff() { return toStaff(e); }
     const mu::engraving::Staff* staff() const { return toStaff(e); }
 
+    QQmlListProperty<EngravingItem> brackets() { return wrapContainerProperty<EngravingItem>(this, staff()->brackets()); }
+
     Part* part();
+    bool show() { return staff()->show(); }
+    bool cutaway() { return staff()->cutaway(); }
+    bool showIfEmpty() { return staff()->showIfEmpty(); }
+    bool hideSystemBarLine() { return staff()->hideSystemBarLine(); }
+    int hideWhenEmpty() { return int(staff()->hideWhenEmpty()); }
+    int mergeMatchingRests() { return int(staff()->mergeMatchingRests()); }
+    bool shouldMergeMatchingRests() { return staff()->shouldMergeMatchingRests(); }
+    // std::list<Staff*> staffList();
+    Staff* primaryStaff() { return wrap<Staff>(staff()->primaryStaff()); }
+    /// \endcond
+
+    /// The current timestretch factor at a given tick in the score, i.e. the
+    /// ratio of the local time signature over the global time signature.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::FractionWrapper* timeStretch(apiv1::FractionWrapper* tick);
+    /// The currently active time signature at a given tick in the score.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE EngravingItem* timeSig(apiv1::FractionWrapper* tick);
+    /// The current written key at a given tick in the score, one of
+    /// PluginAPI::PLuginAPI::Key values.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \see PluginAPI::PLuginAPI::Key
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int key(apiv1::FractionWrapper* tick);
+    /// The transposition at a given tick in the score, active if the
+    /// score is not in concert pitch.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \see PluginAPI::IntervalWrapper
+    /// \since MuseScore 4.6
+    Q_INVOKABLE apiv1::IntervalWrapper* transpose(apiv1::FractionWrapper* tick);
+
+    /// The swing settings at a given tick.
+    /// \returns An object with the following fields:
+    /// - \p swingUnit - raw tick length value of the swing unit
+    /// - \p swingRatio - value of the ratio, percentage.
+    /// - \p isOn - whether swing is active.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE QVariantMap swing(apiv1::FractionWrapper* tick);
+    /// The capo settings at a given tick.
+    /// \returns An object with the following fields:
+    /// - \p active - whether there is a capo active.
+    /// - \p fretPosition - the fret of the capo
+    /// - \p ignoredStrings - list of strings not affected by the capo.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE QVariantMap capo(apiv1::FractionWrapper* tick);
+
+    /// Whether the notes at a given tick are stemless
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE bool stemless(apiv1::FractionWrapper* tick);
+    /// The staff height at a given tick in spatium units.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE qreal staffHeight(apiv1::FractionWrapper* tick);
+    // StaffType helper functions
+    /// Whether the staff is a pitched staff at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE bool isPitchedStaff(apiv1::FractionWrapper* tick);
+    /// Whether the staff is a tab staff at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE bool isTabStaff(apiv1::FractionWrapper* tick);
+    /// Whether the staff is a drum staff at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE bool isDrumStaff(apiv1::FractionWrapper* tick);
+    /// The number of staff lines at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int lines(apiv1::FractionWrapper* tick);
+    /// The distance between staff lines at a given tick, in spatium units.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE qreal lineDistance(apiv1::FractionWrapper* tick);
+    /// Whether the staff lines are invisible at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE bool isLinesInvisible(apiv1::FractionWrapper* tick);
+    /// The middle line of this staff at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int middleLine(apiv1::FractionWrapper* tick);
+    /// The bottom line of this staff at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int bottomLine(apiv1::FractionWrapper* tick);
+    /// The staff scaling at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE qreal staffMag(apiv1::FractionWrapper* tick);
+    /// The spatium value at a given tick.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE qreal spatium(apiv1::FractionWrapper* tick);
+    /// The pitch offset value at a given tick, determined by active ottavas.
+    /// \param tick Tick location in the score, as a fraction.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE int pitchOffset(apiv1::FractionWrapper* tick);
+
+    /// For staves in part scores: Whether the given voice
+    /// is displayed in the score.
+    /// \param voice The voice number (0-3) to check.
+    /// \since MuseScore 4.6
+    Q_INVOKABLE bool isVoiceVisible(int voice);
+};
+
+//---------------------------------------------------------
+//   SpannerSegment
+///  Provides access to internal mu::engraving::SpannerSegment objects.
+///  \since MuseScore 4.6
+//---------------------------------------------------------
+
+class SpannerSegment : public EngravingItem
+{
+    Q_OBJECT
+    /// The spanner object of this spanner segment.
+    /// \see PluginAPI::Spanner
+    Q_PROPERTY(apiv1::Spanner * spanner READ spanner)
+    /// The spanner segment type of this spanner segment,
+    /// one of PluginAPI::PluginAPI::SpannerSegmentType values.
+    Q_PROPERTY(int spannerSegmentType READ spannerSegmentType)
+    /// Position of the spanner segment's end part,
+    /// including manual offset through \ref userOff2.
+    /// \see EngravingItem::userOff2
+    Q_PROPERTY(QPointF pos2 READ pos2)
+
+    /// \cond MS_INTERNAL
+
+public:
+    SpannerSegment(mu::engraving::SpannerSegment* spannerSegment, Ownership own = Ownership::PLUGIN)
+        : EngravingItem(spannerSegment, own) {}
+
+    mu::engraving::SpannerSegment* spannerSegment() { return toSpannerSegment(e); }
+    const mu::engraving::SpannerSegment* spannerSegment() const { return toSpannerSegment(e); }
+
+    Spanner* spanner() { return wrap<Spanner>(spannerSegment()->spanner()); }
+    int spannerSegmentType() { return int(spannerSegment()->spannerSegmentType()); }
+    QPointF pos2() const { return PointF(spannerSegment()->pos2() / spannerSegment()->spatium()).toQPointF(); }
+
     /// \endcond
 };
 
+//---------------------------------------------------------
+//   Spanner
+///  Provides access to internal mu::engraving::Spanner objects.
+///  \since MuseScore 4.6
+//---------------------------------------------------------
+
+class Spanner : public EngravingItem
+{
+    Q_OBJECT
+    /// The starting element of the spanner.
+    Q_PROPERTY(apiv1::EngravingItem * startElement READ startElement)
+    /// The ending note of the tie.
+    Q_PROPERTY(apiv1::EngravingItem * endElement READ endElement)
+    /// List of spanner segments belonging to this spanner.
+    Q_PROPERTY(QQmlListProperty<apiv1::SpannerSegment> spannerSegments READ spannerSegments)
+
+    /// \cond MS_INTERNAL
+
+public:
+    Spanner(mu::engraving::Spanner* spanner, Ownership own = Ownership::PLUGIN)
+        : EngravingItem(spanner, own) {}
+
+    mu::engraving::Spanner* spanner() { return toSpanner(e); }
+    const mu::engraving::Spanner* spanner() const { return toSpanner(e); }
+
+    EngravingItem* startElement() const { return wrap(spanner()->startElement()); }
+    EngravingItem* endElement() const { return wrap(spanner()->startElement()); }
+
+    QQmlListProperty<SpannerSegment> spannerSegments()
+    {
+        return wrapContainerProperty<SpannerSegment>(this, spanner()->spannerSegments());
+    }
+
+    /// \endcond
+};
+
+//---------------------------------------------------------
+//   Tie
+///  Provides access to internal mu::engraving::Tie objects.
+///  \since MuseScore 3.3
+//---------------------------------------------------------
+
+class Tie : public Spanner
+{
+    Q_OBJECT
+    /// The starting note of the tie.
+    Q_PROPERTY(apiv1::Note * startNote READ startNote)
+    /// The ending note of the tie.
+    Q_PROPERTY(apiv1::Note * endNote READ endNote)
+    /// Whether the placement is inside.
+    /// \since MuseScore 4.6
+    Q_PROPERTY(bool isInside READ isInside)
+
+    /// \cond MS_INTERNAL
+
+public:
+    Tie(mu::engraving::Tie* tie, Ownership own = Ownership::PLUGIN)
+        : Spanner(tie, own) {}
+
+    mu::engraving::Tie* tie() { return toTie(e); }
+    const mu::engraving::Tie* tie() const { return toTie(e); }
+
+    Note* startNote() const { return wrap<Note>(tie()->startNote()); }
+    Note* endNote() const { return wrap<Note>(tie()->startNote()); }
+    bool isInside() const { return tie()->isInside(); }
+
+    /// \endcond
+};
+
+class QmlChildrenListAccess : public QQmlListProperty<EngravingItem>
+{
+public:
+    QmlChildrenListAccess(QObject* obj, engraving::EngravingItemList& container)
+        : QQmlListProperty<EngravingItem>(obj, &container, &count, &at) {}
+
+    static qsizetype count(QQmlListProperty<EngravingItem>* l) { return static_cast<engraving::EngravingItemList*>(l->data)->size(); }
+    static EngravingItem* at(QQmlListProperty<EngravingItem>* l, qsizetype i)
+    {
+        return wrap(static_cast<engraving::EngravingItemList*>(l->data)->at(i), Ownership::SCORE);
+    }
+};
+
+/** \cond PLUGIN_API \private \endcond */
+inline QmlChildrenListAccess wrapChildrenContainerProperty(QObject* obj, engraving::EngravingItemList& c)
+{
+    return QmlChildrenListAccess(obj, c);
+}
 #undef API_PROPERTY
 #undef API_PROPERTY_T
 #undef API_PROPERTY_READ_ONLY
