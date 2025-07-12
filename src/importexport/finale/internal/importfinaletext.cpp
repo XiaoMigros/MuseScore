@@ -69,7 +69,7 @@ static const std::vector<std::string> kEnigmaTags = {
 String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, bool isHeaderOrFooter)
 {
     std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-    std::string rawString = pageTextBlock->getRawTextBlock()->text;
+    std::string rawString = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
     String endString;
     std::shared_ptr<FontInfo> prevFont;
     FontStyle currFontStyle = FontStyle::Normal; // keep track of this to avoid badly nested tags
@@ -270,7 +270,7 @@ void FinaleParser::importTexts()
     for (std::shared_ptr<texts::FileInfoText> fileInfoText : fileInfoTexts) {
         String metaTag = FinaleTConv::metaTagFromFileInfo(fileInfoText->getTextType());
         std::shared_ptr<others::TextBlock> fileInfoTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, Cmper(fileInfoText->getTextType()));
-        std::string fileInfoValue = fileInfoTextBlock ? fileInfoTextBlock->getText(m_currentMusxPartId, /*trimTags*/ true, musx::util::EnigmaString::AccidentalStyle::Unicode) : std::string();
+        std::string fileInfoValue = fileInfoTextBlock ? fileInfoTextBlock->getRawTextCtx(m_currentMusxPartId).getText(/*trimTags*/ true, musx::util::EnigmaString::AccidentalStyle::Unicode) : std::string();
         if (!metaTag.empty() && !fileInfoValue.empty()) {
             m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
         }
@@ -311,7 +311,7 @@ void FinaleParser::importTexts()
     // gather texts by position
     for (std::shared_ptr<others::PageTextAssign> pageTextAssign : pageTextAssignList) {
         std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-        std::string rawText = pageTextBlock->getRawTextBlock()->text;
+        std::string rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
 
         // if text is not at top or bottom, invisible,
         // not recurring, or not on page 1, don't import as hf
@@ -333,7 +333,7 @@ void FinaleParser::importTexts()
         /// @todo parse page number / part name except on first page ($p, $i). If not that, set to false
         if (pageTextAssign->startPage == 2 && pageTextAssign->endPage == 0) {
             std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-            std::string rawText = pageTextBlock->getRawTextBlock()->text;
+            std::string rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
             String endString;
             auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles&) -> bool {
                 endString.append(String::fromStdString(nextChunk));
