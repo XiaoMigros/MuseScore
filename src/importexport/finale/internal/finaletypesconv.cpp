@@ -1087,7 +1087,7 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
         { TextType::Title,       u"workTitle" },
         { TextType::Composer,    u"composer" },
         { TextType::Copyright,   u"copyright" },
-        { TextType::Description, u"description" }, // not native
+        { TextType::Description, u"description" }, // created by Finale importer
         { TextType::Lyricist,    u"lyricist" },
         { TextType::Arranger,    u"arranger" },
         { TextType::Subtitle,    u"subtitle" },
@@ -1101,7 +1101,7 @@ String FinaleTConv::metaTagFromTextComponent(const std::string& component)
         { "title",       u"workTitle" },
         { "composer",    u"composer" },
         { "copyright",   u"copyright" },
-        { "description", u"description" }, // not native
+        { "description", u"description" }, // created by Finale importer
         { "lyricist",    u"lyricist" },
         { "arranger",    u"arranger" },
         { "subtitle",    u"subtitle" },

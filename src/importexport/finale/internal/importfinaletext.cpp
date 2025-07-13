@@ -53,6 +53,10 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
+/// @todo Instead of hard-coding page 1 and page 2, we need to find the first page in the Finale file with music on it
+/// and use that as the first page. At least, that is my impression. How to handle blank pages in MuseScore is an open question.
+/// - RGP
+
 static const std::vector<std::tuple<int, String, FontStyle> > fontStyleMapper = {
     // raw finale value, musescore text tag, musescore fontstyle
     { 1,  u"b", FontStyle::Bold },
@@ -66,10 +70,10 @@ static const std::vector<std::string> kEnigmaTags = {
     "subtitle, lyricist, description",
 };
 
-bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, uint16_t page)
+bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, PageCmper page)
 {
-    const PageCmper startPageNum = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
-    const PageCmper endPageNum = pageTextAssign->calcEndPageNumber(m_currentMusxPartId); // calcEndPageNumber handles case when endPage is zero
+    const std::optional<PageCmper> startPageNum = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
+    const std::optional<PageCmper> endPageNum = pageTextAssign->calcEndPageNumber(m_currentMusxPartId); // calcEndPageNumber handles case when endPage is zero
     return (startPageNum == page && endPageNum == page);
 };
 
@@ -180,13 +184,9 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
         } else if (parsedCommand[0] == "cprsym") {
             return String(u"\u00A9").toStdString();
         } else if (parsedCommand[0] == "partname") {
-            /// @todo it may make more sense to get the partname from musx. Not sure. For now, not changing it.
-            Excerpt* e = m_score->excerpt();
-            std::string partName = (e && !m_score->isMaster()) ? e->name().toStdString() : "Score"; /// @todo this "Score" string is stored in the musx options
             if (isHeaderOrFooter) {
-                return (pageTextAssign->startPage == 2 && pageTextAssign->endPage == 0) ? "$i" : "$I";
+                return (pageTextAssign->calcStartPageNumber(m_currentMusxPartId) == 2 && pageTextAssign->isMultiAssignedThruLastPage()) ? "$i" : "$I";
             }
-            return partName;
         } else if (parsedCommand[0] ==  "totpages") {
             if (isHeaderOrFooter) {
                 return "$n";
@@ -306,7 +306,15 @@ void FinaleParser::importTexts()
     // gather texts by position
     for (std::shared_ptr<others::PageTextAssign> pageTextAssign : pageTextAssignList) {
         std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-        const std::string& rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
+        const std::optional<PageCmper> startPage = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
+        const std::optional<PageCmper> endPage = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
+        if (!startPage || !endPage) {
+            // this page text does not appear on any page in this musx score/linked part.
+            // it happens
+            //  1) when the assignment is to a leading blank page that does not exist in this score/part
+            //  2) when the start page assignment is beyond the number of pages in this score/part
+            continue;
+        }
 
         // if text is not at top or bottom, invisible,
         // not recurring, or not on page 1, don't import as hf
@@ -314,9 +322,9 @@ void FinaleParser::importTexts()
         // For 3-page scores, we can import text only assigned to page 2 as a regular odd hf if we disable hf on page one.
         /// @todo add sensible limits for xDisp and such.
         if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center
-            || pageTextAssign->hidden || pageTextAssign->getCmper() > (m_score->npages() <= 3 ? m_score->npages() : 1)
-            || pageTextAssign->startPage > (m_score->npages() <= 3 ? m_score->npages() : (pageTextAssign->endPage == 0 ? 2 : 1))
-            || pageTextAssign->endPage < (m_score->npages() <= 3 ? -1 : m_score->npages())) {
+            || pageTextAssign->hidden
+            || size_t(startPage.value()) > (m_score->npages() <= 3 ? m_score->npages() : (pageTextAssign->isMultiAssignedThruLastPage() ? 2 : 1))
+            || size_t(endPage.value()) < (m_score->npages() <= 3 ? -1 : m_score->npages())) {
             notHF.emplace_back(pageTextAssign);
             continue;
         }
@@ -326,7 +334,7 @@ void FinaleParser::importTexts()
         // Only the part name or page number can be displayed on pages 2+
         // without disabling the HF on page 1.
         /// @todo parse page number / part name except on first page ($p, $i). If not that, set to false
-        if (pageTextAssign->startPage == 2 && pageTextAssign->endPage == 0) {
+        if (startPage.value() == 2 && pageTextAssign->isMultiAssignedThruLastPage()) {
             std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
             std::string rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
             String endString;
@@ -391,11 +399,11 @@ void FinaleParser::importTexts()
         }
 
         if (isOnlyPage(pageTextAssign, 1) || isOnlyPage(pageTextAssign, 3)
-            || pageTextAssign->endPage == 0) {
+            || pageTextAssign->isMultiAssignedThruLastPage()) {
             hf.show = true;
         }
 
-        if (isOnlyPage(pageTextAssign, 2) || pageTextAssign->endPage == 0) {
+        if (isOnlyPage(pageTextAssign, 2) || pageTextAssign->isMultiAssignedThruLastPage()) {
             if (pageTextAssign->indRpPos) {
                 hf.oddEven = true;
             }
@@ -412,7 +420,7 @@ void FinaleParser::importTexts()
             }
         }
         if (isOnlyPage(pageTextAssign, 1) || isOnlyPage(pageTextAssign, 3)
-            || pageTextAssign->endPage == 0) {
+            || pageTextAssign->isMultiAssignedThruLastPage()) {
             switch (pageTextAssign->hPosLp) {
             case others::PageTextAssign::HorizontalAlignment::Left:
                 hf.oddLeftTexts.emplace_back(pageTextAssign);
@@ -425,7 +433,7 @@ void FinaleParser::importTexts()
                 break;
             }
         }
-        if (isOnlyPage(pageTextAssign, 2) || pageTextAssign->endPage == 0) {
+        if (isOnlyPage(pageTextAssign, 2) || pageTextAssign->isMultiAssignedThruLastPage()) {
             switch (pageTextAssign->indRpPos ? pageTextAssign->hPosLp : pageTextAssign->hPosRp) {
             case others::PageTextAssign::HorizontalAlignment::Left:
                 hf.evenLeftTexts.emplace_back(pageTextAssign);
@@ -469,14 +477,10 @@ void FinaleParser::importTexts()
 
     auto getPages = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign) -> std::vector<page_idx_t> {
         std::vector<page_idx_t> pagesWithText;
-        if (pageTextAssign->getCmper() == 0) {
-            page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId) - 1);
-            page_idx_t endP = pageTextAssign->endPage == 0 ? page_idx_t(m_score->npages()) : page_idx_t(pageTextAssign->endPage);
-            for (page_idx_t i = startP; i <= endP; ++i) {
-                pagesWithText.emplace_back(i);
-            }
-        } else {
-            pagesWithText.emplace_back(page_idx_t(pageTextAssign->getCmper()));
+        page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(1) - 1);
+        page_idx_t endP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(PageCmper(m_score->npages())) - 1);
+        for (page_idx_t i = startP; i <= endP; ++i) {
+            pagesWithText.emplace_back(i);
         }
         return pagesWithText;
     };

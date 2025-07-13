@@ -96,7 +96,7 @@ private:
     // texts
     void importTexts();
 
-    bool isOnlyPage(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign, uint16_t page);
+    bool isOnlyPage(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign, musx::dom::PageCmper page);
     engraving::String stringFromText(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign,
                                      bool isHeaderOrFooter = false);
 
