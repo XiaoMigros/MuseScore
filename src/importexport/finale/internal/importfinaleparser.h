@@ -49,6 +49,12 @@ struct ReadableTuplet {
     int layer = 0; // for nested tuplets. 0 = outermost
 };
 
+enum class HeaderFooterType {
+    None,
+    FirstPage,
+    SecondPageToEnd
+};
+
 class FinaleParser
 {
 public:
@@ -94,11 +100,10 @@ private:
     void importStyles(engraving::MStyle& style, musx::dom::Cmper partId);
 
     // texts
-    void importTexts();
+    void importPageTexts();
 
     bool isOnlyPage(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign, musx::dom::PageCmper page);
-    engraving::String stringFromText(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign,
-                                     bool isHeaderOrFooter = false);
+    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, HeaderFooterType hfType = HeaderFooterType::None);
 
     engraving::Score* m_score;
     const std::shared_ptr<musx::dom::Document> m_doc;
