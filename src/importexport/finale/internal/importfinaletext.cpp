@@ -66,6 +66,13 @@ static const std::vector<std::string> kEnigmaTags = {
     "subtitle, lyricist, description",
 };
 
+bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, uint16_t page)
+{
+    const PageCmper startPageNum = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
+    const PageCmper endPageNum = pageTextAssign->calcEndPageNumber(m_currentMusxPartId); // calcEndPageNumber handles case when endPage is zero
+    return (startPageNum == page && endPageNum == page);
+};
+
 String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, bool isHeaderOrFooter)
 {
     std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
@@ -74,11 +81,6 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
     std::shared_ptr<FontInfo> prevFont;
     FontStyle currFontStyle = FontStyle::Normal; // keep track of this to avoid badly nested tags
     /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
-
-    auto isOnlyPage = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign, uint16_t page) {
-        return (pageTextAssign->getCmper() == page || (pageTextAssign->startPage == page && pageTextAssign->endPage == page)
-        || (pageTextAssign->startPage == uint16_t(m_score->npages()) && pageTextAssign->endPage == 0));
-    };
 
     // The processTextChunk function process each chunk of processed text with font information. It is only
     // called when the font information changes.
@@ -224,14 +226,11 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
             }
             // fall through
         }
-        // Find and replace metaTags with their actual text value
-        for (const auto& metaTag : kEnigmaTags) {
-            if (parsedCommand[0] == metaTag) {
-                std::string tagValue = m_score->metaTag(FinaleTConv::metaTagFromTextComponent(metaTag)).toStdString();
-                if (isHeaderOrFooter) {
-                    return "$:" + tagValue + ":";
-                }
-                return tagValue;
+        // Find and insert metaTags when appropriate
+        if (isHeaderOrFooter) {
+            String metaTag = FinaleTConv::metaTagFromTextComponent(parsedCommand[0]);
+            if (!metaTag.isEmpty()) {
+                return "$:" + metaTag.toStdString() + ":";
             }
         }
         // Returning std::nullopt allows the musx library to fill in any we have not handled.
@@ -303,15 +302,11 @@ void FinaleParser::importTexts()
     std::vector<std::shared_ptr<others::PageTextAssign>> notHF;
     std::vector<std::shared_ptr<others::PageTextAssign>> remainder;
 
-    auto isOnlyPage = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign, uint16_t page) {
-        return (pageTextAssign->getCmper() == page || (pageTextAssign->startPage == page && pageTextAssign->endPage == page)
-        || (pageTextAssign->startPage == uint16_t(m_score->npages()) && pageTextAssign->endPage == 0));
-    };
     std::optional<int> scorePageOffset = std::nullopt;
     // gather texts by position
     for (std::shared_ptr<others::PageTextAssign> pageTextAssign : pageTextAssignList) {
         std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-        std::string rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
+        const std::string& rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
 
         // if text is not at top or bottom, invisible,
         // not recurring, or not on page 1, don't import as hf
@@ -475,7 +470,7 @@ void FinaleParser::importTexts()
     auto getPages = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign) -> std::vector<page_idx_t> {
         std::vector<page_idx_t> pagesWithText;
         if (pageTextAssign->getCmper() == 0) {
-            page_idx_t startP = page_idx_t(pageTextAssign->startPage);
+            page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId) - 1);
             page_idx_t endP = pageTextAssign->endPage == 0 ? page_idx_t(m_score->npages()) : page_idx_t(pageTextAssign->endPage);
             for (page_idx_t i = startP; i <= endP; ++i) {
                 pagesWithText.emplace_back(i);
