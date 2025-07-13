@@ -1095,9 +1095,9 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
     return muse::value(metaTagTable, textType, String());
 }
 
-String FinaleTConv::metaTagFromTextComponent(std::string component)
+String FinaleTConv::metaTagFromTextComponent(const std::string& component)
 {
-    static const std::unordered_map<std::string, String> metaTagTable = {
+    static const std::unordered_map<std::string_view, String> metaTagTable = {
         { "title",       u"workTitle" },
         { "composer",    u"composer" },
         { "copyright",   u"copyright" },

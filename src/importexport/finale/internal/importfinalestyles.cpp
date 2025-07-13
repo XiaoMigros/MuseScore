@@ -21,7 +21,8 @@
  */
 #include "dom/mscore.h"
 #include "dom/textbase.h"
-#include "dom/types.h"
+#include "dom/mmrestrange.h"
+#include "types/types.h"
 #include "internal/importfinalelogger.h"
 #include "internal/importfinaleparser.h"
 #include "internal/finaletypesconv.h"
