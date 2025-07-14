@@ -57,20 +57,11 @@ namespace mu::iex::finale {
 /// and use that as the first page. At least, that is my impression. How to handle blank pages in MuseScore is an open question.
 /// - RGP
 
-static const std::vector<std::tuple<int, String, FontStyle> > fontStyleMapper = {
-    // raw finale value, musescore text tag, musescore fontstyle
-    { 1,  u"b", FontStyle::Bold },
-    { 2,  u"i", FontStyle::Italic },
-    { 4,  u"u", FontStyle::Underline },
-    { 32, u"s", FontStyle::Strike },
-};
-
 String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, HeaderFooterType hfType)
 {
     String endString;
     const bool isHeaderOrFooter = hfType != HeaderFooterType::None;
     std::shared_ptr<FontInfo> prevFont;
-    FontStyle currFontStyle = FontStyle::Normal; // keep track of this to avoid badly nested tags
     /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
 
     // The processTextChunk function process each chunk of processed text with font information. It is only
@@ -80,71 +71,29 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
         if (!prevFont || prevFont->fontId != font->fontId) {
             // When using musical fonts, don't actually set the font type since symbols are loaded separately.
             /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
-            if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
+            /// @todo append this based on whether symbol ends up being replaced or not.
+            //if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
                 endString.append(String(u"<font face=\"" + String::fromStdString(font->getName()) + u"\"/>"));
-                /// @todo append this based on whether symbol ends up being replaced or not.
-            }
+            //}
         }
         if (!prevFont || prevFont->fontSize != font->fontSize) {
             endString.append(String(u"<font size=\""));
-            endString.append(String::number(font->fontSize) + String(u"\"/>'"));
+            endString.append(String::number(font->fontSize) + String(u"\"/>"));
         }
         if (!prevFont || prevFont->getEnigmaStyles() != font->getEnigmaStyles()) {
-            int finaleFontStyle = font->getEnigmaStyles();
-            std::vector<std::tuple<String, FontStyle, bool> > fontTags;
-
-            // How this works:
-            // If Finale says the text is a certain style, we add a tag saying text should match the style.
-            // If MuseScore says the text is currently like that, we add a tag saying text should stop matching that style.
-            //    If Finale says to set a style, and MuseScore is currently not that style, we add a positive tag.
-            //    If MuseScore is currently a style and Finale does not re-tag it, we cancel that style with a negative tag.
-            //    If neither mention the style (it isn't currently active nor has it been set), do nothing.
-            //    If Finale and MuseScore contain it (meaning it's active currently AND was re-tagged, presumably due to
-            //     a different style changing), add a positive and negative tag. This ensures we won't end up with bad nesting.
-            // We then order the tags, and remove occuring duplicates, if the nesting allows it.
-            // Yes, this can result in a lot of excessive tags, but even native MuseScore is currently no different!
-
-            for (const auto& fontStyle : fontStyleMapper) {
-                auto [finaleInt, museScoreTag, museScoreEnum] = fontStyle;
-
-                if (finaleFontStyle & finaleInt) {
-                    fontTags.emplace_back(std::make_tuple(String(u"<" + museScoreTag + u">"), museScoreEnum, true));
-                }
-                if (currFontStyle & museScoreEnum) {
-                    fontTags.emplace_back(std::make_tuple(String(u"</" + museScoreTag + u">"), museScoreEnum, false));
-                }
-            }
-            if (!fontTags.empty()) {
-                std::sort(fontTags.begin(), fontTags.end(),[] (const auto& a, const auto& b) {
-                    auto [tagA, msEnumA, addA] = a;
-                    auto [tagB, msEnumB, addB] = b;
-                    if (addA == addB) {
-                        return msEnumA < msEnumB == addA;
-                    }
-                    return addA;
-                });
-
-                // remove duplicate adjacent tags
-                for (size_t i = 1; i < fontTags.size();) {
-                    auto [tagA, msEnumA, addA] = fontTags[i -1];
-                    auto [tagB, msEnumB, addB] = fontTags[i];
-                    if (msEnumA == msEnumB) {
-                        fontTags.erase(fontTags.begin() + i - 1, fontTags.begin() + i + 1);
-                        if (i == 0) {
-                            break;
-                        }
-                        --i;
+            auto checkbit = [&](bool bit, bool prevBit, const String& museScoreTag) {
+                if (bit != prevBit) {
+                    if (bit) {
+                        endString.append(String(u"<" + museScoreTag + u">"));
                     } else {
-                        ++i;
+                        endString.append(String(u"</" + museScoreTag + u">"));
                     }
                 }
-
-                // append the finished product
-                for (const auto& fontTag : fontTags) {
-                    auto [tag, msEnum, add] = fontTag;
-                    endString.append(tag);
-                }
-            }
+            };
+            checkbit(font->bold, prevFont && prevFont->bold, u"b");
+            checkbit(font->italic, prevFont && prevFont->italic, u"i");
+            checkbit(font->underline, prevFont && prevFont->underline, u"u");
+            checkbit(font->strikeout, prevFont && prevFont->strikeout, u"s");
         }
         prevFont = std::make_shared<FontInfo>(*font);
         endString.append(String::fromStdString(nextChunk));

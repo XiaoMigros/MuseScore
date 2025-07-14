@@ -204,14 +204,9 @@ void FinaleParser::importParts()
         part->setId(partId);
 
         // names of part
-        std::string fullBaseName = staff->getFullInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setPartName(String::fromStdString(trimNewLineFromString(fullBaseName)));
-
-        std::string fullEffectiveName = compositeStaff->getFullInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setLongName(String::fromStdString(trimNewLineFromString(fullEffectiveName)));
-
-        std::string abrvName = compositeStaff->getAbbreviatedInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setShortName(String::fromStdString(trimNewLineFromString(abrvName)));
+        part->setPartName(stringFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId)));
+        part->setLongName(stringFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId)));
+        part->setShortName(stringFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId)));
 
         if (multiStaffInst) {
             for (auto inst : multiStaffInst->visualStaffNums) {
