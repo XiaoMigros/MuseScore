@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <exception>
+#include <sstream>
 
 #include "musx/musx.h"
 
@@ -53,31 +54,32 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
-static const std::vector<std::tuple<int, String, FontStyle> > fontStyleMapper = {
-    // raw finale value, musescore text tag, musescore fontstyle
-    { 1,  u"b", FontStyle::Bold },
-    { 2,  u"i", FontStyle::Italic },
-    { 4,  u"u", FontStyle::Underline },
-    { 32, u"s", FontStyle::Strike },
-};
+/// @todo Instead of hard-coding page 1 and page 2, we need to find the first page in the Finale file with music on it
+/// and use that as the first page. At least, that is my impression. How to handle blank pages in MuseScore is an open question.
+/// - RGP
 
-static const std::vector<std::string> kEnigmaTags = {
-    "arranger", "title", "composer", // "copyright",
-    "subtitle, lyricist, description",
-};
-
-String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, bool isHeaderOrFooter)
+String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options)
 {
-    std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-    std::string rawString = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
     String endString;
+    const bool isHeaderOrFooter = options.hfType != HeaderFooterType::None;
     std::shared_ptr<FontInfo> prevFont;
-    FontStyle currFontStyle = FontStyle::Normal; // keep track of this to avoid badly nested tags
     /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
 
-    auto isOnlyPage = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign, uint16_t page) {
-        return (pageTextAssign->getCmper() == page || (pageTextAssign->startPage == page && pageTextAssign->endPage == page)
-        || (pageTextAssign->startPage == uint16_t(m_score->npages()) && pageTextAssign->endPage == 0));
+    // helper lamdas
+    auto calcEffectiveFontSize = [&](const std::shared_ptr<FontInfo>& fontInfo) -> double {
+        if (!fontInfo) return -1; // impossible initial value
+        double finalScaling = fontInfo->absolute ? 1.0 : options.scaleFontSizeBy;
+        return FinaleTConv::spatiumScaledFontSize(fontInfo) * finalScaling;
+    };
+
+    auto checkFontStylebit = [&](bool bit, bool prevBit, const String& museScoreTag) {
+        if (bit != prevBit) {
+            if (bit) {
+                endString.append(String(u"<" + museScoreTag + u">"));
+            } else {
+                endString.append(String(u"</" + museScoreTag + u">"));
+            }
+        }
     };
 
     // The processTextChunk function process each chunk of processed text with font information. It is only
@@ -87,72 +89,22 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
         if (!prevFont || prevFont->fontId != font->fontId) {
             // When using musical fonts, don't actually set the font type since symbols are loaded separately.
             /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
-            if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
+            /// @todo append this based on whether symbol ends up being replaced or not.
+            //if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
                 endString.append(String(u"<font face=\"" + String::fromStdString(font->getName()) + u"\"/>"));
-                /// @todo append this based on whether symbol ends up being replaced or not.
-            }
+            //}
         }
-        if (!prevFont || prevFont->fontSize != font->fontSize) {
+        double prevSize = calcEffectiveFontSize(prevFont);
+        double currSize = calcEffectiveFontSize(font);
+        if (prevSize != currSize) {
             endString.append(String(u"<font size=\""));
-            endString.append(String::number(font->fontSize) + String(u"\"/>'"));
+            endString.append(String::number(currSize, 2) + String(u"\"/>"));
         }
         if (!prevFont || prevFont->getEnigmaStyles() != font->getEnigmaStyles()) {
-            int finaleFontStyle = font->getEnigmaStyles();
-            std::vector<std::tuple<String, FontStyle, bool> > fontTags;
-            /// @todo: RGP: it might be a lot simpler to use the bool properties in FontInfo. Not sure.
-
-            // How this works:
-            // If Finale says the text is a certain style, we add a tag saying text should match the style.
-            // If MuseScore says the text is currently like that, we add a tag saying text should stop matching that style.
-            //    If Finale says to set a style, and MuseScore is currently not that style, we add a positive tag.
-            //    If MuseScore is currently a style and Finale does not re-tag it, we cancel that style with a negative tag.
-            //    If neither mention the style (it isn't currently active nor has it been set), do nothing.
-            //    If Finale and MuseScore contain it (meaning it's active currently AND was re-tagged, presumably due to
-            //     a different style changing), add a positive and negative tag. This ensures we won't end up with bad nesting.
-            // We then order the tags, and remove occuring duplicates, if the nesting allows it.
-            // Yes, this can result in a lot of excessive tags, but even native MuseScore is currently no different!
-
-            for (const auto& fontStyle : fontStyleMapper) {
-                auto [finaleInt, museScoreTag, museScoreEnum] = fontStyle;
-
-                if (finaleFontStyle & finaleInt) {
-                    fontTags.emplace_back(std::make_tuple(String(u"<" + museScoreTag + u">"), museScoreEnum, true));
-                }
-                if (currFontStyle & museScoreEnum) {
-                    fontTags.emplace_back(std::make_tuple(String(u"</" + museScoreTag + u">"), museScoreEnum, false));
-                }
-            }
-            if (!fontTags.empty()) {
-                std::sort(fontTags.begin(), fontTags.end(),[] (const auto& a, const auto& b) {
-                    auto [tagA, msEnumA, addA] = a;
-                    auto [tagB, msEnumB, addB] = b;
-                    if (addA == addB) {
-                        return msEnumA < msEnumB == addA;
-                    }
-                    return addA;
-                });
-
-                // remove duplicate adjacent tags
-                for (size_t i = 1; i < fontTags.size();) {
-                    auto [tagA, msEnumA, addA] = fontTags[i -1];
-                    auto [tagB, msEnumB, addB] = fontTags[i];
-                    if (msEnumA == msEnumB) {
-                        fontTags.erase(fontTags.begin() + i - 1, fontTags.begin() + i + 1);
-                        if (i == 0) {
-                            break;
-                        }
-                        --i;
-                    } else {
-                        ++i;
-                    }
-                }
-
-                // append the finished product
-                for (const auto& fontTag : fontTags) {
-                    auto [tag, msEnum, add] = fontTag;
-                    endString.append(tag);
-                }
-            }
+            checkFontStylebit(font->bold, prevFont && prevFont->bold, u"b");
+            checkFontStylebit(font->italic, prevFont && prevFont->italic, u"i");
+            checkFontStylebit(font->underline, prevFont && prevFont->underline, u"u");
+            checkFontStylebit(font->strikeout, prevFont && prevFont->strikeout, u"s");
         }
         prevFont = std::make_shared<FontInfo>(*font);
         endString.append(String::fromStdString(nextChunk));
@@ -170,21 +122,26 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
         /// @todo Perhaps add parse functions to classes like PageTextAssign to handle this automatically. But it also may be important
         /// to handle it here for an intelligent import, if text can reference a page number offset in MuseScore.
         if (parsedCommand[0] == "page") {
-            if (parsedCommand.size() < 2) {
-                // log error
+            // ignore page offset argument. we set this once in the style settings.
+            switch (options.hfType) {
+                default:
+                case HeaderFooterType::None: break;
+                case HeaderFooterType::FirstPage: break;
+                case HeaderFooterType::SecondPageToEnd:
+                    if (parsedCommand.size() > 1) {
+                        // always overwrite with the last one we find.
+                        m_score->setPageNumberOffset(std::stoi(parsedCommand[1]));
+                    }
+                    return "$p";
             }
-            // do something
-            return std::nullopt; // for now, just dump the command into the processed string
-        } else if (parsedCommand[0] == "cprsym") {
-            return String(u"\u00A9").toStdString();
         } else if (parsedCommand[0] == "partname") {
-            /// @todo it may make more sense to get the partname from musx. Not sure. For now, not changing it.
-            Excerpt* e = m_score->excerpt();
-            std::string partName = (e && !m_score->isMaster()) ? e->name().toStdString() : "Score"; /// @todo this "Score" string is stored in the musx options
-            if (isHeaderOrFooter) {
-                return (pageTextAssign->startPage == 2 && pageTextAssign->endPage == 0) ? "$i" : "$I";
+            switch (options.hfType) {
+                /// @todo maybe create a "partname" metatag instead? (Especially if excerpts can have different values.)
+                default:
+                case HeaderFooterType::None: break;
+                case HeaderFooterType::FirstPage: return "$I";
+                case HeaderFooterType::SecondPageToEnd: return "$i";
             }
-            return partName;
         } else if (parsedCommand[0] ==  "totpages") {
             if (isHeaderOrFooter) {
                 return "$n";
@@ -194,57 +151,50 @@ String FinaleParser::stringFromText(const std::shared_ptr<others::PageTextAssign
             if (isHeaderOrFooter) {
                 return "$f";
             }
-            /// @todo Does the file have a name at import time?
+            /// @todo Does the file have a name at import time? Otherwise we could use the musx filename we opened.
             return m_score->masterScore()->name().toStdString();
-        } else if (parsedCommand[0] ==  "date") {
-            // This command takes an argument. Why? What does it do?
-            // RGP: It is a format code. I will have to dig to see what all the values are,
-            //      but I would guess 0 means use the document default and the other values
-            //      are like enum values specifying a specific format. (Same for other datetime args.)
-            return muse::Date::currentDate().toString(muse::DateFormat::ISODate).toStdString();
-            /// @todo check for correct date format
-        } else if (parsedCommand[0] ==  "time") {
-            // This command takes an argument. Why? What does it do?
-            return muse::Time::currentTime().toString(muse::DateFormat::ISODate).toStdString();
-            /// @todo check for correct date format
-        } else if (parsedCommand[0] == "fdate") {
-            // This command takes an argument. Why? What does it do?
-            musx::dom::header::FileInfo fDate = m_doc->getHeader()->created;
-            return std::to_string(fDate.day) + "/" + std::to_string(fDate.month) + "/" + std::to_string(fDate.year);
-            /// @todo check for correct date format
         } else if (parsedCommand[0] ==  "perftime") {
-            // This command takes an argument. Why? What does it do?
+            /// @todo: honor format code (see class comments for musx::util::EnigmaString)
+            /// Note that Finale's UI does not support any format but m'ss", but plugins could have inserted other formats.
             int rawDurationSeconds = m_score->duration();
             int minutes = rawDurationSeconds / 60;
             int seconds = rawDurationSeconds % 60;
-            return std::to_string(minutes) + "'" + std::to_string(seconds) + '"';
+            std::ostringstream oss;
+            oss << minutes << '\'' << std::setw(2) << std::setfill('0') << seconds << '"';
+            return oss.str();
         } else if (parsedCommand[0] ==  "copyright") {
-            if (isHeaderOrFooter) {
-                return isOnlyPage(pageTextAssign, 1) ? "$C" : "$c";
+            /// @todo maybe not use $C/$c at all in favor of $:copyright:.?
+            switch (options.hfType) {
+                default:
+                case HeaderFooterType::None: return "$:copyright:";
+                case HeaderFooterType::FirstPage: return "$C";
+                case HeaderFooterType::SecondPageToEnd: return "$c";
             }
-            // fall through
         }
-        // Find and replace metaTags with their actual text value
-        for (const auto& metaTag : kEnigmaTags) {
-            if (parsedCommand[0] == metaTag) {
-                std::string tagValue = m_score->metaTag(FinaleTConv::metaTagFromTextComponent(metaTag)).toStdString();
-                if (isHeaderOrFooter) {
-                    return "$:" + tagValue + ":";
-                }
-                return tagValue;
+        // Find and insert metaTags when appropriate
+        if (isHeaderOrFooter) {
+            String metaTag = FinaleTConv::metaTagFromTextComponent(parsedCommand[0]);
+            if (!metaTag.isEmpty()) {
+                return "$:" + metaTag.toStdString() + ":";
             }
         }
         // Returning std::nullopt allows the musx library to fill in any we have not handled.
         return std::nullopt;
     };
 
-    musx::util::EnigmaString::parseEnigmaText(m_doc, m_currentMusxPartId, rawString, processTextChunk, processCommand);
+    parsingContext.parseEnigmaText(processTextChunk, processCommand);
 
     return endString;
 };
 
+bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, PageCmper page)
+{
+    const std::optional<PageCmper> startPageNum = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
+    const std::optional<PageCmper> endPageNum = pageTextAssign->calcEndPageNumber(m_currentMusxPartId); // calcEndPageNumber handles case when endPage is zero
+    return (startPageNum == page && endPageNum == page);
+};
 
-void FinaleParser::importTexts()
+void FinaleParser::importPageTexts()
 {
     FinaleTextConv::init();
     std::vector<std::shared_ptr<others::PageTextAssign>> pageTextAssignList = m_doc->getOthers()->getArray<others::PageTextAssign>(m_currentMusxPartId);
@@ -266,30 +216,19 @@ void FinaleParser::importTexts()
     // need to create character conversion map for non-smufl fonts???
 
     // set score metadata
-    std::vector<std::shared_ptr<texts::FileInfoText>> fileInfoTexts = m_doc->getTexts()->getArray<texts::FileInfoText>(m_currentMusxPartId);
+    std::vector<std::shared_ptr<texts::FileInfoText>> fileInfoTexts = m_doc->getTexts()->getArray<texts::FileInfoText>();
     for (std::shared_ptr<texts::FileInfoText> fileInfoText : fileInfoTexts) {
         String metaTag = FinaleTConv::metaTagFromFileInfo(fileInfoText->getTextType());
-        std::shared_ptr<others::TextBlock> fileInfoTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, Cmper(fileInfoText->getTextType()));
-        std::string fileInfoValue = fileInfoTextBlock ? fileInfoTextBlock->getRawTextCtx(m_currentMusxPartId).getText(/*trimTags*/ true, musx::util::EnigmaString::AccidentalStyle::Unicode) : std::string();
+        std::string fileInfoValue = musx::util::EnigmaString::trimTags(fileInfoText->text);
         if (!metaTag.empty() && !fileInfoValue.empty()) {
             m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
         }
     }
 
-    const std::vector<std::string> kEnigmaFontCommands = { "font", "fontid", "Font", "fontMus", "fontTxt", "fontNum", "size", "nfx", "baseline", "tracking" };
-    // fontMus, fontTxt, fontNum are tempomarks category fonts. dynamics, tempomarks, etc. (5) all have different categories. 5x3
-    const std::vector<std::string> kEnigmaOthers = { "partname()", "perftime(???)", "page(numberOffset)", "totpages()", "cprsym()", "filename()", "date(???)", "fdate(???)", "time(x)" };
-
-    // This means we can import page 1 text as header /footer, irrespective of whether it would appear on a hypothetical page 3.
-    const bool twoPage = m_score->npages() == 2;
-    const bool threePage = m_score->npages() == 3;
-    bool singleHeader = true; //for now
-    bool singleFooter = true; //for now
-
     struct HeaderFooter {
         bool show = false;
-        bool showFirstPage = true;
-        bool oddEven = false; // different odd/even pages
+        bool showFirstPage = true; // always show first page
+        bool oddEven = true; // always different odd/even pages
         std::vector<std::shared_ptr<others::PageTextAssign>> oddLeftTexts;
         std::vector<std::shared_ptr<others::PageTextAssign>> oddMiddleTexts;
         std::vector<std::shared_ptr<others::PageTextAssign>> oddRightTexts;
@@ -303,170 +242,114 @@ void FinaleParser::importTexts()
     std::vector<std::shared_ptr<others::PageTextAssign>> notHF;
     std::vector<std::shared_ptr<others::PageTextAssign>> remainder;
 
-    auto isOnlyPage = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign, uint16_t page) {
-        return (pageTextAssign->getCmper() == page || (pageTextAssign->startPage == page && pageTextAssign->endPage == page)
-        || (pageTextAssign->startPage == uint16_t(m_score->npages()) && pageTextAssign->endPage == 0));
-    };
-    std::optional<int> scorePageOffset = std::nullopt;
     // gather texts by position
     for (std::shared_ptr<others::PageTextAssign> pageTextAssign : pageTextAssignList) {
-        std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-        std::string rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
+        if (pageTextAssign->hidden) {
+            // there may be something we can do with hidden assignments created for Patterson's Copyist Helper plugin,
+            // but generally it means the header is not applicable to this part.
+            continue;
+        }
+        const std::optional<PageCmper> startPage = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
+        const std::optional<PageCmper> endPage = pageTextAssign->calcEndPageNumber(m_currentMusxPartId);
+        if (!startPage || !endPage) {
+            // this page text does not appear on any page in this musx score/linked part.
+            // it happens
+            //  1) when the assignment is to a leading blank page that does not exist in this score/part
+            //  2) when the start page assignment is beyond the number of pages in this score/part
+            continue;
+        }
 
         // if text is not at top or bottom, invisible,
         // not recurring, or not on page 1, don't import as hf
         // For 2-page scores, we can import text only assigned to page 2 as a regular even hf.
         // For 3-page scores, we can import text only assigned to page 2 as a regular odd hf if we disable hf on page one.
+        // RGP: I don't think we should do the 3rd option. Disabling hf on page one is a non-starter. We should never do that,
+        //      because it causes far more damage than benefit. I changed it not to.
         /// @todo add sensible limits for xDisp and such.
         if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center
-            || pageTextAssign->hidden || pageTextAssign->getCmper() > (m_score->npages() <= 3 ? m_score->npages() : 1)
-            || pageTextAssign->startPage > (m_score->npages() <= 3 ? m_score->npages() : (pageTextAssign->endPage == 0 ? 2 : 1))
-            || pageTextAssign->endPage < (m_score->npages() <= 3 ? -1 : m_score->npages())) {
+                                 || pageTextAssign->hidden
+                                 || startPage.value() >= 3 /// @todo must be changed to be first non-blank page + 2
+                                 || endPage.value() < PageCmper(m_score->npages())) {
             notHF.emplace_back(pageTextAssign);
             continue;
-        }
-
-        HeaderFooter& hf = pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Top ? header : footer;
-
-        // Only the part name or page number can be displayed on pages 2+
-        // without disabling the HF on page 1.
-        /// @todo parse page number / part name except on first page ($p, $i). If not that, set to false
-        if (pageTextAssign->startPage == 2 && pageTextAssign->endPage == 0) {
-            std::shared_ptr<others::TextBlock> pageTextBlock = m_doc->getOthers()->get<others::TextBlock>(m_currentMusxPartId, pageTextAssign->block);
-            std::string rawText = pageTextBlock->getRawTextCtx(m_currentMusxPartId).getRawText()->text;
-            String endString;
-            auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles&) -> bool {
-                endString.append(String::fromStdString(nextChunk));
-                return true;
-            };
-
-            auto processCommand = [&](const std::vector<std::string>& parsedCommand) -> std::optional<std::string> {
-                if (parsedCommand.empty()) {
-                    // log error
-                    return std::nullopt;
-                }
-                if (parsedCommand[0] == "page") {
-                    if (parsedCommand.size() < 2) {
-                        return "false";
-                    }
-                    if (scorePageOffset.has_value()) {
-                        if (scorePageOffset.value() == std::stoi(parsedCommand[1])) {
-                            return "true";
-                        }
-                    } else {
-                        scorePageOffset = std::stoi(parsedCommand[1]);
-                        return "true";
-                    }
-                } else if (parsedCommand[0] == "partname") {
-                    return "true";
-                }
-                return "false";
-            };
-
-            musx::util::EnigmaString::parseEnigmaText(m_doc, m_currentMusxPartId, rawText, processTextChunk, processCommand,
-                    musx::util::EnigmaString::AccidentalStyle::Unicode);
-            if (endString != String(u"true")) {
-                hf.showFirstPage = false;
-            }
         }
         remainder.emplace_back(pageTextAssign);
     }
 
-    if (scorePageOffset.has_value()) {
-        m_score->setPageNumberOffset(scorePageOffset.value());
-    }
-
     for (std::shared_ptr<others::PageTextAssign> pageTextAssign : remainder) {
         HeaderFooter& hf = pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Top ? header : footer;
-        // requires showFirstPage
-        if (isOnlyPage(pageTextAssign, 1)) {
-            if (!hf.showFirstPage) {
-                muse::remove(remainder, pageTextAssign);
-                notHF.emplace_back(pageTextAssign);
-                continue;
-            }
-            if (!twoPage) {
-                String pageXmlText = stringFromText(pageTextAssign, false);
-                if (pageXmlText != m_score->metaTag(u"copyright")) {
-                    muse::remove(remainder, pageTextAssign);
-                    notHF.emplace_back(pageTextAssign);
-                    continue;
-                }
-            }
-        }
-
-        if (isOnlyPage(pageTextAssign, 1) || isOnlyPage(pageTextAssign, 3)
-            || pageTextAssign->endPage == 0) {
-            hf.show = true;
-        }
-
-        if (isOnlyPage(pageTextAssign, 2) || pageTextAssign->endPage == 0) {
-            if (pageTextAssign->indRpPos) {
-                hf.oddEven = true;
-            }
-        }
+        hf.show = true;
     }
     for (std::shared_ptr<others::PageTextAssign> pageTextAssign : remainder) {
         HeaderFooter& hf = pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Top ? header : footer;
-        // requires oddEven and showFirstPage
-        if (isOnlyPage(pageTextAssign, 3)) {
-            if (!hf.oddEven || m_score->npages() > 4 || hf.showFirstPage) {
-                // muse::remove(remainder, pageTextAssign);
-                notHF.emplace_back(pageTextAssign);
-                continue;
-            }
-        }
-        if (isOnlyPage(pageTextAssign, 1) || isOnlyPage(pageTextAssign, 3)
-            || pageTextAssign->endPage == 0) {
-            switch (pageTextAssign->hPosLp) {
-            case others::PageTextAssign::HorizontalAlignment::Left:
+        /// @todo this has got to take into account the page text's hPosLp or hPosRp based on indRpPos.
+        /// @todo Finale bases right/left on the actual page numbers, not the visual page numbers. But MuseScore's
+        /// left/right headers display based on visual page numbers. So the whole calculation must be reversed if
+        /// m_score->pageNumberOffset() is odd.
+        switch (pageTextAssign->hPosLp) {
+        case others::PageTextAssign::HorizontalAlignment::Left:
+            if (pageTextAssign->oddEven != others::PageTextAssign::PageAssignType::Even) {
                 hf.oddLeftTexts.emplace_back(pageTextAssign);
-                break;
-            case others::PageTextAssign::HorizontalAlignment::Center:
-                hf.oddMiddleTexts.emplace_back(pageTextAssign);
-                break;
-            case others::PageTextAssign::HorizontalAlignment::Right:
-                hf.oddRightTexts.emplace_back(pageTextAssign);
-                break;
             }
-        }
-        if (isOnlyPage(pageTextAssign, 2) || pageTextAssign->endPage == 0) {
-            switch (pageTextAssign->indRpPos ? pageTextAssign->hPosLp : pageTextAssign->hPosRp) {
-            case others::PageTextAssign::HorizontalAlignment::Left:
+            if (pageTextAssign->oddEven != others::PageTextAssign::PageAssignType::Odd) {
                 hf.evenLeftTexts.emplace_back(pageTextAssign);
-                break;
-            case others::PageTextAssign::HorizontalAlignment::Center:
-                hf.evenMiddleTexts.emplace_back(pageTextAssign);
-                break;
-            case others::PageTextAssign::HorizontalAlignment::Right:
-                hf.evenRightTexts.emplace_back(pageTextAssign);
-                break;
             }
+            break;
+        case others::PageTextAssign::HorizontalAlignment::Center:
+            if (pageTextAssign->oddEven != others::PageTextAssign::PageAssignType::Even) {
+                hf.oddMiddleTexts.emplace_back(pageTextAssign);
+            }
+            if (pageTextAssign->oddEven != others::PageTextAssign::PageAssignType::Odd) {
+                hf.evenMiddleTexts.emplace_back(pageTextAssign);
+            }
+            break;
+        case others::PageTextAssign::HorizontalAlignment::Right:
+            if (pageTextAssign->oddEven != others::PageTextAssign::PageAssignType::Even) {
+                hf.oddRightTexts.emplace_back(pageTextAssign);
+            }
+            if (pageTextAssign->oddEven != others::PageTextAssign::PageAssignType::Odd) {
+                hf.evenRightTexts.emplace_back(pageTextAssign);
+            }
+            break;
         }
     }
+
+    auto stringFromPageText = [&](const std::shared_ptr<others::PageTextAssign>& pageText, bool isForHeaderFooter = true) {
+        std::optional<PageCmper> startPage = pageText->calcStartPageNumber(m_currentMusxPartId);
+        std::optional<PageCmper> endPage = pageText->calcEndPageNumber(m_currentMusxPartId);
+        HeaderFooterType hfType = isForHeaderFooter ? HeaderFooterType::FirstPage : HeaderFooterType::None;
+        if (isForHeaderFooter && startPage == 2 && endPage.value() == PageCmper(m_score->npages())) {
+            hfType = HeaderFooterType::SecondPageToEnd;
+        }
+        std::optional<PageCmper> forPageId = hfType != HeaderFooterType::SecondPageToEnd ? startPage : std::nullopt;
+        musx::util::EnigmaParsingContext parsingContext = pageText->getRawTextCtx(m_currentMusxPartId, forPageId);
+        EnigmaParsingOptions options(hfType);
+        /// @todo set options.scaleFontSizeBy to per-page scaling if MuseScore can't do per-page scaling directly.
+        return stringFromEnigmaText(parsingContext, hfType);
+    };
 
     if (header.show) {
         m_score->style().set(Sid::showHeader,      true);
         m_score->style().set(Sid::headerFirstPage, header.showFirstPage);
         m_score->style().set(Sid::headerOddEven,   header.oddEven);
-        m_score->style().set(Sid::evenHeaderL,     header.evenLeftTexts.empty() ? String() : stringFromText(header.evenLeftTexts.front(), true)); // for now
-        m_score->style().set(Sid::evenHeaderC,     header.evenMiddleTexts.empty() ? String() : stringFromText(header.evenMiddleTexts.front(), true));
-        m_score->style().set(Sid::evenHeaderR,     header.evenRightTexts.empty() ? String() : stringFromText(header.evenRightTexts.front(), true));
-        m_score->style().set(Sid::oddHeaderL,      header.oddLeftTexts.empty() ? String() : stringFromText(header.oddLeftTexts.front(), true));
-        m_score->style().set(Sid::oddHeaderC,      header.oddMiddleTexts.empty() ? String() : stringFromText(header.oddMiddleTexts.front(), true));
-        m_score->style().set(Sid::oddHeaderR,      header.oddRightTexts.empty() ? String() : stringFromText(header.oddRightTexts.front(), true));
+        m_score->style().set(Sid::evenHeaderL,     header.evenLeftTexts.empty() ? String() : stringFromPageText(header.evenLeftTexts.front())); // for now
+        m_score->style().set(Sid::evenHeaderC,     header.evenMiddleTexts.empty() ? String() : stringFromPageText(header.evenMiddleTexts.front()));
+        m_score->style().set(Sid::evenHeaderR,     header.evenRightTexts.empty() ? String() : stringFromPageText(header.evenRightTexts.front()));
+        m_score->style().set(Sid::oddHeaderL,      header.oddLeftTexts.empty() ? String() : stringFromPageText(header.oddLeftTexts.front()));
+        m_score->style().set(Sid::oddHeaderC,      header.oddMiddleTexts.empty() ? String() : stringFromPageText(header.oddMiddleTexts.front()));
+        m_score->style().set(Sid::oddHeaderR,      header.oddRightTexts.empty() ? String() : stringFromPageText(header.oddRightTexts.front()));
     }
 
     if (footer.show) {
         m_score->style().set(Sid::showFooter,      true);
         m_score->style().set(Sid::footerFirstPage, footer.showFirstPage);
         m_score->style().set(Sid::footerOddEven,   footer.oddEven);
-        m_score->style().set(Sid::evenFooterL,     footer.evenLeftTexts.empty() ? String() : stringFromText(footer.evenLeftTexts.front(), true)); // for now
-        m_score->style().set(Sid::evenFooterC,     footer.evenMiddleTexts.empty() ? String() : stringFromText(footer.evenMiddleTexts.front(), true));
-        m_score->style().set(Sid::evenFooterR,     footer.evenRightTexts.empty() ? String() : stringFromText(footer.evenRightTexts.front(), true));
-        m_score->style().set(Sid::oddFooterL,      footer.oddLeftTexts.empty() ? String() : stringFromText(footer.oddLeftTexts.front(), true));
-        m_score->style().set(Sid::oddFooterC,      footer.oddMiddleTexts.empty() ? String() : stringFromText(footer.oddMiddleTexts.front(), true));
-        m_score->style().set(Sid::oddFooterR,      footer.oddRightTexts.empty() ? String() : stringFromText(footer.oddRightTexts.front(), true));
+        m_score->style().set(Sid::evenFooterL,     footer.evenLeftTexts.empty() ? String() : stringFromPageText(footer.evenLeftTexts.front())); // for now
+        m_score->style().set(Sid::evenFooterC,     footer.evenMiddleTexts.empty() ? String() : stringFromPageText(footer.evenMiddleTexts.front()));
+        m_score->style().set(Sid::evenFooterR,     footer.evenRightTexts.empty() ? String() : stringFromPageText(footer.evenRightTexts.front()));
+        m_score->style().set(Sid::oddFooterL,      footer.oddLeftTexts.empty() ? String() : stringFromPageText(footer.oddLeftTexts.front()));
+        m_score->style().set(Sid::oddFooterC,      footer.oddMiddleTexts.empty() ? String() : stringFromPageText(footer.oddMiddleTexts.front()));
+        m_score->style().set(Sid::oddFooterR,      footer.oddRightTexts.empty() ? String() : stringFromPageText(footer.oddRightTexts.front()));
     }
 
     std::vector<Cmper> pagesWithHeaderFrames;
@@ -474,14 +357,10 @@ void FinaleParser::importTexts()
 
     auto getPages = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign) -> std::vector<page_idx_t> {
         std::vector<page_idx_t> pagesWithText;
-        if (pageTextAssign->getCmper() == 0) {
-            page_idx_t startP = page_idx_t(pageTextAssign->startPage);
-            page_idx_t endP = pageTextAssign->endPage == 0 ? page_idx_t(m_score->npages()) : page_idx_t(pageTextAssign->endPage);
-            for (page_idx_t i = startP; i <= endP; ++i) {
-                pagesWithText.emplace_back(i);
-            }
-        } else {
-            pagesWithText.emplace_back(page_idx_t(pageTextAssign->getCmper()));
+        page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(1) - 1);
+        page_idx_t endP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(PageCmper(m_score->npages())) - 1);
+        for (page_idx_t i = startP; i <= endP; ++i) {
+            pagesWithText.emplace_back(i);
         }
         return pagesWithText;
     };
@@ -576,6 +455,7 @@ void FinaleParser::importTexts()
     // if not enough space, attempt to position based on closest measure
     //note: text is placed slightly lower than indicated position (line space?)
     // todo: read text properties but also tempo, swing, etc
+    //  NOTE from RGP: tempo, swing, etc. are text expressions and will be handled separately from page text.
 }
 
 }
