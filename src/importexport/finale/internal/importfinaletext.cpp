@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <exception>
+#include <sstream>
 
 #include "musx/musx.h"
 
@@ -57,12 +58,29 @@ namespace mu::iex::finale {
 /// and use that as the first page. At least, that is my impression. How to handle blank pages in MuseScore is an open question.
 /// - RGP
 
-String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, HeaderFooterType hfType)
+String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options)
 {
     String endString;
-    const bool isHeaderOrFooter = hfType != HeaderFooterType::None;
+    const bool isHeaderOrFooter = options.hfType != HeaderFooterType::None;
     std::shared_ptr<FontInfo> prevFont;
     /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
+
+    // helper lamdas
+    auto calcEffectiveFontSize = [&](const std::shared_ptr<FontInfo>& fontInfo) -> double {
+        if (!fontInfo) return -1; // impossible initial value
+        double finalScaling = fontInfo->absolute ? 1.0 : options.scaleFontSizeBy;
+        return FinaleTConv::spatiumScaledFontSize(fontInfo) * finalScaling;
+    };
+
+    auto checkFontStylebit = [&](bool bit, bool prevBit, const String& museScoreTag) {
+        if (bit != prevBit) {
+            if (bit) {
+                endString.append(String(u"<" + museScoreTag + u">"));
+            } else {
+                endString.append(String(u"</" + museScoreTag + u">"));
+            }
+        }
+    };
 
     // The processTextChunk function process each chunk of processed text with font information. It is only
     // called when the font information changes.
@@ -76,24 +94,17 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
                 endString.append(String(u"<font face=\"" + String::fromStdString(font->getName()) + u"\"/>"));
             //}
         }
-        if (!prevFont || prevFont->fontSize != font->fontSize) {
+        double prevSize = calcEffectiveFontSize(prevFont);
+        double currSize = calcEffectiveFontSize(font);
+        if (prevSize != currSize) {
             endString.append(String(u"<font size=\""));
-            endString.append(String::number(font->fontSize) + String(u"\"/>"));
+            endString.append(String::number(currSize, 2) + String(u"\"/>"));
         }
         if (!prevFont || prevFont->getEnigmaStyles() != font->getEnigmaStyles()) {
-            auto checkbit = [&](bool bit, bool prevBit, const String& museScoreTag) {
-                if (bit != prevBit) {
-                    if (bit) {
-                        endString.append(String(u"<" + museScoreTag + u">"));
-                    } else {
-                        endString.append(String(u"</" + museScoreTag + u">"));
-                    }
-                }
-            };
-            checkbit(font->bold, prevFont && prevFont->bold, u"b");
-            checkbit(font->italic, prevFont && prevFont->italic, u"i");
-            checkbit(font->underline, prevFont && prevFont->underline, u"u");
-            checkbit(font->strikeout, prevFont && prevFont->strikeout, u"s");
+            checkFontStylebit(font->bold, prevFont && prevFont->bold, u"b");
+            checkFontStylebit(font->italic, prevFont && prevFont->italic, u"i");
+            checkFontStylebit(font->underline, prevFont && prevFont->underline, u"u");
+            checkFontStylebit(font->strikeout, prevFont && prevFont->strikeout, u"s");
         }
         prevFont = std::make_shared<FontInfo>(*font);
         endString.append(String::fromStdString(nextChunk));
@@ -112,14 +123,19 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
         /// to handle it here for an intelligent import, if text can reference a page number offset in MuseScore.
         if (parsedCommand[0] == "page") {
             // ignore page offset argument. we set this once in the style settings.
-            switch (hfType) {
+            switch (options.hfType) {
                 default:
                 case HeaderFooterType::None: break;
                 case HeaderFooterType::FirstPage: break;
-                case HeaderFooterType::SecondPageToEnd: return "$p";
+                case HeaderFooterType::SecondPageToEnd:
+                    if (parsedCommand.size() > 1) {
+                        // always overwrite with the last one we find.
+                        m_score->setPageNumberOffset(std::stoi(parsedCommand[1]));
+                    }
+                    return "$p";
             }
         } else if (parsedCommand[0] == "partname") {
-            switch (hfType) {
+            switch (options.hfType) {
                 default:
                 case HeaderFooterType::None: break;
                 case HeaderFooterType::FirstPage: return "$I";
@@ -134,16 +150,19 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
             if (isHeaderOrFooter) {
                 return "$f";
             }
-            /// @todo Does the file have a name at import time?
+            /// @todo Does the file have a name at import time? Otherwise we could use the musx filename we opened.
             return m_score->masterScore()->name().toStdString();
         } else if (parsedCommand[0] ==  "perftime") {
             /// @todo: honor format code (see class comments for musx::util::EnigmaString)
+            /// Note that Finale's UI does not support any format but m'ss", but plugins could have inserted other formats.
             int rawDurationSeconds = m_score->duration();
             int minutes = rawDurationSeconds / 60;
             int seconds = rawDurationSeconds % 60;
-            return std::to_string(minutes) + "'" + std::to_string(seconds) + '"';
+            std::ostringstream oss;
+            oss << minutes << '\'' << std::setw(2) << std::setfill('0') << seconds << '"';
+            return oss.str();
         } else if (parsedCommand[0] ==  "copyright") {
-            switch (hfType) {
+            switch (options.hfType) {
                 default:
                 case HeaderFooterType::None: break;
                 case HeaderFooterType::FirstPage: return "$C";
@@ -380,16 +399,16 @@ void FinaleParser::importPageTexts()
         }
     }
 
-    auto stringFromPageText = [&](const std::shared_ptr<others::PageTextAssign>& pageText) {
+    auto stringFromPageText = [&](const std::shared_ptr<others::PageTextAssign>& pageText, bool isForHeaderFooter = true) {
         std::optional<PageCmper> startPage = pageText->calcStartPageNumber(m_currentMusxPartId);
-        HeaderFooterType hfType = HeaderFooterType::None;
-        if (isOnlyPage(pageText, 1)) {
-            hfType = HeaderFooterType::FirstPage;
-        } else if (startPage == 2 && pageText->isMultiAssignedThruLastPage()) {
+        HeaderFooterType hfType = isForHeaderFooter ? HeaderFooterType::FirstPage : HeaderFooterType::None;
+        if (isForHeaderFooter && startPage == 2 && pageText->isMultiAssignedThruLastPage()) {
             hfType = HeaderFooterType::SecondPageToEnd;
         }
         std::optional<PageCmper> forPageId = hfType != HeaderFooterType::SecondPageToEnd ? startPage : std::nullopt;
         musx::util::EnigmaParsingContext parsingContext = pageText->getRawTextCtx(m_currentMusxPartId, forPageId);
+        EnigmaParsingOptions options(hfType);
+        /// @todo set options.scaleFontSizeBy to per-page scaling if MuseScore can't do per-page scaling directly.
         return stringFromEnigmaText(parsingContext, hfType);
     };
 

@@ -45,7 +45,7 @@ namespace mu::iex::finale {
 void FinaleParser::parse()
 {
     // styles (first, so that spatium and other defaults are correct)
-    importStyles(m_score->style(), m_currentMusxPartId);
+    importStyles();
 
     // scoremap
     importParts();

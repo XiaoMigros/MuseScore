@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "dom/score.h"
 #include "dom/mscore.h"
 #include "dom/textbase.h"
 #include "dom/mmrestrange.h"
@@ -32,10 +33,6 @@ using namespace mu::engraving;
 using namespace musx::dom;
 
 namespace mu::iex::finale {
-
-// Finale uses music font size 24 to fill a space.
-// MuseScore uses music font size 20 to fill a space.
-constexpr static double MUSE_FINALE_SCALE_DIFFERENTIAL = 20.0 / 24.0;
 
 static const std::set<std::string_view> museScoreSMuFLFonts{
     "Bravura",
@@ -186,19 +183,21 @@ static void writeEfixSpace(MStyle& style, Sid sid, Efix efix)
     style.set(sid, FinaleTConv::doubleFromEfix(efix));
 }
 
-static void writeFontPref(MStyle& style, const std::string& namePrefix, const FontInfo* fontInfo)
+static void writeFontPref(MStyle& style, const std::string& namePrefix, const std::shared_ptr<FontInfo>& fontInfo)
 {
     style.set(styleIdx(namePrefix + "FontFace"), String::fromStdString(fontInfo->getName()));
-    style.set(styleIdx(namePrefix + "FontSize"),
-                    double(fontInfo->fontSize) * (fontInfo->absolute ? 1.0 : MUSE_FINALE_SCALE_DIFFERENTIAL));
+    style.set(styleIdx(namePrefix + "FontSize"), FinaleTConv::spatiumScaledFontSize(fontInfo));
     style.set(styleIdx(namePrefix + "FontSpatiumDependent"), !fontInfo->absolute);
-    style.set(styleIdx(namePrefix + "FontStyle"), museFontEfx(fontInfo));
+    style.set(styleIdx(namePrefix + "FontStyle"), museFontEfx(fontInfo.get()));
 }
 
 static void writeDefaultFontPref(MStyle& style, const FinalePreferences& prefs, const std::string& namePrefix, options::FontOptions::FontType type)
 {
-    auto fontPrefs = options::FontOptions::getFontInfo(prefs.document, type);
-    writeFontPref(style, namePrefix, fontPrefs.get());
+    if (auto fontPrefs = options::FontOptions::getFontInfo(prefs.document, type)) {
+        writeFontPref(style, namePrefix, fontPrefs);
+    } else {
+        prefs.logger->logWarning(String::fromStdString("unable to load default font info for type " + std::to_string(int(type))));
+    }
 }
 
 void writeLinePrefs(MStyle& style,
@@ -244,7 +243,7 @@ static void writeCategoryTextFontPref(MStyle& style, const FinalePreferences& pr
         prefs.logger->logWarning(String::fromStdString("marking category " + cat->getName() + " has no text font."));
         return;
     }
-    writeFontPref(style, namePrefix, cat->textFont.get());
+    writeFontPref(style, namePrefix, cat->textFont);
     for (auto& it : cat->textExpressions) {
         if (auto exp = it.second.lock()) {
             writeFramePrefs(style, namePrefix, exp->getEnclosure().get());
@@ -326,7 +325,7 @@ static void writeLyricsPrefs(MStyle& style, const FinalePreferences& prefs)
                 fontInfo = font;
             }
         }
-        writeFontPref(style, "lyrics" + std::string(evenOdd), fontInfo.get());
+        writeFontPref(style, "lyrics" + std::string(evenOdd), fontInfo);
     }
 }
 
@@ -512,7 +511,7 @@ void writeMeasureNumberPrefs(MStyle& style, const FinalePreferences& prefs)
                                   Evpu vertical,
                                   const std::string& prefix)
         {
-            writeFontPref(style, prefix, fontInfo.get());
+            writeFontPref(style, prefix, fontInfo);
             style.set(styleIdx(prefix + "VPlacement"), verticalAlignment(vertical));
             style.set(styleIdx(prefix + "HPlacement"), horizontalAlignment(alignment));
             style.set(styleIdx(prefix + "Align"), justificationAlign(justification));
@@ -605,7 +604,7 @@ void writeTupletPrefs(MStyle& style, const FinalePreferences& prefs)
         style.set(Sid::tupletMusicalSymbolsScale, museMagVal(prefs, options::FontOptions::FontType::Tuplet));
         style.set(Sid::tupletUseSymbols, true);
     } else {
-        writeFontPref(style, "tuplet", fontInfo.get());
+        writeFontPref(style, "tuplet", fontInfo);
         style.set(Sid::tupletMusicalSymbolsScale, 1.0);
         style.set(Sid::tupletUseSymbols, false);
     }
@@ -639,7 +638,7 @@ void writeMarkingPrefs(MStyle& style, const FinalePreferences& prefs)
     if (!textBlockFont) {
         throw std::invalid_argument("unable to find font prefs for Text Blocks");
     }
-    writeFontPref(style, "default", textBlockFont.get());
+    writeFontPref(style, "default", textBlockFont);
     style.set(Sid::titleFontFace, String::fromStdString(textBlockFont->getName()));
     style.set(Sid::subTitleFontFace, String::fromStdString(textBlockFont->getName()));
     style.set(Sid::composerFontFace, String::fromStdString(textBlockFont->getName()));
@@ -676,25 +675,26 @@ void writeMarkingPrefs(MStyle& style, const FinalePreferences& prefs)
     writeCategoryTextFontPref(style, prefs, "rehearsalMark", CategoryType::RehearsalMarks);
     writeDefaultFontPref(style, prefs, "repeatLeft", FontType::Repeat);
     writeDefaultFontPref(style, prefs, "repeatRight", FontType::Repeat);
-    writeFontPref(style, "frame", textBlockFont.get());
+    writeFontPref(style, "frame", textBlockFont);
     writeCategoryTextFontPref(style, prefs, "textLine", CategoryType::TechniqueText);
     writeCategoryTextFontPref(style, prefs, "systemTextLine", CategoryType::ExpressiveText);
     writeCategoryTextFontPref(style, prefs, "glissando", CategoryType::TechniqueText);
     writeCategoryTextFontPref(style, prefs, "bend", CategoryType::TechniqueText);
-    writeFontPref(style, "header", textBlockFont.get());
-    writeFontPref(style, "footer", textBlockFont.get());
-    writeFontPref(style, "copyright", textBlockFont.get());
-    writeFontPref(style, "pageNumber", textBlockFont.get());
-    writeFontPref(style, "instrumentChange", textBlockFont.get());
-    writeFontPref(style, "sticking", textBlockFont.get());
+    writeFontPref(style, "header", textBlockFont);
+    writeFontPref(style, "footer", textBlockFont);
+    writeFontPref(style, "copyright", textBlockFont);
+    writeFontPref(style, "pageNumber", textBlockFont);
+    writeFontPref(style, "instrumentChange", textBlockFont);
+    writeFontPref(style, "sticking", textBlockFont);
     for (int i = 1; i <= 12; ++i) {
-        writeFontPref(style, "user" + std::to_string(i), textBlockFont.get());
+        writeFontPref(style, "user" + std::to_string(i), textBlockFont);
     }
 }
 
-void FinaleParser::importStyles(MStyle& style, Cmper partId)
+void FinaleParser::importStyles()
 {
-    FinalePreferences prefs = getCurrentPrefs(*this, partId);
+    MStyle& style = m_score->style();
+    FinalePreferences prefs = getCurrentPrefs(*this, m_currentMusxPartId);
     writePagePrefs(style, prefs);
     writeLyricsPrefs(style, prefs);
     writeLineMeasurePrefs(style, prefs);

@@ -64,6 +64,7 @@ public:
     static engraving::PointF evpuToPointF(musx::dom::Evpu xEvpu, musx::dom::Evpu yEvpu);
     static double doubleFromEfix(musx::dom::Efix efix);
     static double doubleFromPercent(int percent);
+    static double spatiumScaledFontSize(const std::shared_ptr<musx::dom::FontInfo>& fontInfo);
 };
 
 }
