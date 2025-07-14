@@ -1087,7 +1087,7 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
         { TextType::Title,       u"workTitle" },
         { TextType::Composer,    u"composer" },
         { TextType::Copyright,   u"copyright" },
-        { TextType::Description, u"description" }, // not native
+        { TextType::Description, u"description" }, // created by Finale importer
         { TextType::Lyricist,    u"lyricist" },
         { TextType::Arranger,    u"arranger" },
         { TextType::Subtitle,    u"subtitle" },
@@ -1095,13 +1095,13 @@ String FinaleTConv::metaTagFromFileInfo(texts::FileInfoText::TextType textType)
     return muse::value(metaTagTable, textType, String());
 }
 
-String FinaleTConv::metaTagFromTextComponent(std::string component)
+String FinaleTConv::metaTagFromTextComponent(const std::string& component)
 {
-    static const std::unordered_map<std::string, String> metaTagTable = {
+    static const std::unordered_map<std::string_view, String> metaTagTable = {
         { "title",       u"workTitle" },
         { "composer",    u"composer" },
         { "copyright",   u"copyright" },
-        { "description", u"description" }, // not native
+        { "description", u"description" }, // created by Finale importer
         { "lyricist",    u"lyricist" },
         { "arranger",    u"arranger" },
         { "subtitle",    u"subtitle" },
@@ -1112,6 +1112,16 @@ String FinaleTConv::metaTagFromTextComponent(std::string component)
 double FinaleTConv::doubleFromPercent(int percent)
 {
     return double(percent) / 100.0;
+}
+
+double FinaleTConv::spatiumScaledFontSize(const std::shared_ptr<FontInfo>& fontInfo)
+{
+    // Finale uses music font size 24 to fill a space.
+    // MuseScore uses music font size 20 to fill a space.
+    // This scaling carries over to any font setting whose font size scales with spatium.
+    constexpr static double MUSE_FINALE_SCALE_DIFFERENTIAL = 20.0 / 24.0;
+
+    return double(fontInfo->fontSize) * (fontInfo->absolute ? 1.0 : MUSE_FINALE_SCALE_DIFFERENTIAL);
 }
 
 }

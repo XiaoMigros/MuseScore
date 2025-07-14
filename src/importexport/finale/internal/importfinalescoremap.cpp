@@ -203,16 +203,6 @@ void FinaleParser::importParts()
         QString partId = String("P%1").arg(++partNumber);
         part->setId(partId);
 
-        // names of part
-        std::string fullBaseName = staff->getFullInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setPartName(QString::fromStdString(trimNewLineFromString(fullBaseName)));
-
-        std::string fullEffectiveName = compositeStaff->getFullInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setLongName(QString::fromStdString(trimNewLineFromString(fullEffectiveName)));
-
-        std::string abrvName = compositeStaff->getAbbreviatedInstrumentName(musx::util::EnigmaString::AccidentalStyle::Unicode);
-        part->setShortName(QString::fromStdString(trimNewLineFromString(abrvName)));
-
         if (multiStaffInst) {
             for (auto inst : multiStaffInst->visualStaffNums) {
                 if (auto instStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, inst, 1, 0)) {
@@ -224,6 +214,21 @@ void FinaleParser::importParts()
             createStaff(part, compositeStaff, it);
             inst2Part.emplace(staff->getCmper(), partId);
         }
+
+        // names of part
+        auto nameFromEnigmaText = [&](const musx::util::EnigmaParsingContext& parsingContext) {
+            EnigmaParsingOptions options;
+            // Finale staff/group names do not scale with individual staff scaling whereas MS instrument names do
+            // Compensate here.
+            if (!part->staves().empty()) {
+                options.scaleFontSizeBy = 1.0 / part->staff(0)->constStaffType(Fraction(0, 1))->userMag();
+            }
+            return stringFromEnigmaText(parsingContext, options);
+        };
+        part->setPartName(nameFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId)));
+        part->setLongName(nameFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId)));
+        part->setShortName(nameFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId)));
+
         m_score->appendPart(part);
     }
 }
@@ -669,6 +674,9 @@ void FinaleParser::importStaffItems()
 
 void FinaleParser::importPageLayout()
 {
+    /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty
+    /// @todo Match staff separation in Finale better.
+
     // No measures or staves means no valid staff systems
     if (m_score->measures()->empty() || m_score->noStaves()) {
         return;
@@ -683,7 +691,7 @@ void FinaleParser::importPageLayout()
 
         //retrieve leftmost measure of system
         Fraction startTick = muse::value(m_meas2Tick, leftStaffSystem->startMeas, Fraction(-1, 1));
-        Measure* startMeasure = startTick >= Fraction(0, 1)  ? m_score->tick2measure(startTick) : nullptr;
+        Measure* startMeasure = startTick >= Fraction(0, 1) ? m_score->tick2measure(startTick) : nullptr;
 
         // determine if system is first on the page
         // determine the current page the staffsystem is on
@@ -698,7 +706,7 @@ void FinaleParser::importPageLayout()
             IF_ASSERT_FAILED(firstPageSystem) {
                 break;
             }
-            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
+            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-2, 1));
             if (pageStartTick < startTick) {
                 continue;
             }
@@ -825,7 +833,8 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((rightStaffSystem->bottom + 96) + staffSystems[i+1]->distanceToPrev + (-staffSystems[i+1]->top))));
+            // In Finale, up is positive and down is negative. That means we have to reverse the signs for MuseScore.
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top)));
             startMeasure->add(downSpacer);
         }
     }
