@@ -55,6 +55,15 @@ enum class HeaderFooterType {
     SecondPageToEnd
 };
 
+struct EnigmaParsingOptions
+{
+    EnigmaParsingOptions() = default;
+    EnigmaParsingOptions(HeaderFooterType hf) : hfType(hf)  {};
+
+    HeaderFooterType hfType = HeaderFooterType::None;
+    double scaleFontSizeBy = 1.0;
+};
+
 class FinaleParser
 {
 public:
@@ -97,13 +106,13 @@ private:
     bool positionFixedRests(const std::unordered_map<engraving::Rest*, musx::dom::NoteInfoPtr>& fixedRests);
 
     // styles
-    void importStyles(engraving::MStyle& style, musx::dom::Cmper partId);
+    void importStyles();
 
     // texts
     void importPageTexts();
 
     bool isOnlyPage(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign, musx::dom::PageCmper page);
-    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, HeaderFooterType hfType = HeaderFooterType::None);
+    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options = {});
 
     engraving::Score* m_score;
     const std::shared_ptr<musx::dom::Document> m_doc;

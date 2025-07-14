@@ -203,11 +203,6 @@ void FinaleParser::importParts()
         QString partId = String("P%1").arg(++partNumber);
         part->setId(partId);
 
-        // names of part
-        part->setPartName(stringFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId)));
-        part->setLongName(stringFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId)));
-        part->setShortName(stringFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId)));
-
         if (multiStaffInst) {
             for (auto inst : multiStaffInst->visualStaffNums) {
                 if (auto instStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, inst, 1, 0)) {
@@ -219,6 +214,21 @@ void FinaleParser::importParts()
             createStaff(part, compositeStaff, it);
             inst2Part.emplace(staff->getCmper(), partId);
         }
+
+        // names of part
+        auto nameFromEnigmaText = [&](const musx::util::EnigmaParsingContext& parsingContext) {
+            EnigmaParsingOptions options;
+            // Finale staff/group names do not scale with individual staff scaling whereas MS instrument names do
+            // Compensate here.
+            if (!part->staves().empty()) {
+                options.scaleFontSizeBy = 1.0 / part->staff(0)->constStaffType(Fraction(0, 1))->userMag();
+            }
+            return stringFromEnigmaText(parsingContext, options);
+        };
+        part->setPartName(nameFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId)));
+        part->setLongName(nameFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId)));
+        part->setShortName(nameFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId)));
+
         m_score->appendPart(part);
     }
 }
@@ -678,7 +688,7 @@ void FinaleParser::importPageLayout()
 
         //retrieve leftmost measure of system
         Fraction startTick = muse::value(m_meas2Tick, leftStaffSystem->startMeas, Fraction(-1, 1));
-        Measure* startMeasure = startTick >= Fraction(0, 1)  ? m_score->tick2measure(startTick) : nullptr;
+        Measure* startMeasure = startTick >= Fraction(0, 1) ? m_score->tick2measure(startTick) : nullptr;
 
         // determine if system is first on the page
         // determine the current page the staffsystem is on
@@ -693,7 +703,7 @@ void FinaleParser::importPageLayout()
             IF_ASSERT_FAILED(firstPageSystem) {
                 break;
             }
-            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
+            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-2, 1));
             if (pageStartTick < startTick) {
                 continue;
             }
@@ -820,7 +830,7 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((rightStaffSystem->bottom + 96) + staffSystems[i+1]->distanceToPrev + (-staffSystems[i+1]->top))));
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + (staffSystems[i+1]->top))));
             startMeasure->add(downSpacer);
         }
     }
