@@ -58,7 +58,7 @@ void FinaleParser::parse()
     mapLayers();
     importEntries();
 
-    // importTexts(); WIP
+    importPageTexts(); //WIP
 }
 
 }
