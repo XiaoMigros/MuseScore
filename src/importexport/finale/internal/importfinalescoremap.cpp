@@ -674,6 +674,9 @@ void FinaleParser::importStaffItems()
 
 void FinaleParser::importPageLayout()
 {
+    /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty
+    /// @todo Match staff separation in Finale better.
+
     // No measures or staves means no valid staff systems
     if (m_score->measures()->empty() || m_score->noStaves()) {
         return;
@@ -830,7 +833,8 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + (staffSystems[i+1]->top))));
+            // In Finale, up is positive and down is negative. That means we have to reverse the signs for MuseScore.
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top)));
             startMeasure->add(downSpacer);
         }
     }
