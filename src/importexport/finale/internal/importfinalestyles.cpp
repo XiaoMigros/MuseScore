@@ -45,44 +45,6 @@ static const std::set<std::string_view> museScoreSMuFLFonts{
     "Finale Broadway"
 };
 
-struct FinalePreferences
-{
-    FinalePreferences(const FinaleParser& context) :
-        document(context.musxDocument()), logger(context.logger()) {}
-
-    DocumentPtr document;
-    std::shared_ptr<FinaleLogger> logger;
-    std::shared_ptr<FontInfo> defaultMusicFont;
-    Cmper forPartId{};
-    // options
-    std::shared_ptr<options::AccidentalOptions> accidentalOptions;
-    std::shared_ptr<options::AlternateNotationOptions> alternateNotationOptions;
-    std::shared_ptr<options::AugmentationDotOptions> augDotOptions;
-    std::shared_ptr<options::BarlineOptions> barlineOptions;
-    std::shared_ptr<options::BeamOptions> beamOptions;
-    std::shared_ptr<options::ClefOptions> clefOptions;
-    std::shared_ptr<options::FlagOptions> flagOptions;
-    std::shared_ptr<options::GraceNoteOptions> graceOptions;
-    std::shared_ptr<options::KeySignatureOptions> keyOptions;
-    std::shared_ptr<options::LineCurveOptions> lineCurveOptions;
-    std::shared_ptr<options::MiscOptions> miscOptions;
-    std::shared_ptr<options::MultimeasureRestOptions> mmRestOptions;
-    std::shared_ptr<options::MusicSpacingOptions> musicSpacing;
-    std::shared_ptr<options::PageFormatOptions::PageFormat> pageFormat;
-    std::shared_ptr<options::PianoBraceBracketOptions> braceOptions;
-    std::shared_ptr<options::RepeatOptions> repeatOptions;
-    std::shared_ptr<options::SmartShapeOptions> smartShapeOptions;
-    std::shared_ptr<options::StaffOptions> staffOptions;
-    std::shared_ptr<options::StemOptions> stemOptions;
-    std::shared_ptr<options::TieOptions> tieOptions;
-    std::shared_ptr<options::TimeSignatureOptions> timeOptions;
-    std::shared_ptr<options::TupletOptions> tupletOptions;
-    // others that function as options
-    std::shared_ptr<others::LayerAttributes> layerOneAttributes;
-    std::shared_ptr<others::MeasureNumberRegion::ScorePartData> measNumScorePart;
-    std::shared_ptr<others::PartGlobals> partGlobals;
-};
-
 template <typename T>
 static std::shared_ptr<T> getDocOptions(const FinaleParser& context, const std::string& prefsName)
 {
@@ -93,57 +55,52 @@ static std::shared_ptr<T> getDocOptions(const FinaleParser& context, const std::
     return result;
 }
 
-static FinalePreferences getCurrentPrefs(const FinaleParser& context, Cmper forPartId)
+void FinaleOptions::init(const FinaleParser& context)
 {
-    FinalePreferences retval(context);
-    retval.forPartId = forPartId;
-
     auto fontOptions = getDocOptions<options::FontOptions>(context, "font");
-    retval.defaultMusicFont = fontOptions->getFontInfo(options::FontOptions::FontType::Music);
+    defaultMusicFont = fontOptions->getFontInfo(options::FontOptions::FontType::Music);
     //
-    retval.accidentalOptions = getDocOptions<options::AccidentalOptions>(context, "accidental");
-    retval.alternateNotationOptions = getDocOptions<options::AlternateNotationOptions>(context, "alternate notation");
-    retval.augDotOptions = getDocOptions<options::AugmentationDotOptions>(context, "augmentation dot");
-    retval.barlineOptions = getDocOptions<options::BarlineOptions>(context, "barline");
-    retval.beamOptions = getDocOptions<options::BeamOptions>(context, "beam");
-    retval.clefOptions = getDocOptions<options::ClefOptions>(context, "clef");
-    retval.flagOptions = getDocOptions<options::FlagOptions>(context, "flag");
-    retval.graceOptions = getDocOptions<options::GraceNoteOptions>(context, "grace note");
-    retval.keyOptions = getDocOptions<options::KeySignatureOptions>(context, "key signature");
-    retval.lineCurveOptions = getDocOptions<options::LineCurveOptions>(context, "lines & curves");
-    retval.miscOptions = getDocOptions<options::MiscOptions>(context, "miscellaneous");
-    retval.mmRestOptions = getDocOptions<options::MultimeasureRestOptions>(context, "multimeasure rest");
-    retval.musicSpacing = getDocOptions<options::MusicSpacingOptions>(context, "music spacing");
+    accidentalOptions = getDocOptions<options::AccidentalOptions>(context, "accidental");
+    alternateNotationOptions = getDocOptions<options::AlternateNotationOptions>(context, "alternate notation");
+    augDotOptions = getDocOptions<options::AugmentationDotOptions>(context, "augmentation dot");
+    barlineOptions = getDocOptions<options::BarlineOptions>(context, "barline");
+    beamOptions = getDocOptions<options::BeamOptions>(context, "beam");
+    clefOptions = getDocOptions<options::ClefOptions>(context, "clef");
+    flagOptions = getDocOptions<options::FlagOptions>(context, "flag");
+    graceOptions = getDocOptions<options::GraceNoteOptions>(context, "grace note");
+    keyOptions = getDocOptions<options::KeySignatureOptions>(context, "key signature");
+    lineCurveOptions = getDocOptions<options::LineCurveOptions>(context, "lines & curves");
+    miscOptions = getDocOptions<options::MiscOptions>(context, "miscellaneous");
+    mmRestOptions = getDocOptions<options::MultimeasureRestOptions>(context, "multimeasure rest");
+    musicSpacing = getDocOptions<options::MusicSpacingOptions>(context, "music spacing");
     auto pageFormatOptions = getDocOptions<options::PageFormatOptions>(context, "page format");
-    retval.pageFormat = pageFormatOptions->calcPageFormatForPart(forPartId);
-    retval.braceOptions = getDocOptions<options::PianoBraceBracketOptions>(context, "piano braces & brackets");
-    retval.repeatOptions = getDocOptions<options::RepeatOptions>(context, "repeat");
-    retval.smartShapeOptions = getDocOptions<options::SmartShapeOptions>(context, "smart shape");
-    retval.staffOptions = getDocOptions<options::StaffOptions>(context, "staff");
-    retval.stemOptions = getDocOptions<options::StemOptions>(context, "stem");
-    retval.tieOptions = getDocOptions<options::TieOptions>(context, "tie");
-    retval.timeOptions = getDocOptions<options::TimeSignatureOptions>(context, "time signature");
-    retval.tupletOptions = getDocOptions<options::TupletOptions>(context, "tuplet");
+    pageFormat = pageFormatOptions->calcPageFormatForPart(context.currentMusxPartId());
+    braceOptions = getDocOptions<options::PianoBraceBracketOptions>(context, "piano braces & brackets");
+    repeatOptions = getDocOptions<options::RepeatOptions>(context, "repeat");
+    smartShapeOptions = getDocOptions<options::SmartShapeOptions>(context, "smart shape");
+    staffOptions = getDocOptions<options::StaffOptions>(context, "staff");
+    stemOptions = getDocOptions<options::StemOptions>(context, "stem");
+    tieOptions = getDocOptions<options::TieOptions>(context, "tie");
+    timeOptions = getDocOptions<options::TimeSignatureOptions>(context, "time signature");
+    tupletOptions = getDocOptions<options::TupletOptions>(context, "tuplet");
     //
-    retval.layerOneAttributes = context.musxDocument()->getOthers()->get<others::LayerAttributes>(forPartId, 0);
-    if (!retval.layerOneAttributes) {
+    layerOneAttributes = context.musxDocument()->getOthers()->get<others::LayerAttributes>(context.currentMusxPartId(), 0);
+    if (!layerOneAttributes) {
         throw std::invalid_argument("document contains no options for Layer 1");
     }
-    auto measNumRegions = context.musxDocument()->getOthers()->getArray<others::MeasureNumberRegion>(forPartId);
+    auto measNumRegions = context.musxDocument()->getOthers()->getArray<others::MeasureNumberRegion>(context.currentMusxPartId());
     if (measNumRegions.size() > 0) {
-        retval.measNumScorePart = (forPartId && measNumRegions[0]->useScoreInfoForPart && measNumRegions[0]->partData)
+        measNumScorePart = (context.currentMusxPartId() && measNumRegions[0]->useScoreInfoForPart && measNumRegions[0]->partData)
         ? measNumRegions[0]->partData
         : measNumRegions[0]->scoreData;
-        if (!retval.measNumScorePart) {
+        if (!measNumScorePart) {
             throw std::invalid_argument("document contains no ScorePartData for measure number region " + std::to_string(measNumRegions[0]->getCmper()));
         }
     }
-    retval.partGlobals = context.musxDocument()->getOthers()->get<others::PartGlobals>(forPartId, MUSX_GLOBALS_CMPER);
-    if (!retval.layerOneAttributes) {
+    partGlobals = context.musxDocument()->getOthers()->get<others::PartGlobals>(context.currentMusxPartId(), MUSX_GLOBALS_CMPER);
+    if (!layerOneAttributes) {
         throw std::invalid_argument("document contains no options for Layer 1");
     }
-
-    return retval;
 }
 
 static uint16_t museFontEfx(const FontInfo* fontInfo)
@@ -158,11 +115,11 @@ static uint16_t museFontEfx(const FontInfo* fontInfo)
     return retval;
 }
 
-static double museMagVal(const FinalePreferences& prefs, const options::FontOptions::FontType type)
+static double museMagVal(const FinaleParser& context, const options::FontOptions::FontType type)
 {
-    auto fontPrefs = options::FontOptions::getFontInfo(prefs.document, type);
-    if (fontPrefs->getName() == prefs.defaultMusicFont->getName()) {
-        return double(fontPrefs->fontSize) / double(prefs.defaultMusicFont->fontSize);
+    auto fontPrefs = options::FontOptions::getFontInfo(context.musxDocument(), type);
+    if (fontPrefs->getName() == context.musxOptions().defaultMusicFont->getName()) {
+        return double(fontPrefs->fontSize) / double(context.musxOptions().defaultMusicFont->fontSize);
     }
     return 1.0;
 }
@@ -191,12 +148,12 @@ static void writeFontPref(MStyle& style, const std::string& namePrefix, const st
     style.set(styleIdx(namePrefix + "FontStyle"), museFontEfx(fontInfo.get()));
 }
 
-static void writeDefaultFontPref(MStyle& style, const FinalePreferences& prefs, const std::string& namePrefix, options::FontOptions::FontType type)
+static void writeDefaultFontPref(MStyle& style, const FinaleParser& context, const std::string& namePrefix, options::FontOptions::FontType type)
 {
-    if (auto fontPrefs = options::FontOptions::getFontInfo(prefs.document, type)) {
+    if (auto fontPrefs = options::FontOptions::getFontInfo(context.musxDocument(), type)) {
         writeFontPref(style, namePrefix, fontPrefs);
     } else {
-        prefs.logger->logWarning(String::fromStdString("unable to load default font info for type " + std::to_string(int(type))));
+        context.logger()->logWarning(String::fromStdString("unable to load default font info for type " + std::to_string(int(type))));
     }
 }
 
@@ -232,15 +189,15 @@ static void writeFramePrefs(MStyle& style, const std::string& namePrefix, const 
               enclosure->roundCorners ? int(lround(enclosure->cornerRadius / EFIX_PER_EVPU)) : 0);
 }
 
-static void writeCategoryTextFontPref(MStyle& style, const FinalePreferences& prefs, const std::string& namePrefix, others::MarkingCategory::CategoryType categoryType)
+static void writeCategoryTextFontPref(MStyle& style, const FinaleParser& context, const std::string& namePrefix, others::MarkingCategory::CategoryType categoryType)
 {
-    auto cat = prefs.document->getOthers()->get<others::MarkingCategory>(prefs.forPartId, Cmper(categoryType));
+    auto cat = context.musxDocument()->getOthers()->get<others::MarkingCategory>(context.currentMusxPartId(), Cmper(categoryType));
     if (!cat) {
-        prefs.logger->logWarning(String::fromStdString("unable to load category def for " + namePrefix));
+        context.logger()->logWarning(String::fromStdString("unable to load category def for " + namePrefix));
         return;
     }
     if (!cat->textFont) {
-        prefs.logger->logWarning(String::fromStdString("marking category " + cat->getName() + " has no text font."));
+        context.logger()->logWarning(String::fromStdString("marking category " + cat->getName() + " has no text font."));
         return;
     }
     writeFontPref(style, namePrefix, cat->textFont);
@@ -249,14 +206,14 @@ static void writeCategoryTextFontPref(MStyle& style, const FinalePreferences& pr
             writeFramePrefs(style, namePrefix, exp->getEnclosure().get());
             break;
         } else {
-            prefs.logger->logWarning(String::fromStdString("marking category " + cat->getName() + " has invalid text expression."));
+            context.logger()->logWarning(String::fromStdString("marking category " + cat->getName() + " has invalid text expression."));
         }
     }
 }
 
-static void writePagePrefs(MStyle& style, const FinalePreferences& prefs)
+static void writePagePrefs(MStyle& style, const FinaleParser& context)
 {
-    const auto& pagePrefs = prefs.pageFormat;
+    const auto& pagePrefs = context.musxOptions().pageFormat;
 
     style.set(Sid::pageWidth, double(pagePrefs->pageWidth) / EVPU_PER_INCH);
     style.set(Sid::pageHeight, double(pagePrefs->pageHeight) / EVPU_PER_INCH);
@@ -281,7 +238,7 @@ static void writePagePrefs(MStyle& style, const FinalePreferences& prefs)
     style.set(Sid::spatium, ((EVPU_PER_SPACE * staffPercent * pagePercent) / EVPU_PER_MM) * DPMM);
 
     // Calculate small staff size and small note size from first system, if any is there
-    if (const auto& firstSystem = prefs.document->getOthers()->get<others::StaffSystem>(prefs.forPartId, 1)) {
+    if (const auto& firstSystem = context.musxDocument()->getOthers()->get<others::StaffSystem>(context.currentMusxPartId(), 1)) {
         auto minMax = firstSystem->calcMinMaxStaffSizes();
         if (minMax.first < 1.0) {
             style.set(Sid::smallStaffMag, minMax.first.toDouble());
@@ -290,7 +247,7 @@ static void writePagePrefs(MStyle& style, const FinalePreferences& prefs)
     }
 
     // Default music font
-    const auto& defaultMusicFont = prefs.defaultMusicFont;
+    const auto& defaultMusicFont = context.musxOptions().defaultMusicFont;
     const bool isSMuFL = [defaultMusicFont]() -> bool {
         if (defaultMusicFont->calcIsSMuFL())
             return true;
@@ -311,16 +268,16 @@ static void writePagePrefs(MStyle& style, const FinalePreferences& prefs)
     }
 }
 
-static void writeLyricsPrefs(MStyle& style, const FinalePreferences& prefs)
+static void writeLyricsPrefs(MStyle& style, const FinaleParser& context)
 {
-    auto fontInfo = options::FontOptions::getFontInfo(prefs.document, options::FontOptions::FontType::LyricVerse);
+    auto fontInfo = options::FontOptions::getFontInfo(context.musxDocument(), options::FontOptions::FontType::LyricVerse);
     for (auto [verseNumber, evenOdd] : {
              std::make_pair(1, "Odd"),
              std::make_pair(2, "Even")
          }) {
-        auto verseText = prefs.document->getTexts()->get<texts::LyricsVerse>(Cmper(verseNumber));
+        auto verseText = context.musxDocument()->getTexts()->get<texts::LyricsVerse>(Cmper(verseNumber));
         if (verseText && !verseText->text.empty()) {
-            auto font = verseText->getRawTextCtx(prefs.forPartId).parseFirstFontInfo();
+            auto font = verseText->getRawTextCtx(context.currentMusxPartId()).parseFirstFontInfo();
             if (font) {
                 fontInfo = font;
             }
@@ -329,9 +286,10 @@ static void writeLyricsPrefs(MStyle& style, const FinalePreferences& prefs)
     }
 }
 
-void writeLineMeasurePrefs(MStyle& style, const FinalePreferences& prefs)
+void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
 {
     using RepeatWingStyle = options::RepeatOptions::WingStyle;
+    const auto& prefs = context.musxOptions();
 
     writeEfixSpace(style, Sid::barWidth, prefs.barlineOptions->barlineWidth);
     writeEfixSpace(style, Sid::doubleBarWidth, prefs.barlineOptions->barlineWidth);
@@ -354,7 +312,7 @@ void writeLineMeasurePrefs(MStyle& style, const FinalePreferences& prefs)
     writeEvpuSpace(style, Sid::clefLeftMargin, prefs.clefOptions->clefFrontSepar);
     writeEvpuSpace(style, Sid::keysigLeftMargin, prefs.keyOptions->keyFront);
 
-    const double timeSigSpaceBefore = prefs.forPartId
+    const double timeSigSpaceBefore = context.currentMusxPartId()
                                           ? prefs.timeOptions->timeFrontParts
                                           : prefs.timeOptions->timeFront;
     writeEvpuSpace(style, Sid::timesigLeftMargin, timeSigSpaceBefore);
@@ -390,11 +348,13 @@ void writeLineMeasurePrefs(MStyle& style, const FinalePreferences& prefs)
     style.set(Sid::keySigCourtesyBarlineMode,
               int(FinaleTConv::boolToCourtesyBarlineMode(prefs.barlineOptions->drawDoubleBarlineBeforeKeyChanges)));
     style.set(Sid::timeSigCourtesyBarlineMode, int(CourtesyBarlineMode::ALWAYS_SINGLE));  // Hard-coded as 0 in Finale
-    style.set(Sid::hideEmptyStaves, !prefs.forPartId);
+    style.set(Sid::hideEmptyStaves, context.currentMusxPartId() == SCORE_PARTID);
 }
 
-void writeStemPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeStemPrefs(MStyle& style, const FinaleParser& context)
 {
+    const auto& prefs = context.musxOptions();
+
     style.set(Sid::useStraightNoteFlags, prefs.flagOptions->straightFlags);
     writeEfixSpace(style, Sid::stemWidth, prefs.stemOptions->stemWidth);
     style.set(Sid::shortenStem, true);
@@ -403,8 +363,10 @@ void writeStemPrefs(MStyle& style, const FinalePreferences& prefs)
     writeEfixSpace(style, Sid::stemSlashThickness, prefs.graceOptions->graceSlashWidth);
 }
 
-void writeMusicSpacingPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeMusicSpacingPrefs(MStyle& style, const FinaleParser& context)
 {
+    const auto& prefs = context.musxOptions();
+
     writeEvpuSpace(style, Sid::minMeasureWidth, prefs.musicSpacing->minWidth);
     writeEvpuSpace(style, Sid::minNoteDistance, prefs.musicSpacing->minDistance);
     style.set(Sid::measureSpacing, prefs.musicSpacing->scalingFactor);
@@ -412,8 +374,10 @@ void writeMusicSpacingPrefs(MStyle& style, const FinalePreferences& prefs)
     writeEvpuSpace(style, Sid::minTieLength, prefs.musicSpacing->minDistTiedNotes);
 }
 
-void writeNoteRelatedPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeNoteRelatedPrefs(MStyle& style, const FinaleParser& context)
 {
+    const auto& prefs = context.musxOptions();
+
     writeEvpuSpace(style, Sid::accidentalDistance, prefs.accidentalOptions->acciAcciSpace);
     writeEvpuSpace(style, Sid::accidentalNoteDistance, prefs.accidentalOptions->acciNoteSpace);
     writeEfixSpace(style, Sid::beamWidth, prefs.beamOptions->beamWidth);
@@ -424,25 +388,27 @@ void writeNoteRelatedPrefs(MStyle& style, const FinalePreferences& prefs)
               (prefs.beamOptions->beamStubLength + (2.0 * prefs.stemOptions->stemWidth / EFIX_PER_EVPU)));
 
     style.set(Sid::beamNoSlope, prefs.beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::AlwaysFlat);
-    style.set(Sid::dotMag, museMagVal(prefs, options::FontOptions::FontType::AugDots));
+    style.set(Sid::dotMag, museMagVal(context, options::FontOptions::FontType::AugDots));
     writeEvpuSpace(style, Sid::dotNoteDistance, prefs.augDotOptions->dotNoteOffset);
     writeEvpuSpace(style, Sid::dotRestDistance, prefs.augDotOptions->dotNoteOffset); // Same value as dotNoteDistance
     /// @todo Finale's value is calculated relative to the rightmost point of the previous dot, MuseScore the leftmost.(Observed behavior)
     /// We need to add on the symbol width of one dot for the correct value.
     writeEvpuSpace(style, Sid::dotDotDistance, prefs.augDotOptions->dotOffset);
-    style.set(Sid::articulationMag, museMagVal(prefs, options::FontOptions::FontType::Articulation));
+    style.set(Sid::articulationMag, museMagVal(context, options::FontOptions::FontType::Articulation));
     style.set(Sid::graceNoteMag, FinaleTConv::doubleFromPercent(prefs.graceOptions->gracePerc));
     style.set(Sid::concertPitch, !prefs.partGlobals->showTransposed);
     style.set(Sid::multiVoiceRestTwoSpaceOffset, std::labs(prefs.layerOneAttributes->restOffset) >= 4);
     style.set(Sid::mergeMatchingRests, prefs.miscOptions->consolidateRestsAcrossLayers);
 }
 
-void writeSmartShapePrefs(MStyle& style, const FinalePreferences& prefs)
+void writeSmartShapePrefs(MStyle& style, const FinaleParser& context)
 {
+    const auto& prefs = context.musxOptions();
+
     // Hairpin-related settings
     writeEvpuSpace(style, Sid::hairpinHeight, prefs.smartShapeOptions->shortHairpinOpeningWidth);
     style.set(Sid::hairpinContHeight, 0.5); // Hardcoded to a half space
-    writeCategoryTextFontPref(style, prefs, "hairpin", others::MarkingCategory::CategoryType::Dynamics);
+    writeCategoryTextFontPref(style, context, "hairpin", others::MarkingCategory::CategoryType::Dynamics);
     writeLinePrefs(style, "hairpin",
                    prefs.smartShapeOptions->crescLineWidth,
                    prefs.smartShapeOptions->smartDashOn,
@@ -470,9 +436,11 @@ void writeSmartShapePrefs(MStyle& style, const FinalePreferences& prefs)
     style.set(Sid::ottavaNumbersOnly, prefs.smartShapeOptions->showOctavaAsText);
 }
 
-void writeMeasureNumberPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
 {
     using MeasureNumberRegion = others::MeasureNumberRegion;
+    const auto& prefs = context.musxOptions();
+
     style.set(Sid::showMeasureNumber, prefs.measNumScorePart != nullptr);
 
     if (prefs.measNumScorePart) {
@@ -542,7 +510,7 @@ void writeMeasureNumberPrefs(MStyle& style, const FinalePreferences& prefs)
                        scorePart->mmRestJustify, scorePart->mmRestAlign, scorePart->mmRestYdisp, "mmRestRange");
     }
 
-    style.set(Sid::createMultiMeasureRests, prefs.forPartId != 0);
+    style.set(Sid::createMultiMeasureRests, context.currentMusxPartId() != 0);
     style.set(Sid::minEmptyMeasures, prefs.mmRestOptions->numStart);
     writeEvpuSpace(style, Sid::minMMRestWidth, prefs.mmRestOptions->measWidth);
     style.set(Sid::mmRestNumberPos, (prefs.mmRestOptions->numAdjY / EVPU_PER_SPACE) + 1);
@@ -553,17 +521,20 @@ void writeMeasureNumberPrefs(MStyle& style, const FinalePreferences& prefs)
     writeEvpuSpace(style, Sid::mmRestOldStyleSpacing, prefs.mmRestOptions->symSpacing);
 }
 
-void writeRepeatEndingPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeRepeatEndingPrefs(MStyle& style, const FinaleParser& context)
 {
+    const auto& prefs = context.musxOptions();
+
     writeEfixSpace(style, Sid::voltaLineWidth, prefs.repeatOptions->bracketLineWidth);
     style.set(Sid::voltaLineStyle, LineType::SOLID);
-    writeDefaultFontPref(style, prefs, "volta", options::FontOptions::FontType::Ending);
+    writeDefaultFontPref(style, context, "volta", options::FontOptions::FontType::Ending);
     style.set(Sid::voltaAlign, Align(AlignH::LEFT, AlignV::BASELINE));
 }
 
-void writeTupletPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeTupletPrefs(MStyle& style, const FinaleParser& context)
 {
     using TupletOptions = options::TupletOptions;
+    const auto& prefs = context.musxOptions();
     const auto& tupletOptions = prefs.tupletOptions;
 
     style.set(Sid::tupletOutOfStaff, tupletOptions->avoidStaff);
@@ -595,13 +566,13 @@ void writeTupletPrefs(MStyle& style, const FinalePreferences& prefs)
         style.set(Sid::tupletBracketType, int(TupletBracketType::AUTO_BRACKET));
     }
 
-    const auto& fontInfo = options::FontOptions::getFontInfo(prefs.document, options::FontOptions::FontType::Tuplet);
+    const auto& fontInfo = options::FontOptions::getFontInfo(context.musxDocument(), options::FontOptions::FontType::Tuplet);
     if (!fontInfo) {
         throw std::invalid_argument("Unable to load font pref for tuplets");
     }
 
     if (fontInfo->calcIsSMuFL()) {
-        style.set(Sid::tupletMusicalSymbolsScale, museMagVal(prefs, options::FontOptions::FontType::Tuplet));
+        style.set(Sid::tupletMusicalSymbolsScale, museMagVal(context, options::FontOptions::FontType::Tuplet));
         style.set(Sid::tupletUseSymbols, true);
     } else {
         writeFontPref(style, "tuplet", fontInfo);
@@ -613,12 +584,13 @@ void writeTupletPrefs(MStyle& style, const FinalePreferences& prefs)
                 (std::max)(-tupletOptions->leftHookLen, -tupletOptions->rightHookLen));
 }
 
-void writeMarkingPrefs(MStyle& style, const FinalePreferences& prefs)
+void writeMarkingPrefs(MStyle& style, const FinaleParser& context)
 {
     using FontType = options::FontOptions::FontType;
     using CategoryType = others::MarkingCategory::CategoryType;
+    const auto& prefs = context.musxOptions();
 
-    auto cat = prefs.document->getOthers()->get<others::MarkingCategory>(prefs.forPartId, Cmper(CategoryType::Dynamics));
+    auto cat = context.musxDocument()->getOthers()->get<others::MarkingCategory>(context.currentMusxPartId(), Cmper(CategoryType::Dynamics));
     if (!cat) {
         throw std::invalid_argument("unable to find MarkingCategory for dynamics");
     }
@@ -634,7 +606,7 @@ void writeMarkingPrefs(MStyle& style, const FinalePreferences& prefs)
                   catFontInfo->calcIsSMuFL() ? (catFontInfo->fontSize / prefs.defaultMusicFont->fontSize) : 1.0);
     }
 
-    auto textBlockFont = options::FontOptions::getFontInfo(prefs.document, FontType::TextBlock);
+    auto textBlockFont = options::FontOptions::getFontInfo(context.musxDocument(), FontType::TextBlock);
     if (!textBlockFont) {
         throw std::invalid_argument("unable to find font prefs for Text Blocks");
     }
@@ -644,42 +616,42 @@ void writeMarkingPrefs(MStyle& style, const FinalePreferences& prefs)
     style.set(Sid::composerFontFace, String::fromStdString(textBlockFont->getName()));
     style.set(Sid::lyricistFontFace, String::fromStdString(textBlockFont->getName()));
 
-    writeDefaultFontPref(style, prefs, "longInstrument", FontType::StaffNames);
+    writeDefaultFontPref(style, context, "longInstrument", FontType::StaffNames);
     const auto fullPosition = prefs.staffOptions->namePos;
     if (!fullPosition) {
         throw std::invalid_argument("unable to find default full name positioning for staves");
     }
     style.set(Sid::longInstrumentAlign, FinaleTConv::justifyToAlignment(fullPosition->justify));
 
-    writeDefaultFontPref(style, prefs, "shortInstrument", FontType::AbbrvStaffNames);
+    writeDefaultFontPref(style, context, "shortInstrument", FontType::AbbrvStaffNames);
     const auto abbreviatedPosition = prefs.staffOptions->namePosAbbrv;
     if (!abbreviatedPosition) {
         throw std::invalid_argument("unable to find default abbreviated name positioning for staves");
     }
     style.set(Sid::shortInstrumentAlign, FinaleTConv::justifyToAlignment(abbreviatedPosition->justify));
 
-    writeDefaultFontPref(style, prefs, "partInstrument", FontType::StaffNames);
-    writeCategoryTextFontPref(style, prefs, "dynamics", CategoryType::Dynamics);
-    writeCategoryTextFontPref(style, prefs, "expression", CategoryType::ExpressiveText);
-    writeCategoryTextFontPref(style, prefs, "tempo", CategoryType::TempoMarks);
-    writeCategoryTextFontPref(style, prefs, "tempoChange", CategoryType::ExpressiveText);
+    writeDefaultFontPref(style, context, "partInstrument", FontType::StaffNames);
+    writeCategoryTextFontPref(style, context, "dynamics", CategoryType::Dynamics);
+    writeCategoryTextFontPref(style, context, "expression", CategoryType::ExpressiveText);
+    writeCategoryTextFontPref(style, context, "tempo", CategoryType::TempoMarks);
+    writeCategoryTextFontPref(style, context, "tempoChange", CategoryType::ExpressiveText);
     writeLinePrefs(style, "tempoChange",
                    prefs.smartShapeOptions->smartLineWidth,
                    prefs.smartShapeOptions->smartDashOn,
                    prefs.smartShapeOptions->smartDashOff,
                    LineType::DASHED);
-    writeCategoryTextFontPref(style, prefs, "metronome", CategoryType::TempoMarks);
+    writeCategoryTextFontPref(style, context, "metronome", CategoryType::TempoMarks);
     style.set(Sid::translatorFontFace, String::fromStdString(textBlockFont->getName()));
-    writeCategoryTextFontPref(style, prefs, "systemText", CategoryType::ExpressiveText);
-    writeCategoryTextFontPref(style, prefs, "staffText", CategoryType::TechniqueText);
-    writeCategoryTextFontPref(style, prefs, "rehearsalMark", CategoryType::RehearsalMarks);
-    writeDefaultFontPref(style, prefs, "repeatLeft", FontType::Repeat);
-    writeDefaultFontPref(style, prefs, "repeatRight", FontType::Repeat);
+    writeCategoryTextFontPref(style, context, "systemText", CategoryType::ExpressiveText);
+    writeCategoryTextFontPref(style, context, "staffText", CategoryType::TechniqueText);
+    writeCategoryTextFontPref(style, context, "rehearsalMark", CategoryType::RehearsalMarks);
+    writeDefaultFontPref(style, context, "repeatLeft", FontType::Repeat);
+    writeDefaultFontPref(style, context, "repeatRight", FontType::Repeat);
     writeFontPref(style, "frame", textBlockFont);
-    writeCategoryTextFontPref(style, prefs, "textLine", CategoryType::TechniqueText);
-    writeCategoryTextFontPref(style, prefs, "systemTextLine", CategoryType::ExpressiveText);
-    writeCategoryTextFontPref(style, prefs, "glissando", CategoryType::TechniqueText);
-    writeCategoryTextFontPref(style, prefs, "bend", CategoryType::TechniqueText);
+    writeCategoryTextFontPref(style, context, "textLine", CategoryType::TechniqueText);
+    writeCategoryTextFontPref(style, context, "systemTextLine", CategoryType::ExpressiveText);
+    writeCategoryTextFontPref(style, context, "glissando", CategoryType::TechniqueText);
+    writeCategoryTextFontPref(style, context, "bend", CategoryType::TechniqueText);
     writeFontPref(style, "header", textBlockFont);
     writeFontPref(style, "footer", textBlockFont);
     writeFontPref(style, "copyright", textBlockFont);
@@ -694,18 +666,17 @@ void writeMarkingPrefs(MStyle& style, const FinalePreferences& prefs)
 void FinaleParser::importStyles()
 {
     MStyle& style = m_score->style();
-    FinalePreferences prefs = getCurrentPrefs(*this, m_currentMusxPartId);
-    writePagePrefs(style, prefs);
-    writeLyricsPrefs(style, prefs);
-    writeLineMeasurePrefs(style, prefs);
-    writeStemPrefs(style, prefs);
-    writeMusicSpacingPrefs(style, prefs);
-    writeNoteRelatedPrefs(style, prefs);
-    writeSmartShapePrefs(style, prefs);
-    writeMeasureNumberPrefs(style, prefs);
-    writeRepeatEndingPrefs(style, prefs);
-    writeTupletPrefs(style, prefs);
-    writeMarkingPrefs(style, prefs);
+    writePagePrefs(style, *this);
+    writeLyricsPrefs(style, *this);
+    writeLineMeasurePrefs(style, *this);
+    writeStemPrefs(style, *this);
+    writeMusicSpacingPrefs(style, *this);
+    writeNoteRelatedPrefs(style, *this);
+    writeSmartShapePrefs(style, *this);
+    writeMeasureNumberPrefs(style, *this);
+    writeRepeatEndingPrefs(style, *this);
+    writeTupletPrefs(style, *this);
+    writeMarkingPrefs(style, *this);
 }
 
 }
