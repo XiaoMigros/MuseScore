@@ -74,15 +74,6 @@ static std::optional<ClefTypeList> clefTypeListFromMusxStaff(const std::shared_p
     return ClefTypeList(concertClef, transposeClef);
 }
 
-static std::string trimNewLineFromString(const std::string& src)
-{
-    size_t pos = src.find('\n');
-    if (pos != std::string::npos) {
-        return src.substr(0, pos);  // Truncate at the newline, excluding it
-    }
-    return src;
-}
-
 Staff* FinaleParser::createStaff(Part* part, const std::shared_ptr<const others::Staff> musxStaff, const InstrumentTemplate* it)
 {
     Staff* s = Factory::createStaff(part);
