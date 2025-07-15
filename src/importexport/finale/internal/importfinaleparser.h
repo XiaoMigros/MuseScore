@@ -46,6 +46,7 @@ struct FinaleOptions
     void init(const FinaleParser& context);
     // common
     std::shared_ptr<const musx::dom::FontInfo> defaultMusicFont;
+    musx::util::Fraction combinedDefaultStaffScaling;  // cache this so we don't need to calculate it every time
     // options
     std::shared_ptr<const musx::dom::options::AccidentalOptions> accidentalOptions;
     std::shared_ptr<const musx::dom::options::AlternateNotationOptions> alternateNotationOptions;

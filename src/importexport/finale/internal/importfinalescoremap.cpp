@@ -845,12 +845,13 @@ void FinaleParser::importPageLayout()
             }
         }
 
+        // In Finale, up is positive and down is negative. That means we have to reverse the signs of the vertical axis for MuseScore.
         // create system top and bottom margins
         if (isFirstSystemOnPage) {
             Spacer* upSpacer = Factory::createSpacer(startMeasure);
             upSpacer->setSpacerType(SpacerType::UP);
             upSpacer->setTrack(0);
-            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(-leftStaffSystem->top + leftStaffSystem->distanceToPrev)));
+            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(leftStaffSystem->top - leftStaffSystem->distanceToPrev))); // (signs reversed)
             /// @todo account for title frames / perhaps header frames
             startMeasure->add(upSpacer);
         }
@@ -858,8 +859,7 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            // In Finale, up is positive and down is negative. That means we have to reverse the signs for MuseScore.
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top)));
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top))); // (signs reversed)
             startMeasure->add(downSpacer);
         }
     }
