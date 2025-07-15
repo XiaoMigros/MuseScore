@@ -284,8 +284,8 @@ static void writePagePrefs(MStyle& style, const FinalePreferences& prefs)
     if (const auto& firstSystem = prefs.document->getOthers()->get<others::StaffSystem>(prefs.forPartId, 1)) {
         auto minMax = firstSystem->calcMinMaxStaffSizes();
         if (minMax.first < 1.0) {
-            style.set(Sid::smallStaffMag, minMax.first);
-            style.set(Sid::smallNoteMag, minMax.first);
+            style.set(Sid::smallStaffMag, minMax.first.toDouble());
+            style.set(Sid::smallNoteMag, minMax.first.toDouble());
         }
     }
 
