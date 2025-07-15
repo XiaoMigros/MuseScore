@@ -101,6 +101,7 @@ void FinaleOptions::init(const FinaleParser& context)
     if (!layerOneAttributes) {
         throw std::invalid_argument("document contains no options for Layer 1");
     }
+    combinedDefaultStaffScaling = pageFormat->calcCombinedSystemScaling();
 }
 
 static uint16_t museFontEfx(const FontInfo* fontInfo)
@@ -213,7 +214,8 @@ static void writeCategoryTextFontPref(MStyle& style, const FinaleParser& context
 
 static void writePagePrefs(MStyle& style, const FinaleParser& context)
 {
-    const auto& pagePrefs = context.musxOptions().pageFormat;
+    const auto& prefs = context.musxOptions();
+    const auto& pagePrefs = prefs.pageFormat;
 
     style.set(Sid::pageWidth, double(pagePrefs->pageWidth) / EVPU_PER_INCH);
     style.set(Sid::pageHeight, double(pagePrefs->pageHeight) / EVPU_PER_INCH);
@@ -233,16 +235,14 @@ static void writePagePrefs(MStyle& style, const FinaleParser& context)
     writeEvpuSpace(style, Sid::firstSystemIndentationValue, pagePrefs->firstSysMarginLeft);
 
     // Calculate Spatium
-    const double pagePercent = FinaleTConv::doubleFromPercent(pagePrefs->pagePercent);
-    const double staffPercent = (double(pagePrefs->rawStaffHeight) / (EVPU_PER_SPACE * 4 * 16)) * FinaleTConv::doubleFromPercent(pagePrefs->sysPercent);
-    style.set(Sid::spatium, ((EVPU_PER_SPACE * staffPercent * pagePercent) / EVPU_PER_MM) * DPMM);
+    style.set(Sid::spatium, ((EVPU_PER_SPACE * prefs.combinedDefaultStaffScaling.toDouble()) / EVPU_PER_MM) * DPMM);
 
     // Calculate small staff size and small note size from first system, if any is there
     if (const auto& firstSystem = context.musxDocument()->getOthers()->get<others::StaffSystem>(context.currentMusxPartId(), 1)) {
-        auto minMax = firstSystem->calcMinMaxStaffSizes();
-        if (minMax.first < 1.0) {
-            style.set(Sid::smallStaffMag, minMax.first.toDouble());
-            style.set(Sid::smallNoteMag, minMax.first.toDouble());
+        auto [minSize, maxSize] = firstSystem->calcMinMaxStaffSizes();
+        if (minSize < 1) {
+            style.set(Sid::smallStaffMag, minSize.toDouble());
+            style.set(Sid::smallNoteMag, minSize.toDouble());
         }
     }
 
