@@ -91,6 +91,20 @@ TDuration FinaleTConv::noteInfoToDuration(std::pair<musx::dom::NoteType, unsigne
     return TDuration(DurationType::V_INVALID);
 }
 
+engraving::NoteType FinaleTConv::durationTypeToNoteType(DurationType type, bool after)
+{
+    if (int(type) < int(DurationType::V_EIGHTH)) {
+        return after ? engraving::NoteType::GRACE4 : engraving::NoteType::GRACE8_AFTER;
+    }
+    if (int(type) >= int(DurationType::V_32ND)) {
+        return after ? engraving::NoteType::GRACE32_AFTER : engraving::NoteType::GRACE32;
+    }
+    if (type == DurationType::V_16TH) {
+        return after ? engraving::NoteType::GRACE16_AFTER : engraving::NoteType::GRACE16;
+    }
+    return after ? engraving::NoteType::GRACE8_AFTER : engraving::NoteType::APPOGGIATURA;
+}
+
 ClefType FinaleTConv::toMuseScoreClefType(ClefIndex clef)
 {
     // For now, base this on the default clef definitions.
