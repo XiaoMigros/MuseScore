@@ -677,11 +677,47 @@ void FinaleParser::importPageLayout()
     /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty
     /// @todo Match staff separation in Finale better.
 
+    // Handle blank pages
+    std::vector<std::shared_ptr<others::Page>> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId);
+    size_t blankPagesToAdd = 0;
+    for (const auto& page : pages) {
+        if (page->isBlank()) {
+            ++blankPagesToAdd;
+        } else if (blankPagesToAdd) {
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
+            IF_ASSERT_FAILED(firstPageSystem) {
+                continue;
+            }
+            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
+            if (pageStartTick.negative()) {
+                continue;
+            }
+            Measure* afterBlank = m_score->tick2measure(pageStartTick);
+            for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+                VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
+                pageFrame->setTick(pageStartTick);
+                pageFrame->setNext(afterBlank);
+                pageFrame->setPrev(afterBlank);
+                m_score->measures()->insert(pageFrame, pageFrame);
+                LayoutBreak* lb = Factory::createLayoutBreak(pageFrame);
+                lb->setLayoutBreakType(LayoutBreakType::PAGE);
+                pageFrame->add(lb);
+            }
+        }
+    }
+    for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+        VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
+        pageFrame->setTick(m_score->last() ? m_score->last()->endTick() : Fraction(0, 1));
+        m_score->measures()->append(pageFrame);
+        LayoutBreak* lb = Factory::createLayoutBreak(pageFrame);
+        lb->setLayoutBreakType(LayoutBreakType::PAGE);
+        pageFrame->add(lb);
+    }
+
     // No measures or staves means no valid staff systems
-    if (m_score->measures()->empty() || m_score->noStaves()) {
+    if (!m_score->firstMeasure() || m_score->noStaves()) {
         return;
     }
-    std::vector<std::shared_ptr<others::Page>> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId);
     std::vector<std::shared_ptr<others::StaffSystem>> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
     logger()->logDebugTrace(String(u"Document contains %1 staff systems and %2 pages.").arg(staffSystems.size(), pages.size()));
     size_t currentPageIndex = 0;
@@ -699,7 +735,6 @@ void FinaleParser::importPageLayout()
         for (size_t j = currentPageIndex; j < pages.size(); ++j) {
             const std::shared_ptr<others::Page>& page = pages[j];
             if (page->isBlank()) {
-                /// @todo handle blank page??
                 continue;
             }
             const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
@@ -802,7 +837,6 @@ void FinaleParser::importPageLayout()
         bool isLastSystemOnPage = false;
         for (const std::shared_ptr<others::Page>& page : pages) {
             if (page->isBlank()) {
-                /// @todo handle blank page???
                 continue;
             }
             const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
