@@ -207,23 +207,56 @@ static Tuplet* bottomTupletFromTick(std::vector<ReadableTuplet> tupletMap, Fract
     return nullptr;
 }
 
-bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrackIdx, Measure* measure,
+static Fraction findParentTickForGraceNote(EntryInfoPtr entryInfo, bool& insertAfter, FinaleLoggerPtr& logger)
+{
+    for (EntryInfoPtr entryInfoPtr = entryInfo.getNextSameV(); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextSameV()) {
+        if (!entryInfoPtr->getEntry()->graceNote) {
+            if (!entryInfoPtr.calcDisplaysAsRest()) {
+                return FinaleTConv::musxFractionToFraction(entryInfoPtr.calcGlobalElapsedDuration()).reduced();
+            }
+        }
+    }
+    for (EntryInfoPtr entryInfoPtr = entryInfo.getPreviousSameV(); entryInfoPtr; entryInfoPtr = entryInfoPtr.getPreviousSameV()) {
+        if (!entryInfoPtr->getEntry()->graceNote) {
+            if (!entryInfoPtr.calcDisplaysAsRest()) {
+                insertAfter = true;
+                return FinaleTConv::musxFractionToFraction(entryInfoPtr.calcGlobalElapsedDuration()).reduced();
+            }
+        }
+    }
+    logger->logWarning(String(u"Failed to attach grace notes to a chord."));
+    return Fraction(-1, 1);
+}
+
+bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrackIdx, Measure* measure, bool graceNotes,
                                          std::vector<ReadableTuplet>& tupletMap, std::unordered_map<Rest*, NoteInfoPtr>& fixedRests)
 {
-    if (entryInfo->getEntry()->graceNote) {
-        logger()->logWarning(String(u"Grace notes not yet supported"), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
-        return true;
-    }
-
-    Fraction entryStartTick = FinaleTConv::musxFractionToFraction(entryInfo.calcGlobalElapsedDuration()).reduced();
-    Segment* segment = measure->getSegmentR(SegmentType::ChordRest, entryStartTick);
-
     // Retrieve entry from entryInfo
     std::shared_ptr<const Entry> currentEntry = entryInfo->getEntry();
     if (!currentEntry) {
         logger()->logWarning(String(u"Failed to get entry"));
         return false;
     }
+
+    const bool isGrace = entryInfo->getEntry()->graceNote;
+    if (isGrace != graceNotes) {
+        return true;
+    }
+    bool graceAfterType = false;
+
+    Fraction entryStartTick = Fraction(-1, 1);
+    // todo: save the fraction to avoid calling this function for every grace note
+    // And the grace note code is sparse in safety checks by comparison to the rest of the code.
+    if (isGrace) {
+        if (entryInfo.calcDisplaysAsRest()) {
+            logger()->logWarning(String(u"Grace rests are not supported"));
+            return false;
+        }
+        entryStartTick = findParentTickForGraceNote(entryInfo, graceAfterType, logger());
+    } else {
+        FinaleTConv::musxFractionToFraction(entryInfo.calcGlobalElapsedDuration()).reduced();
+    }
+    Segment* segment = measure->getSegmentR(SegmentType::ChordRest, entryStartTick);
 
     // durationType
     TDuration d = FinaleTConv::noteInfoToDuration(currentEntry->calcNoteInfo());
@@ -288,6 +321,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             note->setNval(nval);
 
             // Add accidental if needed
+            /// @todo Do we really need to explicitly add the accidental object if it's not frozen?
             bool forceAccidental = noteInfoPtr->freezeAcci;
             if (!forceAccidental) {
                 int line = noteValToLine(nval, targetStaff, segment->tick());
@@ -326,6 +360,8 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             }
             /// @todo Since we may create a tie-start from a note without its corresponding `tieEnd` set (see above), I'm not sure the best way to handle this.
             /// FWIW: This code seems, however, to be producing correct ties as-is, but it may not be correct in every case.
+            /// This is because, with the introduction of partial and l.v. ties, ties no longer require two notes to be valid. However, regular ties not having
+            /// both start and end note set is undefined behaviour not otherwise attainable in the software, and should be corrected.
             if (noteInfoPtr->tieEnd) {
                 engraving::Note* prevTied = muse::value(m_noteInfoPtr2Note, noteInfoPtr.calcTieFrom(), nullptr);
                 Tie* tie = prevTied ? prevTied->tieFor() : nullptr;
@@ -374,22 +410,31 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
     cr->setDurationType(d);
     cr->setStaffMove(crossStaffMove);
-    cr->setParent(segment);
     cr->setTrack(curTrackIdx);
-    if (cr->durationType().type() != DurationType::V_MEASURE) {
+    if (cr->durationType().type() == DurationType::V_MEASURE) {
+        cr->setTicks(measure->timesig() * targetStaff->timeStretch(measure->tick()));
+    } else {
         if (cr->durationTypeTicks() < Fraction(1, 4)) {
+            /// @todo Do we need to do this?
             cr->setBeamMode(BeamMode::NONE); // this is changed in the next pass to match the beaming.
         }
         cr->setTicks(cr->actualDurationType().fraction());
+    }
+    if (isGrace) {
+        engraving::Chord* gc = toChord(cr);
+        /// @todo acciaccatura
+        gc->setNoteType(FinaleTConv::durationTypeToNoteType(d.type(), graceAfterType));
+        engraving::Chord* graceParentChord = toChord(segment->element(curTrackIdx));
+        gc->setGraceIndex(static_cast<int>(graceAfterType ? graceParentChord->graceNotesAfter().size() : graceParentChord->graceNotesBefore().size()));
+        graceParentChord->add(gc);
     } else {
-        cr->setTicks(measure->timesig() * targetStaff->timeStretch(measure->tick()));
+        segment->add(cr);
+        Tuplet* parentTuplet = bottomTupletFromTick(tupletMap, entryStartTick);
+        if (parentTuplet) {
+            parentTuplet->add(cr);
+        }
+        logger()->logInfo(String(u"Adding entry of duration %2 at tick %1").arg(entryStartTick.toString(), cr->durationTypeTicks().toString()));
     }
-    segment->add(cr);
-    Tuplet* parentTuplet = bottomTupletFromTick(tupletMap, entryStartTick);
-    if (parentTuplet) {
-        parentTuplet->add(cr);
-    }
-    logger()->logInfo(String(u"Adding entry of duration %2 at tick %1").arg(entryStartTick.toString(), cr->durationTypeTicks().toString()));
     return true;
 }
 
@@ -681,7 +726,10 @@ void FinaleParser::importEntries()
 
                         // add chords and rests
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
-                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, tupletMap, fixedRests);
+                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ false, tupletMap, fixedRests);
+                        }
+                        for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
+                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ true, tupletMap, fixedRests);
                         }
 
                         // add tremolos
