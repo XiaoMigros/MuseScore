@@ -512,7 +512,7 @@ void FinaleParser::importStaffItems()
         }
         for (MeasCmper measNum : styleChanges) {
             Fraction currTick = muse::value(m_meas2Tick, measNum, Fraction(-1, 1));
-            Measure* measure = currTick >= Fraction(0, 1)  ? m_score->tick2measure(currTick) : nullptr;
+            Measure* measure = !currTick.negative() ? m_score->tick2measure(currTick) : nullptr;
             IF_ASSERT_FAILED(measure) {
                 logger()->logWarning(String(u"Unable to retrieve measure by tick"), m_doc, musxScrollViewItem->staffId, measNum);
                 return;
@@ -557,7 +557,7 @@ void FinaleParser::importStaffItems()
         /// @todo handle pickup measures and other measures where display and actual timesigs differ
         for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
             Fraction currTick = muse::value(m_meas2Tick, musxMeasure->getCmper(), Fraction(-1, 1));
-            Measure* measure = currTick >= Fraction(0, 1)  ? m_score->tick2measure(currTick) : nullptr;
+            Measure* measure = !currTick.negative() ? m_score->tick2measure(currTick) : nullptr;
             IF_ASSERT_FAILED(measure) {
                 logger()->logWarning(String(u"Unable to retrieve measure by tick"), m_doc, musxScrollViewItem->staffId, musxMeasure->getCmper());
                 return;
@@ -688,11 +688,47 @@ void FinaleParser::importPageLayout()
     /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty
     /// @todo Match staff separation in Finale better.
 
+    // Handle blank pages
+    std::vector<std::shared_ptr<others::Page>> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId);
+    size_t blankPagesToAdd = 0;
+    for (const auto& page : pages) {
+        if (page->isBlank()) {
+            ++blankPagesToAdd;
+        } else if (blankPagesToAdd) {
+            const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
+            IF_ASSERT_FAILED(firstPageSystem) {
+                continue;
+            }
+            Fraction pageStartTick = muse::value(m_meas2Tick, firstPageSystem->startMeas, Fraction(-1, 1));
+            if (pageStartTick.negative()) {
+                continue;
+            }
+            Measure* afterBlank = m_score->tick2measure(pageStartTick);
+            for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+                VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
+                pageFrame->setTick(pageStartTick);
+                pageFrame->setNext(afterBlank);
+                pageFrame->setPrev(afterBlank);
+                m_score->measures()->insert(pageFrame, pageFrame);
+                LayoutBreak* lb = Factory::createLayoutBreak(pageFrame);
+                lb->setLayoutBreakType(LayoutBreakType::PAGE);
+                pageFrame->add(lb);
+            }
+        }
+    }
+    for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+        VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
+        pageFrame->setTick(m_score->last() ? m_score->last()->endTick() : Fraction(0, 1));
+        m_score->measures()->append(pageFrame);
+        LayoutBreak* lb = Factory::createLayoutBreak(pageFrame);
+        lb->setLayoutBreakType(LayoutBreakType::PAGE);
+        pageFrame->add(lb);
+    }
+
     // No measures or staves means no valid staff systems
-    if (m_score->measures()->empty() || m_score->noStaves()) {
+    if (!m_score->firstMeasure() || m_score->noStaves()) {
         return;
     }
-    std::vector<std::shared_ptr<others::Page>> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId);
     std::vector<std::shared_ptr<others::StaffSystem>> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
     logger()->logDebugTrace(String(u"Document contains %1 staff systems and %2 pages.").arg(staffSystems.size(), pages.size()));
     size_t currentPageIndex = 0;
@@ -702,7 +738,7 @@ void FinaleParser::importPageLayout()
 
         //retrieve leftmost measure of system
         Fraction startTick = muse::value(m_meas2Tick, leftStaffSystem->startMeas, Fraction(-1, 1));
-        Measure* startMeasure = startTick >= Fraction(0, 1) ? m_score->tick2measure(startTick) : nullptr;
+        Measure* startMeasure = !startTick.negative() ? m_score->tick2measure(startTick) : nullptr;
 
         // determine if system is first on the page
         // determine the current page the staffsystem is on
@@ -710,7 +746,6 @@ void FinaleParser::importPageLayout()
         for (size_t j = currentPageIndex; j < pages.size(); ++j) {
             const std::shared_ptr<others::Page>& page = pages[j];
             if (page->isBlank()) {
-                /// @todo handle blank page??
                 continue;
             }
             const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
@@ -740,7 +775,7 @@ void FinaleParser::importPageLayout()
                 if (muse::RealIsEqualOrMore(dist, 0.0)
                     && muse::RealIsEqualOrMore(m_score->style().styleD(Sid::pagePrintableWidth) * EVPU_PER_INCH, dist)) {
                     Fraction distTick = muse::value(m_meas2Tick, staffSystems[j]->startMeas, Fraction(-1, 1));
-                    Measure* distMeasure = distTick >= Fraction(0, 1)  ? m_score->tick2measure(distTick) : nullptr;
+                    Measure* distMeasure = !distTick.negative() ? m_score->tick2measure(distTick) : nullptr;
                     IF_ASSERT_FAILED(distMeasure) {
                         break;
                     }
@@ -763,7 +798,7 @@ void FinaleParser::importPageLayout()
 
         // now we have moved Coda Systems, compute end of System
         Fraction endTick = muse::value(m_meas2Tick, rightStaffSystem->getLastMeasure(), Fraction(-1, 1));
-        Measure* endMeasure = endTick >= Fraction(0, 1)  ? m_score->tick2measure(endTick) : nullptr;
+        Measure* endMeasure = !endTick.negative() ? m_score->tick2measure(endTick) : nullptr;
         IF_ASSERT_FAILED(startMeasure && endMeasure) {
             logger()->logWarning(String(u"Unable to retrieve measure(s) by tick for staffsystem"));
             continue;
@@ -813,7 +848,6 @@ void FinaleParser::importPageLayout()
         bool isLastSystemOnPage = false;
         for (const std::shared_ptr<others::Page>& page : pages) {
             if (page->isBlank()) {
-                /// @todo handle blank page???
                 continue;
             }
             const std::shared_ptr<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
