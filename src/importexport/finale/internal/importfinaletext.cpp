@@ -113,7 +113,8 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
 
     // The processCommand function sends back to the parser a subsitution string for the Enigma command.
     // The command is parsed with the command in the first element and any parameters in subsequent elements.
-    // Return "" to remove the command from the processed string. Return std::nullopt to copy the command text into the processed string.
+    // Return "" to remove the command from the processed string. Return std::nullopt to have the parsing function insert
+    // a default value.
     auto processCommand = [&](const std::vector<std::string>& parsedCommand) -> std::optional<std::string> {
         if (parsedCommand.empty()) {
             // log error
