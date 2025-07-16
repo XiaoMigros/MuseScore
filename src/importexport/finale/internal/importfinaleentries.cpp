@@ -209,14 +209,14 @@ static Tuplet* bottomTupletFromTick(std::vector<ReadableTuplet> tupletMap, Fract
 
 static Fraction findParentTickForGraceNote(EntryInfoPtr entryInfo, bool& insertAfter, FinaleLoggerPtr& logger)
 {
-    for (EntryInfoPtr entryInfoPtr = entryInfo.getNextSameV(); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextSameV()) {
+    for (EntryInfoPtr entryInfoPtr = entryInfo; entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextSameV()) {
         if (!entryInfoPtr->getEntry()->graceNote) {
             if (!entryInfoPtr.calcDisplaysAsRest()) {
                 return FinaleTConv::musxFractionToFraction(entryInfoPtr.calcGlobalElapsedDuration()).reduced();
             }
         }
     }
-    for (EntryInfoPtr entryInfoPtr = entryInfo.getPreviousSameV(); entryInfoPtr; entryInfoPtr = entryInfoPtr.getPreviousSameV()) {
+    for (EntryInfoPtr entryInfoPtr = entryInfo; entryInfoPtr; entryInfoPtr = entryInfoPtr.getPreviousSameV()) {
         if (!entryInfoPtr->getEntry()->graceNote) {
             if (!entryInfoPtr.calcDisplaysAsRest()) {
                 insertAfter = true;
@@ -224,6 +224,10 @@ static Fraction findParentTickForGraceNote(EntryInfoPtr entryInfo, bool& insertA
             }
         }
     }
+    // MuseScore requires grace notes be attached to a chord. The above code
+    // tries to find a chord adjacent to the grace notes, but will not yield
+    // a result in certain edge cases. One day MuseScore will allow the same
+    // flexibility for grace notes as Finale, but until then we must do this
     logger->logWarning(String(u"Failed to attach grace notes to a chord."));
     return Fraction(-1, 1);
 }
@@ -254,7 +258,11 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         }
         entryStartTick = findParentTickForGraceNote(entryInfo, graceAfterType, logger());
     } else {
-        FinaleTConv::musxFractionToFraction(entryInfo.calcGlobalElapsedDuration()).reduced();
+        entryStartTick = FinaleTConv::musxFractionToFraction(entryInfo.calcGlobalElapsedDuration()).reduced();
+    }
+    if (entryStartTick.negative()) {
+        // Return true for non-anchorable grace notes, else false
+        return isGrace;
     }
     Segment* segment = measure->getSegmentR(SegmentType::ChordRest, entryStartTick);
 
@@ -442,7 +450,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
 bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx, Measure* measure)
 {
-    if (!entryInfoPtr.calcIsBeamStart()) {
+    if (!entryInfoPtr.calcIsBeamStart() || entryInfo->getEntry()->graceNote) { // grace note beaming not yet implemented
         return true;
     }
     /// @todo detect special cases for beams over barlines created by the Beam Over Barline plugin
@@ -751,7 +759,7 @@ void FinaleParser::importEntries()
             logger()->logInfo(String(u"Fixing corruptions for measure at staff %1, tick %2").arg(String::number(curStaffIdx), currTick.toString()));
             measure->checkMeasure(curStaffIdx);
             // ...and make sure voice 1 exists.
-            if (!measure->hasVoice(staffTrackIdx)) {                
+            if (!measure->hasVoice(staffTrackIdx)) {
                 std::shared_ptr<const others::StaffComposite> currMusxStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
                 Segment* segment = measure->getSegmentR(SegmentType::ChordRest, Fraction(0, 1));
                 Rest* rest = Factory::createRest(segment, TDuration(DurationType::V_MEASURE));
