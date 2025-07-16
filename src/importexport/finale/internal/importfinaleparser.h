@@ -127,6 +127,12 @@ private:
 
     engraving::Staff* createStaff(engraving::Part* part, const std::shared_ptr<const musx::dom::others::Staff> musxStaff,
                                   const engraving::InstrumentTemplate* it = nullptr);
+    engraving::Clef* createClef(engraving::Score* score,
+                                const std::shared_ptr<musx::dom::others::Staff>& musxStaff,
+                                engraving::staff_idx_t staffIdx,
+                                musx::dom::ClefIndex musxClef,
+                                engraving::Measure* measure, musx::dom::Edu musxEduPos,
+                                bool afterBarline, bool visible);
     void importClefs(const std::shared_ptr<musx::dom::others::InstrumentUsed>& musxScrollViewItem,
                      const std::shared_ptr<musx::dom::others::Measure>& musxMeasure,
                      engraving::Measure* measure, engraving::staff_idx_t curStaffIdx,

@@ -105,33 +105,55 @@ engraving::NoteType FinaleTConv::durationTypeToNoteType(DurationType type, bool 
     return after ? engraving::NoteType::GRACE8_AFTER : engraving::NoteType::APPOGGIATURA;
 }
 
-ClefType FinaleTConv::toMuseScoreClefType(ClefIndex clef)
+ClefType FinaleTConv::toMuseScoreClefType(const musx::dom::options::ClefOptions::ClefInfo& clefInfo, int musxMiddleCStaffPos)
 {
-    // For now, base this on the default clef definitions.
-    // A future todo could be to infer the clef from the actual
-    // clef definition record in the Musx document's clef options.
+    // Musx staff positions start with the reference line as 0. (The reference line on a standard 5-line staff is the top line.)
+    // Positive values are above the reference line. Negative values are below the reference line.
 
-    static const std::unordered_map<DefaultClefType, ClefType> defaultClefTypeTable = {
-        { DefaultClefType::Treble,        ClefType::G },
-        { DefaultClefType::Alto,          ClefType::C3 },
-        { DefaultClefType::Tenor,         ClefType::C4 },
-        { DefaultClefType::Bass,          ClefType::F },
-        { DefaultClefType::Percussion,    ClefType::PERC2 },
-        { DefaultClefType::Treble8vb,     ClefType::G8_VB },
-        { DefaultClefType::Bass8vb,       ClefType::F8_VB },
-        { DefaultClefType::Baritone,      ClefType::F_B },
-        { DefaultClefType::FrenchViolin,  ClefType::G_1 },
-        { DefaultClefType::BaritoneC,     ClefType::C5 },
-        { DefaultClefType::MezzoSoprano,  ClefType::C2 },
-        { DefaultClefType::Soprano,       ClefType::C1 },
-        { DefaultClefType::AltPercussion, ClefType::PERC },
-        { DefaultClefType::Treble8va,     ClefType::G8_VA },
-        { DefaultClefType::Bass8va,       ClefType::F_8VA },
-        { DefaultClefType::Blank,         ClefType::INVALID },
-        { DefaultClefType::Tab1,          ClefType::TAB },
-        { DefaultClefType::Tab2,          ClefType::TAB },
+    using MusxClefType = music_theory::ClefType;
+    auto [clefType, octaveShift] = clefInfo;
+
+    // key:     musx middle-C staff position
+    // value:   MuseScore clef type
+
+    static const std::unordered_map<int, ClefType> gClefTypes = {
+        { -10,  ClefType::G },
+        {  +4,  ClefType::G15_MB },
+        {  -3,  ClefType::G8_VB },
+        { -17,  ClefType::G8_VA },
+        { -24,  ClefType::G15_MA },
+        { -12,  ClefType::G_1 },
     };
-    return muse::value(defaultClefTypeTable, DefaultClefType(clef), ClefType::INVALID);
+
+    static const std::unordered_map<int, ClefType> cClefTypes = {
+        {   0,  ClefType::C5 },
+        {  -2,  ClefType::C4 },
+        {  -4,  ClefType::C3 },
+        {  -6,  ClefType::C2 },
+        {  -8,  ClefType::C1 },
+        { -10,  ClefType::C_19C },
+    };
+
+    static const std::unordered_map<int, ClefType> fClefTypes = {
+        {  +2,  ClefType::F },
+        { +16,  ClefType::F15_MB },
+        {  +9,  ClefType::F8_VB },
+        {  -5,  ClefType::F_8VA },
+        { -12,  ClefType::F_15MA },
+        {  +4,  ClefType::F_C },
+        {   0,  ClefType::F_B },
+    };
+
+    switch (clefType) {
+        case MusxClefType::G: return muse::value(gClefTypes, musxMiddleCStaffPos, ClefType::INVALID);
+        case MusxClefType::C: return muse::value(cClefTypes, musxMiddleCStaffPos, ClefType::INVALID);
+        case MusxClefType::F: return muse::value(fClefTypes, musxMiddleCStaffPos, ClefType::INVALID);
+        case MusxClefType::Percussion1: return ClefType::PERC;
+        case MusxClefType::Percussion2: return ClefType::PERC2;
+        case MusxClefType::Tab: return ClefType::TAB;
+        default: break;
+    }
+    return ClefType::INVALID;
 }
 
 String FinaleTConv::instrTemplateIdfromUuid(std::string uuid)
