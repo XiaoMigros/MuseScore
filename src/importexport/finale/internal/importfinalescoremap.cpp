@@ -407,11 +407,8 @@ static bool changed(const T& a, const T& b, bool& result)
 bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<const musx::dom::others::StaffComposite>& currStaff)
 {
     bool result = false;
-    // only override the Show Clefs setting if it is actually overridden in the staff style. Otherwise,
-    // leave the MuseScore setting alone because it may be turned off to simulate a blank clef.
-    if (currStaff->masks->negClef && staffType->genClef() == currStaff->hideClefs) {
+    if (changed(staffType->genClef(), !currStaff->hideClefs, result)) {
         staffType->setGenClef(!currStaff->hideClefs);
-        result = true;
     }
     if (changed(staffType->genKeysig(), !currStaff->hideKeySigs, result)) {
         staffType->setGenKeysig(!currStaff->hideKeySigs);

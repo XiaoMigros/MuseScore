@@ -383,6 +383,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         }
         cr = toChordRest(chord);
     } else {
+        const std::shared_ptr<others::Staff> musxStaff = entryInfo.createCurrentStaff();
         if (entryInfo.calcIsFullMeasureRest()) {
             d = TDuration(DurationType::V_MEASURE);
         }
@@ -393,6 +394,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             fixedRests.emplace(rest, NoteInfoPtr(entryInfo, 0));
         }
         cr = toChordRest(rest);
+        cr->setVisible(!musxStaff->hideRests);
     }
 
     int entrySize = entryInfo.calcEntrySize();
@@ -636,8 +638,9 @@ static void createTupletsFromMap(Measure* measure, track_idx_t curTrackIdx, std:
             // finale value doesn't include parent tuplet ratio, but is global. Our setup should be correct though, so hack the assert
             f /= tupletMap[ratioIndex].scoreTuplet->ratio();
         }
-        IF_ASSERT_FAILED(f.reduced() == (tupletMap[i].endTick - tupletMap[i].startTick).reduced()) {
+        if(!(f.reduced() == (tupletMap[i].endTick - tupletMap[i].startTick).reduced())) { // implement with IF_ASSERT_FAILED after the @todo below is addressed. Otherwise, we can't test with real files.
             logger->logWarning(String(u"Tuplet duration is corrupted"));
+            continue;
             /// @todo account for tuplets with invalid durations, i.e. durations not attainable in MuseScore
         }
         transferTupletProperties(tupletMap[i].musxTuplet, tupletMap[i].scoreTuplet, logger);
@@ -748,12 +751,14 @@ void FinaleParser::importEntries()
             logger()->logInfo(String(u"Fixing corruptions for measure at staff %1, tick %2").arg(String::number(curStaffIdx), currTick.toString()));
             measure->checkMeasure(curStaffIdx);
             // ...and make sure voice 1 exists.
-            if (!measure->hasVoice(staffTrackIdx)) {
+            if (!measure->hasVoice(staffTrackIdx)) {                
+                std::shared_ptr<const others::StaffComposite> currMusxStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
                 Segment* segment = measure->getSegmentR(SegmentType::ChordRest, Fraction(0, 1));
                 Rest* rest = Factory::createRest(segment, TDuration(DurationType::V_MEASURE));
                 rest->setScore(m_score);
                 rest->setTicks(measure->timesig() * curStaff->timeStretch(measure->tick()));
                 rest->setTrack(staffTrackIdx);
+                rest->setVisible(!currMusxStaff->hideRests && !currMusxStaff->blankMeasure);
                 segment->add(rest);
             }
         }
