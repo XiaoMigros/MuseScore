@@ -450,7 +450,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
 bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx, Measure* measure)
 {
-    if (!entryInfoPtr.calcIsBeamStart() || entryInfo->getEntry()->graceNote) { // grace note beaming not yet implemented
+    if (!entryInfoPtr.calcIsBeamStart() || entryInfoPtr->getEntry()->graceNote) { // grace note beaming not yet implemented
         return true;
     }
     /// @todo detect special cases for beams over barlines created by the Beam Over Barline plugin

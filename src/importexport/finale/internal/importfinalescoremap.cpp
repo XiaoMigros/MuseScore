@@ -690,7 +690,7 @@ void FinaleParser::importStaffItems()
 
 void FinaleParser::importPageLayout()
 {
-    /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty
+    /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty or excluded even if it is not.
     /// @todo Match staff separation in Finale better.
 
     // Handle blank pages
@@ -871,12 +871,13 @@ void FinaleParser::importPageLayout()
         }
 
         // In Finale, up is positive and down is negative. That means we have to reverse the signs of the vertical axis for MuseScore.
+        // HOWEVER, the top and right margins have signs reversed from the U.I. Are we confused yet?
         // create system top and bottom margins
         if (isFirstSystemOnPage) {
             Spacer* upSpacer = Factory::createSpacer(startMeasure);
             upSpacer->setSpacerType(SpacerType::UP);
             upSpacer->setTrack(0);
-            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(leftStaffSystem->top - leftStaffSystem->distanceToPrev))); // (signs reversed)
+            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(-leftStaffSystem->top - leftStaffSystem->distanceToPrev))); // (signs reversed)
             /// @todo account for title frames / perhaps header frames
             startMeasure->add(upSpacer);
         }
@@ -884,7 +885,7 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top))); // (signs reversed)
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev - staffSystems[i+1]->top))); // (signs reversed)
             startMeasure->add(downSpacer);
         }
     }
