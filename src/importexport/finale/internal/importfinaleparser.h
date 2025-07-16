@@ -174,6 +174,7 @@ private:
     std::unordered_map<musx::dom::LayerIndex, engraving::voice_idx_t> m_layer2Voice;
     std::unordered_set<musx::dom::LayerIndex> m_layerForceStems;
     std::map<musx::dom::NoteInfoPtr, engraving::Note*> m_noteInfoPtr2Note; // use std::map to avoid need for NoteInfoPtr hash function
+    std::map<musx::dom::EntryInfoPtr, engraving::ChordRest*> m_entryInfoPtr2CR; // use std::map to avoid need for EntryInfoPtr hash function
 };
 
 }

@@ -445,17 +445,18 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         }
         logger()->logInfo(String(u"Adding entry of duration %2 at tick %1").arg(entryStartTick.toString(), cr->durationTypeTicks().toString()));
     }
+    m_entryInfoPtr2CR.emplace(entryInfo, cr);
     return true;
 }
 
 bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx, Measure* measure)
 {
-    if (!entryInfoPtr.calcIsBeamStart() || entryInfoPtr->getEntry()->graceNote) { // grace note beaming not yet implemented
+    if (!entryInfoPtr.calcIsBeamStart()) {
         return true;
     }
     /// @todo detect special cases for beams over barlines created by the Beam Over Barline plugin
-    ChordRest* cr = measure->findChordRest(measure->tick() + FinaleTConv::musxFractionToFraction(entryInfoPtr.calcGlobalElapsedDuration()), curTrackIdx);
-    if (!cr) { // once grace notes are supported, use IF_ASSERT_FAILED(cr)
+    ChordRest* cr = muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr);
+    IF_ASSERT_FAILED(cr) {
         logger()->logWarning(String(u"Entry %1 was not mapped").arg(entryInfoPtr->getEntry()->getEntryNumber()), m_doc, entryInfoPtr.getStaff(), entryInfoPtr.getMeasure());
         return false;
     }
@@ -469,9 +470,9 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
     ChordRest* lastCr = nullptr;
     for (EntryInfoPtr nextInBeam = entryInfoPtr.getNextInBeamGroup(); nextInBeam; nextInBeam = nextInBeam.getNextInBeamGroup()) {
         std::shared_ptr<const Entry> currentEntry = nextInBeam->getEntry();
-        lastCr = measure->findChordRest(measure->tick() + FinaleTConv::musxFractionToFraction(nextInBeam.calcGlobalElapsedDuration()), curTrackIdx);
+        lastCr = muse::value(m_entryInfoPtr2CR, nextInBeam, nullptr);
         IF_ASSERT_FAILED(lastCr) {
-            logger()->logWarning(String(u"Entry %1 was not mapped").arg(nextInBeam->getEntry()->getEntryNumber()), m_doc, nextInBeam.getStaff(), nextInBeam.getMeasure());
+            logger()->logWarning(String(u"Entry %1 was not mapped").arg(currentEntry->getEntryNumber()), m_doc, nextInBeam.getStaff(), nextInBeam.getMeasure());
             continue;
         }
         /// @todo fully test secondary beam breaks: can a smaller beam than 32nd be broken?
@@ -658,6 +659,7 @@ static void createTupletsFromMap(Measure* measure, track_idx_t curTrackIdx, std:
             tupletMap[parentIndex].scoreTuplet->add(tupletMap[i].scoreTuplet);
         }
     }
+    /// @todo get beaming rules from time signature and only override properties when necessary
 }
 
 void FinaleParser::importEntries()
@@ -747,9 +749,11 @@ void FinaleParser::importEntries()
                         processTremolos(tremoloMap, curTrackIdx, measure);
 
                         // create beams and position non-floating rests
+                        /// XM: Where is the rest positioning here?
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
                             processBeams(entryInfoPtr, curTrackIdx, measure);
                         }
+                        m_entryInfoPtr2CR.clear(); /// @todo For beaming over barlines we'll need to be much more careful about clearing this.
                     }
                 }
                 // position fixed rests after all layers have been imported
