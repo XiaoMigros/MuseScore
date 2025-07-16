@@ -638,7 +638,7 @@ static void createTupletsFromMap(Measure* measure, track_idx_t curTrackIdx, std:
             // finale value doesn't include parent tuplet ratio, but is global. Our setup should be correct though, so hack the assert
             f /= tupletMap[ratioIndex].scoreTuplet->ratio();
         }
-        if(!(f.reduced() == (tupletMap[i].endTick - tupletMap[i].startTick).reduced())) { // implement with IF_ASSERT_FAILED after the @todo below is addressed. Otherwise, we can't test with real files.
+        if (!(f.reduced() == (tupletMap[i].endTick - tupletMap[i].startTick).reduced())) { // implement with IF_ASSERT_FAILED after the @todo below is addressed. Otherwise, we can't test with real files.
             logger->logWarning(String(u"Tuplet duration is corrupted"));
             continue;
             /// @todo account for tuplets with invalid durations, i.e. durations not attainable in MuseScore
