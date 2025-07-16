@@ -61,21 +61,23 @@ using namespace mu::iex::finale;
 
 namespace mu::iex::finale {
 
-static std::optional<ClefTypeList> clefTypeListFromMusxStaff(const std::shared_ptr<const others::Staff> musxStaff)
-{
-    ClefType concertClef = FinaleTConv::toMuseScoreClefType(musxStaff->calcFirstClefIndex());
-    ClefType transposeClef = concertClef;
-    if (musxStaff->transposition && musxStaff->transposition->setToClef) {
-        transposeClef = FinaleTConv::toMuseScoreClefType(musxStaff->transposedClef);
-    }
-    if (concertClef == ClefType::INVALID || transposeClef == ClefType::INVALID) {
-        return std::nullopt;
-    }
-    return ClefTypeList(concertClef, transposeClef);
-}
-
 Staff* FinaleParser::createStaff(Part* part, const std::shared_ptr<const others::Staff> musxStaff, const InstrumentTemplate* it)
 {
+    auto clefTypeListFromMusxStaff = [&](const std::shared_ptr<const others::Staff> musxStaff) -> std::optional<ClefTypeList>
+    {
+        const std::shared_ptr<options::ClefOptions::ClefDef>& concerClefDef = musxOptions().clefOptions->getClefDef(musxStaff->calcFirstClefIndex());
+        ClefType concertClef = FinaleTConv::toMuseScoreClefType(concerClefDef->calcInfo(musxStaff), concerClefDef->middleCPos);
+        ClefType transposeClef = concertClef;
+        if (musxStaff->transposition && musxStaff->transposition->setToClef) {
+            const std::shared_ptr<options::ClefOptions::ClefDef>& trasposeClefDef = musxOptions().clefOptions->getClefDef(musxStaff->transposition->setToClef);
+            transposeClef = FinaleTConv::toMuseScoreClefType(trasposeClefDef->calcInfo(musxStaff), trasposeClefDef->middleCPos);
+        }
+        if (concertClef == ClefType::INVALID || transposeClef == ClefType::INVALID) {
+            return std::nullopt;
+        }
+        return ClefTypeList(concertClef, transposeClef);
+    };
+
     Staff* s = Factory::createStaff(part);
 
     StaffType* staffType = s->staffType(Fraction(0, 1));
@@ -308,11 +310,17 @@ void FinaleParser::importBrackets()
     }
 }
 
-static Clef* createClef(Score* score, staff_idx_t staffIdx, ClefIndex musxClef, Measure* measure, Edu musxEduPos, bool afterBarline, bool visible)
+Clef* FinaleParser::createClef(Score* score, const std::shared_ptr<musx::dom::others::Staff>& musxStaff,
+                               staff_idx_t staffIdx, ClefIndex musxClef, Measure* measure, Edu musxEduPos,
+                               bool afterBarline, bool visible)
 {
-    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(musxClef);
+    const std::shared_ptr<options::ClefOptions::ClefDef>& clefDef = musxOptions().clefOptions->getClefDef(musxClef);
+    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(clefDef->calcInfo(musxStaff), clefDef->middleCPos);
     if (entryClefType == ClefType::INVALID) {
         return nullptr;
+    }
+    if (clefDef->isBlank()) {
+        visible = false;
     }
     Clef* clef = Factory::createClef(score->dummy()->segment());
     clef->setTrack(staffIdx * VOICES);
@@ -349,7 +357,7 @@ void FinaleParser::importClefs(const std::shared_ptr<others::InstrumentUsed>& mu
     auto musxStaffAtMeasureStart = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
     if (musxStaffAtMeasureStart && musxStaffAtMeasureStart->transposition && musxStaffAtMeasureStart->transposition->setToClef) {
         if (musxStaffAtMeasureStart->transposedClef != musxCurrClef) {
-            if (createClef(m_score, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, /*xEduPos*/ 0, false, true)) {
+            if (createClef(m_score, musxStaffAtMeasureStart, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, /*xEduPos*/ 0, false, true)) {
                 musxCurrClef = musxStaffAtMeasureStart->transposedClef;
             }
         }
@@ -359,7 +367,7 @@ void FinaleParser::importClefs(const std::shared_ptr<others::InstrumentUsed>& mu
         if (gfHold->clefId.has_value()) {
             if (gfHold->clefId.value() != musxCurrClef || gfHold->showClefMode == ShowClefMode::Always) {
                 const bool visible = gfHold->showClefMode != ShowClefMode::Never;
-                if (createClef(m_score, curStaffIdx, gfHold->clefId.value(), measure, /*xEduPos*/ 0, gfHold->clefAfterBarline, visible)) {
+                if (createClef(m_score, musxStaffAtMeasureStart, curStaffIdx, gfHold->clefId.value(), measure, /*xEduPos*/ 0, gfHold->clefAfterBarline, visible)) {
                     musxCurrClef = gfHold->clefId.value();
                 }
             }
@@ -369,8 +377,8 @@ void FinaleParser::importClefs(const std::shared_ptr<others::InstrumentUsed>& mu
                 if (midMeasureClef->xEduPos > 0 || midMeasureClef->clefIndex != musxCurrClef || midMeasureClef->clefMode == ShowClefMode::Always) {
                     const bool visible = midMeasureClef->clefMode != ShowClefMode::Never;
                     const bool afterBarline = midMeasureClef->xEduPos == 0 && midMeasureClef->afterBarline;
-                    /// @todo Test with stretched staff time. (midMeasureClef->xEduPos is in global edu values.)
-                    if (Clef* clef = createClef(m_score, curStaffIdx, midMeasureClef->clefIndex, measure, midMeasureClef->xEduPos, afterBarline, visible)) {
+                    auto currStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), midMeasureClef->xEduPos);
+                    if (Clef* clef = createClef(m_score, currStaff, curStaffIdx, midMeasureClef->clefIndex, measure, midMeasureClef->xEduPos, afterBarline, visible)) {
                         // only set y offset because MuseScore automatically calculates the horizontal spacing offset
                         clef->setOffset(0.0, -FinaleTConv::doubleFromEvpu(midMeasureClef->yEvpuPos) * clef->spatium());
                         /// @todo perhaps populate other fields from midMeasureClef, such as clef-specific mag, etc.?
@@ -399,11 +407,8 @@ static bool changed(const T& a, const T& b, bool& result)
 bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<const musx::dom::others::StaffComposite>& currStaff)
 {
     bool result = false;
-    // only override the Show Clefs setting if it is actually overridden in the staff style. Otherwise,
-    // leave the MuseScore setting alone because it may be turned off to simulate a blank clef.
-    if (currStaff->masks->negClef && staffType->genClef() == currStaff->hideClefs) {
+    if (changed(staffType->genClef(), !currStaff->hideClefs, result)) {
         staffType->setGenClef(!currStaff->hideClefs);
-        result = true;
     }
     if (changed(staffType->genKeysig(), !currStaff->hideKeySigs, result)) {
         staffType->setGenKeysig(!currStaff->hideKeySigs);
