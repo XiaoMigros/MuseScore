@@ -750,6 +750,7 @@ void FinaleParser::importEntries()
 
                         // create beams and position non-floating rests
                         /// XM: Where is the rest positioning here?
+                        /// RP: It is 7 lines below here.
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
                             processBeams(entryInfoPtr, curTrackIdx, measure);
                         }
