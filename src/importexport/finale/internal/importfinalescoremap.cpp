@@ -102,18 +102,6 @@ Staff* FinaleParser::createStaff(Part* part, const std::shared_ptr<const others:
     /// @todo inherit
     s->setHideWhenEmpty(Staff::HideMode::INSTRUMENT);
 
-    // calculate whether to use small staff size from first system
-    if (const auto& firstSystem = musxStaff->getDocument()->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, 1)) {
-        if (firstSystem->hasStaffScaling) {
-            if (auto staffSize = musxStaff->getDocument()->getDetails()->get<details::StaffSize>(m_currentMusxPartId, 1, musxStaff->getCmper())) {
-                double userMag = FinaleTConv::doubleFromPercent(staffSize->staffPercent);
-                if (!muse::RealIsEqual(staffType->userMag(), userMag)) {
-                    staffType->setUserMag(userMag);
-                }
-            }
-        }
-    }
-
     // clefs
     if (std::optional<ClefTypeList> defaultClefs = clefTypeListFromMusxStaff(musxStaff)) {
         s->setDefaultClefType(defaultClefs.value());
@@ -211,8 +199,12 @@ void FinaleParser::importParts()
             EnigmaParsingOptions options;
             // Finale staff/group names do not scale with individual staff scaling whereas MS instrument names do
             // Compensate here.
-            if (!part->staves().empty()) {
-                options.scaleFontSizeBy = 1.0 / part->staff(0)->constStaffType(Fraction(0, 1))->userMag();
+            options.scaleFontSizeBy = 1.0;
+            // userMag is not set yet, so use musx data
+            const std::vector<std::shared_ptr<others::InstrumentUsed>> systemOneStaves = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, 1);
+            if (std::optional<size_t> index = others::InstrumentUsed::getIndexForStaff(systemOneStaves, staff->getCmper())) {
+                const musx::util::Fraction staffMag = systemOneStaves[index.value()]->calcEffectiveScaling() / musxOptions().combinedDefaultStaffScaling;
+                options.scaleFontSizeBy /= staffMag.toDouble();
             }
             return stringFromEnigmaText(parsingContext, options);
         };
@@ -393,8 +385,15 @@ void FinaleParser::importClefs(const std::shared_ptr<others::InstrumentUsed>& mu
 template<typename T>
 static bool changed(const T& a, const T& b, bool& result)
 {
-    result = result || a != b;
-    return a != b;
+    const bool isNotEqual = [&]() {
+        if constexpr(std::is_floating_point_v<T>) {
+            return !muse::RealIsEqual(a, b);
+        } else {
+            return a != b;
+        }
+    }();
+    result = result || isNotEqual;
+    return isNotEqual;
 }
 
 bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<const musx::dom::others::StaffComposite>& currStaff)
@@ -456,6 +455,18 @@ bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<c
         staffType->setStemless(currStaff->hideStems);
     }
 
+    // userMag is not based on staff styles but on others::InstrumentUsed
+    if (std::shared_ptr<others::StaffSystem> system = m_doc->calculateSystemFromMeasure(m_currentMusxPartId, currStaff->getMeasureId())) {
+        std::vector<std::shared_ptr<others::InstrumentUsed>> systemStaves = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, system->getCmper());
+        if (std::optional<size_t> index = others::InstrumentUsed::getIndexForStaff(systemStaves, currStaff->getCmper())) {
+            const size_t x = index.value();
+            const double newUserMag = (systemStaves[x]->calcEffectiveScaling() / musxOptions().combinedDefaultStaffScaling).toDouble();
+            if (changed(staffType->userMag(), newUserMag, result)) {
+                staffType->setUserMag(newUserMag);
+            }
+        }
+    }
+
     /// @todo use userMag instead of smallClef? (But it requires a separate system-by-system search.)
     /// @todo tablature options
     /// @todo others?
@@ -467,6 +478,7 @@ void FinaleParser::importStaffItems()
 {
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    std::vector<std::shared_ptr<others::StaffSystem>> musxSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
         // per staff style calculations
         const std::shared_ptr<others::Staff>& rawStaff = m_doc->getOthers()->get<others::Staff>(m_currentMusxPartId, musxScrollViewItem->staffId);
@@ -487,6 +499,14 @@ void FinaleParser::importStaffItems()
                     } else {
                         styleChanges.emplace(nextMeas);
                     }
+                }
+            }
+        }
+        for (const auto& musxSystem : musxSystems) {
+            if (musxSystem->startMeas > 1) { // we already added measure 1 at init time
+                std::vector<std::shared_ptr<others::InstrumentUsed>> systemStaves = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, musxSystem->getCmper());
+                if (others::InstrumentUsed::getIndexForStaff(systemStaves, rawStaff->getCmper())) {
+                    styleChanges.emplace(musxSystem->startMeas);
                 }
             }
         }
@@ -845,12 +865,13 @@ void FinaleParser::importPageLayout()
             }
         }
 
+        // In Finale, up is positive and down is negative. That means we have to reverse the signs of the vertical axis for MuseScore.
         // create system top and bottom margins
         if (isFirstSystemOnPage) {
             Spacer* upSpacer = Factory::createSpacer(startMeasure);
             upSpacer->setSpacerType(SpacerType::UP);
             upSpacer->setTrack(0);
-            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(-leftStaffSystem->top + leftStaffSystem->distanceToPrev)));
+            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(leftStaffSystem->top - leftStaffSystem->distanceToPrev))); // (signs reversed)
             /// @todo account for title frames / perhaps header frames
             startMeasure->add(upSpacer);
         }
@@ -858,8 +879,7 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            // In Finale, up is positive and down is negative. That means we have to reverse the signs for MuseScore.
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top)));
+            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev + staffSystems[i+1]->top))); // (signs reversed)
             startMeasure->add(downSpacer);
         }
     }
