@@ -786,12 +786,12 @@ void FinaleParser::importPageLayout()
                     }
                     logger()->logInfo(String(u"Adding space between systems at tick %1").arg(distTick.toString()));
                     HBox* distBox = Factory::createHBox(m_score->dummy()->system());
+                    distBox->setBoxWidth(Spatium(FinaleTConv::doubleFromEvpu(dist)));
+                    distBox->setSizeIsSpatiumDependent(false);
                     distBox->setTick(distMeasure->tick());
                     distBox->setNext(distMeasure);
                     distBox->setPrev(distMeasure->prev());
-                    distBox->setBoxWidth(Spatium(FinaleTConv::doubleFromEvpu(dist)));
-                    distBox->setSizeIsSpatiumDependent(false);
-                    distMeasure->setPrev(distBox);
+                    m_score->measures()->insert(distBox, distBox);
                     // distBox->manageExclusionFromParts(/*exclude =*/ true); // excluded by default
                     rightStaffSystem = staffSystems[j];
                     i = j; // skip over coda systems, don't parse twice
@@ -818,12 +818,12 @@ void FinaleParser::importPageLayout()
                 m_score->style().set(Sid::firstSystemIndentationValue, FinaleTConv::doubleFromEvpu(leftStaffSystem->left));
             } else {
                 HBox* leftBox = Factory::createHBox(m_score->dummy()->system());
+                leftBox->setBoxWidth(Spatium(FinaleTConv::doubleFromEvpu(leftStaffSystem->left)));
+                leftBox->setSizeIsSpatiumDependent(false);
                 leftBox->setTick(startMeasure->tick());
                 leftBox->setNext(startMeasure);
                 leftBox->setPrev(startMeasure->prev());
-                leftBox->setBoxWidth(Spatium(FinaleTConv::doubleFromEvpu(leftStaffSystem->left)));
-                leftBox->setSizeIsSpatiumDependent(false);
-                startMeasure->setPrev(leftBox);
+                m_score->measures()->insert(distBox, distBox);
                 // leftBox->manageExclusionFromParts(/*exclude =*/ true); // excluded by default
                 sysStart = leftBox;
             }
@@ -833,13 +833,13 @@ void FinaleParser::importPageLayout()
         MeasureBase* sysEnd = endMeasure;
         if (!muse::RealIsEqual(double(-rightStaffSystem->right), 0.0)) {
             HBox* rightBox = Factory::createHBox(m_score->dummy()->system());
+            rightBox->setBoxWidth(Spatium(FinaleTConv::doubleFromEvpu(-rightStaffSystem->right)));
+            rightBox->setSizeIsSpatiumDependent(false);
             Fraction rightTick = endMeasure->nextMeasure() ? endMeasure->nextMeasure()->tick() : m_score->last()->endTick();
             rightBox->setTick(rightTick);
             rightBox->setNext(endMeasure->next());
             rightBox->setPrev(endMeasure);
-            rightBox->setBoxWidth(Spatium(FinaleTConv::doubleFromEvpu(-rightStaffSystem->right)));
-            rightBox->setSizeIsSpatiumDependent(false);
-            endMeasure->setNext(rightBox);
+            m_score->measures()->insert(rightBox, rightBox);
             // rightBox->manageExclusionFromParts(/*exclude =*/ true); // excluded by default
             sysEnd = rightBox;
         } else {
