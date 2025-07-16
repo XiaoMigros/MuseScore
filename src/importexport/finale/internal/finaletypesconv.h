@@ -46,7 +46,7 @@ public:
     static engraving::DurationType noteTypeToDurationType(musx::dom::NoteType noteType);
     static engraving::TDuration noteInfoToDuration(std::pair<musx::dom::NoteType, unsigned> noteInfo);
     static engraving::NoteType durationTypeToNoteType(engraving::DurationType type, bool after);
-    static engraving::ClefType toMuseScoreClefType(musx::dom::ClefIndex clef);
+    static engraving::ClefType toMuseScoreClefType(const musx::dom::options::ClefOptions::ClefInfo& clefInfo, int musxMiddleCStaffPos);
     static engraving::String instrTemplateIdfromUuid(std::string uuid);
     static engraving::BracketType toMuseScoreBracketType(musx::dom::details::StaffGroup::BracketStyle bracketStyle);
     static engraving::TupletNumberType toMuseScoreTupletNumberType(musx::dom::options::TupletOptions::NumberStyle numberStyle);
