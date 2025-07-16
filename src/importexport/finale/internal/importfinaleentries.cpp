@@ -400,7 +400,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     int entrySize = entryInfo.calcEntrySize();
     if (entrySize <= musx::dom::MAX_CUE_PERCENTAGE) {
         double crMag = FinaleTConv::doubleFromPercent(entrySize);
-        if (crMag <= m_score->style().styleD(Sid::smallNoteMag)) {
+        if (muse::RealIsEqualOrLess(crMag, m_score->style().styleD(Sid::smallNoteMag))) { // is just less enough here?
             if (m_smallNoteMagFound) {
                 logger()->logWarning(String(u"Inconsistent cue note sizes found. Using the smallest encountered."), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
             }
@@ -414,7 +414,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     cr->setStaffMove(crossStaffMove);
     cr->setTrack(curTrackIdx);
     if (cr->durationType().type() == DurationType::V_MEASURE) {
-        cr->setTicks(measure->timesig() * targetStaff->timeStretch(measure->tick()));
+        cr->setTicks(measure->timesig() * baseStaff->timeStretch(measure->tick())); // baseStaff because that's the staff the cr 'belongs to'
     } else {
         if (cr->durationTypeTicks() < Fraction(1, 4)) {
             /// @todo Do we need to do this?
