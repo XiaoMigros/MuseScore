@@ -66,11 +66,11 @@ Staff* FinaleParser::createStaff(Part* part, const std::shared_ptr<const others:
     auto clefTypeListFromMusxStaff = [&](const std::shared_ptr<const others::Staff> musxStaff) -> std::optional<ClefTypeList>
     {
         const std::shared_ptr<options::ClefOptions::ClefDef>& concerClefDef = musxOptions().clefOptions->getClefDef(musxStaff->calcFirstClefIndex());
-        ClefType concertClef = FinaleTConv::toMuseScoreClefType(concerClefDef->calcInfo(musxStaff), concerClefDef->middleCPos);
+        ClefType concertClef = FinaleTConv::toMuseScoreClefType(concerClefDef, musxStaff);
         ClefType transposeClef = concertClef;
         if (musxStaff->transposition && musxStaff->transposition->setToClef) {
             const std::shared_ptr<options::ClefOptions::ClefDef>& trasposeClefDef = musxOptions().clefOptions->getClefDef(musxStaff->transposition->setToClef);
-            transposeClef = FinaleTConv::toMuseScoreClefType(trasposeClefDef->calcInfo(musxStaff), trasposeClefDef->middleCPos);
+            transposeClef = FinaleTConv::toMuseScoreClefType(trasposeClefDef, musxStaff);
         }
         if (concertClef == ClefType::INVALID || transposeClef == ClefType::INVALID) {
             return std::nullopt;
@@ -315,7 +315,7 @@ Clef* FinaleParser::createClef(Score* score, const std::shared_ptr<musx::dom::ot
                                bool afterBarline, bool visible)
 {
     const std::shared_ptr<options::ClefOptions::ClefDef>& clefDef = musxOptions().clefOptions->getClefDef(musxClef);
-    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(clefDef->calcInfo(musxStaff), clefDef->middleCPos);
+    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(clefDef, musxStaff);
     if (entryClefType == ClefType::INVALID) {
         return nullptr;
     }
@@ -823,7 +823,7 @@ void FinaleParser::importPageLayout()
                 leftBox->setTick(startMeasure->tick());
                 leftBox->setNext(startMeasure);
                 leftBox->setPrev(startMeasure->prev());
-                m_score->measures()->insert(distBox, distBox);
+                m_score->measures()->insert(leftBox, leftBox);
                 // leftBox->manageExclusionFromParts(/*exclude =*/ true); // excluded by default
                 sysStart = leftBox;
             }
