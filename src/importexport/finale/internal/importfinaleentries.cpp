@@ -683,10 +683,11 @@ void FinaleParser::importEntries()
 
         Staff* curStaff = m_score->staff(curStaffIdx);
         // reset tie tracking when appropriate
-        if (track2staff(curStaff->part()->endTrack()) > lastStaffIdxInPart) {
+        // We can't reset it now that we use it for spanner anchoring later.
+        /* if (track2staff(curStaff->part()->endTrack()) > lastStaffIdxInPart) {
             lastStaffIdxInPart = track2staff(curStaff->part()->endTrack());
             m_noteInfoPtr2Note.clear();
-        }
+        } */
 
         for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
             Fraction currTick = muse::value(m_meas2Tick, musxMeasure->getCmper(), Fraction(-1, 1));
@@ -753,7 +754,7 @@ void FinaleParser::importEntries()
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
                             processBeams(entryInfoPtr, curTrackIdx, measure);
                         }
-                        m_entryInfoPtr2CR.clear(); /// @todo For beaming over barlines we'll need to be much more careful about clearing this.
+                        // m_entryInfoPtr2CR.clear(); /// @todo use 2 maps, one of which clears itself, to make beaming more efficient
                     }
                 }
                 // position fixed rests after all layers have been imported
