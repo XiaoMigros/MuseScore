@@ -63,6 +63,13 @@ public:
     static engraving::StaffGroup staffGroupFromNotationStyle(musx::dom::others::Staff::NotationStyle notationStyle);
     static engraving::String metaTagFromFileInfo(musx::dom::texts::FileInfoText::TextType textType);
     static engraving::String metaTagFromTextComponent(const std::string& component);
+    static engraving::ElementType elementTypeFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
+    static engraving::OttavaType ottavaTypeFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
+    static engraving::SlurStyleType slurStyleTypeFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
+    static engraving::DirectionV directionVFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
+    static engraving::LineType lineTypeFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
+    static std::pair<double, double> hookHeightsFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
+    // unit conversion
     static double doubleFromEvpu(musx::dom::Evpu evpu);
     static engraving::PointF evpuToPointF(musx::dom::Evpu xEvpu, musx::dom::Evpu yEvpu);
     static double doubleFromEfix(musx::dom::Efix efix);

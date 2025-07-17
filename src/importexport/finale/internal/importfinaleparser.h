@@ -154,6 +154,9 @@ private:
     // styles
     void importStyles();
 
+    // smart shapes
+    void importSmartShapes();
+
     // texts
     void importPageTexts();
 
