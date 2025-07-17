@@ -165,6 +165,7 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
             return oss.str();
         } else if (parsedCommand[0] ==  "copyright") {
             /// @todo maybe not use $C/$c at all in favor of $:copyright:.?
+            /// XM: It's common to only show a footer on the first page. This is only attainable with $C.
             switch (options.hfType) {
                 default:
                 case HeaderFooterType::None: return "$:copyright:";
