@@ -146,8 +146,8 @@ ClefType FinaleTConv::toMuseScoreClefType(const std::shared_ptr<const musx::dom:
         {   0,  ClefType::F_B },
     };
 
-    /// @todo use clefDef->clefChar to diffentiate clef types that only differ by glyph.
-    /// To handle non-SMuFL glyphs we'll need font mappings, which are planned.
+    /// @todo Use clefDef->clefChar to differentiate clef types that only differ by glyph.
+    /// To handle non-SMuFL glyphs we'll need glyph mappings, which are planned.
 
     switch (clefType) {
         case MusxClefType::G: return muse::value(gClefTypes, clefDef->middleCPos, ClefType::INVALID);
