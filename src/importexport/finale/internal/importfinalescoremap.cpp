@@ -709,7 +709,7 @@ void FinaleParser::importPageLayout()
                 continue;
             }
             Measure* afterBlank = m_score->tick2measure(pageStartTick);
-            for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+            for (; blankPagesToAdd > 0; --blankPagesToAdd) {
                 VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
                 pageFrame->setTick(pageStartTick);
                 pageFrame->setNext(afterBlank);
@@ -721,7 +721,7 @@ void FinaleParser::importPageLayout()
             }
         }
     }
-    for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+    for (; blankPagesToAdd > 0; --blankPagesToAdd) {
         VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
         pageFrame->setTick(m_score->last() ? m_score->last()->endTick() : Fraction(0, 1));
         m_score->measures()->append(pageFrame);

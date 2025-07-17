@@ -450,7 +450,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     return true;
 }
 
-bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx, Measure* measure)
+bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx)
 {
     if (!entryInfoPtr.calcIsBeamStart()) {
         return true;
@@ -672,7 +672,7 @@ void FinaleParser::importEntries()
     }
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
-    staff_idx_t lastStaffIdxInPart = 0;
+    // staff_idx_t lastStaffIdxInPart = 0;
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
         staff_idx_t curStaffIdx = muse::value(m_inst2Staff, InstCmper(musxScrollViewItem->staffId), muse::nidx);
         track_idx_t staffTrackIdx = curStaffIdx * VOICES;
@@ -752,7 +752,7 @@ void FinaleParser::importEntries()
 
                         // create beams
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
-                            processBeams(entryInfoPtr, curTrackIdx, measure);
+                            processBeams(entryInfoPtr, curTrackIdx);
                         }
                         // m_entryInfoPtr2CR.clear(); /// @todo use 2 maps, one of which clears itself, to make beaming more efficient
                     }
