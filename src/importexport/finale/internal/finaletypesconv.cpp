@@ -105,13 +105,14 @@ engraving::NoteType FinaleTConv::durationTypeToNoteType(DurationType type, bool 
     return after ? engraving::NoteType::GRACE8_AFTER : engraving::NoteType::APPOGGIATURA;
 }
 
-ClefType FinaleTConv::toMuseScoreClefType(const musx::dom::options::ClefOptions::ClefInfo& clefInfo, int musxMiddleCStaffPos)
+ClefType FinaleTConv::toMuseScoreClefType(const std::shared_ptr<const musx::dom::options::ClefOptions::ClefDef>& clefDef,
+                                          const std::shared_ptr<const musx::dom::others::Staff>& musxStaff)
 {
     // Musx staff positions start with the reference line as 0. (The reference line on a standard 5-line staff is the top line.)
     // Positive values are above the reference line. Negative values are below the reference line.
 
     using MusxClefType = music_theory::ClefType;
-    auto [clefType, octaveShift] = clefInfo;
+    auto [clefType, octaveShift] = clefDef->calcInfo(musxStaff);
 
     // key:     musx middle-C staff position
     // value:   MuseScore clef type
@@ -132,6 +133,7 @@ ClefType FinaleTConv::toMuseScoreClefType(const musx::dom::options::ClefOptions:
         {  -6,  ClefType::C2 },
         {  -8,  ClefType::C1 },
         { -10,  ClefType::C_19C },
+        {  +5,  ClefType::C4_8VB },
     };
 
     static const std::unordered_map<int, ClefType> fClefTypes = {
@@ -144,10 +146,13 @@ ClefType FinaleTConv::toMuseScoreClefType(const musx::dom::options::ClefOptions:
         {   0,  ClefType::F_B },
     };
 
+    /// @todo Use clefDef->clefChar to differentiate clef types that only differ by glyph.
+    /// To handle non-SMuFL glyphs we'll need glyph mappings, which are planned.
+
     switch (clefType) {
-        case MusxClefType::G: return muse::value(gClefTypes, musxMiddleCStaffPos, ClefType::INVALID);
-        case MusxClefType::C: return muse::value(cClefTypes, musxMiddleCStaffPos, ClefType::INVALID);
-        case MusxClefType::F: return muse::value(fClefTypes, musxMiddleCStaffPos, ClefType::INVALID);
+        case MusxClefType::G: return muse::value(gClefTypes, clefDef->middleCPos, ClefType::INVALID);
+        case MusxClefType::C: return muse::value(cClefTypes, clefDef->middleCPos, ClefType::INVALID);
+        case MusxClefType::F: return muse::value(fClefTypes, clefDef->middleCPos, ClefType::INVALID);
         case MusxClefType::Percussion1: return ClefType::PERC;
         case MusxClefType::Percussion2: return ClefType::PERC2;
         case MusxClefType::Tab: return ClefType::TAB;
