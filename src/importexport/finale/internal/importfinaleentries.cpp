@@ -424,9 +424,10 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     if (cr->durationType().type() == DurationType::V_MEASURE) {
         cr->setTicks(measure->timesig() * baseStaff->timeStretch(measure->tick())); // baseStaff because that's the staff the cr 'belongs to'
     } else {
-        if (cr->durationTypeTicks() < Fraction(1, 4)) {
-            /// @todo Do we need to do this?
-            cr->setBeamMode(BeamMode::NONE); // this is changed in the next pass to match the beaming.
+        if (cr->beams() > 0) {
+            // This is changed in the next pass to match the beaming.
+            // Notes with flags need to be accounted for.
+            cr->setBeamMode(BeamMode::NONE);
         }
         cr->setTicks(cr->actualDurationType().fraction());
     }
@@ -748,9 +749,7 @@ void FinaleParser::importEntries()
                         // add tremolos
                         processTremolos(tremoloMap, curTrackIdx, measure);
 
-                        // create beams and position non-floating rests
-                        /// XM: Where is the rest positioning here?
-                        /// RP: It is 7 lines below here.
+                        // create beams
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
                             processBeams(entryInfoPtr, curTrackIdx, measure);
                         }
