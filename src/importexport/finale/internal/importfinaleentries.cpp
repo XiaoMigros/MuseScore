@@ -507,11 +507,8 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     /// Is this correct? Probably.
     // Dot offset
     if (currentEntry->dotTieAlt) {
-        std::vector<std::shared_ptr<details::DotAlterations>> dotAlterations = m_doc->getDetails()->getArray<details::DotAlterations>(m_currentMusxPartId);
+        std::vector<std::shared_ptr<details::DotAlterations>> dotAlterations = m_doc->getDetails()->getArray<details::DotAlterations>(m_currentMusxPartId, currentEntryNumber);
         for (const std::shared_ptr<details::DotAlterations>& da : dotAlterations) {
-            if (da->getEntryNumber() != currentEntryNumber) {
-                continue;
-            }
             engraving::Note* n = cr->isChord() ? noteFromEntryInfoAndNumber(entryInfo, da->getNoteId()) : nullptr;
             Rest* r = cr->isRest() ? toRest(cr) : nullptr;
             if (n) {

@@ -23,11 +23,12 @@
 
 #include "musx/musx.h"
 #include "engraving/types/types.h"
-#include "engraving/dom/key.h"
-#include "engraving/dom/noteval.h"
 #include "engraving/dom/chord.h"
-#include "engraving/dom/tuplet.h"
+#include "engraving/dom/key.h"
 #include "engraving/dom/mscore.h"
+#include "engraving/dom/noteval.h"
+#include "engraving/dom/ottava.h"
+#include "engraving/dom/tuplet.h"
 
 #include "importfinalelogger.h"
 
