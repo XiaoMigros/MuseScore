@@ -142,6 +142,17 @@ std::unordered_map<int, voice_idx_t> FinaleParser::mapFinaleVoices(const std::ma
     return result;
 }
 
+engraving::Note* FinaleParser::noteFromEntryInfoAndNumber(EntryInfoPtr entryInfoPtr, NoteNumber nn)
+{
+    for (size_t i = 0; i < entryInfoPtr->getEntry()->notes.size(); ++i) {
+        NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfoPtr, i);
+        if (noteInfoPtr->getNoteId() == nn) {
+            return muse::value(m_noteInfoPtr2Note, noteInfoPtr, nullptr);
+        }
+    }
+    return nullptr;
+}
+
 static void transferTupletProperties(std::shared_ptr<const details::TupletDef> musxTuplet, Tuplet* scoreTuplet, FinaleLoggerPtr& logger)
 {
     scoreTuplet->setNumberType(FinaleTConv::toMuseScoreTupletNumberType(musxTuplet->numStyle));
@@ -242,6 +253,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         logger()->logWarning(String(u"Failed to get entry"));
         return false;
     }
+    EntryNumber currentEntryNumber = currentEntry->getEntryNumber();
 
     const bool isGrace = entryInfo->getEntry()->graceNote;
     if (isGrace != graceNotes) {
@@ -251,7 +263,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
     Fraction entryStartTick = Fraction(-1, 1);
     // todo: save the fraction to avoid calling this function for every grace note
-    // And the grace note code is sparse in safety checks by comparison to the rest of the code.
+    // And the grace note code is sparse in safety checks by comparison with the rest of the code.
     if (isGrace) {
         if (entryInfo.calcDisplaysAsRest()) {
             logger()->logWarning(String(u"Grace rests are not supported"));
@@ -348,7 +360,37 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                     a->setAccidentalType(at);
                     a->setRole(noteInfoPtr->freezeAcci ? AccidentalRole::USER : AccidentalRole::AUTO);
                     a->setParent(note);
+                    if (currentEntry->noteDetail) {
+                        // Accidental size and offset
+                        /// @todo Finale doesn't offset notes for ledger lines, MuseScore offsets
+                        /// rightmost accidentals matching the type of an accidental on a note with ledger lines.
+                        /// @todo decide when to disable autoplace
+                        std::vector<std::shared_ptr<details::AccidentalAlterations>> accidentalInfos = m_doc->getDetails()->getArray<details::AccidentalAlterations>(m_currentMusxPartId);
+                        for (const std::shared_ptr<details::AccidentalAlterations>& accidentalInfo : accidentalInfos) {
+                            if (accidentalInfo->getEntryNumber() != currentEntryNumber || accidentalInfo->getNoteId() != i) {
+                                continue;
+                            }
+                            if (muse::RealIsEqualOrLess(FinaleTConv::doubleFromPercent(accidentalInfo->percent), m_score->style().styleD(Sid::smallNoteMag))) {
+                                a->setSmall(true);
+                            }
+                            a->setOffset(FinaleTConv::evpuToPointF(accidentalInfo->hOffset, accidentalInfo->allowVertPos ? -accidentalInfo->vOffset : 0));
+                        }
+                    }
                     note->add(a);
+                }
+            }
+
+            if (currentEntry->noteDetail) {
+                std::vector<std::shared_ptr<details::NoteAlterations>> noteInfos = m_doc->getDetails()->getArray<details::NoteAlterations>(m_currentMusxPartId);
+                for (const std::shared_ptr<details::NoteAlterations>& noteInfo : noteInfos) {
+                    if (noteInfo->getEntryNumber() != currentEntryNumber || noteInfo->getNoteId() != i) {
+                        continue;
+                    }
+                    if (muse::RealIsEqualOrLess(FinaleTConv::doubleFromPercent(noteInfo->percent), m_score->style().styleD(Sid::smallNoteMag))) {
+                        note->setSmall(true);
+                    }
+                    note->setOffset(FinaleTConv::evpuToPointF(noteInfo->nxdisp, noteInfo->allowVertPos ? -noteInfo->nydisp : 0));
+                    /// @todo interpret notehead type from altNhead (and perhaps useOwnFont/customFont as well).
                 }
             }
 
@@ -388,6 +430,22 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             DirectionV dir = currentEntry->upStem ? DirectionV::UP : DirectionV::DOWN;
             chord->setStemDirection(dir);
         }
+        /// @todo We can't use CustomStem directly, we need to use CustomUpStem or CustomDownStem, which depends on (beam) layout
+        /// @todo StemAlterations and StemAlterationsUnderBeam
+        /// @todo is this where stemSlash is determined?
+        /// @todo does this chord have a stem already?
+        /* if (chord->stem() && currentEntry->stemDetail) {
+            // Stem visibility and offset
+            std::vector<std::shared_ptr<details::CustomStem>> customStems = m_doc->getDetails()->getArray<details::CustomStem>(m_currentMusxPartId);
+            for (const std::shared_ptr<details::CustomStem>& customStem : customStems) {
+                chord->stem()->setVisible(customStem->calcIsHiddenStem());
+                if (customStem->hOffset != 0 || customStem->vOffset != 0) {
+                    chord->stem()->setOffset(FinaleTConv::evpuToPointF(customStem->hOffset, -customStem->vOffset));
+                    chord->stem()->setAutoPlace(false); // make more nuanced?
+                }
+            }
+        } */
+        // chord->setIsChordPlayable(!currentEntry->noPlayback); //this is an undo method
         cr = toChordRest(chord);
     } else {
         const std::shared_ptr<others::Staff> musxStaff = entryInfo.createCurrentStaff();
@@ -401,7 +459,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             fixedRests.emplace(rest, NoteInfoPtr(entryInfo, 0));
         }
         cr = toChordRest(rest);
-        cr->setVisible(!musxStaff->hideRests);
+        cr->setVisible(!musxStaff->hideRests && !currentEntry->isHidden);
     }
 
     int entrySize = entryInfo.calcEntrySize();
@@ -443,6 +501,41 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             parentTuplet->add(cr);
         }
         logger()->logInfo(String(u"Adding entry of duration %2 at tick %1").arg(entryStartTick.toString(), cr->durationTypeTicks().toString()));
+    }
+
+    /// Currently we only generate dots if they have modified properties.
+    /// Is this correct? Probably.
+    // Dot offset
+    if (currentEntry->dotTieAlt) {
+        std::vector<std::shared_ptr<details::DotAlterations>> dotAlterations = m_doc->getDetails()->getArray<details::DotAlterations>(m_currentMusxPartId);
+        for (const std::shared_ptr<details::DotAlterations>& da : dotAlterations) {
+            if (da->getEntryNumber() != currentEntryNumber) {
+                continue;
+            }
+            engraving::Note* n = cr->isChord() ? noteFromEntryInfoAndNumber(entryInfo, da->getNoteId()) : nullptr;
+            Rest* r = cr->isRest() ? toRest(cr) : nullptr;
+            if (n) {
+                for (int i = 0; i < cr->dots(); ++i) {
+                    NoteDot* dot = Factory::createNoteDot(n);
+                    dot->setParent(n);
+                    dot->setVisible(!currentEntry->isHidden);
+                    dot->setTrack(cr->track());
+                    dot->setOffset(FinaleTConv::evpuToPointF(da->hOffset + i * da->interdotSpacing, da->vOffset));
+                    n->add(dot);
+                }
+            } else if (r) {
+                for (int i = 0; i < cr->dots(); ++i) {
+                    NoteDot* dot = Factory::createNoteDot(r);
+                    dot->setParent(r);
+                    dot->setVisible(r->visible());
+                    dot->setTrack(cr->track());
+                    dot->setOffset(FinaleTConv::evpuToPointF(da->hOffset + i * da->interdotSpacing, da->vOffset));
+                    r->add(dot);
+                }
+            } else {
+                break;
+            }
+        }
     }
     m_entryInfoPtr2CR.emplace(entryInfo, cr);
     return true;
