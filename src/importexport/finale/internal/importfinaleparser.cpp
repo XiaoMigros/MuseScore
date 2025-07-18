@@ -51,8 +51,8 @@ void FinaleParser::parse()
     importParts();
     importBrackets();
     importMeasures();
-    importPageLayout();
     importStaffItems();
+    importPageLayout();
 
     // entries (notes, rests & tuplets)
     mapLayers();
