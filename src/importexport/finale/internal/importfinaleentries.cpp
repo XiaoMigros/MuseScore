@@ -843,7 +843,7 @@ void FinaleParser::importEntries()
                 positionFixedRests(fixedRests);
             }
             // Avoid corruptions: fill in any gaps in existing voices...
-            logger()->logInfo(String(u"Fixing corruptions for measure at staff %1, tick %2").arg(String::number(curStaffIdx), currTick.toString()));
+            // logger()->logInfo(String(u"Fixing corruptions for measure at staff %1, tick %2").arg(String::number(curStaffIdx), currTick.toString()));
             measure->checkMeasure(curStaffIdx);
             // ...and make sure voice 1 exists.
             if (!measure->hasVoice(staffTrackIdx)) {

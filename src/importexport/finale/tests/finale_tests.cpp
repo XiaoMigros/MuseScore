@@ -131,6 +131,7 @@ void Finale_Tests::enigmaXmlImportTestRef(const char* file)
         finaleImportTestRef(#name); \
     }
 
+MUSX_IMPORT_TEST(smartShapes1)
 MUSX_IMPORT_TEST_DISABLED(onePartNoMeasures)
 MUSX_IMPORT_TEST(grandStaffPartNoMeasures)
 MUSX_IMPORT_TEST_DISABLED(twoPartsNoMeasures)
@@ -144,7 +145,6 @@ MUSX_IMPORT_TEST(oneMeasureWithTies)
 MUSX_IMPORT_TEST(multistaffInst)
 MUSX_IMPORT_TEST(v1v2Ties)
 MUSX_IMPORT_TEST(v1v2Ties2)
-MUSX_IMPORT_TEST(smartShapes1)
 
 #undef MUSX_IMPORT_TEST
 #undef MUSX_IMPORT_TEST_DISABLED
