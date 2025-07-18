@@ -351,27 +351,6 @@ ClefType FinaleParser::toMuseScoreClefType(const std::shared_ptr<const musx::dom
         {   0,  ClefType::F_B },
     };
 
-    auto tabIsSerif = [&]() -> bool {
-        if (clefDef->isShape) {
-            if (auto shape = musxStaff->getDocument()->getOthers()->get<others::ShapeDef>(musxStaff->getPartId(), clefDef->shapeId)) {
-                bool result = false;
-                shape->iterateInstructions([&](others::ShapeDef::InstructionType instructionType, std::vector<int> data) -> bool {
-                    if (std::optional<FontInfo> fontInfo = others::ShapeDef::Instruction::parseSetFont(musxStaff->getDocument(), instructionType, data)) {
-                        result = fontInfo->getName().find("Times") != std::string::npos; // Finale default file uses "Times" or "Times New Roman"
-                        return false;
-                    }
-                    return true;
-                });
-                return result;
-            } else {
-                return false;
-            }
-        }
-        // 0xF40D is "4stringTabClefSerif" and 0xF40B is "6stringTabClefSerif"
-        // They are both optional glyphs from the MakeMusic extended glyph set defined in glyphnamesFinale.json.
-        return clefDef->calcFont()->calcIsSMuFL() && (clefDef->clefChar == 0xF40D || clefDef->clefChar == 0xF40B);
-    };
-
     /// @todo Use clefDef->clefChar to differentiate clef types that only differ by glyph.
     /// To handle non-SMuFL glyphs we'll need glyph mappings, which are planned.
 
@@ -381,14 +360,8 @@ ClefType FinaleParser::toMuseScoreClefType(const std::shared_ptr<const musx::dom
         case MusxClefType::F: return muse::value(fClefTypes, clefDef->middleCPos, ClefType::INVALID);
         case MusxClefType::Percussion1: return ClefType::PERC;
         case MusxClefType::Percussion2: return ClefType::PERC2;
-        case MusxClefType::Tab:
-        {
-            const bool isSerif = tabIsSerif();
-            if (musxStaff->calcNumberOfStafflines() <= 4) {
-                return isSerif ? ClefType::TAB4_SERIF : ClefType::TAB4;
-            }
-            return isSerif ? ClefType::TAB_SERIF : ClefType::TAB;
-        }
+        case MusxClefType::Tab: return musxStaff->calcNumberOfStafflines() <= 4 ? ClefType::TAB4 : ClefType::TAB;
+        case MusxClefType::TabSerif: return musxStaff->calcNumberOfStafflines() <= 4 ? ClefType::TAB4_SERIF : ClefType::TAB_SERIF;
         default: break;
     }
     return ClefType::INVALID;
