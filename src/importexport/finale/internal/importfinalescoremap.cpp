@@ -954,8 +954,9 @@ void FinaleParser::importPageLayout()
             if (nextStaffIdx == muse::nidx || prevStaffIdx == muse::nidx) {
                 continue;
             }
-            double dist = FinaleTConv::doubleFromEvpu(-nextMusxStaff->distFromTop + prevMusxStaff->distFromTop);
-                          // - m_score->staff(prevStaffIdx)->staffHeight(startMeasure->tick());
+            double dist = FinaleTConv::doubleFromEvpu(-nextMusxStaff->distFromTop + prevMusxStaff->distFromTop)
+            // This line requires importStaffItems() be called before importPageLayout()
+                          - m_score->staff(prevStaffIdx)->staffHeight(startMeasure->tick());
             Spacer* staffSpacer = Factory::createSpacer(startMeasure);
             staffSpacer->setSpacerType(SpacerType::FIXED);
             staffSpacer->setTrack(staff2track(prevStaffIdx));
