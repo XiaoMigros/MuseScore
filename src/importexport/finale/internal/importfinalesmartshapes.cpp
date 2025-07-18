@@ -57,19 +57,23 @@ void FinaleParser::importSmartShapes()
     logger()->logInfo(String(u"Importing smart shapes"));
 
     auto elementFromTerminationSeg = [&](const std::shared_ptr<others::SmartShape>& smartShape, bool start) -> EngravingItem* {
+        logger()->logInfo(String(u"Finding spanner element..."));
         const std::shared_ptr<others::SmartShape::TerminationSeg>& termSeg = start ? smartShape->startTermSeg : smartShape->endTermSeg;
         EntryInfoPtr entryInfoPtr = termSeg->endPoint->calcAssociatedEntry();
         if (entryInfoPtr) {
             NoteNumber nn = start ? smartShape->startNoteId : smartShape->endNoteId;
             if (nn) {
+                logger()->logInfo(String(u"Found note to anchor to"));
                 return toEngravingItem(noteFromEntryInfoAndNumber(entryInfoPtr, nn));
             } else {
                 EngravingItem* e = toEngravingItem(muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr));
                 if (e) {
+                    logger()->logInfo(String(u"Found CR to anchor to"));
                     return e;
                 }
             }
         }
+        logger()->logInfo(String(u"No CR found! Creating TimeTickAnchor"));
         staff_idx_t staffIdx = muse::value(m_inst2Staff, termSeg->endPoint->staffId, muse::nidx);
         Fraction mTick = muse::value(m_meas2Tick, termSeg->endPoint->measId, Fraction(-1, 1));
         Measure* measure = !mTick.negative() ? m_score->tick2measure(mTick) : nullptr;
@@ -79,6 +83,7 @@ void FinaleParser::importSmartShapes()
         Fraction tick = FinaleTConv::musxFractionToFraction(termSeg->endPoint->calcGlobalPosition());
         TimeTickAnchor* anchor = EditTimeTickAnchors::createTimeTickAnchor(measure, tick, staffIdx);
         EditTimeTickAnchors::updateLayout(measure);
+        logger()->logInfo(String(u"Created TimeTickAnchor"));
         return toEngravingItem(anchor->segment());
     };
 
@@ -96,6 +101,8 @@ void FinaleParser::importSmartShapes()
             // custom smartshapes, not yet supported
             continue;
         }
+
+        logger()->logInfo(String(u"Read spanner type"));
 
         Spanner* newSpanner = toSpanner(Factory::createItem(type, m_score->dummy()));
 
@@ -155,7 +162,8 @@ void FinaleParser::importSmartShapes()
         }
         /// @todo set guitar bend type
 
-        m_score->addElement(newSpanner);
+        // m_score->addSpanner(newSpanner, false);
+        // m_score->addElement(newSpanner);
     }
 }
 
