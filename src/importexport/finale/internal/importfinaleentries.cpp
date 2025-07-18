@@ -233,6 +233,7 @@ static Fraction findParentTickForGraceNote(EntryInfoPtr entryInfo, bool& insertA
 }
 
 bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrackIdx, Measure* measure, bool graceNotes,
+                                         std::vector<engraving::Note*>& notesWithUnmanagedTies,
                                          std::vector<ReadableTuplet>& tupletMap, std::unordered_map<Rest*, NoteInfoPtr>& fixedRests)
 {
     // Retrieve entry from entryInfo
@@ -299,13 +300,10 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     // check if the calculate cross-staff position is valid
     staff_idx_t idx = static_cast<staff_idx_t>(int(staffIdx) + crossStaffMove);
     const Staff* baseStaff = m_score->staff(staffIdx);
-    const StaffType* baseStaffType = baseStaff->staffType(segment->tick());
     const Staff* targetStaff = m_score->staff(idx);
-    const StaffType* targetStaffType = targetStaff ? targetStaff->staffType(segment->tick()) : nullptr;
-    staff_idx_t minStaff = track2staff(baseStaff->part()->startTrack());
-    staff_idx_t maxStaff = track2staff(baseStaff->part()->endTrack());
-    if (!(targetStaff && targetStaff->visible() && idx >= minStaff && idx < maxStaff
-          && targetStaffType->group() == baseStaffType->group() && targetStaff->isLinked() == baseStaff->isLinked())) {
+    if (!(targetStaff && targetStaff->visible() && targetStaff->isLinked() == baseStaff->isLinked()
+          && staff2track(idx) >= baseStaff->part()->startTrack() && staff2track(idx) < baseStaff->part()->endTrack()
+          && targetStaff->staffType(segment->tick())->group() == baseStaff->staffType(segment->tick())->group())) {
         crossStaffMove = 0;
         targetStaff = baseStaff;
         idx = staffIdx;
@@ -330,53 +328,54 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
             // Add accidental if needed
             /// @todo Do we really need to explicitly add the accidental object if it's not frozen?
-            bool forceAccidental = noteInfoPtr->freezeAcci;
-            if (!forceAccidental) {
-                int line = noteValToLine(nval, targetStaff, segment->tick());
-                bool error = false;
-                engraving::Note* startN = note->firstTiedNote();
-                if (Segment* startSegment = startN->chord()->segment()) {
-                    AccidentalVal defaultAccVal = startSegment->measure()->findAccidental(startSegment, idx, line, error);
-                    if (error) {
-                        defaultAccVal = Accidental::subtype2value(AccidentalType::NONE); // needed?
+            if (targetStaff->isPitchedStaff(segment->tick())) {
+                bool forceAccidental = noteInfoPtr->freezeAcci;
+                if (!forceAccidental) {
+                    int line = noteValToLine(nval, targetStaff, segment->tick());
+                    bool error = false;
+                    engraving::Note* startN = note->firstTiedNote();
+                    if (Segment* startSegment = startN->chord()->segment()) {
+                        AccidentalVal defaultAccVal = startSegment->measure()->findAccidental(startSegment, idx, line, error);
+                        if (error) {
+                            defaultAccVal = Accidental::subtype2value(AccidentalType::NONE); // needed?
+                        }
+                        forceAccidental = defaultAccVal != accVal;
                     }
-                    forceAccidental = defaultAccVal != accVal;
+                }
+                if (forceAccidental) {
+                    AccidentalType at = Accidental::value2subtype(accVal);
+                    Accidental* a = Factory::createAccidental(note);
+                    a->setAccidentalType(at);
+                    a->setRole(noteInfoPtr->freezeAcci ? AccidentalRole::USER : AccidentalRole::AUTO);
+                    a->setParent(note);
+                    note->add(a);
                 }
             }
-            if (forceAccidental) {
-                AccidentalType at = Accidental::value2subtype(accVal);
-                Accidental* a = Factory::createAccidental(note);
-                a->setAccidentalType(at);
-                a->setRole(noteInfoPtr->freezeAcci ? AccidentalRole::USER : AccidentalRole::AUTO);
-                a->setParent(note);
-                note->add(a);
-            }
+
             chord->add(note);
 
             // set up ties
             if (noteInfoPtr->tieStart) {
-                // Finale can sometimes be missing a tieEnd setting on a tied-to note,
-                // so the existence of a tiedTo candidate is sufficient when the `tieStart` bit is set.
-                // The test file v2v2Ties2.musx contains an example of a missing tieEnd bit with the tied E6 across the barline.
-                NoteInfoPtr tiedTo = noteInfoPtr.calcTieTo();
-                Tie* tie = tiedTo ? Factory::createTie(m_score->dummy()) : Factory::createLaissezVib(m_score->dummy()->note());
-                tie->setStartNote(note);
-                tie->setTick(note->tick());
-                tie->setTrack(note->track());
-                tie->setParent(note); //needed?
-                note->setTieFor(tie);
+                // We can't tell for sure at this point whether a tie will have an end note,
+                // so we decide between real tie and l.v. tie later on.
+                notesWithUnmanagedTies.emplace_back(note);
             }
-            /// @todo Since we may create a tie-start from a note without its corresponding `tieEnd` set (see above), I'm not sure the best way to handle this.
-            /// FWIW: This code seems, however, to be producing correct ties as-is, but it may not be correct in every case.
-            /// This is because, with the introduction of partial and l.v. ties, ties no longer require two notes to be valid. However, regular ties not having
-            /// both start and end note set is undefined behaviour not otherwise attainable in the software, and should be corrected.
             if (noteInfoPtr->tieEnd) {
+                /// @todo This code won't work if the start note is in a currently unmapped voice. But because of
+                /// the fact we explicitly create accidentals, we need the ties to be correct during processEntryInfo. (Do we?)
                 engraving::Note* prevTied = muse::value(m_noteInfoPtr2Note, noteInfoPtr.calcTieFrom(), nullptr);
-                Tie* tie = prevTied ? prevTied->tieFor() : nullptr;
-                if (tie) {
+                if (prevTied) {
+                    Tie* tie = Factory::createTie(m_score->dummy());
+                    tie->setStartNote(prevTied);
+                    tie->setTick(prevTied->tick());
+                    tie->setTrack(prevTied->track());
+                    tie->setParent(prevTied); //needed?
+                    prevTied->setTieFor(tie);
                     tie->setEndNote(note);
                     tie->setTick2(note->tick());
+                    tie->setTrack2(note->track());
                     note->setTieBack(tie);
+                    muse::remove(notesWithUnmanagedTies, prevTied);
                 } else {
                     logger()->logInfo(String(u"Tie does not have starting note. Possibly a partial tie, currently unsupported."));
                 }
@@ -440,8 +439,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         graceParentChord->add(gc);
     } else {
         segment->add(cr);
-        Tuplet* parentTuplet = bottomTupletFromTick(tupletMap, entryStartTick);
-        if (parentTuplet) {
+        if (Tuplet* parentTuplet = bottomTupletFromTick(tupletMap, entryStartTick)) {
             parentTuplet->add(cr);
         }
         logger()->logInfo(String(u"Adding entry of duration %2 at tick %1").arg(entryStartTick.toString(), cr->durationTypeTicks().toString()));
@@ -672,7 +670,7 @@ void FinaleParser::importEntries()
     }
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
-    // staff_idx_t lastStaffIdxInPart = 0;
+    std::vector<engraving::Note*> notesWithUnmanagedTies;
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
         staff_idx_t curStaffIdx = muse::value(m_inst2Staff, InstCmper(musxScrollViewItem->staffId), muse::nidx);
         track_idx_t staffTrackIdx = curStaffIdx * VOICES;
@@ -682,12 +680,6 @@ void FinaleParser::importEntries()
         }
 
         Staff* curStaff = m_score->staff(curStaffIdx);
-        // reset tie tracking when appropriate
-        // We can't reset it now that we use it for spanner anchoring later.
-        /* if (track2staff(curStaff->part()->endTrack()) > lastStaffIdxInPart) {
-            lastStaffIdxInPart = track2staff(curStaff->part()->endTrack());
-            m_noteInfoPtr2Note.clear();
-        } */
 
         for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
             Fraction currTick = muse::value(m_meas2Tick, musxMeasure->getCmper(), Fraction(-1, 1));
@@ -741,10 +733,10 @@ void FinaleParser::importEntries()
 
                         // add chords and rests
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
-                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ false, tupletMap, fixedRests);
+                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ false, notesWithUnmanagedTies, tupletMap, fixedRests);
                         }
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
-                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ true, tupletMap, fixedRests);
+                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ true, notesWithUnmanagedTies, tupletMap, fixedRests);
                         }
 
                         // add tremolos
@@ -774,6 +766,20 @@ void FinaleParser::importEntries()
                 rest->setVisible(!currMusxStaff->hideRests && !currMusxStaff->blankMeasure);
                 segment->add(rest);
             }
+        }
+
+        // Ties can only be attached to notes within a single part (instrument).
+        // In the last staff of an instrument, add the ties and clear the vector.
+        if (curStaffIdx == curStaff->part()->staves().back()->idx()) {
+            for (engraving::Note* note : notesWithUnmanagedTies) {
+                Tie* tie = Factory::createLaissezVib(m_score->dummy()->note());
+                tie->setStartNote(note);
+                tie->setTick(note->tick());
+                tie->setTrack(note->track());
+                tie->setParent(note); //needed?
+                note->setTieFor(tie);
+            }
+            notesWithUnmanagedTies.clear();
         }
     }
 }

@@ -147,6 +147,7 @@ private:
     std::unordered_map<int, engraving::track_idx_t> mapFinaleVoices(const std::map<musx::dom::LayerIndex, bool>& finaleVoiceMap,
                                                          musx::dom::InstCmper curStaff, musx::dom::MeasCmper curMeas) const;
     bool processEntryInfo(musx::dom::EntryInfoPtr entryInfo, engraving::track_idx_t curTrackIdx, engraving::Measure* measure, bool graceNotes,
+                          std::vector<engraving::Note*>& notesWithUnmanagedTies,
                           std::vector<ReadableTuplet>& tupletMap, std::unordered_map<engraving::Rest*, musx::dom::NoteInfoPtr>& fixedRests);
     bool processBeams(musx::dom::EntryInfoPtr entryInfoPtr, engraving::track_idx_t curTrackIdx);
     bool positionFixedRests(const std::unordered_map<engraving::Rest*, musx::dom::NoteInfoPtr>& fixedRests);
