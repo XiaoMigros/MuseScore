@@ -482,6 +482,9 @@ bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<c
 void FinaleParser::importStaffItems()
 {
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
+    if (musxMeasures.empty()) {
+        return;
+    }
     std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
     std::vector<std::shared_ptr<others::StaffSystem>> musxSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
