@@ -66,11 +66,11 @@ Staff* FinaleParser::createStaff(Part* part, const std::shared_ptr<const others:
     auto clefTypeListFromMusxStaff = [&](const std::shared_ptr<const others::Staff> musxStaff) -> std::optional<ClefTypeList>
     {
         const std::shared_ptr<options::ClefOptions::ClefDef>& concerClefDef = musxOptions().clefOptions->getClefDef(musxStaff->calcFirstClefIndex());
-        ClefType concertClef = FinaleTConv::toMuseScoreClefType(concerClefDef, musxStaff);
+        ClefType concertClef = toMuseScoreClefType(concerClefDef, musxStaff);
         ClefType transposeClef = concertClef;
         if (musxStaff->transposition && musxStaff->transposition->setToClef) {
             const std::shared_ptr<options::ClefOptions::ClefDef>& trasposeClefDef = musxOptions().clefOptions->getClefDef(musxStaff->transposition->setToClef);
-            transposeClef = FinaleTConv::toMuseScoreClefType(trasposeClefDef, musxStaff);
+            transposeClef = toMuseScoreClefType(trasposeClefDef, musxStaff);
         }
         if (concertClef == ClefType::INVALID || transposeClef == ClefType::INVALID) {
             return std::nullopt;
@@ -310,12 +310,96 @@ void FinaleParser::importBrackets()
     }
 }
 
+ClefType FinaleParser::toMuseScoreClefType(const std::shared_ptr<const musx::dom::options::ClefOptions::ClefDef>& clefDef,
+                                           const std::shared_ptr<const musx::dom::others::Staff>& musxStaff)
+{
+    // Musx staff positions start with the reference line as 0. (The reference line on a standard 5-line staff is the top line.)
+    // Positive values are above the reference line. Negative values are below the reference line.
+
+    using MusxClefType = music_theory::ClefType;
+    auto [clefType, octaveShift] = clefDef->calcInfo(musxStaff);
+
+    // key:     musx middle-C staff position
+    // value:   MuseScore clef type
+
+    static const std::unordered_map<int, ClefType> gClefTypes = {
+        { -10,  ClefType::G },
+        {  +4,  ClefType::G15_MB },
+        {  -3,  ClefType::G8_VB },
+        { -17,  ClefType::G8_VA },
+        { -24,  ClefType::G15_MA },
+        { -12,  ClefType::G_1 },
+    };
+
+    static const std::unordered_map<int, ClefType> cClefTypes = {
+        {   0,  ClefType::C5 },
+        {  -2,  ClefType::C4 },
+        {  -4,  ClefType::C3 },
+        {  -6,  ClefType::C2 },
+        {  -8,  ClefType::C1 },
+        { -10,  ClefType::C_19C },
+        {  +5,  ClefType::C4_8VB },
+    };
+
+    static const std::unordered_map<int, ClefType> fClefTypes = {
+        {  +2,  ClefType::F },
+        { +16,  ClefType::F15_MB },
+        {  +9,  ClefType::F8_VB },
+        {  -5,  ClefType::F_8VA },
+        { -12,  ClefType::F_15MA },
+        {  +4,  ClefType::F_C },
+        {   0,  ClefType::F_B },
+    };
+
+    auto tabIsSerif = [&]() -> bool {
+        if (clefDef->isShape) {
+            if (auto shape = musxStaff->getDocument()->getOthers()->get<others::ShapeDef>(musxStaff->getPartId(), clefDef->shapeId)) {
+                bool result = false;
+                shape->iterateInstructions([&](others::ShapeDef::InstructionType instructionType, std::vector<int> data) -> bool {
+                    if (std::optional<FontInfo> fontInfo = others::ShapeDef::Instruction::parseSetFont(musxStaff->getDocument(), instructionType, data)) {
+                        result = fontInfo->getName().find("Times") != std::string::npos; // Finale default file uses "Times" or "Times New Roman"
+                        return false;
+                    }
+                    return true;
+                });
+                return result;
+            } else {
+                return false;
+            }
+        }
+        // 0xF40D is "4stringTabClefSerif" and 0xF40B is "6stringTabClefSerif"
+        // They are both optional glyphs from the MakeMusic extended glyph set defined in glyphnamesFinale.json.
+        return clefDef->calcFont()->calcIsSMuFL() && (clefDef->clefChar == 0xF40D || clefDef->clefChar == 0xF40B);
+    };
+
+    /// @todo Use clefDef->clefChar to differentiate clef types that only differ by glyph.
+    /// To handle non-SMuFL glyphs we'll need glyph mappings, which are planned.
+
+    switch (clefType) {
+        case MusxClefType::G: return muse::value(gClefTypes, clefDef->middleCPos, ClefType::INVALID);
+        case MusxClefType::C: return muse::value(cClefTypes, clefDef->middleCPos, ClefType::INVALID);
+        case MusxClefType::F: return muse::value(fClefTypes, clefDef->middleCPos, ClefType::INVALID);
+        case MusxClefType::Percussion1: return ClefType::PERC;
+        case MusxClefType::Percussion2: return ClefType::PERC2;
+        case MusxClefType::Tab:
+        {
+            const bool isSerif = tabIsSerif();
+            if (musxStaff->calcNumberOfStafflines() <= 4) {
+                return isSerif ? ClefType::TAB4_SERIF : ClefType::TAB4;
+            }
+            return isSerif ? ClefType::TAB_SERIF : ClefType::TAB;
+        }
+        default: break;
+    }
+    return ClefType::INVALID;
+}
+
 Clef* FinaleParser::createClef(Score* score, const std::shared_ptr<musx::dom::others::Staff>& musxStaff,
                                staff_idx_t staffIdx, ClefIndex musxClef, Measure* measure, Edu musxEduPos,
                                bool afterBarline, bool visible)
 {
     const std::shared_ptr<options::ClefOptions::ClefDef>& clefDef = musxOptions().clefOptions->getClefDef(musxClef);
-    ClefType entryClefType = FinaleTConv::toMuseScoreClefType(clefDef, musxStaff);
+    ClefType entryClefType = toMuseScoreClefType(clefDef, musxStaff);
     if (entryClefType == ClefType::INVALID) {
         return nullptr;
     }
@@ -420,14 +504,7 @@ bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<c
     if (changed(staffType->group(), staffGroup, result)) {
         staffType->setGroup(staffGroup);
     }
-    int numLines = [&]() -> int {
-        if (currStaff->staffLines.has_value()) {
-            return currStaff->staffLines.value();
-        } else if (currStaff->customStaff.has_value()) {
-            return static_cast<int>(currStaff->customStaff.value().size());
-        }
-        return 5;
-    }();
+    int numLines = currStaff->calcNumberOfStafflines();
     bool staffInvisible = numLines <= 0;
     if (staffInvisible) {
         numLines = 5;
