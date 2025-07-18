@@ -58,7 +58,10 @@ void FinaleParser::parse()
     mapLayers();
     importEntries();
 
-    importPageTexts(); //WIP
+    // smart shapes (lines)
+    importSmartShapes(); //WIP
+
+    // importPageTexts(); //WIP
 }
 
 }

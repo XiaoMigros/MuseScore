@@ -165,6 +165,7 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
             return oss.str();
         } else if (parsedCommand[0] ==  "copyright") {
             /// @todo maybe not use $C/$c at all in favor of $:copyright:.?
+            /// XM: It's common to only show a footer on the first page. This is only attainable with $C.
             switch (options.hfType) {
                 default:
                 case HeaderFooterType::None: return "$:copyright:";
@@ -367,6 +368,7 @@ void FinaleParser::importPageTexts()
     };
 
     auto pagePosOfPageTextAssign = [](Page* page, const std::shared_ptr<others::PageTextAssign>& pageTextAssign) -> PointF {
+        /// @todo e.g. center-aligned text in vframes is also in the center of the page, account for that here
         RectF pageBox = page->ldata()->bbox(); // height and width definitely work, this hopefully too
         PointF p;
 
@@ -411,7 +413,7 @@ void FinaleParser::importPageTexts()
         return p;
     };
 
-    auto getMeasureForPageTextAssign = [](Page* page, PointF p, bool allowNonMeasures = true) -> MeasureBase* {
+    /* auto getMeasureForPageTextAssign = [](Page* page, PointF p, bool allowNonMeasures = true) -> MeasureBase* {
         MeasureBase* closestMB = nullptr;
         double prevDist = DBL_MAX;
         for (System* s : page->systems()) {
@@ -443,13 +445,14 @@ void FinaleParser::importPageTexts()
                 MeasureBase* mb = getMeasureForPageTextAssign(page, pagePosOfPageText);
                 IF_ASSERT_FAILED (mb) {
                     // RGP: Finale pages can be blank, so this will definitely happen on the Finale side. (Check others::Page::isBlank to determine if it is blank)
+                    // XM: We handle blank pages by adding a frame (which inherits MeasureBase*) and a page break. Asserting we find something should.work.
                     // log error
                     // this should never happen! all pages need at least one measurebase
                 }
                 addPageTextToMeasure(pageTextAssign, pagePosOfPageText, mb, page);
             }
         }
-    }
+    } */
 
     // Don't add frames for text vertically aligned to the center.
     // if top or bottom, we should hopefully be able to check for distance to surrounding music and work from that

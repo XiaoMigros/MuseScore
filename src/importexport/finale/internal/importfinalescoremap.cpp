@@ -559,6 +559,9 @@ bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<c
 void FinaleParser::importStaffItems()
 {
     std::vector<std::shared_ptr<others::Measure>> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
+    if (musxMeasures.empty()) {
+        return;
+    }
     std::vector<std::shared_ptr<others::InstrumentUsed>> musxScrollView = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
     std::vector<std::shared_ptr<others::StaffSystem>> musxSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
     for (const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem : musxScrollView) {
@@ -786,7 +789,7 @@ void FinaleParser::importPageLayout()
                 continue;
             }
             Measure* afterBlank = m_score->tick2measure(pageStartTick);
-            for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+            for (; blankPagesToAdd > 0; --blankPagesToAdd) {
                 VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
                 pageFrame->setTick(pageStartTick);
                 pageFrame->setNext(afterBlank);
@@ -798,7 +801,7 @@ void FinaleParser::importPageLayout()
             }
         }
     }
-    for (blankPagesToAdd; blankPagesToAdd > 0; --blankPagesToAdd) {
+    for (; blankPagesToAdd > 0; --blankPagesToAdd) {
         VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
         pageFrame->setTick(m_score->last() ? m_score->last()->endTick() : Fraction(0, 1));
         m_score->measures()->append(pageFrame);
@@ -954,7 +957,7 @@ void FinaleParser::importPageLayout()
             Spacer* upSpacer = Factory::createSpacer(startMeasure);
             upSpacer->setSpacerType(SpacerType::UP);
             upSpacer->setTrack(0);
-            upSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu(-leftStaffSystem->top - leftStaffSystem->distanceToPrev))); // (signs reversed)
+            upSpacer->setGap(FinaleTConv::absoluteSpatiumFromEvpu(-leftStaffSystem->top - leftStaffSystem->distanceToPrev, upSpacer)); // (signs reversed)
             /// @todo account for title frames / perhaps header frames
             startMeasure->add(upSpacer);
         }
@@ -962,8 +965,29 @@ void FinaleParser::importPageLayout()
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
             downSpacer->setTrack((m_score->nstaves() - 1) * VOICES); // invisible staves are correctly accounted for on layout
-            downSpacer->setGap(Spatium(FinaleTConv::doubleFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev - staffSystems[i+1]->top))); // (signs reversed)
+            downSpacer->setGap(FinaleTConv::absoluteSpatiumFromEvpu((-rightStaffSystem->bottom - 96) - staffSystems[i+1]->distanceToPrev - staffSystems[i+1]->top, downSpacer)); // (signs reversed)
             startMeasure->add(downSpacer);
+        }
+
+        // Add distance between the staves
+        /// @todo do we need to account for staff visibility here, using startMeasure->system()->staff(staffIdx)->show() ?
+        /// Possibly a layout call would needed before here, since we may need check for the visibility of SysStaves
+        auto instrumentsUsedInSystem = m_doc->getOthers()->getArray<others::InstrumentUsed>(m_currentMusxPartId, leftStaffSystem->getCmper());
+        for (size_t j = 1; j < instrumentsUsedInSystem.size(); ++j) {
+            std::shared_ptr<others::InstrumentUsed>& prevMusxStaff = instrumentsUsedInSystem[j - 1];
+            std::shared_ptr<others::InstrumentUsed>& nextMusxStaff = instrumentsUsedInSystem[j];
+            staff_idx_t prevStaffIdx = muse::value(m_inst2Staff, prevMusxStaff->staffId, muse::nidx);
+            staff_idx_t nextStaffIdx = muse::value(m_inst2Staff, nextMusxStaff->staffId, muse::nidx);
+            if (nextStaffIdx == muse::nidx || prevStaffIdx == muse::nidx) {
+                continue;
+            }
+            double dist = FinaleTConv::doubleFromEvpu(-nextMusxStaff->distFromTop + prevMusxStaff->distFromTop)
+                          - m_score->staff(prevStaffIdx)->staffHeight(startMeasure->tick());
+            Spacer* staffSpacer = Factory::createSpacer(startMeasure);
+            staffSpacer->setSpacerType(SpacerType::FIXED);
+            staffSpacer->setTrack(staff2track(prevStaffIdx));
+            staffSpacer->setGap(FinaleTConv::absoluteSpatium(dist, staffSpacer));
+            startMeasure->add(staffSpacer);
         }
     }
 }
