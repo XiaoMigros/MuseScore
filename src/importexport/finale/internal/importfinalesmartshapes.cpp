@@ -54,8 +54,10 @@ namespace mu::iex::finale {
 
 void FinaleParser::importSmartShapes()
 {
+    logger()->logInfo(String(u"Importing smart shapes"));
+
     auto elementFromTerminationSeg = [&](const std::shared_ptr<others::SmartShape>& smartShape, bool start) -> EngravingItem* {
-        std::shared_ptr<others::SmartShape::TerminationSeg> termSeg = start ? smartShape->startTermSeg : smartShape->endTermSeg;
+        const std::shared_ptr<others::SmartShape::TerminationSeg>& termSeg = start ? smartShape->startTermSeg : smartShape->endTermSeg;
         EntryInfoPtr entryInfoPtr = termSeg->endPoint->calcAssociatedEntry();
         if (entryInfoPtr) {
             NoteNumber nn = start ? smartShape->startNoteId : smartShape->endNoteId;
@@ -80,13 +82,15 @@ void FinaleParser::importSmartShapes()
         return toEngravingItem(anchor->segment());
     };
 
-    std::vector<std::shared_ptr<others::SmartShape>> smartShapes = m_doc->getOthers()->getArray<others::SmartShape>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    std::vector<std::shared_ptr<others::SmartShape>> smartShapes = m_doc->getOthers()->getArray<others::SmartShape>(m_currentMusxPartId); //, BASE_SYSTEM_ID
+    logger()->logInfo(String(u"Found %1 smart shapes").arg(smartShapes.size()));
     for (const std::shared_ptr<others::SmartShape>& smartShape : smartShapes) {
         if (smartShape->shapeType == others::SmartShape::ShapeType::WordExtension
             || smartShape->shapeType == others::SmartShape::ShapeType::Hyphen) {
             // will be handled elsewhere
             continue;
         }
+
         ElementType type = FinaleTConv::elementTypeFromShapeType(smartShape->shapeType);
         if (type == ElementType::INVALID) {
             // custom smartshapes, not yet supported
