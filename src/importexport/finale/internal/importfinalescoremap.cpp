@@ -420,14 +420,7 @@ bool FinaleParser::applyStaffSyles(StaffType* staffType, const std::shared_ptr<c
     if (changed(staffType->group(), staffGroup, result)) {
         staffType->setGroup(staffGroup);
     }
-    int numLines = [&]() -> int {
-        if (currStaff->staffLines.has_value()) {
-            return currStaff->staffLines.value();
-        } else if (currStaff->customStaff.has_value()) {
-            return static_cast<int>(currStaff->customStaff.value().size());
-        }
-        return 5;
-    }();
+    int numLines = currStaff->calcNumberOfStafflines();
     bool staffInvisible = numLines <= 0;
     if (staffInvisible) {
         numLines = 5;

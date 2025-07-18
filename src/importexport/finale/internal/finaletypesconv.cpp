@@ -155,7 +155,12 @@ ClefType FinaleTConv::toMuseScoreClefType(const std::shared_ptr<const musx::dom:
         case MusxClefType::F: return muse::value(fClefTypes, clefDef->middleCPos, ClefType::INVALID);
         case MusxClefType::Percussion1: return ClefType::PERC;
         case MusxClefType::Percussion2: return ClefType::PERC2;
-        case MusxClefType::Tab: return ClefType::TAB;
+        case MusxClefType::Tab:
+            /// @todo detect serif/non-serif from ShapeDefs
+            if (musxStaff->calcNumberOfStafflines() <= 4) {
+                return ClefType::TAB4;
+            }
+            return ClefType::TAB;
         default: break;
     }
     return ClefType::INVALID;
