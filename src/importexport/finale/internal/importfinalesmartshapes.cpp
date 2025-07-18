@@ -60,12 +60,7 @@ void FinaleParser::importSmartShapes()
         if (entryInfoPtr) {
             NoteNumber nn = start ? smartShape->startNoteId : smartShape->endNoteId;
             if (nn) {
-                 for (size_t i = 0; i < entryInfoPtr->getEntry()->notes.size(); ++i) {
-                    NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfoPtr, i);
-                    if (noteInfoPtr->getNoteId() == nn) {
-                        return toEngravingItem(muse::value(m_noteInfoPtr2Note, noteInfoPtr, nullptr));
-                    }
-                 }
+                return toEngravingItem(noteFromEntryInfoAndNumber(entryInfoPtr, nn));
             } else {
                 EngravingItem* e = toEngravingItem(muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr));
                 if (e) {
