@@ -559,6 +559,10 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
     ChordRest* lastCr = nullptr;
     for (EntryInfoPtr nextInBeam = entryInfoPtr.getNextInBeamGroup(); nextInBeam; nextInBeam = nextInBeam.getNextInBeamGroup()) {
         std::shared_ptr<const Entry> currentEntry = nextInBeam->getEntry();
+        if (entryInfoPtr->getEntry()->graceNote && !currentEntry->isNote) {
+            // Grace rests are unmapped and not supported
+            continue;
+        }
         lastCr = muse::value(m_entryInfoPtr2CR, nextInBeam, nullptr);
         IF_ASSERT_FAILED(lastCr) {
             logger()->logWarning(String(u"Entry %1 was not mapped").arg(currentEntry->getEntryNumber()), m_doc, nextInBeam.getStaff(), nextInBeam.getMeasure());
