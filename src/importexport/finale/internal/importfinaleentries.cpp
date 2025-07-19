@@ -402,25 +402,24 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                 // so we decide between real tie and l.v. tie later on.
                 notesWithUnmanagedTies.emplace_back(note);
             }
-            if (noteInfoPtr->tieEnd) {
-                /// @todo This code won't work if the start note is in a currently unmapped voice. But because of
-                /// the fact we explicitly create accidentals, we need the ties to be correct during processEntryInfo. (Do we?)
-                engraving::Note* prevTied = muse::value(m_noteInfoPtr2Note, noteInfoPtr.calcTieFrom(), nullptr);
-                if (prevTied) {
-                    Tie* tie = Factory::createTie(m_score->dummy());
-                    tie->setStartNote(prevTied);
-                    tie->setTick(prevTied->tick());
-                    tie->setTrack(prevTied->track());
-                    tie->setParent(prevTied); //needed?
-                    prevTied->setTieFor(tie);
-                    tie->setEndNote(note);
-                    tie->setTick2(note->tick());
-                    tie->setTrack2(note->track());
-                    note->setTieBack(tie);
-                    muse::remove(notesWithUnmanagedTies, prevTied);
-                } else {
-                    logger()->logInfo(String(u"Tie does not have starting note. Possibly a partial tie, currently unsupported."));
-                }
+            /// @todo This code won't work if the start note is in a currently unmapped voice. But because of
+            /// the fact we explicitly create accidentals, we need the ties to be correct during processEntryInfo. (Do we?)
+            // Don't use noteInfoPtr->tieEnd as it's unreliable
+            engraving::Note* prevTied = muse::value(m_noteInfoPtr2Note, noteInfoPtr.calcTieFrom(), nullptr);
+            if (prevTied) {
+                Tie* tie = Factory::createTie(m_score->dummy());
+                tie->setStartNote(prevTied);
+                tie->setTick(prevTied->tick());
+                tie->setTrack(prevTied->track());
+                tie->setParent(prevTied); //needed?
+                prevTied->setTieFor(tie);
+                tie->setEndNote(note);
+                tie->setTick2(note->tick());
+                tie->setTrack2(note->track());
+                note->setTieBack(tie);
+                muse::remove(notesWithUnmanagedTies, prevTied);
+            } else {
+                logger()->logInfo(String(u"Tie does not have starting note. Possibly a partial tie, currently unsupported."));
             }
             m_noteInfoPtr2Note.emplace(noteInfoPtr, note);
         }
@@ -864,7 +863,7 @@ void FinaleParser::importEntries()
 
         // Ties can only be attached to notes within a single part (instrument).
         // In the last staff of an instrument, add the ties and clear the vector.
-        if (curStaffIdx == curStaff->part()->staves().back()->idx()) {
+        if (curStaff == curStaff->part()->staves().back()) {
             for (engraving::Note* note : notesWithUnmanagedTies) {
                 Tie* tie = Factory::createLaissezVib(m_score->dummy()->note());
                 tie->setStartNote(note);
