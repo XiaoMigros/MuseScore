@@ -65,12 +65,11 @@ void FinaleParser::importSmartShapes()
             if (nn) {
                 logger()->logInfo(String(u"Found note to anchor to"));
                 return toEngravingItem(noteFromEntryInfoAndNumber(entryInfoPtr, nn));
-            } else {
-                EngravingItem* e = toEngravingItem(muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr));
-                if (e) {
-                    logger()->logInfo(String(u"Found CR to anchor to"));
-                    return e;
-                }
+            }
+            EngravingItem* e = toEngravingItem(muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr));
+            if (e) {
+                logger()->logInfo(String(u"Found CR to anchor to"));
+                return e;
             }
         }
         logger()->logInfo(String(u"No CR found! Creating TimeTickAnchor"));
@@ -164,6 +163,23 @@ void FinaleParser::importSmartShapes()
 
         // m_score->addSpanner(newSpanner, false);
         // m_score->addElement(newSpanner);
+        // m_score->undoAddElement(newSpanner);
+
+        newSpanner->setScore(m_score);
+        newSpanner->styleChanged();
+        for (auto ss : newSpanner->spannerSegments()) {
+            ss->setTrack(newSpanner->track());
+        }
+        // if (isMeasureAnchor) {
+            // Measure* endMeasure = tick2measureMM(tick2);
+            // if (endMeasure->tick() != tick2) {
+                // tick2 = endMeasure->endTick();
+            // }
+        // }
+        // if (newSpanner->hasVoiceAssignmentProperties()) {
+            // newSpanner->setInitialTrackAndVoiceAssignment(newSpanner->track(), false);
+        // }
+        m_score->addElement(newSpanner);
     }
 }
 
