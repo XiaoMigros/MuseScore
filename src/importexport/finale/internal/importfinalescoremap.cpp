@@ -954,13 +954,13 @@ void FinaleParser::importPageLayout()
             if (nextStaffIdx == muse::nidx || prevStaffIdx == muse::nidx) {
                 continue;
             }
-            double dist = FinaleTConv::doubleFromEvpu(-nextMusxStaff->distFromTop + prevMusxStaff->distFromTop)
-            // This line requires importStaffItems() be called before importPageLayout()
-                          - m_score->staff(prevStaffIdx)->staffHeight(startMeasure->tick());
             Spacer* staffSpacer = Factory::createSpacer(startMeasure);
             staffSpacer->setSpacerType(SpacerType::FIXED);
             staffSpacer->setTrack(staff2track(prevStaffIdx));
-            staffSpacer->setGap(FinaleTConv::absoluteSpatium(dist, staffSpacer));
+            Spatium dist = FinaleTConv::absoluteSpatiumFromEvpu(-nextMusxStaff->distFromTop + prevMusxStaff->distFromTop, staffSpacer)
+            // This line (probably) requires importStaffItems() be called before importPageLayout().
+                           - Spatium::fromMM(m_score->staff(prevStaffIdx)->staffHeight(startMeasure->tick()), staffSpacer->spatium());
+            staffSpacer->setGap(dist);
             startMeasure->add(staffSpacer);
         }
     }
