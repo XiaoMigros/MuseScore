@@ -26,6 +26,8 @@
 #include <memory>
 
 #include "style/style.h"
+
+#include "engraving/iengravingfontsprovider.h"
 #include "engraving/dom/tuplet.h"
 
 #include "musx/musx.h"
@@ -99,14 +101,12 @@ struct EnigmaParsingOptions
     double scaleFontSizeBy = 1.0;
 };
 
-class FinaleParser
+class FinaleParser : public muse::Injectable
 {
 public:
-    FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, FinaleLoggerPtr& logger)
-        : m_score(score), m_doc(doc), m_logger(logger)
-    {
-        m_finaleOptions.init(*this);
-    }
+    muse::Inject<mu::engraving::IEngravingFontsProvider> engravingFonts = { this };
+
+    FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, FinaleLoggerPtr& logger);
 
     void parse();
 
@@ -114,6 +114,12 @@ public:
     std::shared_ptr<musx::dom::Document> musxDocument() const { return m_doc; }
     const FinaleOptions& musxOptions() const { return m_finaleOptions; }
     musx::dom::Cmper currentMusxPartId() const { return m_currentMusxPartId; }
+
+    bool fontIsEngravingFont(const std::string& fontName) const;
+    bool fontIsEngravingFont(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo) const
+        { return fontIsEngravingFont(fontInfo->getName()); }
+    bool fontIsEngravingFont(const engraving::String& fontName) const
+        { return fontIsEngravingFont(fontName.toStdString()); }
 
     FinaleLoggerPtr logger() const { return m_logger; }
 
@@ -172,6 +178,7 @@ private:
     FinaleLoggerPtr m_logger;
     const musx::dom::Cmper m_currentMusxPartId = musx::dom::SCORE_PARTID; // eventually this may be changed per excerpt/linked part
     bool m_smallNoteMagFound = false;
+    std::unordered_map<std::string, const engraving::IEngravingFontPtr> m_engravingFonts;
 
     std::unordered_map<engraving::staff_idx_t, musx::dom::InstCmper> m_staff2Inst;
     std::unordered_map<musx::dom::InstCmper, engraving::staff_idx_t> m_inst2Staff;
