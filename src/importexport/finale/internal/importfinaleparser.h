@@ -69,6 +69,7 @@ struct FinaleOptions
     std::shared_ptr<const musx::dom::options::SmartShapeOptions> smartShapeOptions;
     std::shared_ptr<const musx::dom::options::StaffOptions> staffOptions;
     std::shared_ptr<const musx::dom::options::StemOptions> stemOptions;
+    std::shared_ptr<const musx::dom::options::TextOptions> textOptions;
     std::shared_ptr<const musx::dom::options::TieOptions> tieOptions;
     std::shared_ptr<const musx::dom::options::TimeSignatureOptions> timeOptions;
     std::shared_ptr<const musx::dom::options::TupletOptions> tupletOptions;
@@ -92,6 +93,20 @@ enum class HeaderFooterType {
     SecondPageToEnd
 };
 
+struct FontTracker
+{
+    FontTracker() = default;
+    FontTracker(const engraving::String& name, double size, engraving::FontStyle styles = engraving::FontStyle::Normal, bool spatiumInd = false)
+        : fontName(name), fontSize(size), fontStyle(styles), spatiumIndependent(spatiumInd) {}
+    FontTracker(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo, double additionalSizeScaling = 1.0);
+    FontTracker(const engraving::MStyle& style, const engraving::String& sidNamePrefix);
+
+    engraving::String fontName;
+    double fontSize = 0.0;
+    engraving::FontStyle fontStyle = engraving::FontStyle::Normal;
+    bool spatiumIndependent = false;
+};
+
 struct EnigmaParsingOptions
 {
     EnigmaParsingOptions() = default;
@@ -99,6 +114,7 @@ struct EnigmaParsingOptions
 
     HeaderFooterType hfType = HeaderFooterType::None;
     double scaleFontSizeBy = 1.0;
+    std::optional<FontTracker> initialFont;
 };
 
 class FinaleParser : public muse::Injectable
@@ -170,7 +186,7 @@ private:
     void importPageTexts();
 
     bool isOnlyPage(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign, musx::dom::PageCmper page);
-    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options = {});
+    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options = {}, FontTracker* firstFontInfo = nullptr);
 
     engraving::Score* m_score;
     const std::shared_ptr<musx::dom::Document> m_doc;

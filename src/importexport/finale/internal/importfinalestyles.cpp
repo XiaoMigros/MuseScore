@@ -81,6 +81,7 @@ void FinaleOptions::init(const FinaleParser& context)
     smartShapeOptions = getDocOptions<options::SmartShapeOptions>(context, "smart shape");
     staffOptions = getDocOptions<options::StaffOptions>(context, "staff");
     stemOptions = getDocOptions<options::StemOptions>(context, "stem");
+    textOptions = getDocOptions<options::TextOptions>(context, "text");
     tieOptions = getDocOptions<options::TieOptions>(context, "tie");
     timeOptions = getDocOptions<options::TimeSignatureOptions>(context, "time signature");
     tupletOptions = getDocOptions<options::TupletOptions>(context, "tuplet");
@@ -117,10 +118,10 @@ static uint16_t museFontEfx(const FontInfo* fontInfo)
 {
     uint16_t retval = 0;
 
-    if (fontInfo->bold) { retval |= 0x01; }
-    if (fontInfo->italic) { retval |= 0x02; }
-    if (fontInfo->underline) { retval |= 0x04; }
-    if (fontInfo->strikeout) { retval |= 0x08; }
+    if (fontInfo->bold) { retval |= uint16_t(FontStyle::Bold); }
+    if (fontInfo->italic) { retval |= uint16_t(FontStyle::Italic); }
+    if (fontInfo->underline) { retval |= uint16_t(FontStyle::Underline); }
+    if (fontInfo->strikeout) { retval |= uint16_t(FontStyle::Strike); }
 
     return retval;
 }

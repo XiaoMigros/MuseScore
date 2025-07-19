@@ -54,25 +54,47 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
-/// @todo Instead of hard-coding page 1 and page 2, we need to find the first page in the Finale file with music on it
-/// and use that as the first page. At least, that is my impression. How to handle blank pages in MuseScore is an open question.
-/// - RGP
+FontTracker::FontTracker(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo, double additionalSizeScaling)
+{
+    fontName = String::fromStdString(fontInfo->getName());
+    fontSize = FinaleTConv::spatiumScaledFontSize(fontInfo);
+    uchar styles = uint8_t(FontStyle::Normal);
+    if (fontInfo->bold)
+        styles |= uint8_t(FontStyle::Bold);
+    if (fontInfo->italic)
+        styles |= uint8_t(FontStyle::Italic);
+    if (fontInfo->underline)
+        styles |= uint8_t(FontStyle::Underline);
+    if (fontInfo->strikeout)
+        styles |= uint8_t(FontStyle::Strike);
+    fontStyle = FontStyle(styles);
+    spatiumIndependent = fontInfo->absolute;
+    if (!fontInfo->absolute) {
+        fontSize *= additionalSizeScaling;
+    }
+}
 
-String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options)
+FontTracker::FontTracker(const MStyle& style, const String& sidNamePrefix)
+{
+    fontName = style.styleSt(MStyle::styleIdx(sidNamePrefix + u"FontFace"));
+    fontSize = style.styleD(MStyle::styleIdx(sidNamePrefix + u"FontSize"));
+    fontStyle = FontStyle(style.styleI(MStyle::styleIdx(sidNamePrefix + u"FontStyle")));
+    spatiumIndependent = style.styleB(MStyle::styleIdx(sidNamePrefix + u"FontSpatiumDependent"));
+}
+
+// Passing in the firstFontInfo pointer suppresses any first font information from being generated in the output string.
+// Instead, it is returned in the pointer.
+String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options, FontTracker* firstFontInfo)
 {
     String endString;
     const bool isHeaderOrFooter = options.hfType != HeaderFooterType::None;
-    std::shared_ptr<FontInfo> prevFont;
-    /// @todo textstyle support: initialise value by checking if with &, then using +/- to set font style
+    std::optional<FontTracker> prevFont = options.initialFont;
+    bool gotInitialFont = false;
 
     // helper lamdas
-    auto calcEffectiveFontSize = [&](const std::shared_ptr<FontInfo>& fontInfo) -> double {
-        if (!fontInfo) return -1; // impossible initial value
-        double finalScaling = fontInfo->absolute ? 1.0 : options.scaleFontSizeBy;
-        return FinaleTConv::spatiumScaledFontSize(fontInfo) * finalScaling;
-    };
-
-    auto checkFontStylebit = [&](bool bit, bool prevBit, const String& museScoreTag) {
+    auto checkFontStylebit = [&](uint8_t styles, uint8_t prevStyles, FontStyle styleToCheck, const String& museScoreTag) {
+        const bool bit = styles & uint8_t(styleToCheck);
+        const bool prevBit = prevStyles & uint8_t(styleToCheck);
         if (bit != prevBit) {
             if (bit) {
                 endString.append(String(u"<" + museScoreTag + u">"));
@@ -85,28 +107,33 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     // The processTextChunk function process each chunk of processed text with font information. It is only
     // called when the font information changes.
     auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles& styles) -> bool {
-        const std::shared_ptr<FontInfo>& font = styles.font;
-        if (!prevFont || prevFont->fontId != font->fontId) {
-            // When using musical fonts, don't actually set the font type since symbols are loaded separately.
-            /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
-            /// @todo append this based on whether symbol ends up being replaced or not.
-            //if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
-                endString.append(String(u"<font face=\"" + String::fromStdString(font->getName()) + u"\"/>"));
-            //}
+        const FontTracker font(styles.font, options.scaleFontSizeBy);
+        if (firstFontInfo && !gotInitialFont) {
+            *firstFontInfo = font;
+        } else {
+            if (!prevFont || prevFont->fontName != font.fontName) {
+                // When using musical fonts, don't actually set the font type since symbols are loaded separately.
+                /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
+                /// @todo append this based on whether symbol ends up being replaced or not.
+                //if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
+                    endString.append(String(u"<font face=\"" + font.fontName + u"\"/>"));
+                //}
+            }
+            if (!prevFont || prevFont->fontSize != font.fontSize) {
+                endString.append(String(u"<font size=\""));
+                endString.append(String::number(font.fontSize, 2) + String(u"\"/>"));
+            }
+            if (!prevFont || prevFont->fontStyle != font.fontStyle) {
+                uint8_t styles = uint8_t(font.fontStyle);
+                uint8_t prevStyles = prevFont ? uint8_t(prevFont->fontStyle) : 0;
+                checkFontStylebit(styles, prevStyles, FontStyle::Bold, u"b");
+                checkFontStylebit(styles, prevStyles, FontStyle::Italic, u"i");
+                checkFontStylebit(styles, prevStyles, FontStyle::Underline, u"u");
+                checkFontStylebit(styles, prevStyles, FontStyle::Strike, u"s");
+            }
         }
-        double prevSize = calcEffectiveFontSize(prevFont);
-        double currSize = calcEffectiveFontSize(font);
-        if (prevSize != currSize) {
-            endString.append(String(u"<font size=\""));
-            endString.append(String::number(currSize, 2) + String(u"\"/>"));
-        }
-        if (!prevFont || prevFont->getEnigmaStyles() != font->getEnigmaStyles()) {
-            checkFontStylebit(font->bold, prevFont && prevFont->bold, u"b");
-            checkFontStylebit(font->italic, prevFont && prevFont->italic, u"i");
-            checkFontStylebit(font->underline, prevFont && prevFont->underline, u"u");
-            checkFontStylebit(font->strikeout, prevFont && prevFont->strikeout, u"s");
-        }
-        prevFont = std::make_shared<FontInfo>(*font);
+        prevFont = font;
+        gotInitialFont = true;
         endString.append(String::fromStdString(nextChunk));
         return true;
     };
@@ -195,6 +222,10 @@ bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pag
     const std::optional<PageCmper> endPageNum = pageTextAssign->calcEndPageNumber(m_currentMusxPartId); // calcEndPageNumber handles case when endPage is zero
     return (startPageNum == page && endPageNum == page);
 };
+
+/// @todo Instead of hard-coding page 1 and page 2, we need to find the first page in the Finale file with music on it
+/// and use that as the first page. At least, that is my impression. How to handle blank pages in MuseScore is an open question.
+/// - RGP
 
 void FinaleParser::importPageTexts()
 {
