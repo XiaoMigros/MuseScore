@@ -23,6 +23,7 @@
 #include "dom/mscore.h"
 #include "dom/textbase.h"
 #include "dom/mmrestrange.h"
+#include "global/stringutils.h"
 #include "types/types.h"
 #include "internal/importfinalelogger.h"
 #include "internal/importfinaleparser.h"
@@ -102,6 +103,14 @@ void FinaleOptions::init(const FinaleParser& context)
         throw std::invalid_argument("document contains no options for Layer 1");
     }
     combinedDefaultStaffScaling = pageFormat->calcCombinedSystemScaling();
+}
+
+bool FinaleParser::fontIsEngravingFont(const std::string& fontName) const
+{
+    if (muse::value(m_engravingFonts, muse::strings::toLower(fontName), nullptr)) {
+        return true;
+    }
+    return false;
 }
 
 static uint16_t museFontEfx(const FontInfo* fontInfo)
@@ -247,18 +256,15 @@ static void writePagePrefs(MStyle& style, const FinaleParser& context)
     }
 
     // Default music font
-    const auto& defaultMusicFont = context.musxOptions().defaultMusicFont;
-    const bool isSMuFL = [defaultMusicFont]() -> bool {
-        if (defaultMusicFont->calcIsSMuFL())
-            return true;
-        auto it = museScoreSMuFLFonts.find(defaultMusicFont->getName());
-        return it != museScoreSMuFLFonts.end();
-    }();
     const String musicFontName = [&]() {
-        if (isSMuFL) {
-            return String::fromStdString(defaultMusicFont->getName());
-        } else if (defaultMusicFont->getName() == "Maestro") {
+        const auto& defaultMusicFont = context.musxOptions().defaultMusicFont;
+        std::string fontName = defaultMusicFont->getName();
+        if (context.fontIsEngravingFont(defaultMusicFont)) {
+            return String::fromStdString(fontName);
+        } else if (fontName == "Maestro" && context.fontIsEngravingFont("Finale Maestro")) {
             return String("Finale Maestro");
+        } else if (fontName == "Petrucci" && context.fontIsEngravingFont("Finale Legacy")) {
+            return String("Finale Legacy");
         } // other `else if` checks as required go here
         return String();
     }();
@@ -571,7 +577,7 @@ void writeTupletPrefs(MStyle& style, const FinaleParser& context)
         throw std::invalid_argument("Unable to load font pref for tuplets");
     }
 
-    if (fontInfo->calcIsSMuFL()) {
+    if (context.fontIsEngravingFont(fontInfo)) {
         style.set(Sid::tupletMusicalSymbolsScale, museMagVal(context, options::FontOptions::FontType::Tuplet));
         style.set(Sid::tupletUseSymbols, true);
     } else {
@@ -595,15 +601,16 @@ void writeMarkingPrefs(MStyle& style, const FinaleParser& context)
         throw std::invalid_argument("unable to find MarkingCategory for dynamics");
     }
     auto catFontInfo = cat->musicFont;
-    bool override = catFontInfo && catFontInfo->calcIsSMuFL() && catFontInfo->fontId != 0;
+    const bool catFontIsEngraving = context.fontIsEngravingFont(catFontInfo);
+    const bool override = catFontInfo && catFontIsEngraving && !catFontInfo->calcIsDefaultMusic();
     style.set(Sid::dynamicsOverrideFont, override);
     if (override) {
         style.set(Sid::dynamicsFont, String::fromStdString(catFontInfo->getName()));
-        style.set(Sid::dynamicsSize, catFontInfo->fontSize / prefs.defaultMusicFont->fontSize);
+        style.set(Sid::dynamicsSize, double(catFontInfo->fontSize) / double(prefs.defaultMusicFont->fontSize));
     } else {
         style.set(Sid::dynamicsFont, String::fromStdString(prefs.defaultMusicFont->getName()));
         style.set(Sid::dynamicsSize,
-                  catFontInfo->calcIsSMuFL() ? (catFontInfo->fontSize / prefs.defaultMusicFont->fontSize) : 1.0);
+                  catFontIsEngraving ? (double(catFontInfo->fontSize) / double(prefs.defaultMusicFont->fontSize)) : 1.0);
     }
 
     auto textBlockFont = options::FontOptions::getFontInfo(context.musxDocument(), FontType::TextBlock);

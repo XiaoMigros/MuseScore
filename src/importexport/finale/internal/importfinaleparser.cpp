@@ -28,6 +28,7 @@
 
 #include "musx/musx.h"
 
+#include "global/stringutils.h"
 #include "types/string.h"
 
 #include "engraving/dom/masterscore.h"
@@ -41,6 +42,16 @@ using namespace musx::dom;
 using namespace mu::iex::finale;
 
 namespace mu::iex::finale {
+
+FinaleParser::FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, FinaleLoggerPtr& logger)
+    : m_score(score), m_doc(doc), m_logger(logger)
+{
+    m_finaleOptions.init(*this);
+    const std::vector<IEngravingFontPtr> fonts = engravingFonts()->fonts();
+    for (const IEngravingFontPtr& font : fonts) {
+        m_engravingFonts.emplace(muse::strings::toLower(font->name()), font);
+    }
+}
 
 void FinaleParser::parse()
 {
