@@ -1249,7 +1249,7 @@ double FinaleTConv::doubleFromPercent(int percent)
     return double(percent) / 100.0;
 }
 
-double FinaleTConv::spatiumScaledFontSize(const std::shared_ptr<FontInfo>& fontInfo)
+double FinaleTConv::spatiumScaledFontSize(const std::shared_ptr<const FontInfo>& fontInfo)
 {
     // Finale uses music font size 24 to fill a space.
     // MuseScore uses music font size 20 to fill a space.

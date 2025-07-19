@@ -197,8 +197,9 @@ void FinaleParser::importParts()
         }
 
         // names of part
-        auto nameFromEnigmaText = [&](const musx::util::EnigmaParsingContext& parsingContext) {
+        auto nameFromEnigmaText = [&](const musx::util::EnigmaParsingContext& parsingContext, const String& sidNamePrefix) {
             EnigmaParsingOptions options;
+            options.initialFont = FontTracker(m_score->style(), sidNamePrefix);
             // Finale staff/group names do not scale with individual staff scaling whereas MS instrument names do
             // Compensate here.
             options.scaleFontSizeBy = 1.0;
@@ -210,9 +211,9 @@ void FinaleParser::importParts()
             }
             return stringFromEnigmaText(parsingContext, options);
         };
-        part->setPartName(nameFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId)));
-        part->setLongName(nameFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId)));
-        part->setShortName(nameFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId)));
+        part->setPartName(nameFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId), u"longInstrument"));
+        part->setLongName(nameFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId), u"longInstrument"));
+        part->setShortName(nameFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId), u"shortInstrument"));
 
         m_score->appendPart(part);
     }
