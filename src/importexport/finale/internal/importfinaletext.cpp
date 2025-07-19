@@ -250,16 +250,6 @@ void FinaleParser::importPageTexts()
     // tempo changes
     // need to create character conversion map for non-smufl fonts???
 
-    // set score metadata
-    std::vector<std::shared_ptr<texts::FileInfoText>> fileInfoTexts = m_doc->getTexts()->getArray<texts::FileInfoText>();
-    for (std::shared_ptr<texts::FileInfoText> fileInfoText : fileInfoTexts) {
-        String metaTag = FinaleTConv::metaTagFromFileInfo(fileInfoText->getTextType());
-        std::string fileInfoValue = musx::util::EnigmaString::trimTags(fileInfoText->text);
-        if (!metaTag.empty() && !fileInfoValue.empty()) {
-            m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
-        }
-    }
-
     struct HeaderFooter {
         bool show = false;
         bool showFirstPage = true; // always show first page
