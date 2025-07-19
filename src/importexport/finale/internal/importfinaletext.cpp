@@ -195,10 +195,12 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
             /// XM: It's common to only show a footer on the first page. This is only attainable with $C.
             switch (options.hfType) {
                 default:
-                case HeaderFooterType::None: return "$:copyright:";
+                case HeaderFooterType::None: return "$:copyright:"; /// @todo does this actually work? maybe not for non-headers?
                 case HeaderFooterType::FirstPage: return "$C";
                 case HeaderFooterType::SecondPageToEnd: return "$c";
             }
+//        } else if (parsedCommand[0] == "flat") {
+//            return "<sym>accidentalFlat</sym>";
         }
         // Find and insert metaTags when appropriate
         if (isHeaderOrFooter) {
