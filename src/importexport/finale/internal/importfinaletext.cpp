@@ -89,26 +89,52 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     String endString;
     const bool isHeaderOrFooter = options.hfType != HeaderFooterType::None;
     std::optional<FontTracker> prevFont = options.initialFont;
-    bool gotInitialFont = false;
+    std::unordered_set<FontStyle> emittedOpenTags; // tracks which open tags we actually emitted here
 
     // helper lamdas
-    auto checkFontStylebit = [&](uint8_t styles, uint8_t prevStyles, FontStyle styleToCheck, const String& museScoreTag) {
-        const bool bit = styles & uint8_t(styleToCheck);
-        const bool prevBit = prevStyles & uint8_t(styleToCheck);
-        if (bit != prevBit) {
-            if (bit) {
-                endString.append(String(u"<" + museScoreTag + u">"));
-            } else {
-                endString.append(String(u"</" + museScoreTag + u">"));
+    auto checkFontStylebit = [&](uint8_t newStyles, uint8_t prevStyles, FontStyle bit, const String& tag, bool closeOnly) {
+        const bool wasOn = prevStyles & uint8_t(bit);
+        const bool nowOn = newStyles & uint8_t(bit);
+        if (wasOn != nowOn) {
+            if (wasOn && !nowOn && closeOnly) {
+                // Check if we ever emitted the opening tag for this style
+                if (emittedOpenTags.find(bit) == emittedOpenTags.end()) {
+                    // Emit dummy <tag></tag> so closing is syntactically valid
+                    endString.append(String(u"<" + tag + u">"));
+                    emittedOpenTags.insert(bit);
+                }
+                endString.append(String(u"</" + tag + u">"));
+            }
+            if (!wasOn && nowOn && !closeOnly) {
+                emittedOpenTags.insert(bit);
+                endString.append(String(u"<" + tag + u">"));
             }
         }
+    };
+
+    auto turnOnFontStyles = [&](const std::optional<FontTracker>& current, const std::optional<FontTracker>& previous) {
+        uint8_t styles = current ? uint8_t(current->fontStyle) : 0;
+        uint8_t prevStyles = previous ? uint8_t(previous->fontStyle) : 0;
+        checkFontStylebit(styles, prevStyles, FontStyle::Bold, u"b", false);
+        checkFontStylebit(styles, prevStyles, FontStyle::Italic, u"i", false);
+        checkFontStylebit(styles, prevStyles, FontStyle::Underline, u"u", false);
+        checkFontStylebit(styles, prevStyles, FontStyle::Strike, u"s", false);
+    };
+
+    auto turnOffFontStyles = [&](const std::optional<FontTracker>& current, const std::optional<FontTracker>& previous) {
+        uint8_t styles = current ? uint8_t(current->fontStyle) : 0;
+        uint8_t prevStyles = previous ? uint8_t(previous->fontStyle) : 0;
+        checkFontStylebit(styles, prevStyles, FontStyle::Strike, u"s", true);
+        checkFontStylebit(styles, prevStyles, FontStyle::Underline, u"u", true);
+        checkFontStylebit(styles, prevStyles, FontStyle::Italic, u"i", true);
+        checkFontStylebit(styles, prevStyles, FontStyle::Bold, u"b", true);
     };
 
     // The processTextChunk function process each chunk of processed text with font information. It is only
     // called when the font information changes.
     auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles& styles) -> bool {
         const FontTracker font(styles.font, options.scaleFontSizeBy);
-        if (firstFontInfo && !gotInitialFont) {
+        if (firstFontInfo && !prevFont) {
             *firstFontInfo = font;
         } else {
             if (!prevFont || prevFont->fontName != font.fontName) {
@@ -124,16 +150,13 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
                 endString.append(String::number(font.fontSize, 2) + String(u"\"/>"));
             }
             if (!prevFont || prevFont->fontStyle != font.fontStyle) {
-                uint8_t styles = uint8_t(font.fontStyle);
-                uint8_t prevStyles = prevFont ? uint8_t(prevFont->fontStyle) : 0;
-                checkFontStylebit(styles, prevStyles, FontStyle::Bold, u"b");
-                checkFontStylebit(styles, prevStyles, FontStyle::Italic, u"i");
-                checkFontStylebit(styles, prevStyles, FontStyle::Underline, u"u");
-                checkFontStylebit(styles, prevStyles, FontStyle::Strike, u"s");
+                // first close any that are turning off
+                turnOffFontStyles(font, prevFont);
+                // then open any that are turning on
+                turnOnFontStyles(font, prevFont);
             }
         }
         prevFont = font;
-        gotInitialFont = true;
         endString.append(String::fromStdString(nextChunk));
         return true;
     };
@@ -214,6 +237,7 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     };
 
     parsingContext.parseEnigmaText(processTextChunk, processCommand);
+    turnOffFontStyles(options.initialFont, prevFont);
 
     return endString;
 };

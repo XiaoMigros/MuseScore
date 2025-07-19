@@ -435,7 +435,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         /// @todo does this chord have a stem already?
         /* if (chord->stem() && currentEntry->stemDetail) {
             // Stem visibility and offset
-            std::vector<std::shared_ptr<details::CustomStem>> customStems = m_doc->getDetails()->getArray<details::CustomStem>(m_currentMusxPartId);
+            std::vector<std::shared_ptr<details::CustomStem>> customStems = m_doc->getDetails()->getArray<details::CustomStem>(m_currentMusxPartId); // RGP: pass in the entry number as 2nd param here
             for (const std::shared_ptr<details::CustomStem>& customStem : customStems) {
                 chord->stem()->setVisible(customStem->calcIsHiddenStem());
                 if (customStem->hOffset != 0 || customStem->vOffset != 0) {
