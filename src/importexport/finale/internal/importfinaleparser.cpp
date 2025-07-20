@@ -28,6 +28,7 @@
 
 #include "musx/musx.h"
 
+#include "global/stringutils.h"
 #include "types/string.h"
 
 #include "engraving/dom/masterscore.h"
@@ -42,8 +43,30 @@ using namespace mu::iex::finale;
 
 namespace mu::iex::finale {
 
+FinaleParser::FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, FinaleLoggerPtr& logger)
+    : m_score(score), m_doc(doc), m_logger(logger)
+{
+    m_finaleOptions.init(*this);
+    const std::vector<IEngravingFontPtr> fonts = engravingFonts()->fonts();
+    for (const IEngravingFontPtr& font : fonts) {
+        m_engravingFonts.emplace(muse::strings::toLower(font->name()), font);
+    }
+}
+
 void FinaleParser::parse()
 {
+    // set score metadata
+    muse::Date creationDate(m_doc->getHeader()->created.year, m_doc->getHeader()->created.month, m_doc->getHeader()->created.day);
+    m_score->setMetaTag(u"creationDate", creationDate.toString(muse::DateFormat::ISODate));
+    std::vector<std::shared_ptr<texts::FileInfoText>> fileInfoTexts = m_doc->getTexts()->getArray<texts::FileInfoText>();
+    for (std::shared_ptr<texts::FileInfoText> fileInfoText : fileInfoTexts) {
+        String metaTag = FinaleTConv::metaTagFromFileInfo(fileInfoText->getTextType());
+        std::string fileInfoValue = musx::util::EnigmaString::trimTags(fileInfoText->text);
+        if (!metaTag.empty() && !fileInfoValue.empty()) {
+            m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
+        }
+    }
+
     // styles (first, so that spatium and other defaults are correct)
     importStyles();
 
