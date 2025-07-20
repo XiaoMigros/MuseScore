@@ -117,6 +117,65 @@ struct EnigmaParsingOptions
     std::optional<FontTracker> initialFont;
 };
 
+struct ReadableCustomLine
+{
+    ReadableCustomLine() = default;
+    ReadableCustomLine(const FinaleParser&, const std::shared_ptr<musx::dom::others::SmartShapeCustomLine>&);
+
+    engraving::ElementType elementType;
+    bool lineVisible;
+    engraving::HookType beginHookType;
+    engraving::HookType endHookType;
+    engraving::Spatium beginHookHeight;
+    engraving::Spatium endHookHeight;
+    engraving::Spatium gapBetweenTextAndLine;
+    bool textSizeSpatiumDependent;
+    bool diagonal;
+    engraving::LineType lineStyle;
+    engraving::Spatium lineWidth;
+    double dashLineLen;
+    double dashGapLen;
+
+    engraving::TextPlace beginTextPlace;
+    engraving::String beginText;
+    engraving::Align beginTextAlign;
+    engraving::String beginFontFamily;
+    double beginFontSize;
+    engraving::FontStyle beginFontStyle;
+    engraving::PointF beginTextOffset;
+
+    engraving::TextPlace continueTextPlace;
+    engraving::String continueText;
+    engraving::Align continueTextAlign;
+    engraving::String continueFontFamily;
+    double continueFontSize;
+    engraving::FontStyle continueFontStyle;
+    engraving::PointF continueTextOffset;
+
+    engraving::TextPlace endTextPlace;
+    engraving::String endText;
+    engraving::Align endTextAlign;
+    engraving::String endFontFamily;
+    double endFontSize;
+    engraving::FontStyle endFontStyle;
+    engraving::PointF endTextOffset;
+
+    engraving::String centerLongText;
+    engraving::AlignH centerLongTextAlign; // Doesn't have vertical AlignV property
+    engraving::String centerLongFontFamily;
+    double centerLongFontSize;
+    engraving::FontStyle centerLongFontStyle;
+    engraving::PointF centerLongTextOffset;
+
+    engraving::String centerShortText;
+    engraving::AlignH centerShortTextAlign; // Doesn't have vertical AlignV property
+    engraving::String centerShortFontFamily;
+    double centerShortFontSize;
+    engraving::FontStyle centerShortFontStyle;
+    engraving::PointF centerShortTextOffset;
+};
+using ReadableCustomLineMap = std::map<musx::dom::Cmper, ReadableCustomLine*>;
+
 class FinaleParser : public muse::Injectable
 {
 public:
@@ -126,16 +185,17 @@ public:
 
     void parse();
 
+    // Document
     const engraving::Score* score() const { return m_score; }
     std::shared_ptr<musx::dom::Document> musxDocument() const { return m_doc; }
     const FinaleOptions& musxOptions() const { return m_finaleOptions; }
     musx::dom::Cmper currentMusxPartId() const { return m_currentMusxPartId; }
 
+    // Text
+    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options = {}, FontTracker* firstFontInfo = nullptr) const;
     bool fontIsEngravingFont(const std::string& fontName) const;
-    bool fontIsEngravingFont(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo) const
-        { return fontIsEngravingFont(fontInfo->getName()); }
-    bool fontIsEngravingFont(const engraving::String& fontName) const
-        { return fontIsEngravingFont(fontName.toStdString()); }
+    bool fontIsEngravingFont(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo) const { return fontIsEngravingFont(fontInfo->getName()); }
+    bool fontIsEngravingFont(const engraving::String& fontName) const { return fontIsEngravingFont(fontName.toStdString()); }
 
     FinaleLoggerPtr logger() const { return m_logger; }
 
@@ -186,7 +246,6 @@ private:
     void importPageTexts();
 
     bool isOnlyPage(const std::shared_ptr<musx::dom::others::PageTextAssign>& pageTextAssign, musx::dom::PageCmper page);
-    engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options = {}, FontTracker* firstFontInfo = nullptr);
 
     engraving::Score* m_score;
     const std::shared_ptr<musx::dom::Document> m_doc;
@@ -204,6 +263,7 @@ private:
     std::unordered_set<musx::dom::LayerIndex> m_layerForceStems;
     std::map<musx::dom::NoteInfoPtr, engraving::Note*> m_noteInfoPtr2Note; // use std::map to avoid need for NoteInfoPtr hash function
     std::map<musx::dom::EntryInfoPtr, engraving::ChordRest*> m_entryInfoPtr2CR; // use std::map to avoid need for EntryInfoPtr hash function
+    ReadableCustomLineMap m_customLines;
 };
 
 }

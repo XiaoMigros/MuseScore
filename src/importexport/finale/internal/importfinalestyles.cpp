@@ -252,7 +252,7 @@ static void writePagePrefs(MStyle& style, const FinaleParser& context)
         auto [minSize, maxSize] = firstSystem->calcMinMaxStaffSizes();
         if (minSize < 1) {
             style.set(Sid::smallStaffMag, minSize.toDouble());
-            style.set(Sid::smallNoteMag, minSize.toDouble());
+            style.set(Sid::smallNoteMag, minSize.toDouble()); /// XM: Why is this set here? Small note size is applied on top of small staff size.
         }
     }
 
@@ -429,7 +429,7 @@ void writeSmartShapePrefs(MStyle& style, const FinaleParser& context)
     writeEvpuSpace(style, Sid::tieEndWidth, prefs.tieOptions->tieTipWidth);
     writeEfixSpace(style, Sid::tieDottedWidth, prefs.smartShapeOptions->smartLineWidth);
     style.set(Sid::tiePlacementSingleNote, prefs.tieOptions->useOuterPlacement ? TiePlacement::OUTSIDE : TiePlacement::INSIDE);
-	// Note: Finale's 'outer placement' for notes within chords is much closer to inside placement. But outside placement is closer overall.
+    // Note: Finale's 'outer placement' for notes within chords is much closer to inside placement. But outside placement is closer overall.
     style.set(Sid::tiePlacementChord, prefs.tieOptions->useOuterPlacement ? TiePlacement::OUTSIDE : TiePlacement::INSIDE);
 
     // Ottava settings
