@@ -292,6 +292,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
     // because we need the real staff to calculate when to show accidentals,
     // we have to calculate cross-staffing before pitches
+    /// @todo what if cross-staff chord from other staves interfere with this one
     for (size_t i = 0; i < currentEntry->notes.size(); ++i) {
         NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, i);
         if (noteInfoPtr->crossStaff) {

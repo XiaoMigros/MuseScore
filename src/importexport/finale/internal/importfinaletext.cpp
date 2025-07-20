@@ -84,7 +84,7 @@ FontTracker::FontTracker(const MStyle& style, const String& sidNamePrefix)
 
 // Passing in the firstFontInfo pointer suppresses any first font information from being generated in the output string.
 // Instead, it is returned in the pointer.
-String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options, FontTracker* firstFontInfo)
+String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options, FontTracker* firstFontInfo) const
 {
     String endString;
     const bool isHeaderOrFooter = options.hfType != HeaderFooterType::None;

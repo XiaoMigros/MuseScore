@@ -52,6 +52,104 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
+static const std::regex pedalRegex(R"(\bped(ale?)?\b)", std::regex_constants::icase); /// @todo add smufl/glyphs, other pedal names?
+
+ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const std::shared_ptr<musx::dom::others::SmartShapeCustomLine>& customLine)
+{
+    beginText       = context.stringFromEnigmaText(customLine->getLeftStartRawTextCtx(context.currentMusxPartId()));
+    continueText    = context.stringFromEnigmaText(customLine->getLeftContRawTextCtx(context.currentMusxPartId()));
+    endText         = context.stringFromEnigmaText(customLine->getRightEndRawTextCtx(context.currentMusxPartId()));
+    centerLongText  = context.stringFromEnigmaText(customLine->getCenterFullRawTextCtx(context.currentMusxPartId()));
+    centerShortText = context.stringFromEnigmaText(customLine->getCenterAbbrRawTextCtx(context.currentMusxPartId()));
+
+    elementType = [&]() {
+        if (customLine->lineStyle == others::SmartShapeCustomLine::LineStyle::Char
+            && customLine->charParams->lineChar != U' ') {
+            /// @todo use customLine->charParams->lineChar and customLine->charParams->font
+            /// to decide between trill, vibrato, tremolobar. For now, assume trill.
+            return ElementType::TRILL;
+        }
+        // std::vector<std::shared_ptr<texts::SmartShapeText>> customLineTexts = m_doc->getTexts()->getArray<texts::SmartShapeText>();
+        if (std::regex_search(beginText.toStdString(), pedalRegex) || std::regex_search(continueText.toStdString(), pedalRegex)
+            || endText == u"*" /*maestro symbol for pedal star*/) {
+            return ElementType::PEDAL;
+        }
+        /// @todo lines with up hooks below piano staves as pedal
+        /// @todo :
+        /// ElementType::HAIRPIN, ElementType::PEDAL, ElementType::OTTAVA, ElementType::TRILL, ElementType::TEXTLINE, ElementType::PALM_MUTE, /* ElementType::PARTIAL_LYRICSLINE, */
+        /// ElementType::WHAMMY_BAR, ElementType::RASGUEADO, ElementType::HARMONIC_MARK, ElementType::PICK_SCRAPE, ElementType::LET_RING, ElementType::VIBRATO, /* ElementType::TIE, */
+        /// ElementType::GLISSANDO, ElementType::GUITAR_BEND, ElementType::NOTELINE, ElementType::GRADUAL_TEMPO_CHANGE, ElementType::VIBRATO, /* ElementType::VOLTA, */
+        /// /* ElementType::SLUR, *//* ElementType::HAMMER_ON_PULL_OFF */
+        return ElementType::TEXTLINE;
+
+    }();
+
+    switch (customLine->lineStyle) {
+    case others::SmartShapeCustomLine::LineStyle::Char:
+        lineVisible = customLine->charParams->lineChar != U' '; /// @todo general space symbols
+        break;
+    case others::SmartShapeCustomLine::LineStyle::Solid:
+        lineStyle   = LineType::SOLID;
+        lineVisible = customLine->solidParams->lineWidth != 0;
+        lineWidth   = Spatium(FinaleTConv::doubleFromEfix(customLine->solidParams->lineWidth));
+        break;
+    case others::SmartShapeCustomLine::LineStyle::Dashed:
+        lineStyle   = LineType::DASHED; /// @todo When should we set lineStyle to LineType::DOTTED ?
+        lineVisible = customLine->dashedParams->lineWidth != 0;
+        lineWidth   = Spatium(FinaleTConv::doubleFromEfix(customLine->dashedParams->lineWidth));
+        dashLineLen = FinaleTConv::doubleFromEfix(customLine->dashedParams->dashOn) / lineWidth.val();
+        dashGapLen  = FinaleTConv::doubleFromEfix(customLine->dashedParams->dashOff) / lineWidth.val();
+        break;
+    }
+    beginHookType = customLine->lineCapStartType == others::SmartShapeCustomLine::LineCapType::Hook ? HookType::HOOK_90 : HookType::NONE;
+    endHookType   = customLine->lineCapEndType == others::SmartShapeCustomLine::LineCapType::Hook ? HookType::HOOK_90 : HookType::NONE;
+    beginHookHeight = Spatium(FinaleTConv::doubleFromEfix(customLine->lineCapStartHookLength));
+    endHookHeight   = Spatium(FinaleTConv::doubleFromEfix(customLine->lineCapEndHookLength));
+    gapBetweenTextAndLine = Spatium(FinaleTConv::doubleFromEvpu(customLine->lineStartX)); // Don't use lineEndX or lineContX
+    textSizeSpatiumDependent = true; /// ???
+    diagonal = !customLine->makeHorz;
+
+    beginTextPlace    = customLine->lineAfterLeftStartText ? TextPlace::LEFT : TextPlace::BELOW;
+    continueTextPlace = customLine->lineAfterLeftContText ? TextPlace::LEFT : TextPlace::BELOW;
+    // In MuseScore, this value has no effect. End text always uses left placement on layout.
+    // endTextPlace   = customLine->lineBeforeRightEndText ? TextPlace::LEFT : TextPlace::BELOW;
+
+    // Finale's vertical line position is set relative to the text baseline.
+    // Horizontal alignment affects the (visible) offset, so use left placement and set the offset later.
+    beginTextAlign    = Align(AlignH::LEFT, AlignV::BASELINE);
+    continueTextAlign = Align(AlignH::LEFT, AlignV::BASELINE);
+    endTextAlign      = Align(AlignH::LEFT, AlignV::BASELINE);
+    // As the name suggests, this text needs to be centered.
+    centerLongTextAlign  = AlignH::HCENTER;
+    centerShortTextAlign = AlignH::HCENTER;
+
+    // The following are currently saved directly to the
+    // text String and not treated as properties. This will eventually be changed.
+    // beginFontFamily;
+    // continueFontFamily;
+    // endFontFamily;
+    // centerLongFontFamily;
+    // centerShortFontFamily;
+    // beginFontSize;
+    // continueFontSize;
+    // endFontSize;
+    // centerLongFontSize;
+    // centerShortFontSize;
+    // beginFontStyle;
+    // continueFontStyle;
+    // endFontStyle;
+    // centerLongFontStyle;
+    // centerShortFontStyle;
+
+    /// @todo I'm not yet sure how text offset affects the default offset/alignment of lines when added to the score.
+    /// This may need to be accounted for in spanner segment positioning.
+    beginTextOffset    = FinaleTConv::evpuToPointF(customLine->leftStartX, customLine->lineStartY - customLine->leftStartY);
+    continueTextOffset = FinaleTConv::evpuToPointF(customLine->leftContX, customLine->lineStartY - customLine->leftContY);
+    endTextOffset      = FinaleTConv::evpuToPointF(customLine->rightEndX, customLine->lineEndY - customLine->rightEndY);
+    centerLongTextOffset  = FinaleTConv::evpuToPointF(customLine->centerFullX, customLine->lineStartY - customLine->centerFullY);
+    centerShortTextOffset = FinaleTConv::evpuToPointF(customLine->centerAbbrX, customLine->lineStartY - customLine->centerAbbrY);
+}
+
 void FinaleParser::importSmartShapes()
 {
     logger()->logInfo(String(u"Importing smart shapes"));
@@ -59,7 +157,7 @@ void FinaleParser::importSmartShapes()
     auto elementFromTerminationSeg = [&](const std::shared_ptr<others::SmartShape>& smartShape, bool start) -> EngravingItem* {
         logger()->logInfo(String(u"Finding spanner element..."));
         const std::shared_ptr<others::SmartShape::TerminationSeg>& termSeg = start ? smartShape->startTermSeg : smartShape->endTermSeg;
-        EntryInfoPtr entryInfoPtr = termSeg->endPoint->calcAssociatedEntry();
+        EntryInfoPtr entryInfoPtr = termSeg->endPoint->calcAssociatedEntry(m_currentMusxPartId);
         if (entryInfoPtr) {
             NoteNumber nn = start ? smartShape->startNoteId : smartShape->endNoteId;
             if (nn) {
@@ -94,11 +192,25 @@ void FinaleParser::importSmartShapes()
             // will be handled elsewhere
             continue;
         }
+        if (!smartShape->startTermSeg->endPoint->calcIsAssigned() || !smartShape->endTermSeg->endPoint->calcIsAssigned()) {
+            // Unassigned shape, no need to import
+            continue;
+        }
+        ReadableCustomLine* customLine = [&]() -> ReadableCustomLine* {
+            if (smartShape->lineStyleId == 0) {
+                return nullptr;
+            }
+            ReadableCustomLine* line = muse::value(m_customLines, smartShape->lineStyleId, nullptr);
+            if (line == nullptr) {
+                line = new ReadableCustomLine(*this, m_doc->getOthers()->get<others::SmartShapeCustomLine>(m_currentMusxPartId, smartShape->lineStyleId));
+                m_customLines.emplace(smartShape->lineStyleId, line);
+            }
+            return line;
+        }();
 
         ElementType type = FinaleTConv::elementTypeFromShapeType(smartShape->shapeType);
         if (type == ElementType::INVALID) {
-            // custom smartshapes, not yet supported
-            continue;
+            type = customLine->elementType;
         }
 
         logger()->logInfo(String(u"Read spanner type"));
@@ -160,6 +272,47 @@ void FinaleParser::importSmartShapes()
             }
         }
         /// @todo set guitar bend type
+
+        if (customLine && newSpanner->isTextLineBase()) {
+            TextLineBase* textLineBase = toTextLineBase(newSpanner);
+
+            textLineBase->setLineVisible(customLine->lineVisible);
+            textLineBase->setBeginHookType(customLine->beginHookType);
+            textLineBase->setEndHookType(customLine->endHookType);
+            textLineBase->setBeginHookHeight(customLine->beginHookHeight);
+            textLineBase->setEndHookHeight(customLine->endHookHeight);
+            textLineBase->setGapBetweenTextAndLine(customLine->gapBetweenTextAndLine);
+            textLineBase->setTextSizeSpatiumDependent(customLine->textSizeSpatiumDependent);
+            textLineBase->setDiagonal(customLine->diagonal);
+            textLineBase->setLineWidth(customLine->lineWidth);
+            textLineBase->setDashLineLen(customLine->dashLineLen);
+            textLineBase->setDashGapLen(customLine->dashGapLen);
+
+            textLineBase->setBeginTextPlace(customLine->beginTextPlace);
+            textLineBase->setBeginText(customLine->beginText);
+            textLineBase->setBeginTextAlign(customLine->beginTextAlign);
+            // textLineBase->setBeginFontFamily(customLine->beginFontFamily);
+            // textLineBase->setBeginFontSize(customLine->beginFontSize);
+            // textLineBase->setBeginFontStyle(customLine->beginFontStyle);
+            textLineBase->setBeginTextOffset(customLine->beginTextOffset);
+
+            textLineBase->setContinueTextPlace(customLine->continueTextPlace);
+            textLineBase->setContinueText(customLine->continueText);
+            textLineBase->setContinueTextAlign(customLine->continueTextAlign);
+            // textLineBase->setContinueFontFamily(customLine->continueFontFamily);
+            // textLineBase->setContinueFontSize(customLine->continueFontSize);
+            // textLineBase->setContinueFontStyle(customLine->continueFontStyle);
+            textLineBase->setContinueTextOffset(customLine->continueTextOffset);
+
+            textLineBase->setEndTextPlace(customLine->endTextPlace);
+            textLineBase->setEndText(customLine->endText);
+            textLineBase->setEndTextAlign(customLine->endTextAlign);
+            // textLineBase->setEndFontFamily(customLine->endFontFamily);
+            // textLineBase->setEndFontSize(customLine->endFontSize);
+            // textLineBase->setEndFontStyle(customLine->endFontStyle);
+            textLineBase->setEndTextOffset(customLine->endTextOffset);
+        }
+        /// @todo custom trills
 
         // m_score->addSpanner(newSpanner, false);
         // m_score->addElement(newSpanner);
