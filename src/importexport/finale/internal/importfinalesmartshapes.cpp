@@ -184,6 +184,9 @@ void FinaleParser::importSmartShapes()
         return toEngravingItem(anchor->segment());
     };
 
+    /// @note Getting the entire array of smart shapes works for SCORE_PARTID, but if we ever need to do it for excerpts it could fail.
+    /// This is because `getArray` currently cannot pull a mix of score and partially shared part instances. Adding the ability to do so
+    /// would require significant refactoring of musx. -- RGP
     std::vector<std::shared_ptr<others::SmartShape>> smartShapes = m_doc->getOthers()->getArray<others::SmartShape>(m_currentMusxPartId); //, BASE_SYSTEM_ID
     logger()->logInfo(String(u"Found %1 smart shapes").arg(smartShapes.size()));
     for (const std::shared_ptr<others::SmartShape>& smartShape : smartShapes) {
@@ -260,6 +263,9 @@ void FinaleParser::importSmartShapes()
         } else if (type == ElementType::TEXTLINE) {
             TextLineBase* textLine = toTextLineBase(newSpanner);
             textLine->setLineStyle(FinaleTConv::lineTypeFromShapeType(smartShape->shapeType));
+            /// @note The hookHeight of all built-in smart shapes with hooks is determined by musxOptions()->smartShapeOptions.hookLength.
+            /// There are other settings there that also may be applicable to this code.
+            /// Also, I only set it for ottavas in importStyles. We probably need to add aothers there. -- RGP
             std::pair<double, double> hookHeights = FinaleTConv::hookHeightsFromShapeType(smartShape->shapeType);
             if (!muse::RealIsEqual(hookHeights.first, 0)) {
                 textLine->setBeginHookType(HookType::HOOK_90);
