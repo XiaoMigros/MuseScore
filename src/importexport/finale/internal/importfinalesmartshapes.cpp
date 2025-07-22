@@ -213,6 +213,10 @@ void FinaleParser::importSmartShapes()
 
         ElementType type = FinaleTConv::elementTypeFromShapeType(smartShape->shapeType);
         if (type == ElementType::INVALID) {
+            if (!customLine) {
+                logger()->logWarning(String(u"Invalid spanner type"));
+                continue;
+            }
             type = customLine->elementType;
         }
 
