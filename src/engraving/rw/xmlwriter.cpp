@@ -175,9 +175,16 @@ void XmlWriter::tagProperty(const AsciiStringView& name, P_TYPE type, const Prop
         element(name, { { "w", s.width() }, { "h", s.height() } });
     }
     break;
-    case P_TYPE::DRAW_PATH:
-        UNREACHABLE; //! TODO
-        break;
+    case P_TYPE::DRAW_PATH: {
+        PainterPath path = data.value<PainterPath>();
+        startElement("Path");
+        for (size_t i = 0; i < path.elementCount(); ++i) {
+            const PainterPath::Element& e = path.elementAt(i);
+            tag("Element", { { "type", int(e.type) }, { "x", e.x }, { "y", e.y } });
+        }
+        endElement();
+    }
+    break;
     case P_TYPE::SCALE: {
         ScaleF s = data.value<ScaleF>();
         element(name, { { "w", s.width() }, { "h", s.height() } });
@@ -188,6 +195,20 @@ void XmlWriter::tagProperty(const AsciiStringView& name, P_TYPE type, const Prop
     case P_TYPE::MILLIMETRE:
         element(name, data.value<Millimetre>().val());
         break;
+
+    case P_TYPE::BRACKET_PATH: {
+        BracketPath path = data.value<BracketPath>();
+        startElement("bracketPath");
+        for (size_t i = 0; i < path.size(); ++i) {
+            auto [pathType, relative, absolute] = path.at(i);
+            startElement("point");
+            tag("type", pathType);
+            tagPoint("rel", relative);
+            tagPoint("abs", absolute);
+            endElement();
+        }
+        endElement();
+    } break;
 
     // draw
     case P_TYPE::SYMID: {

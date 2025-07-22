@@ -65,6 +65,7 @@ enum class P_TYPE : unsigned char {
     ORNAMENT_SHOW_ACCIDENTAL,
     GLISS_STYLE,
     GLISS_TYPE,
+    BRACKET_PATH,
 
     // Layout
     ALIGN,
@@ -195,6 +196,9 @@ public:
 
     PropertyValue(GlissandoType v)
         : m_type(P_TYPE::GLISS_TYPE), m_data(make_data<GlissandoType>(v)) {}
+
+    PropertyValue(const BracketPath& v)
+        : m_type(P_TYPE::BRACKET_PATH), m_data(make_data<BracketPath>(v)) {}
 
     // Layout
     PropertyValue(Align v)
