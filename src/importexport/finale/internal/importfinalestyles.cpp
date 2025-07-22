@@ -151,6 +151,11 @@ static void writeEfixSpace(MStyle& style, Sid sid, Efix efix)
     style.set(sid, FinaleTConv::doubleFromEfix(efix));
 }
 
+static void writeEvpuPointF(MStyle& style, Sid sid, Evpu xEvpu, Evpu yEvpu)
+{
+    style.set(sid, FinaleTConv::evpuToPointF(xEvpu, yEvpu));
+}
+
 static void writeFontPref(MStyle& style, const std::string& namePrefix, const std::shared_ptr<FontInfo>& fontInfo)
 {
     style.set(styleIdx(namePrefix + "FontFace"), String::fromStdString(fontInfo->getName()));
@@ -252,7 +257,8 @@ static void writePagePrefs(MStyle& style, const FinaleParser& context)
         auto [minSize, maxSize] = firstSystem->calcMinMaxStaffSizes();
         if (minSize < 1) {
             style.set(Sid::smallStaffMag, minSize.toDouble());
-            style.set(Sid::smallNoteMag, minSize.toDouble()); /// XM: Why is this set here? Small note size is applied on top of small staff size.
+            // Finale has no global style for this, but we override it later if we find cue-size chords.
+            style.set(Sid::smallNoteMag, minSize.toDouble());
         }
     }
 
@@ -355,7 +361,7 @@ void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
     style.set(Sid::keySigCourtesyBarlineMode,
               int(FinaleTConv::boolToCourtesyBarlineMode(prefs.barlineOptions->drawDoubleBarlineBeforeKeyChanges)));
     style.set(Sid::timeSigCourtesyBarlineMode, int(CourtesyBarlineMode::ALWAYS_SINGLE));  // Hard-coded as 0 in Finale
-    style.set(Sid::hideEmptyStaves, context.currentMusxPartId() == SCORE_PARTID);
+    style.set(Sid::hideEmptyStaves, context.currentMusxPartId() == SCORE_PARTID); // ???
 }
 
 void writeStemPrefs(MStyle& style, const FinaleParser& context)
@@ -376,9 +382,15 @@ void writeMusicSpacingPrefs(MStyle& style, const FinaleParser& context)
 
     writeEvpuSpace(style, Sid::minMeasureWidth, prefs.musicSpacing->minWidth);
     writeEvpuSpace(style, Sid::minNoteDistance, prefs.musicSpacing->minDistance);
+    writeEvpuSpace(style, Sid::barNoteDistance, prefs.musicSpacing->musFront);
+    writeEvpuSpace(style, Sid::barAccidentalDistance, prefs.musicSpacing->musFront);
+    writeEvpuSpace(style, Sid::noteBarDistance, prefs.musicSpacing->minDistance + prefs.musicSpacing->musBack);
     style.set(Sid::measureSpacing, prefs.musicSpacing->scalingFactor);
     /// @todo find a conversion for note distance to tie length.
     writeEvpuSpace(style, Sid::minTieLength, prefs.musicSpacing->minDistTiedNotes);
+    // This value isn't always in used in Finale, but we can't use manual positioning.
+    writeEvpuSpace(style, Sid::graceToMainNoteDist, prefs.musicSpacing->minDistGrace);
+    writeEvpuSpace(style, Sid::graceToGraceNoteDist, prefs.musicSpacing->minDistGrace);
 }
 
 void writeNoteRelatedPrefs(MStyle& style, const FinaleParser& context)
@@ -398,9 +410,10 @@ void writeNoteRelatedPrefs(MStyle& style, const FinaleParser& context)
     style.set(Sid::dotMag, museMagVal(context, options::FontOptions::FontType::AugDots));
     writeEvpuSpace(style, Sid::dotNoteDistance, prefs.augDotOptions->dotNoteOffset);
     writeEvpuSpace(style, Sid::dotRestDistance, prefs.augDotOptions->dotNoteOffset); // Same value as dotNoteDistance
-    /// @todo Finale's value is calculated relative to the rightmost point of the previous dot, MuseScore the leftmost.(Observed behavior)
-    /// We need to add on the symbol width of one dot for the correct value.
-    writeEvpuSpace(style, Sid::dotDotDistance, prefs.augDotOptions->dotOffset);
+    // Finale's value is calculated relative to the rightmost point of the previous dot, MuseScore the leftmost (observed behavior).
+    // We need to add on the symbol width of one dot for the correct value.
+    style.set(Sid::dotDotDistance, prefs.augDotOptions->dotOffset
+              + context.score()->engravingFont()->width(SymId::augmentationDot, style.styleD(Sid::dotMag) * (style.spatium() / SPATIUM20)));
     style.set(Sid::articulationMag, museMagVal(context, options::FontOptions::FontType::Articulation));
     style.set(Sid::graceNoteMag, FinaleTConv::doubleFromPercent(prefs.graceOptions->gracePerc));
     style.set(Sid::concertPitch, !prefs.partGlobals->showTransposed);
@@ -423,10 +436,16 @@ void writeSmartShapePrefs(MStyle& style, const FinaleParser& context)
 
     // Slur-related settings
     writeEvpuSpace(style, Sid::slurEndWidth, prefs.smartShapeOptions->smartSlurTipWidth);
+    // Average L/R times observed fudge factor (0.75)
+    // Ignore horizontal thickness values as they hardly affect mid width.
+    style.set(Sid::slurMidWidth, FinaleTConv::doubleFromEvpu(prefs.smartShapeOptions->slurThicknessCp1Y + prefs.smartShapeOptions->slurThicknessCp2Y) * 0.375);
+    writeEvpuSpace(style, Sid::slurEndWidth, prefs.smartShapeOptions->smartSlurTipWidth);
     writeEfixSpace(style, Sid::slurDottedWidth, prefs.smartShapeOptions->smartLineWidth);
 
     // Tie-related settings
     writeEvpuSpace(style, Sid::tieEndWidth, prefs.tieOptions->tieTipWidth);
+    // Average L/R times observed fudge factor (0.75)
+    style.set(Sid::tieMidWidth, FinaleTConv::doubleFromEvpu(prefs.tieOptions->thicknessRight + prefs.tieOptions->thicknessLeft) * 0.375);
     writeEfixSpace(style, Sid::tieDottedWidth, prefs.smartShapeOptions->smartLineWidth);
     style.set(Sid::tiePlacementSingleNote, prefs.tieOptions->useOuterPlacement ? TiePlacement::OUTSIDE : TiePlacement::INSIDE);
     // Note: Finale's 'outer placement' for notes within chords is much closer to inside placement. But outside placement is closer overall.
@@ -441,6 +460,12 @@ void writeSmartShapePrefs(MStyle& style, const FinaleParser& context)
                    prefs.smartShapeOptions->smartDashOff,
                    LineType::DASHED);
     style.set(Sid::ottavaNumbersOnly, prefs.smartShapeOptions->showOctavaAsText);
+
+    // Other lines
+    for (Sid styleId : { Sid::textLineHookHeight, Sid::systemTextLineHookHeight,
+                         Sid::letRingHookHeight, Sid::palmMuteHookHeight, Sid::pedalHookHeight }) {
+        writeEvpuSpace(style, styleId, prefs.smartShapeOptions->hookLength);
+    }
 }
 
 void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
@@ -520,7 +545,7 @@ void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
     style.set(Sid::createMultiMeasureRests, context.currentMusxPartId() != 0);
     style.set(Sid::minEmptyMeasures, prefs.mmRestOptions->numStart);
     writeEvpuSpace(style, Sid::minMMRestWidth, prefs.mmRestOptions->measWidth);
-    style.set(Sid::mmRestNumberPos, (prefs.mmRestOptions->numAdjY / EVPU_PER_SPACE) + 1);
+    style.set(Sid::mmRestNumberPos, FinaleTConv::doubleFromEvpu(prefs.mmRestOptions->numAdjY) + 1);
     style.set(Sid::oldStyleMultiMeasureRests,
               prefs.mmRestOptions->useSymbols && prefs.mmRestOptions->useSymsThreshold > 1);
     style.set(Sid::mmRestOldStyleMaxMeasures,
@@ -533,9 +558,15 @@ void writeRepeatEndingPrefs(MStyle& style, const FinaleParser& context)
     const auto& prefs = context.musxOptions();
 
     writeEfixSpace(style, Sid::voltaLineWidth, prefs.repeatOptions->bracketLineWidth);
+    writeEvpuPointF(style, Sid::voltaPosAbove, 0, prefs.repeatOptions->bracketHeight);
+    writeEvpuSpace(style, Sid::voltaHook, prefs.repeatOptions->bracketHookLen);
     style.set(Sid::voltaLineStyle, LineType::SOLID);
     writeDefaultFontPref(style, context, "volta", options::FontOptions::FontType::Ending);
-    style.set(Sid::voltaAlign, Align(AlignH::LEFT, AlignV::BASELINE));
+    // style.set(Sid::voltaAlign, Align(AlignH::LEFT, AlignV::BASELINE));
+    writeEvpuPointF(style, Sid::voltaOffset, prefs.repeatOptions->bracketTextHPos,
+                    prefs.repeatOptions->bracketHookLen - prefs.repeatOptions->bracketTextHPos);
+    // style.set(Sid::voltaAlignStartBeforeKeySig, false);
+    // style.set(Sid::voltaAlignEndLeftOfBarline, false);
 }
 
 void writeTupletPrefs(MStyle& style, const FinaleParser& context)

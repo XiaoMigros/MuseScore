@@ -490,8 +490,9 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     }
     if (isGrace) {
         engraving::Chord* gc = toChord(cr);
-        /// @todo acciaccatura
-        gc->setNoteType(FinaleTConv::durationTypeToNoteType(d.type(), graceAfterType));
+        /// @todo Account for stem slash plugin instead of just document options
+        gc->setNoteType((!graceAfterType && gc->beams() > 0 && entryInfo.calcUnbeamed() && musxOptions().graceOptions->slashFlaggedGraceNotes)
+                         ? engraving::NoteType::ACCIACCATURA : FinaleTConv::durationTypeToNoteType(d.type(), graceAfterType));
         engraving::Chord* graceParentChord = toChord(segment->element(curTrackIdx));
         gc->setGraceIndex(static_cast<int>(graceAfterType ? graceParentChord->graceNotesAfter().size() : graceParentChord->graceNotesBefore().size()));
         graceParentChord->add(gc);
