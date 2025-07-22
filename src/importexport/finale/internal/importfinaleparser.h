@@ -197,6 +197,9 @@ public:
     bool fontIsEngravingFont(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo) const { return fontIsEngravingFont(fontInfo->getName()); }
     bool fontIsEngravingFont(const engraving::String& fontName) const { return fontIsEngravingFont(fontName.toStdString()); }
 
+    // Utility
+    musx::dom::EvpuFloat evpuAugmentationDotWidth() const;
+
     FinaleLoggerPtr logger() const { return m_logger; }
 
 private:
@@ -264,7 +267,7 @@ private:
     std::map<engraving::Fraction, musx::dom::MeasCmper> m_tick2Meas; // use std::map to avoid need for Fraction hash function
     std::unordered_map<musx::dom::LayerIndex, engraving::voice_idx_t> m_layer2Voice;
     std::unordered_set<musx::dom::LayerIndex> m_layerForceStems;
-    std::map<std::pair<EntryNumber, NoteNumber>, engraving::Note*> m_entryNoteNumber2Note; // use std::map to avoid need for std::pair hash function
+    std::map<std::pair<musx::dom::EntryNumber, musx::dom::NoteNumber>, engraving::Note*> m_entryNoteNumber2Note; // use std::map to avoid need for std::pair hash function
     std::unordered_map<musx::dom::EntryNumber, engraving::ChordRest*> m_entryNumber2CR;
     ReadableCustomLineMap m_customLines;
 };

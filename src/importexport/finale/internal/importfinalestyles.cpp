@@ -114,6 +114,12 @@ bool FinaleParser::fontIsEngravingFont(const std::string& fontName) const
     return false;
 }
 
+EvpuFloat FinaleParser::evpuAugmentationDotWidth() const
+{
+    EvpuFloat result = m_score->engravingFont()->width(SymId::augmentationDot, m_score->style().styleD(Sid::dotMag));
+    return result * (EVPU_PER_SPACE / SPATIUM20);
+}
+
 static uint16_t museFontEfx(const FontInfo* fontInfo)
 {
     uint16_t retval = 0;
@@ -393,7 +399,7 @@ void writeMusicSpacingPrefs(MStyle& style, const FinaleParser& context)
     writeEvpuSpace(style, Sid::graceToGraceNoteDist, prefs.musicSpacing->minDistGrace);
 }
 
-void writeNoteRelatedPrefs(MStyle& style, const FinaleParser& context)
+void writeNoteRelatedPrefs(MStyle& style, FinaleParser& context)
 {
     const auto& prefs = context.musxOptions();
 
@@ -412,8 +418,7 @@ void writeNoteRelatedPrefs(MStyle& style, const FinaleParser& context)
     writeEvpuSpace(style, Sid::dotRestDistance, prefs.augDotOptions->dotNoteOffset); // Same value as dotNoteDistance
     // Finale's value is calculated relative to the rightmost point of the previous dot, MuseScore the leftmost (observed behavior).
     // We need to add on the symbol width of one dot for the correct value.
-    style.set(Sid::dotDotDistance, prefs.augDotOptions->dotOffset
-              + context.score()->engravingFont()->width(SymId::augmentationDot, style.styleD(Sid::dotMag) * (style.spatium() / SPATIUM20)));
+    writeEvpuSpace(style, Sid::dotDotDistance, prefs.augDotOptions->dotOffset + context.evpuAugmentationDotWidth());
     style.set(Sid::articulationMag, museMagVal(context, options::FontOptions::FontType::Articulation));
     style.set(Sid::graceNoteMag, FinaleTConv::doubleFromPercent(prefs.graceOptions->gracePerc));
     style.set(Sid::concertPitch, !prefs.partGlobals->showTransposed);

@@ -351,6 +351,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
             // Add accidental if needed
             /// @todo Do we really need to explicitly add the accidental object if it's not frozen?
+            /// RGP: if it has been manually moved, it looks like it.Otherwise perhaps not.
             if (targetStaff->isPitchedStaff(segment->tick())) {
                 bool forceAccidental = noteInfoPtr->freezeAcci;
                 if (!forceAccidental) {
@@ -365,6 +366,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                         forceAccidental = defaultAccVal != accVal;
                     }
                 }
+                /// @todo An accidental can have AccidentalAlterations even if it is not forced.
                 if (forceAccidental) {
                     AccidentalType at = Accidental::value2subtype(accVal);
                     Accidental* a = Factory::createAccidental(note);
@@ -376,14 +378,13 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                         /// @todo Finale doesn't offset notes for ledger lines, MuseScore offsets
                         /// rightmost accidentals matching the type of an accidental on a note with ledger lines.
                         /// @todo decide when to disable autoplace
-                        std::vector<std::shared_ptr<details::AccidentalAlterations>> accidentalInfos = m_doc->getDetails()->getArray<details::AccidentalAlterations>(m_currentMusxPartId);
-                        for (const std::shared_ptr<details::AccidentalAlterations>& accidentalInfo : accidentalInfos) {
-                            if (accidentalInfo->getEntryNumber() != currentEntryNumber || accidentalInfo->getNoteId() != i) {
-                                continue;
-                            }
+                        if (const std::shared_ptr<details::AccidentalAlterations>& accidentalInfo = m_doc->getDetails()->getForNote<details::AccidentalAlterations>(noteInfoPtr)) {
                             if (muse::RealIsEqualOrLess(FinaleTConv::doubleFromPercent(accidentalInfo->percent), m_score->style().styleD(Sid::smallNoteMag))) {
                                 a->setSmall(true);
                             }
+                            /// @todo this calculation needs to take into account the default accidental separation amounts in accidentalOptions. The options
+                            /// should allow us to calculate the default position of the accidental relative to the note. (But it may not be easy.)
+                            /// The result will probably also need to be multiplied by SPATIUM20, if other items are any guide.
                             a->setOffset(FinaleTConv::evpuToPointF(accidentalInfo->hOffset, accidentalInfo->allowVertPos ? -accidentalInfo->vOffset : 0));
                         }
                     }
@@ -392,11 +393,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             }
 
             if (currentEntry->noteDetail) {
-                std::vector<std::shared_ptr<details::NoteAlterations>> noteInfos = m_doc->getDetails()->getArray<details::NoteAlterations>(m_currentMusxPartId);
-                for (const std::shared_ptr<details::NoteAlterations>& noteInfo : noteInfos) {
-                    if (noteInfo->getEntryNumber() != currentEntryNumber || noteInfo->getNoteId() != i) {
-                        continue;
-                    }
+                if (const std::shared_ptr<details::NoteAlterations> noteInfo = m_doc->getDetails()->getForNote<details::NoteAlterations>(noteInfoPtr)) {
                     if (muse::RealIsEqualOrLess(FinaleTConv::doubleFromPercent(noteInfo->percent), m_score->style().styleD(Sid::smallNoteMag))) {
                         note->setSmall(true);
                     }
@@ -432,7 +429,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             } else {
                 logger()->logInfo(String(u"Tie does not have starting note. Possibly a partial tie, currently unsupported."));
             }
-            m_entryNoteNumber2Note.emplace(std::make_pair(noteInfoPtr.getEntryInfo()->getEntry()->getEntryNumber(), noteInfoPtr->getNoteId()), note);
+            m_entryNoteNumber2Note.emplace(std::make_pair(currentEntryNumber, noteInfoPtr->getNoteId()), note);
         }
         if (currentEntry->freezeStem || currentEntry->voice2 || entryInfo->v2Launch
             || m_layerForceStems.find(entryInfo.getLayerIndex()) != m_layerForceStems.end()) {
@@ -516,20 +513,21 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     }
 
     /// Currently we only generate dots if they have modified properties.
-    /// Is this correct? Probably.
+    /// Is this correct? Probably. -RGP: I think so too.
     // Dot offset
     if (currentEntry->dotTieAlt) {
         std::vector<std::shared_ptr<details::DotAlterations>> dotAlterations = m_doc->getDetails()->getArray<details::DotAlterations>(m_currentMusxPartId, currentEntryNumber);
         for (const std::shared_ptr<details::DotAlterations>& da : dotAlterations) {
             engraving::Note* n = cr->isChord() ? noteFromEntryInfoAndNumber(entryInfo, da->getNoteId()) : nullptr;
             Rest* r = cr->isRest() ? toRest(cr) : nullptr;
+            EvpuFloat museInterdot = EvpuFloat(da->interdotSpacing) - evpuAugmentationDotWidth(); /// @todo not sure about this, but it gets the closest result to Finale in my testing
             if (n) {
                 for (int i = 0; i < cr->dots(); ++i) {
                     NoteDot* dot = Factory::createNoteDot(n);
                     dot->setParent(n);
                     dot->setVisible(!currentEntry->isHidden);
                     dot->setTrack(cr->track());
-                    dot->setOffset(FinaleTConv::evpuToPointF(da->hOffset + i * da->interdotSpacing, da->vOffset));
+                    dot->setOffset(FinaleTConv::evpuToPointF((da->hOffset + i * museInterdot) * SPATIUM20, -da->vOffset * SPATIUM20));
                     n->add(dot);
                 }
             } else if (r) {
@@ -538,7 +536,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
                     dot->setParent(r);
                     dot->setVisible(r->visible());
                     dot->setTrack(cr->track());
-                    dot->setOffset(FinaleTConv::evpuToPointF(da->hOffset + i * da->interdotSpacing, da->vOffset));
+                    dot->setOffset(FinaleTConv::evpuToPointF((da->hOffset + i * museInterdot) * SPATIUM20, -da->vOffset * SPATIUM20));
                     r->add(dot);
                 }
             } else {
@@ -546,7 +544,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             }
         }
     }
-    m_entryNumber2CR.emplace(currentEntry->getEntryNumber(), cr);
+    m_entryNumber2CR.emplace(currentEntryNumber, cr);
     return true;
 }
 
