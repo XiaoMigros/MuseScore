@@ -478,6 +478,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     cr->setDurationType(d);
     cr->setStaffMove(crossStaffMove);
     cr->setTrack(curTrackIdx);
+    cr->setVisible(!currentEntry->isHidden);
     if (cr->durationType().type() == DurationType::V_MEASURE) {
         cr->setTicks(measure->timesig() * baseStaff->timeStretch(measure->tick())); // baseStaff because that's the staff the cr 'belongs to'
     } else {
