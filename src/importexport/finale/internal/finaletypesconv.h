@@ -69,9 +69,9 @@ public:
     static engraving::LineType lineTypeFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
     static std::pair<double, double> hookHeightsFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType);
     // unit conversion
-    static double doubleFromEvpu(musx::dom::Evpu evpu);
-    static engraving::PointF evpuToPointF(musx::dom::Evpu xEvpu, musx::dom::Evpu yEvpu);
-    static double doubleFromEfix(musx::dom::Efix efix);
+    static double doubleFromEvpu(double evpu);
+    static engraving::PointF evpuToPointF(double xEvpu, double yEvpu);
+    static double doubleFromEfix(double efix);
     static double doubleFromPercent(int percent);
     static double spatiumScaledFontSize(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo);
     static engraving::Spatium absoluteSpatium(double value, engraving::EngravingItem* e);

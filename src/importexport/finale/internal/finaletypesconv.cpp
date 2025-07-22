@@ -1200,17 +1200,17 @@ std::pair<double, double> FinaleTConv::hookHeightsFromShapeType(musx::dom::other
     return muse::value(shapeTypeTable, shapeType, { 0, 0 });
 }
 
-double FinaleTConv::doubleFromEvpu(Evpu evpu)
+double FinaleTConv::doubleFromEvpu(double evpuDouble)
 {
-    return double(evpu) / EVPU_PER_SPACE;
+    return evpuDouble / EVPU_PER_SPACE;
 }
 
-PointF FinaleTConv::evpuToPointF(Evpu xEvpu, Evpu yEvpu)
+PointF FinaleTConv::evpuToPointF(double xEvpu, double yEvpu)
 {
     return PointF(doubleFromEvpu(xEvpu), doubleFromEvpu(yEvpu));
 }
 
-double FinaleTConv::doubleFromEfix(Efix efix)
+double FinaleTConv::doubleFromEfix(double efix)
 {
     return double(efix) / EFIX_PER_SPACE;
 }

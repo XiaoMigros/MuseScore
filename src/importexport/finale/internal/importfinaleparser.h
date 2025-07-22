@@ -235,7 +235,9 @@ private:
                           std::vector<ReadableTuplet>& tupletMap, std::unordered_map<engraving::Rest*, musx::dom::NoteInfoPtr>& fixedRests);
     bool processBeams(musx::dom::EntryInfoPtr entryInfoPtr, engraving::track_idx_t curTrackIdx);
     bool positionFixedRests(const std::unordered_map<engraving::Rest*, musx::dom::NoteInfoPtr>& fixedRests);
-    engraving::Note* noteFromEntryInfoAndNumber(musx::dom::EntryInfoPtr entryInfoPtr, musx::dom::NoteNumber nn);
+    engraving::Note* noteFromEntryInfoAndNumber(const musx::dom::EntryInfoPtr& entryInfoPtr, musx::dom::NoteNumber nn);
+    engraving::Note* noteFromNoteInfoPtr(const musx::dom::NoteInfoPtr& noteInfoPtr);
+    engraving::ChordRest* chordRestFromEntryInfoPtr(const musx::dom::EntryInfoPtr& entryInfoPtr);
 
     // styles
     void importStyles();
@@ -262,8 +264,8 @@ private:
     std::map<engraving::Fraction, musx::dom::MeasCmper> m_tick2Meas; // use std::map to avoid need for Fraction hash function
     std::unordered_map<musx::dom::LayerIndex, engraving::voice_idx_t> m_layer2Voice;
     std::unordered_set<musx::dom::LayerIndex> m_layerForceStems;
-    std::map<musx::dom::NoteInfoPtr, engraving::Note*> m_noteInfoPtr2Note; // use std::map to avoid need for NoteInfoPtr hash function
-    std::map<musx::dom::EntryInfoPtr, engraving::ChordRest*> m_entryInfoPtr2CR; // use std::map to avoid need for EntryInfoPtr hash function
+    std::map<std::pair<EntryNumber, NoteNumber>, engraving::Note*> m_entryNoteNumber2Note; // use std::map to avoid need for std::pair hash function
+    std::unordered_map<musx::dom::EntryNumber, engraving::ChordRest*> m_entryNumber2CR;
     ReadableCustomLineMap m_customLines;
 };
 
