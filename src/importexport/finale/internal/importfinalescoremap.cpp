@@ -30,6 +30,7 @@
 
 #include "types/string.h"
 
+#include "engraving/dom/barline.h"
 #include "engraving/dom/box.h"
 #include "engraving/dom/bracketItem.h"
 #include "engraving/dom/clef.h"
@@ -148,6 +149,52 @@ void FinaleParser::importMeasures()
         if (!m_score->noStaves()) {
             measure->createStaves(m_score->nstaves() - 1);
         }
+
+        /// @todo choose when to set generated based on default staff barline settings
+        /// (and presence of keysigs for double barlines)
+        auto changeBarline = [&](BarLine* bl, others::Measure::BarlineType type) {
+            switch (type) {
+            case others::Measure::BarlineType::None:
+                bl->setVisible(false);
+                break;
+            case others::Measure::BarlineType::OptionsDefault:
+                // not yet supported
+                break;
+            case others::Measure::BarlineType::Normal:
+                bl->setBarLineType(engraving::BarLineType::NORMAL);
+                break;
+            case others::Measure::BarlineType::Double:
+                bl->setBarLineType(engraving::BarLineType::DOUBLE);
+                break;
+            case others::Measure::BarlineType::Final:
+                bl->setBarLineType(engraving::BarLineType::FINAL);
+                if (measure->nextMeasure()) {
+                    bl->setGenerated(false);
+                }
+                break;
+            case others::Measure::BarlineType::Solid:
+                bl->setBarLineType(engraving::BarLineType::HEAVY);
+                // bl->setGenerated(false);
+                break;
+            case others::Measure::BarlineType::Dashed:
+                bl->setBarLineType(engraving::BarLineType::DASHED);
+                break;
+            case others::Measure::BarlineType::Tick:
+                bl->setSpanFrom(mu::engraving::BARLINE_SPAN_TICK1_FROM);
+                bl->setSpanTo(mu::engraving::BARLINE_SPAN_TICK1_TO);
+                break;
+            case others::Measure::BarlineType::Custom:
+                // unsupported
+                break;
+            }
+        };
+
+        // set repeats after barline type
+        measure->setRepeatStart(musxMeasure->forwardRepeatBar);
+        measure->setRepeatEnd(musxMeasure->backwardsRepeatBar);
+        measure->setBreakMultiMeasureRest(musxMeasure->breakMmRest);
+        measure->setIrregular(musxMeasure->noMeasNum);
+
     }
 }
 
@@ -407,7 +454,7 @@ Clef* FinaleParser::createClef(Score* score, const std::shared_ptr<musx::dom::ot
 
 void FinaleParser::importClefs(const std::shared_ptr<others::InstrumentUsed>& musxScrollViewItem,
                                     const std::shared_ptr<others::Measure>& musxMeasure, Measure* measure, staff_idx_t curStaffIdx,
-                                    ClefIndex& musxCurrClef)
+                                    ClefIndex& musxCurrClef, const std::shared_ptr<others::Measure>& prevMusxMeasure)
 {
     // The Finale UI requires transposition to be a full-measure staff-style assignment, so checking only the beginning of the bar should be sufficient.
     // However, it is possible to defeat this requirement using plugins. That said, doing so produces erratic results, so I'm not sure we should support it.
@@ -415,7 +462,8 @@ void FinaleParser::importClefs(const std::shared_ptr<others::InstrumentUsed>& mu
     auto musxStaffAtMeasureStart = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId, musxMeasure->getCmper(), 0);
     if (musxStaffAtMeasureStart && musxStaffAtMeasureStart->transposition && musxStaffAtMeasureStart->transposition->setToClef) {
         if (musxStaffAtMeasureStart->transposedClef != musxCurrClef) {
-            if (createClef(m_score, musxStaffAtMeasureStart, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, /*xEduPos*/ 0, false, true)) {
+            if (Clef* clef = createClef(m_score, musxStaffAtMeasureStart, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, /*xEduPos*/ 0, false, true)) {
+                clef->setShowCourtesy(!prevMusxMeasure || !prevMusxMeasure->hideCaution);
                 musxCurrClef = musxStaffAtMeasureStart->transposedClef;
             }
         }
@@ -612,6 +660,7 @@ void FinaleParser::importStaffItems()
         std::shared_ptr<TimeSignature> currMusxTimeSig;
         std::shared_ptr<KeySignature> currMusxKeySig;
         std::optional<KeySigEvent> currKeySigEvent;
+        std::shared_ptr<others::Measure> prevMusxMeasure;
         ClefIndex musxCurrClef = others::Staff::calcFirstClefIndex(m_doc, m_currentMusxPartId, musxScrollViewItem->staffId);
         /// @todo handle pickup measures and other measures where display and actual timesigs differ
         for (const std::shared_ptr<others::Measure>& musxMeasure : musxMeasures) {
@@ -644,6 +693,7 @@ void FinaleParser::importStaffItems()
                 ts->setSig(timeSig);
                 ts->setTrack(staffIdx * VOICES);
                 ts->setVisible(musxMeasure->showTime != others::Measure::ShowTimeSigMode::Never);
+                ts->setShowCourtesySig(!prevMusxMeasure || !prevMusxMeasure->hideCaution);
                 Fraction stretch = Fraction(musxTimeSig->calcTotalDuration().calcEduDuration(), globalTimeSig->calcTotalDuration().calcEduDuration()).reduced();
                 ts->setStretch(stretch);
                 /// @todo other time signature options? Beaming? Composite list?
@@ -653,7 +703,7 @@ void FinaleParser::importStaffItems()
             currMusxTimeSig = musxTimeSig;
 
             // clefs
-            importClefs(musxScrollViewItem, musxMeasure, measure, staffIdx, musxCurrClef);
+            importClefs(musxScrollViewItem, musxMeasure, measure, staffIdx, musxCurrClef, prevMusxMeasure);
 
             // keysig
             const std::shared_ptr<KeySignature> musxKeySig = musxMeasure->createKeySignature(musxScrollViewItem->staffId);
@@ -732,12 +782,14 @@ void FinaleParser::importStaffItems()
                     ks->setKeySigEvent(keySigEvent.value());
                     ks->setTrack(staffIdx * VOICES);
                     ks->setVisible(musxMeasure->showKey != others::Measure::ShowKeySigMode::Never);
+                    ks->setShowCourtesy(!prevMusxMeasure || !prevMusxMeasure->hideCaution);
                     seg->add(ks);
                     staff->setKey(currTick, ks->keySigEvent());
                 }
                 currKeySigEvent = keySigEvent;
             }
             currMusxKeySig = musxKeySig;
+            prevMusxMeasure = musxMeasure;
         }
     }
 }
@@ -922,6 +974,20 @@ void FinaleParser::importPageLayout()
                 }
                 break;
             }
+        }
+
+        // If following measure should show full instrument names, add section break to sysEnd
+        const std::shared_ptr<others::Measure>& nextMeasure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, rightStaffSystem->endMeas);
+        if (nextMeasure && nextMeasure->showFullNames) {
+            LayoutBreak* lb = Factory::createLayoutBreak(sysEnd);
+            lb->setLayoutBreakType(LayoutBreakType::SECTION);
+            lb->setStartWithMeasureOne(false);
+            lb->setStartWithLongNames(true);
+            lb->setPause(0.0);
+            lb->setFirstSystemIndentation(false);
+            const std::shared_ptr<others::Measure>& lastMeasure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, rightStaffSystem->getLastMeasure());
+            lb->setShowCourtesy(!lastMeasure->hideCaution);
+            sysEnd->add(lb);
         }
 
         // In Finale, up is positive and down is negative. That means we have to reverse the signs of the vertical axis for MuseScore.
