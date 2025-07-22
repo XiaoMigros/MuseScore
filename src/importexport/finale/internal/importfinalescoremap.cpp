@@ -815,15 +815,17 @@ void FinaleParser::importPageLayout()
                 continue;
             }
             Measure* afterBlank = m_score->tick2measure(pageStartTick);
+            MeasureBase* prev = afterBlank ? afterBlank->prev() : nullptr;
             for (; blankPagesToAdd > 0; --blankPagesToAdd) {
                 VBox* pageFrame = Factory::createVBox(m_score->dummy()->system());
                 pageFrame->setTick(pageStartTick);
                 pageFrame->setNext(afterBlank);
-                pageFrame->setPrev(afterBlank);
+                pageFrame->setPrev(prev);
                 m_score->measures()->insert(pageFrame, pageFrame);
                 LayoutBreak* lb = Factory::createLayoutBreak(pageFrame);
                 lb->setLayoutBreakType(LayoutBreakType::PAGE);
                 pageFrame->add(lb);
+                prev = pageFrame;
             }
         }
     }

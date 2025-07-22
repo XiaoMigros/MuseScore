@@ -164,7 +164,7 @@ void FinaleParser::importSmartShapes()
                 logger()->logInfo(String(u"Found note to anchor to"));
                 return toEngravingItem(noteFromEntryInfoAndNumber(entryInfoPtr, nn));
             }
-            EngravingItem* e = toEngravingItem(muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr));
+            EngravingItem* e = toEngravingItem(chordRestFromEntryInfoPtr(entryInfoPtr));
             if (e) {
                 logger()->logInfo(String(u"Found CR to anchor to"));
                 return e;

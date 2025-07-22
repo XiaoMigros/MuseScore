@@ -142,15 +142,25 @@ std::unordered_map<int, voice_idx_t> FinaleParser::mapFinaleVoices(const std::ma
     return result;
 }
 
-engraving::Note* FinaleParser::noteFromEntryInfoAndNumber(EntryInfoPtr entryInfoPtr, NoteNumber nn)
+engraving::Note* FinaleParser::noteFromEntryInfoAndNumber(const EntryInfoPtr& entryInfoPtr, NoteNumber nn)
 {
-    for (size_t i = 0; i < entryInfoPtr->getEntry()->notes.size(); ++i) {
-        NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfoPtr, i);
-        if (noteInfoPtr->getNoteId() == nn) {
-            return muse::value(m_noteInfoPtr2Note, noteInfoPtr, nullptr);
-        }
+    if (!entryInfoPtr) {
+        return nullptr;
     }
-    return nullptr;
+    return muse::value(m_entryNoteNumber2Note, std::make_pair(entryInfoPtr->getEntry()->getEntryNumber(), nn), nullptr);
+}
+
+engraving::Note* FinaleParser::noteFromNoteInfoPtr(const musx::dom::NoteInfoPtr& noteInfoPtr)
+{
+    if (!noteInfoPtr) {
+        return nullptr;
+    }
+    return noteFromEntryInfoAndNumber(noteInfoPtr.getEntryInfo(), noteInfoPtr->getNoteId());
+}
+
+ChordRest* FinaleParser::chordRestFromEntryInfoPtr(const musx::dom::EntryInfoPtr& entryInfoPtr)
+{
+    return muse::value(m_entryNumber2CR, entryInfoPtr->getEntry()->getEntryNumber());
 }
 
 static void transferTupletProperties(std::shared_ptr<const details::TupletDef> musxTuplet, Tuplet* scoreTuplet, FinaleLoggerPtr& logger)
@@ -406,7 +416,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             /// @todo This code won't work if the start note is in a currently unmapped voice. But because of
             /// the fact we explicitly create accidentals, we need the ties to be correct during processEntryInfo. (Do we?)
             // Don't use noteInfoPtr->tieEnd as it's unreliable
-            engraving::Note* prevTied = muse::value(m_noteInfoPtr2Note, noteInfoPtr.calcTieFrom(), nullptr);
+            engraving::Note* prevTied = noteFromNoteInfoPtr(noteInfoPtr.calcTieFrom());
             if (prevTied) {
                 Tie* tie = Factory::createTie(m_score->dummy());
                 tie->setStartNote(prevTied);
@@ -422,7 +432,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             } else {
                 logger()->logInfo(String(u"Tie does not have starting note. Possibly a partial tie, currently unsupported."));
             }
-            m_noteInfoPtr2Note.emplace(noteInfoPtr, note);
+            m_entryNoteNumber2Note.emplace(std::make_pair(noteInfoPtr.getEntryInfo()->getEntry()->getEntryNumber(), noteInfoPtr->getNoteId()), note);
         }
         if (currentEntry->freezeStem || currentEntry->voice2 || entryInfo->v2Launch
             || m_layerForceStems.find(entryInfo.getLayerIndex()) != m_layerForceStems.end()) {
@@ -447,6 +457,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         } */
         // chord->setIsChordPlayable(!currentEntry->noPlayback); //this is an undo method
         cr = toChordRest(chord);
+        cr->setVisible(!currentEntry->isHidden);
     } else {
         const std::shared_ptr<others::Staff> musxStaff = entryInfo.createCurrentStaff();
         if (entryInfo.calcIsFullMeasureRest()) {
@@ -478,7 +489,6 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     cr->setDurationType(d);
     cr->setStaffMove(crossStaffMove);
     cr->setTrack(curTrackIdx);
-    cr->setVisible(!currentEntry->isHidden);
     if (cr->durationType().type() == DurationType::V_MEASURE) {
         cr->setTicks(measure->timesig() * baseStaff->timeStretch(measure->tick())); // baseStaff because that's the staff the cr 'belongs to'
     } else {
@@ -536,7 +546,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             }
         }
     }
-    m_entryInfoPtr2CR.emplace(entryInfo, cr);
+    m_entryNumber2CR.emplace(currentEntry->getEntryNumber(), cr);
     return true;
 }
 
@@ -546,7 +556,7 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
         return true;
     }
     /// @todo detect special cases for beams over barlines created by the Beam Over Barline plugin
-    ChordRest* cr = muse::value(m_entryInfoPtr2CR, entryInfoPtr, nullptr);
+    ChordRest* cr = chordRestFromEntryInfoPtr(entryInfoPtr);
     IF_ASSERT_FAILED(cr) {
         logger()->logWarning(String(u"Entry %1 was not mapped").arg(entryInfoPtr->getEntry()->getEntryNumber()), m_doc, entryInfoPtr.getStaff(), entryInfoPtr.getMeasure());
         return false;
@@ -565,7 +575,7 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
             // Grace rests are unmapped and not supported
             continue;
         }
-        lastCr = muse::value(m_entryInfoPtr2CR, nextInBeam, nullptr);
+        lastCr = chordRestFromEntryInfoPtr(nextInBeam);
         IF_ASSERT_FAILED(lastCr) {
             logger()->logWarning(String(u"Entry %1 was not mapped").arg(currentEntry->getEntryNumber()), m_doc, nextInBeam.getStaff(), nextInBeam.getMeasure());
             continue;
@@ -842,7 +852,7 @@ void FinaleParser::importEntries()
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
                             processBeams(entryInfoPtr, curTrackIdx);
                         }
-                        // m_entryInfoPtr2CR.clear(); /// @todo use 2 maps, one of which clears itself, to make beaming more efficient
+                        // m_entryNumber2CR.clear(); /// @todo use 2 maps, one of which clears itself, to make beaming more efficient
                     }
                 }
                 // position fixed rests after all layers have been imported
