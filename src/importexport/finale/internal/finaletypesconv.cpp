@@ -1174,28 +1174,28 @@ LineType FinaleTConv::lineTypeFromShapeType(musx::dom::others::SmartShape::Shape
     return muse::value(shapeTypeTable, shapeType, LineType::SOLID);
 }
 
-std::pair<double, double> FinaleTConv::hookHeightsFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType)
+std::pair<int, int> FinaleTConv::hookHeightsFromShapeType(musx::dom::others::SmartShape::ShapeType shapeType)
 {
     using ShapeType = musx::dom::others::SmartShape::ShapeType;
-    static const std::unordered_map<ShapeType, std::pair<double, double> > shapeTypeTable = {
-        { ShapeType::DashLineUp,          { 0, -0.5 } },
-        { ShapeType::DashLineDown,        { 0, 0.5 } },
+    static const std::unordered_map<ShapeType, std::pair<int, int> > shapeTypeTable = {
+        { ShapeType::DashLineUp,          { 0, -1 } },
+        { ShapeType::DashLineDown,        { 0, 1 } },
         { ShapeType::DashLine,            { 0, 0 } },
         { ShapeType::SolidLine,           { 0, 0 } },
-        { ShapeType::SolidLineDown,       { 0, 0.5 } },
-        { ShapeType::SolidLineUp,         { 0, -0.5 } },
-        { ShapeType::SolidLineDownBoth,   { 0.5, 0.5 } },
-        { ShapeType::SolidLineUpBoth,     { -0.5, -0.5 } },
-        { ShapeType::DashLineDownBoth,    { 0.5, 0.5 } },
-        { ShapeType::DashLineUpBoth,      { -0.5, -0.5 } },
-        { ShapeType::SolidLineUpLeft,     { -0.5, 0 } },
-        { ShapeType::SolidLineDownLeft,   { 0.5, 0 } },
-        { ShapeType::DashLineUpLeft,      { -0.5, 0 } },
-        { ShapeType::DashLineDownLeft,    { 0.5, 0 } },
-        { ShapeType::SolidLineUpDown,     { -0.5, 0.5 } },
-        { ShapeType::SolidLineDownUp,     { 0.5, -0.5 } },
-        { ShapeType::DashLineUpDown,      { -0.5, 0.5 } },
-        { ShapeType::DashLineDownUp,      { 0.5, -0.5 } },
+        { ShapeType::SolidLineDown,       { 0, 1 } },
+        { ShapeType::SolidLineUp,         { 0, -1 } },
+        { ShapeType::SolidLineDownBoth,   { 1, 1 } },
+        { ShapeType::SolidLineUpBoth,     { -1, -1 } },
+        { ShapeType::DashLineDownBoth,    { 1, 1 } },
+        { ShapeType::DashLineUpBoth,      { -1, -1 } },
+        { ShapeType::SolidLineUpLeft,     { -1, 0 } },
+        { ShapeType::SolidLineDownLeft,   { 1, 0 } },
+        { ShapeType::DashLineUpLeft,      { -1, 0 } },
+        { ShapeType::DashLineDownLeft,    { 1, 0 } },
+        { ShapeType::SolidLineUpDown,     { -1, 1 } },
+        { ShapeType::SolidLineDownUp,     { 1, -1 } },
+        { ShapeType::DashLineUpDown,      { -1, 1 } },
+        { ShapeType::DashLineDownUp,      { 1, -1 } },
     };
     return muse::value(shapeTypeTable, shapeType, { 0, 0 });
 }

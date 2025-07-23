@@ -96,7 +96,7 @@ void Finale_Tests::finaleImportTestRef(const char* file)
     String fileName = String::fromUtf8(file);
     MasterScore* score = readScore(FINALE_IO_DATA_DIR + fileName + u".musx");
     EXPECT_TRUE(score);
-    fixupScore(score);
+    // fixupScore(score);
     score->doLayout();
     // EXPECT_TRUE(ScoreComp::saveCompareScore(score, fileName + u".mscx", FINALE_IO_DATA_DIR + fileName + u"_ref.mscx"));
     delete score;
@@ -131,8 +131,8 @@ void Finale_Tests::enigmaXmlImportTestRef(const char* file)
         finaleImportTestRef(#name); \
     }
 
-MUSX_IMPORT_TEST(multistaffInst)
 MUSX_IMPORT_TEST(smartShapes1)
+MUSX_IMPORT_TEST(multistaffInst)
 MUSX_IMPORT_TEST_DISABLED(onePartNoMeasures)
 MUSX_IMPORT_TEST(grandStaffPartNoMeasures)
 MUSX_IMPORT_TEST_DISABLED(twoPartsNoMeasures)

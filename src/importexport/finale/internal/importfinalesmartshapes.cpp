@@ -29,6 +29,7 @@
 #include "musx/musx.h"
 
 #include "types/string.h"
+#include "types/translatablestring.h"
 
 #include "engraving/dom/anchors.h"
 #include "engraving/dom/chordrest.h"
@@ -44,6 +45,8 @@
 #include "engraving/dom/textlinebase.h"
 #include "engraving/dom/utils.h"
 
+#include "engraving/types/typesconv.h"
+
 #include "log.h"
 
 using namespace mu::engraving;
@@ -53,6 +56,8 @@ using namespace musx::dom;
 namespace mu::iex::finale {
 
 static const std::regex pedalRegex(R"(\bped(ale?)?\b)", std::regex_constants::icase); /// @todo add smufl/glyphs, other pedal names?
+static const std::regex hairpinRegex(R"(\b(((de)?cresc)|(dim))\.?\b)", std::regex_constants::icase);
+static const std::regex gtcRegex(R"(\b((rit\.?)|(rall\.?))\b)", std::regex_constants::icase);
 
 ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const std::shared_ptr<musx::dom::others::SmartShapeCustomLine>& customLine)
 {
@@ -74,10 +79,16 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const std::s
             || endText == u"*" /*maestro symbol for pedal star*/) {
             return ElementType::PEDAL;
         }
+        if (std::regex_search(beginText.toStdString(), hairpinRegex) || std::regex_search(continueText.toStdString(), hairpinRegex)) {
+            return ElementType::HAIRPIN;
+        }
+        if (std::regex_search(beginText.toStdString(), gtcRegex) || std::regex_search(continueText.toStdString(), gtcRegex)) {
+            return ElementType::GRADUAL_TEMPO_CHANGE;
+        }
         /// @todo lines with up hooks below piano staves as pedal
         /// @todo :
-        /// ElementType::HAIRPIN, ElementType::PEDAL, ElementType::OTTAVA, ElementType::TRILL, ElementType::TEXTLINE, ElementType::PALM_MUTE, /* ElementType::PARTIAL_LYRICSLINE, */
-        /// ElementType::WHAMMY_BAR, ElementType::RASGUEADO, ElementType::HARMONIC_MARK, ElementType::PICK_SCRAPE, ElementType::LET_RING, ElementType::VIBRATO, /* ElementType::TIE, */
+        /// ElementType::HAIRPIN, ElementType::PEDAL, ElementType::OTTAVA, ElementType::TRILL, ElementType::TEXTLINE, ElementType::PALM_MUTE,
+        /// ElementType::WHAMMY_BAR, ElementType::RASGUEADO, ElementType::HARMONIC_MARK, ElementType::PICK_SCRAPE, ElementType::LET_RING, ElementType::VIBRATO,
         /// ElementType::GLISSANDO, ElementType::GUITAR_BEND, ElementType::NOTELINE, ElementType::GRADUAL_TEMPO_CHANGE, ElementType::VIBRATO, /* ElementType::VOLTA, */
         /// /* ElementType::SLUR, *//* ElementType::HAMMER_ON_PULL_OFF */
         return ElementType::TEXTLINE;
@@ -150,10 +161,31 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const std::s
     centerShortTextOffset = FinaleTConv::evpuToPointF(customLine->centerAbbrX, customLine->lineStartY - customLine->centerAbbrY);
 }
 
+static bool elementsValidForSpannerType(const ElementType type, const EngravingItem* startElement, const EngravingItem* endElement)
+{
+    switch (type) {
+    case ElementType::GLISSANDO:
+    case ElementType::NOTELINE:
+        return startElement->isNote() && endElement->isNote();
+    case ElementType::SLUR:
+    case ElementType::OTTAVA:
+        return startElement->isChordRest() && endElement->isChordRest();
+    default:
+        break;
+    }
+    return true;
+}
+
+static ElementType spannerTypeFromElements(EngravingItem* startElement, EngravingItem* endElement)
+{
+    if (startElement->isNote() && endElement->isNote()) {
+        return ElementType::NOTELINE;
+    }
+    return ElementType::TEXTLINE;
+}
+
 void FinaleParser::importSmartShapes()
 {
-    logger()->logInfo(String(u"Importing smart shapes"));
-
     auto elementFromTerminationSeg = [&](const std::shared_ptr<others::SmartShape>& smartShape, bool start) -> EngravingItem* {
         logger()->logInfo(String(u"Finding spanner element..."));
         const std::shared_ptr<others::SmartShape::TerminationSeg>& termSeg = start ? smartShape->startTermSeg : smartShape->endTermSeg;
@@ -188,11 +220,11 @@ void FinaleParser::importSmartShapes()
     /// This is because `getArray` currently cannot pull a mix of score and partially shared part instances. Adding the ability to do so
     /// would require significant refactoring of musx. -- RGP
     std::vector<std::shared_ptr<others::SmartShape>> smartShapes = m_doc->getOthers()->getArray<others::SmartShape>(m_currentMusxPartId); //, BASE_SYSTEM_ID
-    logger()->logInfo(String(u"Found %1 smart shapes").arg(smartShapes.size()));
+    logger()->logInfo(String(u"Import smart shapes: Found %1 smart shapes").arg(smartShapes.size()));
     for (const std::shared_ptr<others::SmartShape>& smartShape : smartShapes) {
         if (smartShape->shapeType == others::SmartShape::ShapeType::WordExtension
             || smartShape->shapeType == others::SmartShape::ShapeType::Hyphen) {
-            // will be handled elsewhere
+            // Will be handled elsewhere
             continue;
         }
         if (!smartShape->startTermSeg->endPoint->calcIsAssigned() || !smartShape->endTermSeg->endPoint->calcIsAssigned()) {
@@ -201,10 +233,12 @@ void FinaleParser::importSmartShapes()
         }
         ReadableCustomLine* customLine = [&]() -> ReadableCustomLine* {
             if (smartShape->lineStyleId == 0) {
+                // Shape does not use custom line
                 return nullptr;
             }
+            // Search our converted shape library, or if not found add to it
             ReadableCustomLine* line = muse::value(m_customLines, smartShape->lineStyleId, nullptr);
-            if (line == nullptr) {
+            if (!line) {
                 line = new ReadableCustomLine(*this, m_doc->getOthers()->get<others::SmartShapeCustomLine>(m_currentMusxPartId, smartShape->lineStyleId));
                 m_customLines.emplace(smartShape->lineStyleId, line);
             }
@@ -220,20 +254,28 @@ void FinaleParser::importSmartShapes()
             type = customLine->elementType;
         }
 
-        logger()->logInfo(String(u"Read spanner type"));
-
-        Spanner* newSpanner = toSpanner(Factory::createItem(type, m_score->dummy()));
-
-        // Set anchors and start/end elements
+        // Find start and end elements, and change element type if needed
         EngravingItem* startElement = elementFromTerminationSeg(smartShape, true);
         EngravingItem* endElement = elementFromTerminationSeg(smartShape, false);
         IF_ASSERT_FAILED(startElement && endElement) {
-            delete newSpanner;
             continue;
         }
+        if (!elementsValidForSpannerType(type, startElement, endElement) || (customLine && type == ElementType::TEXTLINE)) {
+            if (customLine) {
+                type == spannerTypeFromElements(startElement, endElement);
+                /// @todo create notelines instead of textlines also for non-custom?
+            } else {
+                logger()->logInfo(String(u"Cannot create spanner of %1 type with given start/end element").arg(TConv::userName(type).translated()));
+                continue;
+            }
+        }
+
+        logger()->logInfo(String(u"Creating spanner of %1 type").arg(TConv::userName(type).translated()));
+        Spanner* newSpanner = toSpanner(Factory::createItem(type, m_score->dummy()));
+
         if (smartShape->entryBased) {
             if (smartShape->startNoteId && smartShape->endNoteId) {
-                newSpanner->setAnchor(Spanner::Anchor::NOTE); //todo create notelines instead of textlines?
+                newSpanner->setAnchor(Spanner::Anchor::NOTE);
             } else {
                 newSpanner->setAnchor(Spanner::Anchor::CHORD);
             }
@@ -264,21 +306,20 @@ void FinaleParser::importSmartShapes()
             toSlur(newSpanner)->setStyleType(FinaleTConv::slurStyleTypeFromShapeType(smartShape->shapeType));
             /// @todo is there a way to read the calculated direction
             toSlur(newSpanner)->setSlurDirection(FinaleTConv::directionVFromShapeType(smartShape->shapeType));
-        } else if (type == ElementType::TEXTLINE) {
+        } else if (type == ElementType::TEXTLINE && !customLine) {
             TextLineBase* textLine = toTextLineBase(newSpanner);
             textLine->setLineStyle(FinaleTConv::lineTypeFromShapeType(smartShape->shapeType));
-            /// @note The hookHeight of all built-in smart shapes with hooks is determined by musxOptions()->smartShapeOptions.hookLength.
-            /// There are other settings there that also may be applicable to this code.
-            /// Also, I only set it for ottavas in importStyles. We probably need to add aothers there. -- RGP
-            std::pair<double, double> hookHeights = FinaleTConv::hookHeightsFromShapeType(smartShape->shapeType);
-            if (!muse::RealIsEqual(hookHeights.first, 0)) {
+            /// @todo read more settings from smartshape options, set styles for more elements
+            std::pair<int, int> hookHeights = FinaleTConv::hookHeightsFromShapeType(smartShape->shapeType);
+            if (hookHeights.first != 0) {
                 textLine->setBeginHookType(HookType::HOOK_90);
-                textLine->setBeginHookHeight(Spatium(hookHeights.first));
-                // continue should have no hook
+                textLine->setBeginHookHeight(Spatium(hookHeights.first * FinaleTConv::doubleFromEvpu(musxOptions().smartShapeOptions->hookLength)));
+                // continue doesn't have no hook
             }
-            if (!muse::RealIsEqual(hookHeights.second, 0)) {
+            if (hookHeights.second != 0) {
                 textLine->setEndHookType(HookType::HOOK_90);
                 textLine->setEndHookHeight(Spatium(hookHeights.second));
+                textLine->setBeginHookHeight(Spatium(hookHeights.first * FinaleTConv::doubleFromEvpu(musxOptions().smartShapeOptions->hookLength)));
             }
         }
         /// @todo set guitar bend type
