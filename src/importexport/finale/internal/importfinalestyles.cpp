@@ -495,12 +495,12 @@ void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
             }
         };
 
-        auto horizontalAlignment = [](MeasureNumberRegion::AlignJustify align) -> PlacementH {
+        auto horizontalAlignment = [](MeasureNumberRegion::AlignJustify align) -> AlignH {
             switch (align) {
             default:
-            case MeasureNumberRegion::AlignJustify::Left: return PlacementH::LEFT;
-            case MeasureNumberRegion::AlignJustify::Center: return PlacementH::CENTER;
-            case MeasureNumberRegion::AlignJustify::Right: return PlacementH::RIGHT;
+            case MeasureNumberRegion::AlignJustify::Left: return AlignH::LEFT;
+            case MeasureNumberRegion::AlignJustify::Center: return AlignH::HCENTER;
+            case MeasureNumberRegion::AlignJustify::Right: return AlignH::RIGHT;
             }
         };
 

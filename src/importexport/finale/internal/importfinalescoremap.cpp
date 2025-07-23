@@ -232,7 +232,7 @@ void FinaleParser::importParts()
         part->setId(partId);
 
         const auto& [topStaffId, instInfo] = *instIt;
-        for (const auto& [inst, index] : instInfo.staves) {
+        for (const InstCmper inst : instInfo.getSequentialStaves()) {
             if (auto instStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, inst, 1, 0)) {
                 createStaff(part, instStaff, it);
                 inst2Part.emplace(inst, partId);

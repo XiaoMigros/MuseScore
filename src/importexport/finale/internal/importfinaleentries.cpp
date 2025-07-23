@@ -454,7 +454,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         } */
         // chord->setIsChordPlayable(!currentEntry->noPlayback); //this is an undo method
         cr = toChordRest(chord);
-        cr->setVisible(!currentEntry->isHidden);
+        cr->setVisible(!currentEntry->isHidden);    /// @todo get this to work, maybe by using setProperty(Pid::VISIBLE, v)?
     } else {
         const std::shared_ptr<others::Staff> musxStaff = entryInfo.createCurrentStaff();
         if (entryInfo.calcIsFullMeasureRest()) {
