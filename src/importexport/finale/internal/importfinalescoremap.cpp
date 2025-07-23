@@ -214,8 +214,8 @@ void FinaleParser::importParts()
             continue; // safety check
         }
 
-        auto multiStaffInst = staff->getMultiStaffInstVisualGroup();
-        if (multiStaffInst && inst2Part.find(staff->getCmper()) != inst2Part.end()) {
+        const auto instIt = m_doc->getInstruments().find(staff->getCmper());
+        if (instIt == m_doc->getInstruments().end()) {
             continue;
         }
 
@@ -231,16 +231,12 @@ void FinaleParser::importParts()
         QString partId = String("P%1").arg(++partNumber);
         part->setId(partId);
 
-        if (multiStaffInst) {
-            for (auto inst : multiStaffInst->visualStaffNums) {
-                if (auto instStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, inst, 1, 0)) {
-                    createStaff(part, instStaff, it);
-                    inst2Part.emplace(inst, partId);
-                }
+        const auto& [topStaffId, instInfo] = *instIt;
+        for (const auto& [inst, index] : instInfo.staves) {
+            if (auto instStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, inst, 1, 0)) {
+                createStaff(part, instStaff, it);
+                inst2Part.emplace(inst, partId);
             }
-        } else {
-            createStaff(part, compositeStaff, it);
-            inst2Part.emplace(staff->getCmper(), partId);
         }
 
         // names of part
