@@ -57,7 +57,7 @@ namespace mu::iex::finale {
 
 static const std::regex pedalRegex(R"(\bped(ale?)?\b)", std::regex_constants::icase); /// @todo add smufl/glyphs, other pedal names?
 static const std::regex hairpinRegex(R"(\b(((de)?cresc)|(dim))\.?\b)", std::regex_constants::icase);
-static const std::regex gtcRegex(R"(\b((rit\.?)|(rall\.?))\b)", std::regex_constants::icase);
+static const std::regex gtcRegex(R"(\b((rit(\.|ardando)?)|(rall(\.|entando)?))\b)", std::regex_constants::icase);
 
 ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const std::shared_ptr<musx::dom::others::SmartShapeCustomLine>& customLine)
 {
@@ -272,6 +272,8 @@ void FinaleParser::importSmartShapes()
 
         logger()->logInfo(String(u"Creating spanner of %1 type").arg(TConv::userName(type).translated()));
         Spanner* newSpanner = toSpanner(Factory::createItem(type, m_score->dummy()));
+        newSpanner->setScore(m_score);
+        newSpanner->styleChanged();
 
         if (smartShape->entryBased) {
             if (smartShape->startNoteId && smartShape->endNoteId) {
@@ -365,12 +367,6 @@ void FinaleParser::importSmartShapes()
         }
         /// @todo custom trills
 
-        // m_score->addSpanner(newSpanner, false);
-        // m_score->addElement(newSpanner);
-        // m_score->undoAddElement(newSpanner);
-
-        newSpanner->setScore(m_score);
-        newSpanner->styleChanged();
         for (auto ss : newSpanner->spannerSegments()) {
             ss->setTrack(newSpanner->track());
         }
@@ -383,6 +379,7 @@ void FinaleParser::importSmartShapes()
         // if (newSpanner->hasVoiceAssignmentProperties()) {
             // newSpanner->setInitialTrackAndVoiceAssignment(newSpanner->track(), false);
         // }
+
         if (newSpanner->anchor() == Spanner::Anchor::NOTE) {
             toNote(startElement)->add(newSpanner);
         } else {
