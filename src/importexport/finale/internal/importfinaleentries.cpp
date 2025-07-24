@@ -183,6 +183,7 @@ static void transferTupletProperties(std::shared_ptr<const details::TupletDef> m
     }
     if (musxTuplet->avoidStaff) {
         // supported globally as a style: Sid::tupletOutOfStaff
+        m_score->style().set(Sid::tupletOutOfStaff, true);
         logger->logWarning(String(u"Tuplet: Avoiding staves is supported globally as a style, not for individual elements"));
     }
     if (musxTuplet->metricCenter) {
