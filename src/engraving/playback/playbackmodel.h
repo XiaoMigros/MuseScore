@@ -80,10 +80,10 @@ public:
 
     bool hasSoundFlags(const InstrumentTrackId& trackId) const;
 
-    const muse::mpe::PlaybackData& resolveTrackPlaybackData(const InstrumentTrackId& trackId);
-    const muse::mpe::PlaybackData& resolveTrackPlaybackData(const ID& partId, const String& instrumentId);
-    void triggerEventsForItems(const std::vector<const EngravingItem*>& items);
+    muse::mpe::PlaybackData& resolveTrackPlaybackData(const InstrumentTrackId& trackId);
+    muse::mpe::PlaybackData& resolveTrackPlaybackData(const ID& partId, const String& instrumentId);
 
+    void triggerEventsForItems(const std::vector<const EngravingItem*>& items, muse::mpe::duration_t duration, bool flushSound);
     void triggerMetronome(int tick);
     void triggerCountIn(int tick, muse::mpe::duration_t& totalCountInDuration);
 
@@ -131,7 +131,6 @@ private:
     bool hasToReloadTracks(const ScoreChangesRange& changesRange) const;
     bool hasToReloadScore(const ScoreChangesRange& changesRange) const;
 
-    bool containsTrack(const InstrumentTrackId& trackId) const;
     void clearExpiredTracks();
     void clearExpiredContexts(const track_idx_t trackFrom, const track_idx_t trackTo);
     void clearExpiredEvents(const int tickFrom, const int tickTo, const track_idx_t trackFrom, const track_idx_t trackTo);

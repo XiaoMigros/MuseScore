@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-Studio-CLA-applies
+ * MuseScore-CLA-applies
  *
- * MuseScore Studio
+ * MuseScore
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore BVBA and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,27 +20,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_APPSHELL_FRAMELESSWINDOWCONTROLLER_H
-#define MU_APPSHELL_FRAMELESSWINDOWCONTROLLER_H
+#pragma once
 
-#include <QAbstractNativeEventFilter>
-#include <QWindow>
+#include "abstractstyledialogmodel.h"
 
-namespace mu::appshell {
-class FramelessWindowController : public QAbstractNativeEventFilter
+namespace mu::notation {
+class TupletCenteringSelectorModel : public AbstractStyleDialogModel
 {
+    Q_OBJECT
+
+    Q_PROPERTY(StyleItem * tupletNumberRythmicCenter READ tupletNumberRythmicCenter CONSTANT)
+
 public:
-    virtual void init();
+    explicit TupletCenteringSelectorModel(QObject* parent = nullptr);
 
-    QRect windowTitleBarMoveArea() const;
-    void setWindowTitleBarMoveArea(const QRect& area);
-
-protected:
-    bool nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) override;
-
-private:
-    QRect m_windowTitleBarMoveArea;
+    StyleItem* tupletNumberRythmicCenter() const;
 };
 }
-
-#endif // MU_APPSHELL_FRAMELESSWINDOWCONTROLLER_H
