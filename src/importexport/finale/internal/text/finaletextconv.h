@@ -21,33 +21,29 @@
  */
 #pragma once
 
-#include <array>
-#include <map>
-
-#include "types/string.h"
-#include "engraving/types/symid.h"
+#include <optional>
 
 #include "musx/musx.h"
 
-namespace mu::iex::finale {
-using CharacterMap = std::tuple<char16_t, char16_t, engraving::SymId, int>;
+#include "engraving/types/types.h"
+#include "engraving/types/symid.h"
 
-class FinaleLogger;
+namespace mu::iex::finale {
+
 class FinaleTextConv
 {
 public:
-    FinaleTextConv() = default;
+    /// @brief Maps a codepoint in the font's encoding to a SymId
+    static engraving::SymId symIdFromFinaleChar(char32_t c, const std::shared_ptr<musx::dom::FontInfo>& font, engraving::SymId def = engraving::SymId::noSym);
 
-    static bool init();
+    /// @brief Maps a codepoint in the font's encoding to a `<sym>` tag. It must be a glyph that MuseScore can convert to SymId.
+    static std::optional<engraving::String> symIdInsertFromFinaleChar(char32_t c, const std::shared_ptr<musx::dom::FontInfo>& font);
 
-    static engraving::String smuflCodeList(char c, const std::string& font);
-    static engraving::String symIdFromFinaleChar(char c, const std::string& font);
+    /// @brief Only returns a String if *all* characters in the input text can be mapped to `<sym>` tags.
+    static std::optional<engraving::String> symIdInsertsFromStdString(const std::string& text, const std::shared_ptr<musx::dom::FontInfo>& font);
 
-private:
-
-    static bool initConversionJson();
-
-    static inline std::unordered_map<std::string, std::vector<CharacterMap>> m_convertedFonts;
+    /// @brief Maps a codepoint in the font's encoding to String containing Smufl-encoded character. If the input font is Smufl, it may be an optional codepoint.
+    static std::optional<engraving::String> smuflStringFromFinaleChar(char32_t c, const std::shared_ptr<musx::dom::FontInfo>& font);
 };
 
 }

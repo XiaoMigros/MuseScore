@@ -273,8 +273,9 @@ void FinaleParser::importParts()
             }
             return stringFromEnigmaText(parsingContext, options);
         };
-        part->setPartName(nameFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId), u"longInstrument"));
-        part->setLongName(nameFromEnigmaText(compositeStaff->getFullInstrumentNameCtx(m_currentMusxPartId), u"longInstrument"));
+        const String longName = nameFromEnigmaText(staff->getFullInstrumentNameCtx(m_currentMusxPartId), u"longInstrument");
+        part->setPartName(longName);
+        part->setLongName(longName);
         part->setShortName(nameFromEnigmaText(compositeStaff->getAbbreviatedInstrumentNameCtx(m_currentMusxPartId), u"shortInstrument"));
 
         m_score->appendPart(part);
@@ -813,6 +814,8 @@ void FinaleParser::importPageLayout()
 {
     /// @todo Scan each system's staves and make certain that every staff on each system is included even if it is empty or excluded even if it is not.
     /// @todo Match staff separation in Finale better.
+    /// @todo Take into account per-staff scaling. This affects the vertical spacing of staves. I need to add a helper func for this in musx. It requires some
+    /// reverse engineering of Finale behavior.
 
     // Handle blank pages
     std::vector<std::shared_ptr<others::Page>> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId);

@@ -79,7 +79,7 @@ FontTracker::FontTracker(const MStyle& style, const String& sidNamePrefix)
     fontName = style.styleSt(MStyle::styleIdx(sidNamePrefix + u"FontFace"));
     fontSize = style.styleD(MStyle::styleIdx(sidNamePrefix + u"FontSize"));
     fontStyle = FontStyle(style.styleI(MStyle::styleIdx(sidNamePrefix + u"FontStyle")));
-    spatiumIndependent = style.styleB(MStyle::styleIdx(sidNamePrefix + u"FontSpatiumDependent"));
+    spatiumIndependent = !style.styleB(MStyle::styleIdx(sidNamePrefix + u"FontSpatiumDependent"));
 }
 
 // Passing in the firstFontInfo pointer suppresses any first font information from being generated in the output string.
@@ -132,17 +132,15 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     // The processTextChunk function process each chunk of processed text with font information. It is only
     // called when the font information changes.
     auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles& styles) -> bool {
+        std::optional<String> symIds = FinaleTextConv::symIdInsertsFromStdString(nextChunk, styles.font);
         const FontTracker font(styles.font, options.scaleFontSizeBy);
         if (firstFontInfo && !prevFont) {
             *firstFontInfo = font;
         } else {
             if (!prevFont || prevFont->fontName != font.fontName) {
-                // When using musical fonts, don't actually set the font type since symbols are loaded separately.
-                /// @todo decide when we want to not convert symbols/fonts, e.g. to allow multiple musical fonts in one score.
-                /// @todo append this based on whether symbol ends up being replaced or not.
-                //if (!font->calcIsDefaultMusic()) { /// @todo RGP changed from a name check, but each notation element has its own default font setting in Finale. We need to handle that.
+                if (!symIds) { // if this chunk is not all mapped sym tags
                     endString.append(String(u"<font face=\"" + font.fontName + u"\"/>"));
-                //}
+                }
             }
             if (!prevFont || prevFont->fontSize != font.fontSize) {
                 endString.append(String(u"<font size=\""));
@@ -153,7 +151,7 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
             }
         }
         prevFont = font;
-        endString.append(String::fromStdString(nextChunk));
+        endString.append(symIds ? symIds.value() : String::fromStdString(nextChunk));
         return true;
     };
 
@@ -218,8 +216,14 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
                 case HeaderFooterType::FirstPage: return "$C";
                 case HeaderFooterType::SecondPageToEnd: return "$c";
             }
-//        } else if (parsedCommand[0] == "flat") {
-//            return "<sym>accidentalFlat</sym>";
+        } else if (std::optional<options::AccidentalInsertSymbolType> acciInsertType = musx::util::EnigmaString::commandIsAccidentalType(parsedCommand[0])) {
+            const auto& acciDataIt = musxOptions().textOptions->symbolInserts.find(acciInsertType.value());
+            if (acciDataIt != musxOptions().textOptions->symbolInserts.end()) {
+                if (std::optional<String> symTag = FinaleTextConv::symIdInsertFromFinaleChar(acciDataIt->second->symChar, acciDataIt->second->symFont)) {
+                    return symTag.value().toStdString();
+                }
+            }
+            // since we could not map the character to a symbol, let it fall thru and parse as glyphs
         }
         // Find and insert metaTags when appropriate
         if (isHeaderOrFooter) {
@@ -238,6 +242,43 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     return endString;
 };
 
+void FinaleParser::importTextExpressions()
+{
+    // 1st: map all expressions to strings
+    std::unordered_map<Cmper, String> mappedExpressionStrings;
+    std::vector<std::shared_ptr<others::TextExpressionDef>> textExpressionList = m_doc->getOthers()->getArray<others::TextExpressionDef>(m_currentMusxPartId);
+    for (const auto& textExpression : textExpressionList) {
+        others::MarkingCategory::CategoryType categoryType = others::MarkingCategory::CategoryType::Misc;
+        if (std::shared_ptr<others::MarkingCategory> category = m_doc->getOthers()->get<others::MarkingCategory>(m_currentMusxPartId, textExpression->categoryId)) {
+            categoryType = category->categoryType;
+        }
+        EnigmaParsingOptions options;
+        musx::util::EnigmaParsingContext parsingContext = textExpression->getRawTextCtx(m_currentMusxPartId);
+        /// @todo Currently, if the expression starts with a <sym> it is setting the size and font efx for the music font. We can suppress either or both if it makes sense.
+        /// If it is better in MuseScore, we can pass in a variable to get the first font info, and that will suppress any font settngs at the beginning of the string, returning
+        /// either the music font settings (if it starts with a sym) or the text font settings (if it does not.)
+        // Option 1 (to the capture first font info and suppress it in the string)
+        FontTracker firstFontInfo;
+        String exprString = stringFromEnigmaText(parsingContext, options, &firstFontInfo);
+        // Option 2 (to match style setting if possible, with font info tags at the beginning if they differ)
+        options.initialFont = FontTracker(m_score->style(), FinaleTConv::fontStyleSuffixFromCategoryType(categoryType));
+        String exprString2 = stringFromEnigmaText(parsingContext, options);
+        mappedExpressionStrings.emplace(textExpression->getCmper(), std::move(exprString));
+    }
+    /// @
+    // 2nd: iterate each expression assignment and assign the mapped String instances as needed
+    std::vector<std::shared_ptr<others::MeasureExprAssign>> expressionAssignments = m_doc->getOthers()->getArray<others::MeasureExprAssign>(m_currentMusxPartId);
+    for (const auto& expressionAssignment : expressionAssignments) {
+        if (expressionAssignment->textExprId) {
+            /// @todo assign this to the appropriate location(s), taking into account if this is a single-staff or stafflist assignment.
+            /// @note Finale provides a per-staff assignment *in addition* to top-staff (-1) or bot-staff (-2) assignments. Whether it is visible is
+            /// determined by the stafflist (if any) or by whether it is assigned to score or part or both. I don't know enough about MuseScore
+            /// features to suggest an exact import strategy. (I may need to add staff lists to musx. I don't remember adding them yet. But since
+            /// Finale adds an assignment on every staff dictated by the staff list, we may not need to reference it.)
+        }
+    }
+}
+
 bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, PageCmper page)
 {
     const std::optional<PageCmper> startPageNum = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
@@ -251,7 +292,6 @@ bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pag
 
 void FinaleParser::importPageTexts()
 {
-    FinaleTextConv::init();
     std::vector<std::shared_ptr<others::PageTextAssign>> pageTextAssignList = m_doc->getOthers()->getArray<others::PageTextAssign>(m_currentMusxPartId);
 
     // we need to work with real-time positions and pages, so we layout the score.
