@@ -54,7 +54,7 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
-FontTracker::FontTracker(const std::shared_ptr<const musx::dom::FontInfo>& fontInfo, double additionalSizeScaling)
+FontTracker::FontTracker(const MusxInstance<musx::dom::FontInfo>& fontInfo, double additionalSizeScaling)
 {
     fontName = String::fromStdString(fontInfo->getName());
     fontSize = FinaleTConv::spatiumScaledFontSize(fontInfo);
@@ -82,6 +82,14 @@ FontTracker::FontTracker(const MStyle& style, const String& sidNamePrefix)
     spatiumIndependent = !style.styleB(MStyle::styleIdx(sidNamePrefix + u"FontSpatiumDependent"));
 }
 
+FontTracker FontTracker::fromEngravingFont(const engraving::MStyle& style, engraving::Sid styleId, double scaling)
+{
+    FontTracker result;
+    result.fontName = style.styleSt(styleId);
+    result.fontSize = 20.0 * scaling;
+    return result;
+}
+
 // Passing in the firstFontInfo pointer suppresses any first font information from being generated in the output string.
 // Instead, it is returned in the pointer.
 String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options, FontTracker* firstFontInfo) const
@@ -89,6 +97,7 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     String endString;
     const bool isHeaderOrFooter = options.hfType != HeaderFooterType::None;
     std::optional<FontTracker> prevFont = options.initialFont;
+    std::optional<FontTracker> symFont = options.musicSymbolFont;
     std::unordered_set<FontStyle> emittedOpenTags; // tracks whose open tags we actually emitted here
     uint16_t flagsThatAreStillOpen = 0; // any flags we've opened that need to be closed.
 
@@ -134,9 +143,10 @@ String FinaleParser::stringFromEnigmaText(const musx::util::EnigmaParsingContext
     auto processTextChunk = [&](const std::string& nextChunk, const musx::util::EnigmaStyles& styles) -> bool {
         std::optional<String> symIds = FinaleTextConv::symIdInsertsFromStdString(nextChunk, styles.font);
         const FontTracker font(styles.font, options.scaleFontSizeBy);
+        const bool isSymFont = symFont && font == symFont.value();
         if (firstFontInfo && !prevFont) {
             *firstFontInfo = font;
-        } else {
+        } else if (!symIds || !isSymFont) {
             if (!prevFont || prevFont->fontName != font.fontName) {
                 if (!symIds) { // if this chunk is not all mapped sym tags
                     endString.append(String(u"<font face=\"" + font.fontName + u"\"/>"));
@@ -246,28 +256,46 @@ void FinaleParser::importTextExpressions()
 {
     // 1st: map all expressions to strings
     std::unordered_map<Cmper, String> mappedExpressionStrings;
-    std::vector<std::shared_ptr<others::TextExpressionDef>> textExpressionList = m_doc->getOthers()->getArray<others::TextExpressionDef>(m_currentMusxPartId);
+    MusxInstanceList<others::TextExpressionDef> textExpressionList = m_doc->getOthers()->getArray<others::TextExpressionDef>(m_currentMusxPartId);
     for (const auto& textExpression : textExpressionList) {
+        /// @todo Rather than rely only on marking category, it probably makes more sense to interpret the playback features to detect what kind of marking
+        /// this is. Or perhaps a combination of both. This would provide better support to legacy files whose expressions are all Misc.
         others::MarkingCategory::CategoryType categoryType = others::MarkingCategory::CategoryType::Misc;
-        if (std::shared_ptr<others::MarkingCategory> category = m_doc->getOthers()->get<others::MarkingCategory>(m_currentMusxPartId, textExpression->categoryId)) {
+        MusxInstance<FontInfo> catMusicFont;
+        if (MusxInstance<others::MarkingCategory> category = m_doc->getOthers()->get<others::MarkingCategory>(m_currentMusxPartId, textExpression->categoryId)) {
             categoryType = category->categoryType;
+            catMusicFont = category->musicFont;
         }
         EnigmaParsingOptions options;
         musx::util::EnigmaParsingContext parsingContext = textExpression->getRawTextCtx(m_currentMusxPartId);
-        /// @todo Currently, if the expression starts with a <sym> it is setting the size and font efx for the music font. We can suppress either or both if it makes sense.
-        /// If it is better in MuseScore, we can pass in a variable to get the first font info, and that will suppress any font settngs at the beginning of the string, returning
-        /// either the music font settings (if it starts with a sym) or the text font settings (if it does not.)
-        // Option 1 (to the capture first font info and suppress it in the string)
         FontTracker firstFontInfo;
         String exprString = stringFromEnigmaText(parsingContext, options, &firstFontInfo);
         // Option 2 (to match style setting if possible, with font info tags at the beginning if they differ)
         options.initialFont = FontTracker(m_score->style(), FinaleTConv::fontStyleSuffixFromCategoryType(categoryType));
+        /// @todo The musicSymbol font here must be the inferred font *in Finale* that we expect, based on the detection of what kind
+        /// of marking it is mentioned above. Right now this code relies on the category, but probably that is too naive a design.
+        /// Whichever font we choose here will be stripped out in favor of the default for the kind of marking it is.
+        options.musicSymbolFont = [&]() -> std::optional<FontTracker> {
+            if (!catMusicFont) {
+                return FontTracker(musxOptions().defaultMusicFont); // we get here for the Misc category, and this seems like the best choice for legacy files. See todo comments, though.
+            } else if (fontIsEngravingFont(catMusicFont->getName())) {
+                return FontTracker(catMusicFont); // if it's an engraving font use it
+            } else if (catMusicFont->calcIsDefaultMusic() && !musxOptions().calculatedEngravingFontName.empty()) {
+                return FontTracker(catMusicFont); // if it's not an engraving font, but we are using an alternative as engraving font,
+                                                  // specify the non-engraving font here. The parsing routine strips it out and MuseScore
+                                                  // uses the engraving font instead.
+            }
+            return std::nullopt;
+        }();
+        if (catMusicFont && (fontIsEngravingFont(catMusicFont->getName()) || catMusicFont->calcIsDefaultMusic())) {
+            options.musicSymbolFont = FontTracker(catMusicFont);
+        }
         String exprString2 = stringFromEnigmaText(parsingContext, options);
         mappedExpressionStrings.emplace(textExpression->getCmper(), std::move(exprString));
     }
     /// @
     // 2nd: iterate each expression assignment and assign the mapped String instances as needed
-    std::vector<std::shared_ptr<others::MeasureExprAssign>> expressionAssignments = m_doc->getOthers()->getArray<others::MeasureExprAssign>(m_currentMusxPartId);
+    MusxInstanceList<others::MeasureExprAssign> expressionAssignments = m_doc->getOthers()->getArray<others::MeasureExprAssign>(m_currentMusxPartId);
     for (const auto& expressionAssignment : expressionAssignments) {
         if (expressionAssignment->textExprId) {
             /// @todo assign this to the appropriate location(s), taking into account if this is a single-staff or stafflist assignment.
@@ -279,7 +307,7 @@ void FinaleParser::importTextExpressions()
     }
 }
 
-bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pageTextAssign, PageCmper page)
+bool FinaleParser::isOnlyPage(const MusxInstance<others::PageTextAssign>& pageTextAssign, PageCmper page)
 {
     const std::optional<PageCmper> startPageNum = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
     const std::optional<PageCmper> endPageNum = pageTextAssign->calcEndPageNumber(m_currentMusxPartId); // calcEndPageNumber handles case when endPage is zero
@@ -292,7 +320,7 @@ bool FinaleParser::isOnlyPage(const std::shared_ptr<others::PageTextAssign>& pag
 
 void FinaleParser::importPageTexts()
 {
-    std::vector<std::shared_ptr<others::PageTextAssign>> pageTextAssignList = m_doc->getOthers()->getArray<others::PageTextAssign>(m_currentMusxPartId);
+    MusxInstanceList<others::PageTextAssign> pageTextAssignList = m_doc->getOthers()->getArray<others::PageTextAssign>(m_currentMusxPartId);
 
     // we need to work with real-time positions and pages, so we layout the score.
     m_score->setLayoutAll();
@@ -314,21 +342,21 @@ void FinaleParser::importPageTexts()
         bool show = false;
         bool showFirstPage = true; // always show first page
         bool oddEven = true; // always different odd/even pages
-        std::vector<std::shared_ptr<others::PageTextAssign>> oddLeftTexts;
-        std::vector<std::shared_ptr<others::PageTextAssign>> oddMiddleTexts;
-        std::vector<std::shared_ptr<others::PageTextAssign>> oddRightTexts;
-        std::vector<std::shared_ptr<others::PageTextAssign>> evenLeftTexts;
-        std::vector<std::shared_ptr<others::PageTextAssign>> evenMiddleTexts;
-        std::vector<std::shared_ptr<others::PageTextAssign>> evenRightTexts;
+        std::vector<MusxInstance<others::PageTextAssign>> oddLeftTexts;
+        std::vector<MusxInstance<others::PageTextAssign>> oddMiddleTexts;
+        std::vector<MusxInstance<others::PageTextAssign>> oddRightTexts;
+        std::vector<MusxInstance<others::PageTextAssign>> evenLeftTexts;
+        std::vector<MusxInstance<others::PageTextAssign>> evenMiddleTexts;
+        std::vector<MusxInstance<others::PageTextAssign>> evenRightTexts;
     };
 
     HeaderFooter header;
     HeaderFooter footer;
-    std::vector<std::shared_ptr<others::PageTextAssign>> notHF;
-    std::vector<std::shared_ptr<others::PageTextAssign>> remainder;
+    std::vector<MusxInstance<others::PageTextAssign>> notHF;
+    std::vector<MusxInstance<others::PageTextAssign>> remainder;
 
     // gather texts by position
-    for (std::shared_ptr<others::PageTextAssign> pageTextAssign : pageTextAssignList) {
+    for (MusxInstance<others::PageTextAssign> pageTextAssign : pageTextAssignList) {
         if (pageTextAssign->hidden) {
             // there may be something we can do with hidden assignments created for Patterson's Copyist Helper plugin,
             // but generally it means the header is not applicable to this part.
@@ -361,11 +389,11 @@ void FinaleParser::importPageTexts()
         remainder.emplace_back(pageTextAssign);
     }
 
-    for (std::shared_ptr<others::PageTextAssign> pageTextAssign : remainder) {
+    for (MusxInstance<others::PageTextAssign> pageTextAssign : remainder) {
         HeaderFooter& hf = pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Top ? header : footer;
         hf.show = true;
     }
-    for (std::shared_ptr<others::PageTextAssign> pageTextAssign : remainder) {
+    for (MusxInstance<others::PageTextAssign> pageTextAssign : remainder) {
         HeaderFooter& hf = pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Top ? header : footer;
         /// @todo this has got to take into account the page text's hPosLp or hPosRp based on indRpPos.
         /// @todo Finale bases right/left on the actual page numbers, not the visual page numbers. But MuseScore's
@@ -399,7 +427,7 @@ void FinaleParser::importPageTexts()
         }
     }
 
-    auto stringFromPageText = [&](const std::shared_ptr<others::PageTextAssign>& pageText, bool isForHeaderFooter = true) {
+    auto stringFromPageText = [&](const MusxInstance<others::PageTextAssign>& pageText, bool isForHeaderFooter = true) {
         std::optional<PageCmper> startPage = pageText->calcStartPageNumber(m_currentMusxPartId);
         std::optional<PageCmper> endPage = pageText->calcEndPageNumber(m_currentMusxPartId);
         HeaderFooterType hfType = isForHeaderFooter ? HeaderFooterType::FirstPage : HeaderFooterType::None;
@@ -440,7 +468,7 @@ void FinaleParser::importPageTexts()
     std::vector<Cmper> pagesWithHeaderFrames;
     std::vector<Cmper> pagesWithFooterFrames;
 
-    auto getPages = [this](const std::shared_ptr<others::PageTextAssign>& pageTextAssign) -> std::vector<page_idx_t> {
+    auto getPages = [this](const MusxInstance<others::PageTextAssign>& pageTextAssign) -> std::vector<page_idx_t> {
         std::vector<page_idx_t> pagesWithText;
         page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(1) - 1);
         page_idx_t endP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(PageCmper(m_score->npages())) - 1);
@@ -450,7 +478,7 @@ void FinaleParser::importPageTexts()
         return pagesWithText;
     };
 
-    auto pagePosOfPageTextAssign = [](Page* page, const std::shared_ptr<others::PageTextAssign>& pageTextAssign) -> PointF {
+    auto pagePosOfPageTextAssign = [](Page* page, const MusxInstance<others::PageTextAssign>& pageTextAssign) -> PointF {
         /// @todo e.g. center-aligned text in vframes is also in the center of the page, account for that here
         RectF pageBox = page->ldata()->bbox(); // height and width definitely work, this hopefully too
         PointF p;
@@ -512,13 +540,13 @@ void FinaleParser::importPageTexts()
         return closestMB;
     };
 
-    auto addPageTextToMeasure = [](const std::shared_ptr<others::PageTextAssign>& pageTextAssign, PointF p, MeasureBase* mb, Page* page) {
+    auto addPageTextToMeasure = [](const MusxInstance<others::PageTextAssign>& pageTextAssign, PointF p, MeasureBase* mb, Page* page) {
         PointF relativePos = p - mb->pagePos();
         // if (item->placeBelow()) {
         // ldata->setPosY(item->staff() ? item->staff()->staffHeight(item->tick()) : 0.0);
     };
 
-    for (std::shared_ptr<others::PageTextAssign> pageTextAssign : remainder) {
+    for (MusxInstance<others::PageTextAssign> pageTextAssign : remainder) {
         //@todo: use sophisticated check for whether to import as frame or not. (i.e. distance to measure is too large, frame would get in the way of music)
         if (pageTextAssign->vPos == others::PageTextAssign::VerticalAlignment::Center) {
             std::vector<page_idx_t> pagesWithText = getPages(pageTextAssign);
