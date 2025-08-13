@@ -269,6 +269,7 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
         return nullptr;
     }
 
+    startCmd();
     Tuplet* tuplet = Factory::createTuplet(this->dummy()->measure());
     tuplet->setRatio(_ratio);
 
@@ -299,22 +300,10 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
 
     cmdCreateTuplet(destinationChordRest, tuplet);
 
-    const std::vector<DurationElement*>& elements = tuplet->elements();
-    DurationElement* elementForSelect = nullptr;
-    if (!elements.empty()) {
-        DurationElement* firstElement = elements.front();
-        if (firstElement->isRest()) {
-            elementForSelect = firstElement;
-        } else if (elements.size() > 1) {
-            elementForSelect = elements[1];
-        }
-    }
-
-    if (elementForSelect) {
-        score()->select(elementForSelect, SelectType::SINGLE, 0);
+    if (tuplet->elements().empty()) {
         score()->inputState().setDuration(tuplet->baseLen());
     }
-
+    endCmd();
     return tuplet;
 }
 
@@ -4324,10 +4313,10 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
     if (ocr->tuplet()) {
         tuplet->setTuplet(ocr->tuplet());
     }
-    removeChordRest(ocr, false);
+    //removeChordRest(ocr, false);
 
-    ChordRest* cr;
-    if (ocr->isChord()) {
+    ChordRest* cr = ocr;
+    /*if (ocr->isChord()) {
         cr = Factory::createChord(this->dummy()->segment());
         toChord(cr)->setStemDirection(toChord(ocr)->stemDirection());
         for (Note* oldNote : toChord(ocr)->notes()) {
@@ -4339,7 +4328,7 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
         }
     } else {
         cr = Factory::createRest(this->dummy()->segment());
-    }
+    }*/
 
     int actualNotes = an.numerator() / an.denominator();
 
@@ -4349,7 +4338,7 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
     cr->setDurationType(tuplet->baseLen());
     cr->setTicks(tuplet->baseLen().fraction());
 
-    undoAddCR(cr, measure, tick);
+    //undoAddCR(cr, measure, tick);
 
     Fraction ticks = cr->actualTicks();
 
