@@ -122,7 +122,7 @@ bool Stem::acceptDrop(EditData& data) const
         break;
     }
 
-    return false;
+    return chord()->acceptDrop(data);
 }
 
 EngravingItem* Stem::drop(EditData& data)
@@ -139,7 +139,7 @@ EngravingItem* Stem::drop(EditData& data)
         delete e;
         break;
     }
-    return 0;
+    return chord()->drop(data);
 }
 
 PropertyValue Stem::getProperty(Pid propertyId) const

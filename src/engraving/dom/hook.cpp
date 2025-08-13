@@ -99,3 +99,13 @@ SymId Hook::symIdForHookIndex(int index, bool straight)
 
     return SymId::noSym;
 }
+
+bool Hook::acceptDrop(EditData& data) const
+{
+    return chord()->acceptDrop(data);
+}
+
+EngravingItem* Hook::drop(EditData& data)
+{
+    return chord()->drop(data);
+}
