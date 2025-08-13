@@ -94,9 +94,9 @@ public:
     void undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps) override;
     using EngravingObject::undoChangeProperty;
 
-    int gripsCount() const override { return 1; }
-    Grip initialEditModeGrip() const override { return Grip::START; }
-    Grip defaultGrip() const override { return Grip::START; }
+    int gripsCount() const override { return 2; }
+    Grip initialEditModeGrip() const override { return Grip::END; }
+    Grip defaultGrip() const override { return Grip::END; }
     std::vector<PointF> gripsPositions(const EditData&) const override;
 
     void setSelected(bool f) override;
