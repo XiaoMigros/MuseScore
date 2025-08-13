@@ -173,6 +173,8 @@ enum class Sid {
     bracketDistance,
     akkoladeWidth,
     akkoladeBarDistance,
+    useCustomPathForBraces,
+    customPathForBraces,
     dividerLeft,
     dividerLeftSym,
     dividerLeftX,

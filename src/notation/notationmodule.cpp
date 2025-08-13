@@ -93,6 +93,8 @@
 #include "view/styledialog/restspagemodel.h"
 #include "view/styledialog/beamspagemodel.h"
 #include "view/styledialog/bendstyleselector.h"
+#include "view/styledialog/bracedesignersectionmodel.h"
+#include "view/styledialog/bracedesignercanvas.h"
 #include "view/styledialog/tieplacementselector.h"
 #include "view/styledialog/accidentalgrouppagemodel.h"
 #include "view/styledialog/fretboardspagemodel.h"
@@ -228,6 +230,9 @@ void NotationModule::registerUiTypes()
     qmlRegisterUncreatableType<PanelMode>("MuseScore.NotationScene", 1, 0, "PanelMode", "Cannot create");
 
     qmlRegisterUncreatableType<StyleItem>("MuseScore.NotationScene", 1, 0, "StyleItem", "Cannot create StyleItem from QML");
+    qmlRegisterType<BraceDesignerSectionModel>("MuseScore.NotationScene", 1, 0, "BraceDesignerSectionModel");
+    // qmlRegisterType<BracePointItem>("MuseScore.NotationScene", 1, 0, "BracePointItem");
+    qmlRegisterType<BraceDesignerCanvas>("MuseScore.NotationScene", 1, 0, "BraceDesignerCanvas");
     qmlRegisterType<NotesPageModel>("MuseScore.NotationScene", 1, 0, "NotesPageModel");
     qmlRegisterType<RestsPageModel>("MuseScore.NotationScene", 1, 0, "RestsPageModel");
     qmlRegisterType<BeamsPageModel>("MuseScore.NotationScene", 1, 0, "BeamsPageModel");
@@ -246,6 +251,7 @@ void NotationModule::registerUiTypes()
     qmlRegisterType<TupletCenteringSelectorModel>("MuseScore.NotationScene", 1, 0, "TupletCenteringSelectorModel");
 
     qmlRegisterUncreatableType<NoteInputBarCustomiseItem>("MuseScore.NotationScene", 1, 0, "NoteInputBarCustomiseItem", "Cannot create");
+    qmlRegisterUncreatableType<BracketDesignerTypes>("MuseScore.NotationScene", 1, 0, "BracketDesignerTypes", "Not creatable as it is an enum type");
 
     auto ui = ioc()->resolve<IUiEngine>(moduleName());
     if (ui) {

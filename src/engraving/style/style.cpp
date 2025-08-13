@@ -228,6 +228,8 @@ bool MStyle::readProperties(XmlReader& e)
                 break;
             case P_TYPE::TEXT_STYLE:
                 set(idx, TConv::fromXml(e.readAsciiText(), TextStyleType::DEFAULT));
+            case P_TYPE::BRACKET_PATH:
+                set(idx, e.readBracketPath());
                 break;
             default:
                 ASSERT_X(u"unhandled type " + String::number(int(type)));
@@ -740,6 +742,8 @@ void MStyle::save(XmlWriter& xml, bool optimize)
             xml.tag(st.name(), TConv::toXml(value(idx).value<TextStyleType>()));
         } else if (P_TYPE::PARENTHESES_MODE == type) {
             xml.tag(st.name(), TConv::toXml(value(idx).value<ParenthesesMode>()));
+        } else if (P_TYPE::BRACKET_PATH == type) {
+            xml.tagProperty(st.name(), value(idx).value<BracketPath>());
         } else {
             PropertyValue val = value(idx);
             //! NOTE for compatibility
