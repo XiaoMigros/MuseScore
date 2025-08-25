@@ -1645,14 +1645,14 @@ MuseScore::MuseScore()
       menuAdd->addMenu(menuAddPitch);
 
       menuAddInterval = new QMenu();
-      for (int i = 1; i < 10; ++i) {
+      for (int i = 1; i <= 10; ++i) { // unison, second abobe to tenth above
             char buffer[16];
             snprintf(buffer, sizeof buffer, "interval%d", i);
             a = getAction(buffer);
             menuAddInterval->addAction(a);
             }
       menuAddInterval->addSeparator();
-      for (int i = 2; i < 10; ++i) {
+      for (int i = 2; i <= 10; ++i) { // second below to tenth below
             char buffer[16];
             snprintf(buffer, sizeof buffer, "interval-%d", i);
             a = getAction(buffer);
