@@ -622,6 +622,19 @@ void createInstruments(Score* score, QList<MTrack>& tracks)
     const auto& opers = midiImportOperations;
     const auto& instrListOption = opers.data()->trackOpers.msInstrList;
 
+    // Import at most a single value per track here,
+    // skip when multiple values are defined or the value is not defined on tick 0.
+    auto firstChannelValue = [](const std::multimap<ReducedFraction, int>& map) -> std::optional<int> {
+        if (map.size() == 1) {
+            for (auto& i : map) {
+                if (i.first == ReducedFraction(0, 1)) {
+                    return std::make_optional<int>(i.second);
+                }
+            }
+        }
+        return std::nullopt;
+    };
+
     const int ntracks = tracks.size();
     for (int idx = 0; idx < ntracks; ++idx) {
         MTrack& track = tracks[idx];
@@ -630,8 +643,7 @@ void createInstruments(Score* score, QList<MTrack>& tracks)
         const auto& instrList = instrListOption.value(track.indexOfOperation);
         const InstrumentTemplate* instr = nullptr;
         if (!instrList.empty()) {
-            const int instrIndex = opers.data()->trackOpers.msInstrIndex.value(
-                track.indexOfOperation);
+            const int instrIndex = opers.data()->trackOpers.msInstrIndex.value(track.indexOfOperation);
             instr = instrList[instrIndex];
             if (instr) {
                 part->initFromInstrTemplate(instr);
@@ -646,14 +658,15 @@ void createInstruments(Score* score, QList<MTrack>& tracks)
             part->setStaves(1);
         }
 
-        if (part->nstaves() == 1) {
-            if (track.mtrack->drumTrack()) {
-                part->staff(0)->setStaffType(Fraction(0, 1), *StaffType::preset(StaffTypes::PERC_DEFAULT));
-                if (!instr) {
-                    part->instrument()->setDrumset(smDrumset);
-                }
+        if (track.mtrack->drumTrack()) {
+            for (staff_idx_t i = 0; i != part->nstaves(); ++i) {
+                part->staff(i)->setStaffType(Fraction(0, 1), *StaffType::preset(StaffTypes::PERC_DEFAULT));
             }
-        } else {
+            if (!instr) {
+                part->instrument()->setDrumset(smDrumset);
+            }
+        }
+        if (part->nstaves() > 1) {
             if (!instr) {
                 part->staff(0)->setBarLineSpan(true);
                 part->staff(0)->setBracketType(0, BracketType::BRACE);
@@ -665,14 +678,15 @@ void createInstruments(Score* score, QList<MTrack>& tracks)
         }
 
         if (instr) {
-            for (size_t i = 0; i != part->nstaves(); ++i) {
+            for (staff_idx_t i = 0; i != part->nstaves(); ++i) {
                 if (instr->staffTypePreset) {
-                    part->staff(i)->init(instr, nullptr, static_cast<int>(i));
+                    part->staff(i)->init(instr, nullptr, i);
                     part->staff(i)->setStaffType(Fraction(0, 1), *(instr->staffTypePreset));
-                }
+                } else {
 //                        part->staff(i)->setLines(0, instr->staffLines[i]);
 //                        part->staff(i)->setSmall(0, instr->smallStaff[i]);
-                part->staff(i)->setDefaultClefType(instr->clefTypes[i]);
+                    part->staff(i)->setDefaultClefType(instr->clefTypes[i]);
+                }
             }
         }
 
@@ -683,14 +697,18 @@ void createInstruments(Score* score, QList<MTrack>& tracks)
             tracks[idx].staff = part->staff(i);
         }
 
-        // only importing a single volume per track here, skip when multiple volumes
-        // are defined, or the single volume is not defined on tick 0.
-        if (track.volumes.size() == 1) {
-            for (auto& i: track.volumes) {
-                if (i.first == ReducedFraction(0, 1)) {
-                    part->instrument()->channel(0)->setVolume(i.second);
-                }
-            }
+        InstrChannel* ch = part->instrument()->channel(0);
+        if (std::optional<int> volume = firstChannelValue(track.volumes)) {
+            ch->setVolume(volume.value());
+        }
+        if (std::optional<int> pan = firstChannelValue(track.pans)) {
+            ch->setPan(pan.value());
+        }
+        if (std::optional<int> reverb = firstChannelValue(track.reverbs)) {
+            ch->setReverb(reverb.value());
+        }
+        if (std::optional<int> chorus = firstChannelValue(track.choruses)) {
+            ch->setChorus(chorus.value());
         }
 
         score->appendPart(part);
