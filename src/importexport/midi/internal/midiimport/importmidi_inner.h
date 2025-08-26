@@ -107,6 +107,10 @@ public:                 // chords store tuplet iterators, so we need to copy cla
     bool hadInitialNotes = false;
 
     std::multimap<ReducedFraction, int> volumes;
+    std::multimap<ReducedFraction, int> pans;
+    std::multimap<ReducedFraction, int> reverbs;
+    std::multimap<ReducedFraction, int> choruses;
+
     std::multimap<ReducedFraction, MidiChord> chords;
     std::multimap<ReducedFraction, MidiTuplet::TupletData> tuplets;     // <tupletOnTime, ...>
 
