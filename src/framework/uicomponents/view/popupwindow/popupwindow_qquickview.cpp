@@ -56,9 +56,6 @@ void PopupWindow_QQuickView::init(QQmlEngine* engine, bool isDialogMode, bool is
     m_view->setObjectName(POPUP_WINDOW_VIEW_NAME);
     m_view->setResizeMode(QQuickView::SizeRootObjectToView);
 
-    //! NOTE: Should be synchronized with WinWindowsController
-    m_view->setTitle(POPUP_WINDOW_NAME);
-
     //! NOTE It is important that there is a connection to this signal with an error,
     //! otherwise the default action will be performed - displaying a message and terminating.
     //! We will not be able to switch to another backend.
@@ -90,16 +87,16 @@ void PopupWindow_QQuickView::init(QQmlEngine* engine, bool isDialogMode, bool is
     }
     // popup
     else {
-        Qt::WindowFlags flags(
-#if defined(Q_OS_LINUX) || defined(Q_OS_FREEBSD)
-            Qt::Popup // Popups can't be Qt::Tool on Linux Wayland, or they can't be relatvely positioned.
-#else
-            Qt::Tool
-#endif
-            | Qt::FramelessWindowHint            // Without border
-            | Qt::NoDropShadowWindowHint         // Without system shadow
-            | Qt::BypassWindowManagerHint        // Otherwise, it does not work correctly on Gnome (Linux) when resizing)
-            );
+        Qt::WindowFlags flags;
+        if (qGuiApp->platformName().contains("wayland")) {
+            flags = Qt::Popup;
+        } else {
+            flags = Qt::Tool;
+        }
+
+        flags |= Qt::FramelessWindowHint           // Without border
+                 | Qt::NoDropShadowWindowHint      // Without system shadow
+                 | Qt::BypassWindowManagerHint;    // Otherwise, it does not work correctly on Gnome (Linux) when resizing)
 
         m_view->setFlags(flags);
         m_view->setColor(QColor(Qt::transparent));

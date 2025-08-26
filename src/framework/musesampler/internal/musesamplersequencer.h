@@ -23,7 +23,7 @@
 #ifndef MUSE_MUSESAMPLER_MUSESAMPLERSEQUENCER_H
 #define MUSE_MUSESAMPLER_MUSESAMPLERSEQUENCER_H
 
-#include "audio/internal/abstracteventsequencer.h"
+#include "audio/worker/internal/abstracteventsequencer.h"
 #include "imusesamplertracks.h"
 
 #include "internal/apitypes.h"
@@ -74,8 +74,8 @@ struct std::less<MuseSamplerEvent>
 };
 
 namespace muse::musesampler {
-class MuseSamplerSequencer : public muse::audio::AbstractEventSequencer<mpe::NoteEvent, AuditionStartNoteEvent, AuditionStopNoteEvent,
-                                                                        AuditionCCEvent>
+class MuseSamplerSequencer : public audio::worker::AbstractEventSequencer<mpe::NoteEvent, AuditionStartNoteEvent, AuditionStopNoteEvent,
+                                                                          AuditionCCEvent>
 {
 public:
     void init(MuseSamplerLibHandlerPtr samplerLib, ms_MuseSampler sampler, IMuseSamplerTracks* tracks, std::string&& defaultPresetCode);
@@ -117,8 +117,8 @@ private:
     int pitchLevelToCents(const mpe::pitch_level_t pitchLevel) const;
     double dynamicLevelRatio(const mpe::dynamic_level_t level) const;
 
-    ms_NoteArticulation convertArticulationType(mpe::ArticulationType articulation) const;
-    void parseArticulations(const mpe::ArticulationMap& articulations, ms_NoteArticulation& articulationFlag, ms_NoteHead& notehead) const;
+    void parseArticulations(const mpe::ArticulationMap& articulations, ms_NoteArticulation& articulations1,
+                            ms_NoteArticulation2& articulations2, ms_NoteHead& notehead) const;
 
     struct AuditionParams {
         std::string presets;
@@ -137,16 +137,13 @@ private:
 
     struct RenderingInfo {
         long long initialChunksDurationUs = 0;
-        int errorCode = 0;
+        std::string error;
         int64_t percentage = 0;
         audio::InputProcessingProgress::ChunkInfoList lastReceivedChunks;
 
         void clear()
         {
-            initialChunksDurationUs = 0;
-            errorCode = 0;
-            percentage = 0;
-            lastReceivedChunks.clear();
+            *this = RenderingInfo();
         }
     };
 

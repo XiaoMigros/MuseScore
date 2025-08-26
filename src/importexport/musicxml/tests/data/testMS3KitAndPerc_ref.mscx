@@ -58,7 +58,6 @@
           <name>perc5Line</name>
           <keysig>0</keysig>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         <bracket type="0" span="2" col="0" visible="1"/>
         <barLineSpan>1</barLineSpan>
         </Staff>
@@ -302,7 +301,6 @@
           <name>perc5Line</name>
           <keysig>0</keysig>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         </Staff>
       <trackName>Percussion</trackName>
       <Instrument id="percussion">
@@ -515,7 +513,6 @@
         <Text>
           <eid>F_F</eid>
           <style>title</style>
-          <offset x="0" y="-0.0367453"/>
           <text><font size="22"/>Title</text>
           </Text>
         <Text>
