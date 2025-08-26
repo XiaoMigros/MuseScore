@@ -156,6 +156,8 @@ enum class Sid {
     figuredBassStyle,
     systemFrameDistance,
     frameSystemDistance,
+    paddingToNotationAbove,
+    paddingToNotationBelow,
     minMeasureWidth,
 
     barWidth,
@@ -980,6 +982,8 @@ enum class Sid {
     hopoShowOnTabStaves,
     hopoUpperCase,
     hopoShowAll,
+    hopoAlignLettersStandardStaves,
+    hopoAlignLettersTabStaves,
 
     lhTappingSymbolNormalStave,
     lhTappingSymbolTab,
@@ -1379,6 +1383,25 @@ enum class Sid {
     rehearsalMarkPosAbove,
     rehearsalMarkPosBelow,
     rehearsalMarkMinDistance,
+
+    repeatPlayCountFontFace,
+    repeatPlayCountFontSize,
+    repeatPlayCountLineSpacing,
+    repeatPlayCountFontSpatiumDependent,
+    repeatPlayCountFontStyle,
+    repeatPlayCountColor,
+    repeatPlayCountAlign,
+    repeatPlayCountPlacement,
+    repeatPlayCountFrameType,
+    repeatPlayCountFramePadding,
+    repeatPlayCountFrameWidth,
+    repeatPlayCountFrameRound,
+    repeatPlayCountFrameFgColor,
+    repeatPlayCountFrameBgColor,
+    repeatPlayCountPosition,
+    repeatPlayCountPosAbove,
+    repeatPlayCountPosBelow,
+    repeatPlayCountMinDistance,
 
     repeatLeftFontFace,
     repeatLeftFontSize,
@@ -1982,6 +2005,12 @@ enum class Sid {
     useParensOtherJumpCourtesiesAfterCancelling,
 
     smallParens,
+
+    repeatPlayCountPreset,
+    repeatPlayCountShow,
+    repeatPlayCountShowSingleRepeats,
+
+    systemObjectsBelowBottomStaff,
 
     STYLES
     ///\}

@@ -59,6 +59,7 @@
       <systemTextFontFace>Times New Roman</systemTextFontFace>
       <staffTextFontFace>Times New Roman</staffTextFontFace>
       <rehearsalMarkFontFace>Times New Roman</rehearsalMarkFontFace>
+      <repeatPlayCountFontFace>Times New Roman</repeatPlayCountFontFace>
       <repeatLeftFontFace>Times New Roman</repeatLeftFontFace>
       <repeatRightFontFace>Times New Roman</repeatRightFontFace>
       <frameFontFace>Times New Roman</frameFontFace>
@@ -105,7 +106,6 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         </Staff>
       <trackName>Flute</trackName>
       <Instrument id="flute">

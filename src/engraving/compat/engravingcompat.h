@@ -38,6 +38,8 @@ private:
     static void undoStaffTextExcludeFromPart(MasterScore* masterScore);
     static void migrateDynamicPosOnVocalStaves(MasterScore* masterScore);
     static void resetMarkerLeftFontSize(MasterScore* masterScore);
+    static void resetRestVerticalOffsets(MasterScore* masterScore);
+    static void adjustVBoxDistances(MasterScore* masterScore);
 
     static bool relayoutUserModifiedCrossStaffBeams(MasterScore* score);
     static bool resetHookHeightSign(MasterScore* masterScore);

@@ -57,7 +57,6 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         </Staff>
       <trackName>Voice</trackName>
       <Instrument id="voice">
@@ -122,13 +121,11 @@
         <Text>
           <eid>E_E</eid>
           <style>title</style>
-          <offset x="0" y="-0.110236"/>
           <text><font size="22"/>MuseScore testfile</text>
           </Text>
         <Text>
           <eid>F_F</eid>
           <style>subtitle</style>
-          <offset x="0" y="9.88976"/>
           <text><font size="16"/>Cue Notes 3 (Small Chords vs. Small Notes)</text>
           </Text>
         <Text>

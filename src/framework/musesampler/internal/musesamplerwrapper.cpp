@@ -289,22 +289,18 @@ bool MuseSamplerWrapper::initSampler(const sample_rate_t sampleRate, const sampl
         return false;
     }
 
-    const bool isFirstInit = m_sampler == nullptr;
-
-    if (isFirstInit) {
+    if (!m_sampler) {
         m_sampler = m_samplerLib->create();
         IF_ASSERT_FAILED(m_sampler) {
             return false;
         }
     }
 
-    if (isFirstInit || m_samplerLib->supportsReinit()) {
-        if (!m_samplerLib->initSampler(m_sampler, sampleRate, blockSize, AUDIO_CHANNELS_COUNT)) {
-            LOGE() << "Unable to init MuseSampler, sampleRate: " << sampleRate << ", blockSize: " << blockSize;
-            return false;
-        } else {
-            LOGI() << "Successfully initialized sampler, sampleRate: " << sampleRate << ", blockSize: " << blockSize;
-        }
+    if (!m_samplerLib->initSampler(m_sampler, sampleRate, blockSize, AUDIO_CHANNELS_COUNT)) {
+        LOGE() << "Unable to init MuseSampler, sampleRate: " << sampleRate << ", blockSize: " << blockSize;
+        return false;
+    } else {
+        LOGI() << "Successfully initialized sampler, sampleRate: " << sampleRate << ", blockSize: " << blockSize;
     }
 
     prepareOutputBuffer(blockSize);
@@ -314,11 +310,15 @@ bool MuseSamplerWrapper::initSampler(const sample_rate_t sampleRate, const sampl
 
 void MuseSamplerWrapper::setupOnlineSound()
 {
-    m_sequencer.setUpdateMainStreamWhenInactive(true);
+    const bool autoProcess = config()->autoProcessOnlineSoundsInBackground();
+
+    m_sequencer.setUpdateMainStreamWhenInactive(autoProcess);
     m_sequencer.setRenderingProgress(&m_inputProcessingProgress);
-    m_sequencer.setAutoRenderInterval(config()->autoProcessOnlineSoundsInBackground() ? 1.0 : -1.0); // interval < 0 -> no auto process
+    m_sequencer.setAutoRenderInterval(autoProcess ? 1.0 : -1.0); // interval < 0 -> no auto process
 
     config()->autoProcessOnlineSoundsInBackgroundChanged().onReceive(this, [this](bool on) {
+        m_sequencer.setUpdateMainStreamWhenInactive(on);
+        m_sequencer.updateMainStream();
         m_sequencer.setAutoRenderInterval(on ? 1.0 : -1.0);
     });
 

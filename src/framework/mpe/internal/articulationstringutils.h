@@ -5,7 +5,7 @@
  * MuseScore
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore BVBA and others
+ * Copyright (C) 2025 MuseScore BVBA and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,25 +20,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MUSE_MPE_STRINGUTILS_H
-#define MUSE_MPE_STRINGUTILS_H
+#pragma once
 
 #include <QString>
 #include <unordered_map>
 
-#include "mpetypes.h"
+#include "mpe/mpetypes.h"
 
 namespace muse::mpe {
-static const std::unordered_map<ArticulationFamily, QString> ARTICULATION_FAMILY_NAMES = {
+static const std::unordered_map<ArticulationFamily, QString> ARTICULATION_FAMILY_NAMES {
     { ArticulationFamily::Undefined, "Undefined" },
     { ArticulationFamily::Keyboards, "KeyboardsArticulation" },
     { ArticulationFamily::Strings, "StringsArticulation" },
     { ArticulationFamily::Winds, "WindsArticulation" },
     { ArticulationFamily::Percussions, "PercussionsArticulation" },
-    { ArticulationFamily::Voices, "VoicesArticulation" }
+    { ArticulationFamily::Voices, "VoicesArticulation" },
 };
 
-static const std::unordered_map<ArticulationType, QString> ARTICULATION_TYPE_NAMES = {
+static const std::unordered_map<ArticulationType, QString> ARTICULATION_TYPE_NAMES {
     { ArticulationType::Undefined, "Undefined" },
     { ArticulationType::Standard, "Standard" },
     { ArticulationType::Staccato, "Staccato" },
@@ -48,7 +47,6 @@ static const std::unordered_map<ArticulationType, QString> ARTICULATION_TYPE_NAM
     { ArticulationType::Accent, "Accent" },
     { ArticulationType::SoftAccent, "SoftAccent" },
     { ArticulationType::LaissezVibrer, "LaissezVibrer" },
-    { ArticulationType::LetRing, "LetRing" },
     { ArticulationType::Subito, "Subito" },
     { ArticulationType::FadeIn, "FadeIn" },
     { ArticulationType::FadeOut, "FadeOut" },
@@ -144,55 +142,45 @@ static const std::unordered_map<ArticulationType, QString> ARTICULATION_TYPE_NAM
     { ArticulationType::Overdrive, "Overdrive" },
     { ArticulationType::Slap, "Slap" },
     { ArticulationType::Pop, "Pop" },
+    { ArticulationType::LeftHandTapping, "LeftHandTapping" },
+    { ArticulationType::RightHandTapping, "RightHandTapping" },
+    { ArticulationType::MalletBellOnTable, "MalletBellOnTable" },
+    { ArticulationType::MalletBellSuspended, "MalletBellSuspended" },
+    { ArticulationType::MalletLift, "MalletLift" },
+    { ArticulationType::Pluck, "Pluck" },
+    { ArticulationType::PluckLift, "PluckLift" },
+    { ArticulationType::Gyro, "Gyro" },
+    { ArticulationType::Martellato, "Martellato" },
+    { ArticulationType::MartellatoLift, "MartellatoLift" },
+    { ArticulationType::HandMartellato, "HandMartellato" },
+    { ArticulationType::MutedMartellato, "MutedMartellato" },
+    { ArticulationType::ThumbDamp, "ThumbDamp" },
+    { ArticulationType::BrushDamp, "BrushDamp" },
+    { ArticulationType::Ring, "Ring" },
+    { ArticulationType::RingTouch, "RingTouch" },
+    { ArticulationType::SingingBell, "SingingBell" },
+    { ArticulationType::SingingVibrate, "SingingVibrate" },
+    { ArticulationType::Swing, "Swing" },
+    { ArticulationType::Echo, "Echo" },
 };
 
 inline ArticulationFamily articulationFamilyFromString(const QString& str)
 {
-    auto search = std::find_if(ARTICULATION_FAMILY_NAMES.begin(), ARTICULATION_FAMILY_NAMES.end(), [str](const auto& pair) {
-        return pair.second == str;
-    });
-
-    if (search == ARTICULATION_FAMILY_NAMES.cend()) {
-        return ArticulationFamily::Undefined;
-    }
-
-    return search->first;
+    return muse::key(ARTICULATION_FAMILY_NAMES, str, ArticulationFamily::Undefined);
 }
 
-inline QString articulationFamilyToString(const ArticulationFamily family)
+inline const QString articulationFamilyToString(const ArticulationFamily family)
 {
-    auto search = ARTICULATION_FAMILY_NAMES.find(family);
-
-    if (search == ARTICULATION_FAMILY_NAMES.cend()) {
-        return QString();
-    }
-
-    return search->second;
+    return muse::value(ARTICULATION_FAMILY_NAMES, family);
 }
 
 inline ArticulationType articulationTypeFromString(const QString& str)
 {
-    auto search = std::find_if(ARTICULATION_TYPE_NAMES.begin(), ARTICULATION_TYPE_NAMES.end(), [str](const auto& pair) {
-        return pair.second == str;
-    });
-
-    if (search == ARTICULATION_TYPE_NAMES.cend()) {
-        return ArticulationType::Undefined;
-    }
-
-    return search->first;
+    return muse::key(ARTICULATION_TYPE_NAMES, str, ArticulationType::Undefined);
 }
 
-inline QString articulationTypeToString(const ArticulationType type)
+inline const QString articulationTypeToString(const ArticulationType type)
 {
-    auto search = ARTICULATION_TYPE_NAMES.find(type);
-
-    if (search == ARTICULATION_TYPE_NAMES.cend()) {
-        return QString();
-    }
-
-    return search->second;
+    return muse::value(ARTICULATION_TYPE_NAMES, type);
 }
 }
-
-#endif // MUSE_MPE_STRINGUTILS_H

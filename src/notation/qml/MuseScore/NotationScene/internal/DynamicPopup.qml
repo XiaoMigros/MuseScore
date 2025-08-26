@@ -24,12 +24,11 @@ StyledPopupView {
     showArrow: false
 
     focusPolicies: PopupView.DefaultFocus & ~PopupView.ClickFocus
+    placementPolicies: PopupView.PreferBelow
 
     signal elementRectChanged(var elementRect)
 
     function updatePosition() {
-        root.x = root.parent.width / 2 - root.contentWidth / 2
-        root.y = root.parent.height
     }
 
     RowLayout {
@@ -124,7 +123,7 @@ StyledPopupView {
 
                 contentItem: modelData.type === DynamicPopupModel.Dynamic ? dynamicComp :
                                 modelData.type === DynamicPopupModel.Crescendo ? crescHairpinComp :
-                                modelData.type === DynamicPopupModel.Decrescendo ? dimHairpinComp : null
+                                modelData.type === DynamicPopupModel.Diminuendo ? dimHairpinComp : null
 
                 navigation.panel: dynamicsNavPanel
                 navigation.order: index

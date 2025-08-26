@@ -290,6 +290,7 @@ enum class ElementType {
     STAFF_TEXT            = int(mu::engraving::ElementType::STAFF_TEXT),
     SYSTEM_TEXT           = int(mu::engraving::ElementType::SYSTEM_TEXT),
     SOUND_FLAG            = int(mu::engraving::ElementType::SOUND_FLAG),
+    PLAY_COUNT_TEXT       = int(mu::engraving::ElementType::PLAY_COUNT_TEXT),
     PLAYTECH_ANNOTATION   = int(mu::engraving::ElementType::PLAYTECH_ANNOTATION),
     CAPO                  = int(mu::engraving::ElementType::CAPO),
     STRING_TUNINGS        = int(mu::engraving::ElementType::STRING_TUNINGS),
@@ -1293,10 +1294,10 @@ enum class StaffGroup {
 Q_ENUM_NS(StaffGroup);
 
 enum class HideMode {
-    AUTO       = int(mu::engraving::Staff::HideMode::AUTO),
-    ALWAYS     = int(mu::engraving::Staff::HideMode::ALWAYS),
-    NEVER      = int(mu::engraving::Staff::HideMode::NEVER),
-    INSTRUMENT = int(mu::engraving::Staff::HideMode::INSTRUMENT),
+    AUTO       = int(mu::engraving::AutoOnOff::AUTO),
+    ALWAYS     = int(mu::engraving::AutoOnOff::ON),
+    NEVER      = int(mu::engraving::AutoOnOff::OFF),
+    INSTRUMENT = int(mu::engraving::AutoOnOff::AUTO),
 };
 Q_ENUM_NS(HideMode);
 

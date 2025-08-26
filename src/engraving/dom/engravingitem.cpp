@@ -1672,7 +1672,7 @@ bool EngravingItem::isPlayable() const
 
 bool EngravingItem::isSystemObjectBelowBottomStaff() const
 {
-    return systemFlag() && staff() && staff()->systemObjectsBelowBottomStaff();
+    return systemFlag() && staff() && staff()->hasSystemObjectsBelowBottomStaff();
 }
 
 //---------------------------------------------------------
@@ -2430,7 +2430,7 @@ bool EngravingItem::colorsInversionEnabled() const
     return m_colorsInversionEnabled;
 }
 
-void EngravingItem::setColorsInverionEnabled(bool enabled)
+void EngravingItem::setColorsInversionEnabled(bool enabled)
 {
     m_colorsInversionEnabled = enabled;
 }

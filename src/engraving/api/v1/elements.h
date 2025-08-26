@@ -141,6 +141,12 @@ class EngravingItem : public apiv1::ScoreElement
     /// This value is in spatium units for compatibility with EngravingItem.offsetY.
     /// \since MuseScore 3.3
     Q_PROPERTY(qreal posY READ posY)
+    /// Reference position of this element relative to its parent element, in spatium units.
+    /// Use `pos.x` or `pos.y` to access the X and Y components of this point.
+    /// \see EngravingItem::posX
+    /// \see EngravingItem::posY
+    /// \since MuseScore 4.6
+    Q_PROPERTY(QPointF pos READ pos)
     /// Position of this element in page coordinates, in spatium units.
     /// \since MuseScore 3.5
     Q_PROPERTY(QPointF pagePos READ pagePos)
@@ -1023,6 +1029,7 @@ class EngravingItem : public apiv1::ScoreElement
     qreal posX() const { return element()->pos().x() / element()->spatium(); }
     qreal posY() const { return element()->pos().y() / element()->spatium(); }
 
+    QPointF pos() const { return PointF(element()->pos() / element()->spatium()).toQPointF(); }
     QPointF pagePos() const { return PointF(element()->pagePos() / element()->spatium()).toQPointF(); }
     QPointF canvasPos() const { return PointF(element()->canvasPos() / element()->spatium()).toQPointF(); }
 
@@ -1981,9 +1988,9 @@ class Staff : public ScoreElement
     /// mid-system when measures are empty.
     /// \since MuseScore 4.6
     Q_PROPERTY(bool cutaway READ cutaway)
-    /// Whether to not hide if the system is empty.
+    /// Whether to not hide this staff if an entire system is empty.
     /// \since MuseScore 4.6
-    Q_PROPERTY(bool showIfEmpty READ showIfEmpty)
+    Q_PROPERTY(bool showIfEntireSystemEmpty READ showIfEntireSystemEmpty)
     /// Whether to display the system barline (leftmost barline).
     /// \since MuseScore 4.6
     Q_PROPERTY(bool hideSystemBarLine READ hideSystemBarLine)
@@ -2019,7 +2026,7 @@ public:
     int idx() { return int(staff()->idx()); }
     bool show() { return staff()->show(); }
     bool cutaway() { return staff()->cutaway(); }
-    bool showIfEmpty() { return staff()->showIfEmpty(); }
+    bool showIfEntireSystemEmpty() { return staff()->showIfEntireSystemEmpty(); }
     bool hideSystemBarLine() { return staff()->hideSystemBarLine(); }
     int hideWhenEmpty() { return int(staff()->hideWhenEmpty()); }
     int mergeMatchingRests() { return int(staff()->mergeMatchingRests()); }

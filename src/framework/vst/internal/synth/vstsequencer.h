@@ -23,7 +23,7 @@
 #ifndef MUSE_VST_VSTSEQUENCER_H
 #define MUSE_VST_VSTSEQUENCER_H
 
-#include "audio/internal/abstracteventsequencer.h"
+#include "audio/worker/internal/abstracteventsequencer.h"
 
 #include "vsttypes.h"
 
@@ -54,7 +54,7 @@ struct std::less<VstSequencerEvent>
 };
 
 namespace muse::vst {
-class VstSequencer : public muse::audio::AbstractEventSequencer<VstEvent, ParamChangeEvent, muse::audio::gain_t>
+class VstSequencer : public muse::audio::worker::AbstractEventSequencer<VstEvent, ParamChangeEvent, muse::audio::gain_t>
 {
 public:
     void init(ParamsMapping&& mapping, bool useDynamicEvents);
@@ -70,6 +70,7 @@ private:
     void addPlaybackEvents(EventSequenceMap& destination, const mpe::PlaybackEventsMap& events);
     void addDynamicEvents(EventSequenceMap& destination, const mpe::DynamicLevelLayers& layers);
     void addNoteEvent(EventSequenceMap& destination, const mpe::NoteEvent& noteEvent, SostenutoTimeAndDurations& sostenutoTimeAndDurations);
+    void addPedalEvent(EventSequenceMap& destination, const mpe::ArticulationMeta& meta);
     void addControlChangeEvent(EventSequenceMap& destination, const mpe::timestamp_t timestamp, const mpe::ControllerChangeEvent& event);
     void addParamChange(EventSequenceMap& destination, const mpe::timestamp_t timestamp, const ControlIdx controlIdx,
                         const PluginParamValue value);
