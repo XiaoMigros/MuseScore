@@ -29,12 +29,14 @@
 #include "actions/iactionsdispatcher.h"
 #include "iinteractive.h"
 #include "musesamplerresolver.h"
+#include "imusesamplerconfiguration.h"
 
 namespace muse::musesampler {
 class MuseSamplerActionController : public Injectable, public actions::Actionable, public async::Asyncable
 {
     Inject<actions::IActionsDispatcher> dispatcher = { this };
     Inject<IInteractive> interactive = { this };
+    Inject<IMuseSamplerConfiguration> configuration = { this };
 
 public:
     MuseSamplerActionController(const modularity::ContextPtr& iocCtx)
@@ -45,7 +47,6 @@ public:
 private:
     void checkLibraryIsDetected();
     void reloadMuseSampler();
-    void processOnlineSounds();
 
     std::weak_ptr<MuseSamplerResolver> m_museSamplerResolver;
 };

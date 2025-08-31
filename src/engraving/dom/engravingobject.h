@@ -92,6 +92,7 @@ class Harmony;
 class HarpPedalDiagram;
 class Hook;
 class Image;
+class IndicatorIcon;
 class InstrumentChange;
 class InstrumentName;
 class Jump;
@@ -137,6 +138,7 @@ class Pedal;
 class PedalSegment;
 class PickScrape;
 class PickScrapeSegment;
+class PlayCountText;
 class PlayTechAnnotation;
 class Rasgueado;
 class RasgueadoSegment;
@@ -156,6 +158,7 @@ class StaffState;
 class StaffText;
 class StaffTextBase;
 class StaffTypeChange;
+class StaffVisibilityIndicator;
 class Stem;
 class StemSlash;
 class Sticking;
@@ -358,6 +361,7 @@ public:
     CONVERT(Jump,          JUMP)
     CONVERT(Ottava,        OTTAVA)
     CONVERT(LayoutBreak,   LAYOUT_BREAK)
+    CONVERT(StaffVisibilityIndicator, STAFF_VISIBILITY_INDICATOR)
     CONVERT(SystemLockIndicator, SYSTEM_LOCK_INDICATOR)
     CONVERT(Segment,       SEGMENT)
     CONVERT(System,        SYSTEM)
@@ -436,6 +440,7 @@ public:
     CONVERT(StaffText,     STAFF_TEXT)
     CONVERT(SystemText,    SYSTEM_TEXT)
     CONVERT(SoundFlag,     SOUND_FLAG)
+    CONVERT(PlayCountText, PLAY_COUNT_TEXT)
     CONVERT(PlayTechAnnotation, PLAYTECH_ANNOTATION)
     CONVERT(Capo,          CAPO)
     CONVERT(BracketItem,   BRACKET_ITEM)
@@ -580,6 +585,8 @@ public:
     {
         return isArticulationFamily() || isFermata();
     }
+
+    bool isIndicatorIcon() const { return isSystemLockIndicator() || isStaffVisibilityIndicator(); }
 };
 
 //---------------------------------------------------
@@ -789,10 +796,13 @@ CONVERT(Harmony)
 CONVERT(Volta)
 CONVERT(Jump)
 CONVERT(StaffText)
+CONVERT(PlayCountText)
 CONVERT(PlayTechAnnotation)
 CONVERT(Capo)
 CONVERT(Ottava)
 CONVERT(LayoutBreak)
+CONVERT(IndicatorIcon)
+CONVERT(StaffVisibilityIndicator)
 CONVERT(SystemLockIndicator)
 CONVERT(Segment)
 CONVERT(System)

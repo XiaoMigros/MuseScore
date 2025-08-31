@@ -58,7 +58,6 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         <bracket type="1" span="2" col="1" visible="1"/>
         <barLineSpan>1</barLineSpan>
         </Staff>
@@ -67,7 +66,6 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         </Staff>
       <trackName>Piano</trackName>
       <Instrument id="piano">
@@ -133,13 +131,11 @@
         <Text>
           <eid>F_F</eid>
           <style>title</style>
-          <offset x="0" y="-0.07525"/>
           <text><font size="22"/>Excess Hidden Staves</text>
           </Text>
         <Text>
           <eid>G_G</eid>
           <style>subtitle</style>
-          <offset x="0" y="9.92425"/>
           <text><font size="16"/>MuseScore Testcase</text>
           </Text>
         <Text>

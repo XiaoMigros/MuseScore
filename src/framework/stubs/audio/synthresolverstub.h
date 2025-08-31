@@ -22,15 +22,16 @@
 #ifndef MU_AUDIO_SYNTHRESOLVERSTUB_H
 #define MU_AUDIO_SYNTHRESOLVERSTUB_H
 
-#include "audio/isynthresolver.h"
+#include "audio/worker/isynthresolver.h"
 
 namespace muse::audio::synth {
 class SynthResolverStub : public ISynthResolver
 {
 public:
-    void init(const AudioInputParams& defaultInputParams) override;
+    void init(const AudioInputParams& defaultInputParams, const audio::OutputSpec& defaultOutputSpec) override;
 
-    ISynthesizerPtr resolveSynth(const TrackId trackId, const AudioInputParams& params, const PlaybackSetupData& setupData) const override;
+    ISynthesizerPtr resolveSynth(const TrackId trackId, const AudioInputParams& params, const audio::OutputSpec& outputSpec,
+                                 const PlaybackSetupData& setupData) const override;
     ISynthesizerPtr resolveDefaultSynth(const TrackId trackId) const override;
     AudioInputParams resolveDefaultInputParams() const override;
     audio::AudioResourceMetaList resolveAvailableResources() const override;
@@ -40,6 +41,7 @@ public:
 
 private:
     AudioInputParams m_defaultInputParams;
+    OutputSpec m_defaultOutputSpec;
 };
 }
 

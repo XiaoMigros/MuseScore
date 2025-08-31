@@ -23,11 +23,11 @@
 
 #include <vector>
 
-#include "../layoutoptions.h"
 #include "layoutcontext.h"
 
 #include "../../dom/measure.h"
 #include "../../dom/segment.h"
+#include "../../types/types.h"
 
 namespace mu::engraving {
 class BarLine;
@@ -70,6 +70,7 @@ public:
     static void layoutSystem(System* system, LayoutContext& ctx, double xo1, bool isFirstSystem = false, bool firstSystemIndent = false);
 
     static void hideEmptyStaves(System* system, LayoutContext& ctx, bool isFirstSystem);
+    static bool canChangeSysStaffVisibility(const System* system, const staff_idx_t staffIdx);
 
     static void layout2(System* system, LayoutContext& ctx);
     static void restoreLayout2(System* system, LayoutContext& ctx);
@@ -149,6 +150,7 @@ private:
         std::vector<Image*> images;
         std::vector<Parenthesis*> parenthesis;
         std::vector<Harmony*> harmonies;
+        std::vector<PlayCountText*> playCountText;
 
         std::vector<Spanner*> slurs;
         std::vector<Spanner*> trills;
@@ -178,7 +180,7 @@ private:
     static void layoutGuitarBends(Chord* chord, LayoutContext& ctx);
     static void updateCrossBeams(System* system, LayoutContext& ctx);
     static bool measureHasCrossStuffOrModifiedBeams(const Measure* measure);
-    static void restoreTiesAndBends(System* system, LayoutContext& ctx);
+    static void restoreOldSystemLayout(System* system, LayoutContext& ctx);
     static void layoutTuplets(const std::vector<ChordRest*>& chordRests, LayoutContext& ctx);
 
     static void layoutTiesAndBends(const ElementsToLayout& elementsToLayout, LayoutContext& ctx);
@@ -211,6 +213,10 @@ private:
 
     static void layoutParenthesisAndBigTimeSigs(const ElementsToLayout& elementsToLayout);
 
-    static void layoutHarmonies(const std::vector<Harmony*> harmonies, System* system, bool verticalAlign, LayoutContext& ctx);
+    static void layoutHarmonies(const std::vector<Harmony*> harmonies, System* system, LayoutContext& ctx);
+    static void layoutFretDiagrams(const ElementsToLayout& elements, System* system, LayoutContext& ctx);
+
+    static void alignRests(const ElementsToLayout& elementsToLayout, LayoutContext& ctx);
+    static void checkFullMeasureRestCollisions(const ElementsToLayout& elementsToLayout, LayoutContext& ctx);
 };
 }

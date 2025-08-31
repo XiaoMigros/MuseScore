@@ -22,7 +22,8 @@
 
 #include "commonaudioapiconfigurationmodel.h"
 
-#include "audio/audiotypes.h"
+#include "global/translation.h"
+#include "audio/common/audiotypes.h"
 
 #include "log.h"
 
@@ -84,7 +85,7 @@ void CommonAudioApiConfigurationModel::deviceSelected(const QString& deviceId)
 
 unsigned int CommonAudioApiConfigurationModel::bufferSize() const
 {
-    return audioDriver()->outputDeviceBufferSize();
+    return audioDriver()->activeSpec().output.samplesPerChannel;
 }
 
 QList<unsigned int> CommonAudioApiConfigurationModel::bufferSizeList() const
@@ -96,8 +97,6 @@ QList<unsigned int> CommonAudioApiConfigurationModel::bufferSizeList() const
         result << bufferSize;
     }
 
-    std::sort(result.begin(), result.end());
-
     return result;
 }
 
@@ -108,7 +107,7 @@ void CommonAudioApiConfigurationModel::bufferSizeSelected(const QString& bufferS
 
 unsigned int CommonAudioApiConfigurationModel::sampleRate() const
 {
-    return audioDriver()->outputDeviceSampleRate();
+    return audioDriver()->activeSpec().output.sampleRate;
 }
 
 QList<unsigned int> CommonAudioApiConfigurationModel::sampleRateList() const

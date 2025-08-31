@@ -150,6 +150,9 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/serialization/xmldom.h
     ${CMAKE_CURRENT_LIST_DIR}/serialization/msgpack.h
     ${CMAKE_CURRENT_LIST_DIR}/serialization/msgpack_forward.h
+    
+    ${CMAKE_CURRENT_LIST_DIR}/thirdparty/pugixml/pugixml.hpp
+    ${CMAKE_CURRENT_LIST_DIR}/thirdparty/pugixml/pugixml.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/concurrency/taskscheduler.h
     ${CMAKE_CURRENT_LIST_DIR}/concurrency/concurrent.h
@@ -255,6 +258,10 @@ else ()
     set(Z_LIB z)
 endif ()
 
+list(APPEND MODULE_INCLUDE_PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/thirdparty/pugixml
+)
+
 list(APPEND MODULE_INCLUDE_PRIVATE ${Z_INCLUDE})
 list(APPEND MODULE_LINK ${Z_LIB})
 
@@ -283,11 +290,6 @@ endif()
 
 if (MUSE_MODULE_GLOBAL_MULTI_IOC)
     set(MODULE_DEF ${MODULE_DEF} -DMUSE_MODULE_GLOBAL_MULTI_IOC)
-
-target_sources(muse_global
-  PRIVATE
-    types/secs.h
-)
 endif()
 
 setup_module()

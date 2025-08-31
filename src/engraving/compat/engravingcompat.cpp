@@ -25,6 +25,7 @@
 #include "dom/marker.h"
 #include "dom/system.h"
 #include "engraving/dom/beam.h"
+#include "engraving/dom/box.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/instrument.h"
 #include "engraving/dom/masterscore.h"
@@ -42,6 +43,8 @@ void EngravingCompat::doPreLayoutCompatIfNeeded(MasterScore* score)
 
     if (mscVersion < 460) {
         resetMarkerLeftFontSize(score);
+        resetRestVerticalOffsets(score);
+        adjustVBoxDistances(score);
     }
 
     if (mscVersion < 440) {
@@ -174,6 +177,55 @@ void EngravingCompat::resetMarkerLeftFontSize(MasterScore* masterScore)
                     continue;
                 }
                 marker->setSize(CORRECT_DEFAULT_SIZE);
+            }
+        }
+    }
+}
+
+void EngravingCompat::resetRestVerticalOffsets(MasterScore* masterScore)
+{
+    for (Score* score : masterScore->scoreList()) {
+        for (MeasureBase* mb = score->first(); mb; mb = mb->next()) {
+            if (!mb->isMeasure()) {
+                continue;
+            }
+            Measure* measure = toMeasure(mb);
+            for (staff_idx_t staff = 0; staff < score->nstaves(); ++staff) {
+                if (!measure->hasVoices(staff)) {
+                    continue;
+                }
+                track_idx_t startTrack = staff2track(staff);
+                track_idx_t endTrack = startTrack + VOICES;
+                for (Segment& seg : measure->segments()) {
+                    if (!seg.isChordRestType()) {
+                        continue;
+                    }
+                    for (track_idx_t track = startTrack; track < endTrack; ++track) {
+                        EngravingItem* item = seg.element(track);
+                        if (item && item->isRest()) {
+                            item->resetProperty(Pid::OFFSET);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void EngravingCompat::adjustVBoxDistances(MasterScore* masterScore)
+{
+    for (Score* score : masterScore->scoreList()) {
+        for (MeasureBase* mb = score->first(); mb; mb = mb->next()) {
+            MeasureBase* nextmb = mb->next();
+            if (mb->isVBoxBase()) {
+                VBox* vbox = static_cast<VBox*>(mb);
+                vbox->setProperty(Pid::PADDING_TO_NOTATION_ABOVE, Spatium()); // Because pre-4.6 these didn't exist
+                vbox->setProperty(Pid::PADDING_TO_NOTATION_BELOW, Spatium());
+                if (nextmb && nextmb->isVBoxBase()) {
+                    VBox* first = static_cast<VBox*>(mb);
+                    VBox* second = static_cast<VBox*>(nextmb);
+                    first->setBottomGap(first->bottomGap() + second->topGap()); // Because pre-4.6 these used to be added
+                }
             }
         }
     }

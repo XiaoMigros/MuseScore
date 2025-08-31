@@ -123,7 +123,7 @@ private:
 struct RenderAction
 {
     enum class RenderActionType : char {
-        SET, MOVE, MOVEXHEIGHT, PUSH, POP, NOTE, ACCIDENTAL, STOPHALIGN, SCALE
+        SET, MOVE, MOVEXHEIGHT, PUSH, POP, NOTE, ACCIDENTAL, STOPHALIGN, SCALE, PAREN
     };
 
     virtual RenderActionType actionType() const = 0;
@@ -286,12 +286,33 @@ private:
     double m_scale = 1.0;
 };
 
+struct RenderActionParen : RenderAction
+{
+    virtual DirectionH direction() const = 0;
+    RenderActionType actionType() const override { return RenderActionType::PAREN; }
+
+    void print() const override;
+};
+
+struct RenderActionParenLeft : RenderActionParen
+{
+    RenderActionParenLeft() {}
+    DirectionH direction() const override { return DirectionH::LEFT; }
+};
+
+struct RenderActionParenRight : RenderActionParen
+{
+    RenderActionParenRight() {}
+    DirectionH direction() const override { return DirectionH::RIGHT; }
+};
+
 using RenderActionPtr = std::shared_ptr<RenderAction>;
 using RenderActionMovePtr = std::shared_ptr<RenderActionMove>;
 using RenderActionMoveXHeightPtr = std::shared_ptr<RenderActionMoveXHeight>;
 using RenderActionPopPtr = std::shared_ptr<RenderActionPop>;
 using RenderActionScalePtr = std::shared_ptr<RenderActionScale>;
 using RenderActionSetPtr = std::shared_ptr<RenderActionSet>;
+using RenderActionParenPtr = std::shared_ptr<RenderActionParen>;
 
 //---------------------------------------------------------
 //   ChordToken
@@ -456,9 +477,12 @@ public:
     bool stackModifiers() const { return m_stackModifiers; }
     bool excludeModsHAlign() const { return m_excludeModsHAlign; }
     double stackedModifierMag() const { return m_stackedmmag; }
+    const ChordStylePreset& chordPreset() const { return m_chordPreset; }
     void configureAutoAdjust(double emag = 1.0, double eadjust = 0.0, double mmag = 1.0, double madjust = 0.0, double stackedmmag = 0.0,
-                             bool stackModifiers = false, bool excludeModsHAlign = false, String symbolFont = u"");
-    double position(const StringList& names, bool stackModifiers, ChordTokenClass ctc, size_t modifierIdx, size_t nmodifiers) const;
+                             bool stackModifiers = false, bool excludeModsHAlign = false, String symbolFont = u"",
+                             const ChordStylePreset& preset = ChordStylePreset::STANDARD);
+    double position(const StringList& names, bool stackModifiers, bool superScript, ChordTokenClass ctc, size_t modifierIdx,
+                    size_t nmodifiers) const;
 
     void checkChordList(const MStyle& style);
     bool read(const String& name);
@@ -486,6 +510,7 @@ private:
     bool m_autoAdjust = false;
     bool m_stackModifiers = false;
     bool m_excludeModsHAlign = false;
+    ChordStylePreset m_chordPreset = ChordStylePreset::STANDARD;
     double m_nmag = 1.0, m_nadjust = 0.0;   // adjust values are measured in percentage
     double m_emag = 1.0, m_eadjust = 0.0;   // (which is then applied to the height of the font)
     double m_mmag = 1.0, m_madjust = 0.0, m_stackedmmag = 0.0;

@@ -56,7 +56,6 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <hideWhenEmpty>3</hideWhenEmpty>
         </Staff>
       <trackName>Piano</trackName>
       <Instrument id="piano">
@@ -122,13 +121,11 @@
         <Text>
           <eid>E_E</eid>
           <style>title</style>
-          <offset x="0" y="-0.07525"/>
           <text><font size="22"/>Lyric Bracket</text>
           </Text>
         <Text>
           <eid>F_F</eid>
           <style>subtitle</style>
-          <offset x="0" y="9.92425"/>
           <text><font size="16"/>MuseScore Testcase</text>
           </Text>
         <Text>

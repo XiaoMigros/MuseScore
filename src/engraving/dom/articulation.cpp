@@ -313,11 +313,8 @@ bool Articulation::setProperty(Pid propertyId, const PropertyValue& v)
         setDirection(v.value<DirectionV>());
         break;
     case Pid::ARTICULATION_ANCHOR:
-    {
-        ArticulationAnchor anchor = ArticulationAnchor(v.toInt());
         setAnchor(ArticulationAnchor(v.toInt()));
         break;
-    }
     case Pid::PLAY:
         setPlayArticulation(v.toBool());
         break;
@@ -612,7 +609,7 @@ void Articulation::computeCategories()
     m_categories.setFlag(ArticulationCategory::HANDBELLS,
                          (static_cast<int>(m_symId) >= static_cast<int>(SymId::handbellsBelltree)
                           && static_cast<int>(m_symId) <= static_cast<int>(SymId::handbellsTableSingleBell))
-                         || (static_cast<int>(m_textType) >= static_cast<int>(ArticulationTextType::LV)
+                         || (static_cast<int>(m_textType) >= static_cast<int>(ArticulationTextType::TD)
                              && static_cast<int>(m_textType) <= static_cast<int>(ArticulationTextType::VIB))
                          );
 }

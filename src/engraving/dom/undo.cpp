@@ -557,6 +557,10 @@ void UndoStack::redo(EditData* ed)
 
 bool UndoMacro::canRecordSelectedElement(const EngravingItem* e)
 {
+    if (e->generated()) {
+        return false;
+    }
+
     return e->isNote() || (e->isChordRest() && !e->isChord())
            || (e->isTextBase() && !e->isInstrumentName() && !e->isHammerOnPullOffText())
            || e->isFretDiagram() || e->isSoundFlag();
@@ -656,6 +660,17 @@ const InputState& UndoMacro::undoInputState() const
 const InputState& UndoMacro::redoInputState() const
 {
     return m_redoInputState;
+}
+
+void UndoMacro::excludeElementFromSelectionInfo(EngravingItem* element)
+{
+    if (m_undoSelectionInfo.isValid()) {
+        muse::remove(m_undoSelectionInfo.elements, element);
+    }
+
+    if (m_redoSelectionInfo.isValid()) {
+        muse::remove(m_redoSelectionInfo.elements, element);
+    }
 }
 
 const UndoMacro::SelectionInfo& UndoMacro::undoSelectionInfo() const
@@ -1370,7 +1385,7 @@ RemoveStaff::RemoveStaff(Staff* p)
 {
     staff = p;
     ridx  = staff->rstaff();
-    wasSystemObjectStaff = staff->score()->isSystemObjectStaff(staff);
+    wasSystemObjectStaff = staff->isSystemObjectStaff();
 }
 
 void RemoveStaff::undo(EditData*)
@@ -1938,24 +1953,19 @@ ChangeStaff::ChangeStaff(Staff* _staff)
     visible = staff->visible();
     clefType = staff->defaultClefType();
     userDist = staff->userDist();
-    hideMode = staff->hideWhenEmpty();
-    showIfEmpty = staff->showIfEmpty();
     cutaway = staff->cutaway();
     hideSystemBarLine = staff->hideSystemBarLine();
     mergeMatchingRests = staff->mergeMatchingRests();
     reflectTranspositionInLinkedTab = staff->reflectTranspositionInLinkedTab();
 }
 
-ChangeStaff::ChangeStaff(Staff* _staff, bool _visible, ClefTypeList _clefType,
-                         Spatium _userDist, Staff::HideMode _hideMode, bool _showIfEmpty, bool _cutaway,
-                         bool _hideSystemBarLine, AutoOnOff _mergeMatchingRests, bool _reflectTranspositionInLinkedTab)
+ChangeStaff::ChangeStaff(Staff* _staff, bool _visible, ClefTypeList _clefType, Spatium _userDist, bool _cutaway, bool _hideSystemBarLine,
+                         AutoOnOff _mergeMatchingRests, bool _reflectTranspositionInLinkedTab)
 {
     staff       = _staff;
     visible     = _visible;
     clefType    = _clefType;
     userDist    = _userDist;
-    hideMode    = _hideMode;
-    showIfEmpty = _showIfEmpty;
     cutaway     = _cutaway;
     hideSystemBarLine  = _hideSystemBarLine;
     mergeMatchingRests = _mergeMatchingRests;
@@ -1971,8 +1981,6 @@ void ChangeStaff::flip(EditData*)
     bool oldVisible = staff->visible();
     ClefTypeList oldClefType = staff->defaultClefType();
     Spatium oldUserDist   = staff->userDist();
-    Staff::HideMode oldHideMode    = staff->hideWhenEmpty();
-    bool oldShowIfEmpty = staff->showIfEmpty();
     bool oldCutaway     = staff->cutaway();
     bool oldHideSystemBarLine  = staff->hideSystemBarLine();
     AutoOnOff oldMergeMatchingRests = staff->mergeMatchingRests();
@@ -1981,8 +1989,6 @@ void ChangeStaff::flip(EditData*)
     staff->setVisible(visible);
     staff->setDefaultClefType(clefType);
     staff->setUserDist(userDist);
-    staff->setHideWhenEmpty(hideMode);
-    staff->setShowIfEmpty(showIfEmpty);
     staff->setCutaway(cutaway);
     staff->setHideSystemBarLine(hideSystemBarLine);
     staff->setMergeMatchingRests(mergeMatchingRests);
@@ -1991,8 +1997,6 @@ void ChangeStaff::flip(EditData*)
     visible     = oldVisible;
     clefType    = oldClefType;
     userDist    = oldUserDist;
-    hideMode    = oldHideMode;
-    showIfEmpty = oldShowIfEmpty;
     cutaway     = oldCutaway;
     hideSystemBarLine  = oldHideSystemBarLine;
     mergeMatchingRests = oldMergeMatchingRests;
@@ -2083,7 +2087,9 @@ static void changeChordStyle(Score* score)
     bool mstackModifiers = style.styleB(Sid::verticallyStackModifiers);
     bool mexcludeModsHAlign = style.styleB(Sid::chordAlignmentExcludeModifiers);
     String msymbolFont = style.styleSt(Sid::musicalTextFont);
-    score->chordList()->configureAutoAdjust(emag, eadjust, mmag, madjust, stackedmmag, mstackModifiers, mexcludeModsHAlign, msymbolFont);
+    ChordStylePreset preset = style.styleV(Sid::chordStyle).value<ChordStylePreset>();
+    score->chordList()->configureAutoAdjust(emag, eadjust, mmag, madjust, stackedmmag, mstackModifiers, mexcludeModsHAlign, msymbolFont,
+                                            preset);
     if (score->style().styleB(Sid::chordsXmlFile)) {
         score->chordList()->read(u"chords.xml");
     }
@@ -3009,6 +3015,8 @@ void ChangeParent::flip(EditData*)
     parent->add(element);
     staffIdx = si;
     parent = p;
+
+    element->triggerLayout();
 }
 
 //---------------------------------------------------------

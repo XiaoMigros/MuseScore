@@ -158,10 +158,18 @@ public:
 
     PropertyValue getProperty(Pid propertyId) const override;
     PropertyValue propertyDefault(Pid) const override;
+    bool setProperty(Pid propertyId, const PropertyValue&) override;
 
     void startEditDrag(EditData&) override;
 
     std::vector<PointF> gripsPositions(const EditData&) const override;
+
+    Spatium paddingToNotationAbove() const { return m_paddingToNotationAbove; }
+    Spatium paddingToNotationBelow() const { return m_paddingToNotationBelow; }
+
+private:
+    Spatium m_paddingToNotationAbove;
+    Spatium m_paddingToNotationBelow;
 };
 
 //---------------------------------------------------------
@@ -199,20 +207,33 @@ public:
     std::vector<PointF> gripsPositions(const EditData&) const override;
 
     void undoReorderElements(const StringList& newOrder);
-    StringList diagramsOrder() const { return m_diagramsOrder; }
+    const StringList& diagramsOrder() const { return m_diagramsOrder; }
 
-    ElementList orderedElements() const;
+    void undoSetInvisibleDiagrams(const StringList& invisibleDiagrams);
+    const StringList& invisibleDiagrams() const { return m_invisibleDiagrams; }
+
+    ElementList orderedElements(bool includeInvisible = false) const;
+
+    bool needsRebuild() const { return m_needsRebuild; }
+    void setNeedsRebuild(bool v) { m_needsRebuild = v; }
 
 private:
+
+    void updateDiagramsOrder(const StringList& currentDiagrams);
+    void updateInvisibleDiagrams(const StringList& currentDiagrams);
+
     double m_textScale = 0.0;
     double m_diagramScale = 0.0;
     Spatium m_columnGap;
     Spatium m_rowGap;
     int m_chordsPerRow = 0;
 
+    bool m_needsRebuild = false;
+
     AlignH m_contentAlignmentH = AlignH::HCENTER;
 
     StringList /*harmonyNames*/ m_diagramsOrder;
+    StringList /*harmonyNames*/ m_invisibleDiagrams;
 };
 
 //---------------------------------------------------------

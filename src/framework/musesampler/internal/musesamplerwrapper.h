@@ -25,7 +25,7 @@
 
 #include <memory>
 
-#include "audio/internal/abstractsynthesizer.h"
+#include "audio/worker/internal/synthesizers/abstractsynthesizer.h"
 #include "async/channel.h"
 
 #include "libhandler.h"
@@ -36,14 +36,14 @@
 #include "timer.h"
 
 namespace muse::musesampler {
-class MuseSamplerWrapper : public muse::audio::synth::AbstractSynthesizer, public IMuseSamplerTracks
+class MuseSamplerWrapper : public audio::synth::AbstractSynthesizer, public IMuseSamplerTracks
 {
 public:
     MuseSamplerWrapper(MuseSamplerLibHandlerPtr samplerLib, const InstrumentInfo& instrument, const muse::audio::AudioSourceParams& params,
-                       async::Notification processOnlineSoundsRequested, const modularity::ContextPtr& iocCtx);
+                       const modularity::ContextPtr& iocCtx);
     ~MuseSamplerWrapper() override;
 
-    void setSampleRate(unsigned int sampleRate) override;
+    void setOutputSpec(const audio::OutputSpec& spec) override;
     unsigned int audioChannelsCount() const override;
     async::Channel<unsigned int> audioChannelsCountChanged() const override;
     muse::audio::samples_t process(float* buffer, muse::audio::samples_t samplesPerChannel) override;
@@ -57,6 +57,9 @@ public:
     bool readyToPlay() const override;
 
     void revokePlayingNotes() override;
+
+    void processInput() override;
+    void clearCache() override;
 
 private:
     void setupSound(const mpe::PlaybackSetupData& setupData) override;
@@ -94,10 +97,10 @@ private:
     TrackList m_tracks;
     ms_OutputBuffer m_bus;
 
-    async::Notification m_processOnlineSoundsRequested;
-
     muse::audio::samples_t m_currentPosition = 0;
     muse::audio::sample_rate_t m_samplerSampleRate = 0;
+
+    audio::OutputSpec m_outputSpec;
 
     std::vector<float> m_leftChannel;
     std::vector<float> m_rightChannel;

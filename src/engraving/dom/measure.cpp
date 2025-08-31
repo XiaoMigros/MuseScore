@@ -54,6 +54,7 @@
 #include "page.h"
 #include "part.h"
 #include "pitchspelling.h"
+#include "playcounttext.h"
 #include "rest.h"
 #include "score.h"
 #include "segment.h"
@@ -808,7 +809,13 @@ void Measure::add(EngravingItem* e)
         }
         while (s && s->rtick() == t) {
             if (!seg->isChordRestType() && (seg->segmentType() == s->segmentType())) {
-                LOGD("there is already a <%s> segment", seg->subTypeName());
+                if (seg->isType(SegmentType::BarLineType)) {
+                    // Barline segments are regenerated every layout
+                    // We need to remove the regenerated segment when undoing to ensure the original element is added back to the score
+                    m_segments.remove(s);
+                    s = s->next();
+                    continue;
+                }
                 /// HACK: REMOVED to prevent crash in 4.4.3.
                 /// Adding multiple identical segments may cause problems, so we should resolve this properly
                 // return;
@@ -1186,6 +1193,7 @@ void Measure::cmdRemoveStaves(staff_idx_t sStaff, staff_idx_t eStaff)
         MStaff* ms = *(m_mstaves.begin() + i);
         score()->undo(new RemoveMStaff(this, ms, i));
     }
+    score()->undoUpdatePlayCountText(this);
 }
 
 //---------------------------------------------------------
@@ -1284,6 +1292,11 @@ void Measure::cmdAddStaves(staff_idx_t sStaff, staff_idx_t eStaff, bool createRe
                 barline->setParent(bs);
                 barline->setGenerated(false);
                 score()->undoAddElement(barline);
+
+                if (PlayCountText* pct = barline->playCountText()) {
+                    barline->remove(pct);
+                    pct->unlink();
+                }
             }
         }
     }
@@ -1661,6 +1674,10 @@ EngravingItem* Measure::drop(EditData& data)
     case ElementType::BAR_LINE:
     {
         BarLine* bl = toBarLine(e);
+\
+        if (bl->playCount() != -1) {
+            undoChangeProperty(Pid::REPEAT_COUNT, bl->playCount());
+        }
 
         // if dropped bar line refers to span rather than to subtype
         // or if Ctrl key used
@@ -1699,6 +1716,7 @@ EngravingItem* Measure::drop(EditData& data)
                     lmeasure->undoChangeProperty(Pid::REPEAT_END, true);
                 }
             }
+            score()->undoUpdatePlayCountText(this);
         } else if (bl->barLineType() == BarLineType::END_START_REPEAT) {
             Measure* m2 = isMMRest() ? mmRestLast() : this;
             for (size_t stIdx = 0; stIdx < score()->nstaves(); ++stIdx) {
@@ -2232,6 +2250,8 @@ void Measure::sortStaves(std::vector<staff_idx_t>& dst)
         staff_idx_t idx = muse::indexOf(dst, staffIdx);
         e->setTrack(idx * VOICES + voice);
     }
+
+    score()->undoUpdatePlayCountText(this);
 }
 
 //---------------------------------------------------------
@@ -2848,6 +2868,7 @@ bool Measure::setProperty(Pid propertyId, const PropertyValue& value)
         break;
     case Pid::REPEAT_COUNT:
         setRepeatCount(value.toInt());
+        score()->undoUpdatePlayCountText(this);
         break;
     case Pid::USER_STRETCH:
         setUserStretch(value.toDouble());
@@ -3333,6 +3354,14 @@ String Measure::accessibleInfo() const
     return String(u"%1: %2").arg(EngravingItem::accessibleInfo(), String::number(no() + 1));
 }
 
+void Measure::styleChanged()
+{
+    if (endBarLineType() == BarLineType::END_REPEAT) {
+        score()->undoUpdatePlayCountText(this);
+    }
+    MeasureBase::styleChanged();
+}
+
 //---------------------------------------------------
 //    computeTicks
 //    set ticks for all segments
@@ -3382,20 +3411,26 @@ Fraction Measure::anacrusisOffset() const
 
 const BarLine* Measure::endBarLine() const
 {
+    return endBarLine(0, true);
+}
+
+const BarLine* Measure::endBarLine(staff_idx_t staffIdx, bool first) const
+{
     // search barline segment:
     Segment* s = last();
     while (s && !s->isEndBarLineType()) {
         s = s->prev();
     }
-    // search first element
+
     if (s) {
         for (const EngravingItem* e : s->elist()) {
-            if (e) {
+            // Return first barline or barline with matching staffIdx
+            if (e && (e->staffIdx() == staffIdx || first)) {
                 return toBarLine(e);
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------
@@ -3567,16 +3602,22 @@ bool Measure::canAddStringTunings(staff_idx_t staffIdx) const
 
 bool Measure::canAddStaffTypeChange(staff_idx_t staffIdx) const
 {
+    if (isMMRest()) {
+        return false;
+    }
+
     for (const EngravingObject* child : el()) {
         if (!child || !child->isStaffTypeChange()) {
             continue;
         }
+
         const StaffTypeChange* stc = toStaffTypeChange(child);
         if (stc->staffIdx() == staffIdx) {
             // Staff already has a StaffTypeChange at this measure...
             return false;
         }
     }
+
     return true;
 }
 

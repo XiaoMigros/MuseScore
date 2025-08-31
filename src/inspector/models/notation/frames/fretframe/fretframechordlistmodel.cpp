@@ -46,19 +46,26 @@ void FretFrameChordListModel::load()
 
     auto harmonyName = [](const Harmony* harmony) {
         QString name;
-        for (const TextSegment* segment : harmony->ldata()->textList()) {
-            name += segment->text();
+        for (const HarmonyRenderItem* segment : harmony->ldata()->renderItemList()) {
+            if (const TextSegment* textSeg = dynamic_cast<const TextSegment*>(segment)) {
+                name += textSeg->text().toQString();
+            } else if (const ChordSymbolParen* parenSeg = dynamic_cast<const ChordSymbolParen*>(segment)) {
+                name += parenSeg->parenItem->direction() == DirectionH::LEFT ? u"(" : u")";
+            }
         }
 
         return name;
     };
 
-    for (EngravingItem* element : m_fretBox->orderedElements()) {
+    const StringList& invisibleDiagrams = m_fretBox->invisibleDiagrams();
+
+    for (EngravingItem* element : m_fretBox->orderedElements(true /*includeInvisible*/)) {
         FretDiagram* diagram = toFretDiagram(element);
         auto chordItem = new FretFrameChordItem(this);
         chordItem->setId(QString::fromStdString(diagram->eid().toStdString()));
         chordItem->setTitle(harmonyName(diagram->harmony()));
-        chordItem->setIsVisible(diagram->visible());
+
+        chordItem->setIsVisible(!muse::contains(invisibleDiagrams, diagram->harmony()->harmonyName().toLower()));
 
         items << chordItem;
     }
@@ -100,7 +107,7 @@ void FretFrameChordListModel::setChordVisible(int index, bool visible)
         return;
     }
 
-    ElementList diagrams = m_fretBox->orderedElements();
+    ElementList diagrams = m_fretBox->orderedElements(true /*includeInvisible*/);
     if (index < 0 || index >= static_cast<int>(diagrams.size())) {
         return;
     }
@@ -116,7 +123,17 @@ void FretFrameChordListModel::setChordVisible(int index, bool visible)
 
     notation->undoStack()->prepareChanges(actionName);
 
-    m_fretBox->score()->undoChangeVisible(diagrams[index], visible);
+    FretDiagram* diagram = toFretDiagram(diagrams[index]);
+    String harmonyName = diagram->harmony()->harmonyName().toLower();
+
+    StringList invisibleDiagrams = m_fretBox->invisibleDiagrams();
+    if (visible) {
+        invisibleDiagrams.erase(std::remove(invisibleDiagrams.begin(), invisibleDiagrams.end(), harmonyName));
+    } else {
+        invisibleDiagrams.push_back(harmonyName);
+    }
+
+    m_fretBox->undoSetInvisibleDiagrams(invisibleDiagrams);
 
     FretFrameChordItem* item = modelIndexToItem(this->index(index));
     item->setIsVisible(visible);

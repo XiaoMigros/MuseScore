@@ -22,7 +22,7 @@
 #ifndef MU_AUDIO_SYNTHESIZERSTUB_H
 #define MU_AUDIO_SYNTHESIZERSTUB_H
 
-#include "audio/isynthesizer.h"
+#include "audio/worker/isynthesizer.h"
 
 namespace muse::audio::synth {
 class SynthesizerStub : public ISynthesizer
@@ -30,7 +30,7 @@ class SynthesizerStub : public ISynthesizer
 public:
     SynthesizerStub(const audio::AudioSourceParams& params);
 
-    void setSampleRate(unsigned int sampleRate) override;
+    void setOutputSpec(const OutputSpec& spec) override;
 
     unsigned int audioChannelsCount() const override;
 
@@ -61,7 +61,10 @@ public:
     bool isActive() const override;
     void setIsActive(bool arg) override;
 
+    void processInput() override;
     InputProcessingProgress inputProcessingProgress() const override;
+
+    void clearCache() override;
 
 private:
     audio::AudioInputParams m_params;

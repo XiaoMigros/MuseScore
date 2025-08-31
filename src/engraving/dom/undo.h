@@ -283,8 +283,11 @@ public:
 
     const InputState& undoInputState() const;
     const InputState& redoInputState() const;
+
     const SelectionInfo& undoSelectionInfo() const;
     const SelectionInfo& redoSelectionInfo() const;
+
+    void excludeElementFromSelectionInfo(EngravingItem* element);
 
     struct ChangesInfo {
         ElementTypeSet changedObjectTypes;
@@ -930,8 +933,6 @@ class ChangeStaff : public UndoCommand
     bool visible = false;
     ClefTypeList clefType;
     Spatium userDist = Spatium(0.0);
-    Staff::HideMode hideMode = Staff::HideMode::AUTO;
-    bool showIfEmpty = false;
     bool cutaway = false;
     bool hideSystemBarLine = false;
     AutoOnOff mergeMatchingRests = AutoOnOff::AUTO;
@@ -942,8 +943,8 @@ class ChangeStaff : public UndoCommand
 public:
     ChangeStaff(Staff*);
 
-    ChangeStaff(Staff*, bool _visible, ClefTypeList _clefType, Spatium userDist, Staff::HideMode _hideMode, bool _showIfEmpty,
-                bool _cutaway, bool _hideSystemBarLine, AutoOnOff _mergeRests, bool _reflectTranspositionInLinkedTab);
+    ChangeStaff(Staff*, bool _visible, ClefTypeList _clefType, Spatium userDist, bool _cutaway, bool _hideSystemBarLine,
+                AutoOnOff _mergeRests, bool _reflectTranspositionInLinkedTab);
 
     UNDO_TYPE(CommandType::ChangeStaff)
     UNDO_NAME("ChangeStaff")

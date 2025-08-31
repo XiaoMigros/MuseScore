@@ -43,6 +43,24 @@ using namespace mu::notation;
 using namespace muse;
 using namespace muse::async;
 
+TranslatableString nameOfNoteInputMethod(NoteInputMethod method)
+{
+    switch (method) {
+    case NoteInputMethod::UNKNOWN:          break;
+    case NoteInputMethod::BY_NOTE_NAME:     return TranslatableString("noteInputMethod", "Input by note name mode");
+    case NoteInputMethod::BY_DURATION:      return TranslatableString("noteInputMethod", "Input by duration mode");
+    case NoteInputMethod::REPITCH:          return TranslatableString("noteInputMethod", "Re-pitch existing notes mode");
+    case NoteInputMethod::RHYTHM:           return TranslatableString("noteInputMethod", "Rhythm-only input mode");
+    case NoteInputMethod::REALTIME_AUTO:    return TranslatableString("noteInputMethod", "Metronome real-time input mode");
+    case NoteInputMethod::REALTIME_MANUAL:  return TranslatableString("noteInputMethod", "Pedal real-time input mode");
+    case NoteInputMethod::TIMEWISE:         return TranslatableString("noteInputMethod", "Insert mode (grow measures)");
+        // No default case. We want a compiler warning if an enum value is not handled here.
+    }
+
+    UNREACHABLE;
+    return TranslatableString("noteInputMethod", "Unknown note input mode");
+}
+
 static bool noteInputMethodAvailable(NoteInputMethod method, const Staff* staff, const Fraction& tick)
 {
     if (method == NoteInputMethod::BY_DURATION) {
@@ -140,6 +158,7 @@ void NotationNoteInput::startNoteInput(NoteInputMethod method, bool focusNotatio
     notifyAboutStateChanged();
 
     m_interaction->showItem(el);
+    accessibilityController()->announce(nameOfNoteInputMethod(method).translated());
 }
 
 EngravingItem* NotationNoteInput::resolveNoteInputStartPosition() const
@@ -379,6 +398,7 @@ void NotationNoteInput::endNoteInput(bool resetState)
 
     notifyAboutNoteInputEnded();
     updateInputState();
+    accessibilityController()->announce(TranslatableString("noteInputMethod", "Normal mode").translated());
 }
 
 Channel</*focusNotation*/ bool> NotationNoteInput::noteInputStarted() const
@@ -421,6 +441,8 @@ void NotationNoteInput::addNote(const NoteInputParams& params, NoteAddingMode ad
 {
     TRACEFUNC;
 
+    m_interaction->hideShadowNote();
+
     bool addToUpOnCurrentChord = addingMode == NoteAddingMode::CurrentChord;
     bool insertNewChord = addingMode == NoteAddingMode::InsertChord;
 
@@ -450,6 +472,8 @@ void NotationNoteInput::addNote(const NoteInputParams& params, NoteAddingMode ad
 void NotationNoteInput::padNote(const Pad& pad)
 {
     TRACEFUNC;
+
+    m_interaction->hideShadowNote();
 
     startEdit(TranslatableString("undoableAction", "Pad note"));
     score()->padToggle(pad);

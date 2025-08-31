@@ -435,6 +435,17 @@ Segment* Segment::prev(SegmentType types) const
     return 0;
 }
 
+Segment* Segment::prevWithElementsOnTrack(track_idx_t trackIdx, SegmentType segType) const
+{
+    Segment* prevSeg = prev(segType);
+
+    while (prevSeg && !prevSeg->element(trackIdx)) {
+        prevSeg = prevSeg->prev(segType);
+    }
+
+    return prevSeg;
+}
+
 //---------------------------------------------------------
 //   prev1
 ///   return previous \a Segment, don’t stop searching at
@@ -722,12 +733,14 @@ void Segment::add(EngravingItem* el)
         setEmpty(false);
         break;
 
+    case ElementType::HARMONY:
+    case ElementType::FRET_DIAGRAM:
+        score()->rebuildFretBox();
+    //fallthrough
     case ElementType::TEMPO_TEXT:
     case ElementType::DYNAMIC:
     case ElementType::EXPRESSION:
-    case ElementType::HARMONY:
     case ElementType::SYMBOL:
-    case ElementType::FRET_DIAGRAM:
     case ElementType::STAFF_TEXT:
     case ElementType::SYSTEM_TEXT:
     case ElementType::TRIPLET_FEEL:
@@ -914,11 +927,13 @@ void Segment::remove(EngravingItem* el)
         m_elist[track] = 0;
         break;
 
+    case ElementType::HARMONY:
+    case ElementType::FRET_DIAGRAM:
+        score()->rebuildFretBox();
+    //fallthrough
     case ElementType::DYNAMIC:
     case ElementType::EXPRESSION:
     case ElementType::FIGURED_BASS:
-    case ElementType::FRET_DIAGRAM:
-    case ElementType::HARMONY:
     case ElementType::IMAGE:
     case ElementType::MARKER:
     case ElementType::REHEARSAL_MARK:
@@ -2196,7 +2211,7 @@ EngravingItem* Segment::nextElement(staff_idx_t activeStaff)
                 if (lockInd) {
                     return lockInd;
                 }
-            }
+            } //TODO: StaffVisibilityIndicator handling
         }
 
         while (nextSegment) {
@@ -2262,14 +2277,19 @@ EngravingItem* Segment::prevElement(staff_idx_t activeStaff)
             }
         }
 
-        EngravingItem* prev = nullptr;
+        EngravingItem* prevAnnotation = nullptr;
         if (e->explicitParent() == this) {
-            prev = prevAnnotation(e);
+            prevAnnotation = this->prevAnnotation(e);
+        }
+        if (prevAnnotation) {
+            return prevAnnotation;
+        } else if (const Segment* prevSeg = prev1()) {
+            const Spanner* s = prevSeg->lastSpanner(activeStaff);
+            if (s) {
+                return s->spannerSegments().back();
+            }
         }
 
-        if (prev) {
-            return prev;
-        }
         if (notChordRestType()) {
             EngravingItem* lastEl = lastElementOfSegment(activeStaff);
             if (lastEl) {
@@ -2407,7 +2427,7 @@ EngravingItem* Segment::prevElement(staff_idx_t activeStaff)
                 }
             } else if (psm != pmb) {
                 return pmb;
-            }
+            } //TODO: StaffVisibilityIndicator handling
         }
 
         if (EngravingItem* annotation = prevSeg->lastAnnotation(activeStaff)) {
@@ -2664,17 +2684,39 @@ void Segment::createShape(staff_idx_t staffIdx)
 
         setVisible(true);
 
+        // Still include harmony attached to fret diagram
+        if (e->isFretDiagram() && !e->addToSkyline() && toFretDiagram(e)->harmony()) {
+            e = toHarmony(toFretDiagram(e)->harmony());
+        }
+
         if (!e->addToSkyline()) {
             continue;
         }
 
         if (e->isHarmony() || e->isFretDiagram()) {
             // TODO: eliminate once and for all this addHorizontalSpace hack [M.S.]
-            RectF bbox = e->ldata()->bbox().translated(e->pos());
+            PointF pos = e->pos();
+            // Harmony attached to invisible fret diagram
+            if (e->isHarmony() && e->parent()->isFretDiagram()) {
+                pos += e->parentItem()->pos();
+            }
+            RectF bbox = e->ldata()->bbox().translated(pos);
+            if (Parenthesis* p = e->leftParen()) {
+                bbox.unite(p->ldata()->bbox().translated(p->pos() + pos));
+            }
+            if (Parenthesis* p = e->rightParen()) {
+                bbox.unite(p->ldata()->bbox().translated(p->pos() + pos));
+            }
             s.addHorizontalSpacing(e, bbox.left(), bbox.right());
             if (e->isFretDiagram()) {
                 if (Harmony* harmony = toFretDiagram(e)->harmony()) {
                     RectF harmBbox = harmony->ldata()->bbox().translated(harmony->pos() + e->pos());
+                    if (Parenthesis* p = harmony->leftParen()) {
+                        harmBbox.unite(p->ldata()->bbox().translated(p->pos() + harmony->pos() + e->pos()));
+                    }
+                    if (Parenthesis* p = harmony->rightParen()) {
+                        harmBbox.unite(p->ldata()->bbox().translated(p->pos() + harmony->pos() + e->pos()));
+                    }
                     s.addHorizontalSpacing(harmony, harmBbox.left(), harmBbox.right());
                 }
             }

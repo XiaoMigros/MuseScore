@@ -22,7 +22,6 @@
 #include "roottreeitem.h"
 
 #include "parttreeitem.h"
-#include "stafftreeitem.h"
 #include "systemobjectslayertreeitem.h"
 
 using namespace mu::instrumentsscene;
@@ -210,8 +209,17 @@ MoveParams RootTreeItem::buildSystemObjectsMoveParams(int sourceRow, int count, 
     if (dstStaff) {
         moveParams.destinationObjectId = dstStaff->id();
     }
-    if (srcStaff->systemObjectsBelowBottomStaff() && destinationRow < sourceRow) {
-        moveParams.moveSysObjAboveBottomStaff = true;
+
+    bool moveUp = destinationRow < sourceRow;
+    bool moveDown = destinationRow > sourceRow;
+    bool sourceIsSystemObjectLayer = srcItem->type() == LayoutPanelItemType::SYSTEM_OBJECTS_LAYER;
+    bool sourceIsPartLayer = srcItem->type() == LayoutPanelItemType::PART;
+    if (srcStaff->hasSystemObjectsBelowBottomStaff()) {
+        if ((sourceIsSystemObjectLayer && moveUp) || (sourceIsPartLayer && moveDown)) {
+            moveParams.moveSysObjAboveBottomStaff = true;
+        }
+    } else if (sourceIsPartLayer && moveUp) {
+        moveParams.moveSysObjBelowBottomStaff = true;
     }
 
     return moveParams;
