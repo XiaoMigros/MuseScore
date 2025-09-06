@@ -206,13 +206,7 @@ EngravingItem* KeySig::propertyDelegate(Pid propertyId)
     case Pid::SHOW_COURTESY:
     case Pid::KEYSIG_MODE:
     case Pid::IS_COURTESY: {
-        if (staff() && segment()) {
-            const Fraction changeTick = staff()->currentKeyTick(tick());
-            if (Segment* s = score()->tick2segment(changeTick, true, SegmentType::KeySig)) {
-                return toKeySig(s->element(staff2track(staffIdx())));
-            }
-        }
-        break;
+        return changeElement();
     }
     default:
         break;
@@ -227,8 +221,7 @@ EngravingItem* KeySig::propertyDelegate(Pid propertyId)
 
 PropertyValue KeySig::getProperty(Pid propertyId) const
 {
-    EngravingItem* e = const_cast<KeySig*>(this)->propertyDelegate(propertyId);
-    if (e && !isChange()) {
+    if (EngravingItem* e = const_cast<KeySig*>(this)->propertyDelegate(propertyId)) {
         return e->getProperty(propertyId);
     }
     switch (propertyId) {
@@ -253,8 +246,7 @@ PropertyValue KeySig::getProperty(Pid propertyId) const
 
 bool KeySig::setProperty(Pid propertyId, const PropertyValue& v)
 {
-    EngravingItem* e = const_cast<KeySig*>(this)->propertyDelegate(propertyId);
-    if (e && !isChange()) {
+    if (EngravingItem* e = const_cast<KeySig*>(this)->propertyDelegate(propertyId)) {
         return e->setProperty(propertyId, v);
     }
     switch (propertyId) {
