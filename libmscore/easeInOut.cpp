@@ -59,7 +59,11 @@ qreal EaseInOut::tFromX(const qreal x) const {
             // Case that happens about 75% of the time --> 3 roots.
             qreal mp3 = -p / 3.0;
             qreal r = std::sqrt(mp3 * mp3 * mp3);
+#if (__cplusplus >= 201703L) // C++17 or later
+            qreal phi = std::acos(std::clamp(-q / (2.0 * r), -1.0, 1.0));
+#else
             qreal phi = std::acos(std::min(std::max(-1.0, -q / (2.0 * r)), 1.0));
+#endif
             qreal t1 = 2.0 * std::pow(r, 1.0 / 3.0);
             // Find the only root that is within the 0 to 1 interval.
             t = t1 * std::cos(phi / 3.0) - a / 3.0;
