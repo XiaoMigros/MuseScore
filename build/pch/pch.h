@@ -41,10 +41,15 @@
 #include <functional>
 #include <memory>
 
-// Disable warning C4127: conditional expression is constant in VS2017 (generated in header file qvector.h)
 #if (defined (_MSCVER) || defined (_MSC_VER))
    #pragma warning ( push )
+   // Disable warning C4127: "conditional expression is constant" in VS2017 (generated in header file qvector.h)
    #pragma warning ( disable: 4127)
+   #if (_MSVC_LANG > 201703L) // or (__cplusplus > 201703L)
+      #pragma warning ( push )
+      // Disable warning C5054: "operator '&': deprecated between enumerations of different types" when using C++20 (generated in header file qsizepolicy.h)
+      #pragma warning ( disable: 5054)
+   #endif
 #endif
 
 #include <QtGui>
@@ -202,6 +207,9 @@
 
 #include <QJsonDocument>
 
+#if (defined (_MSCVER) || defined (_MSC_VER))
+   //#pragma warning ( pop )
+#endif
 
 // change Q_ASSERT to NOP if not debugging
 
