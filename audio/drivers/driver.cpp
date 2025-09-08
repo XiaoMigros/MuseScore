@@ -23,7 +23,17 @@
 #include "mscore/preferences.h"
 
 #ifdef USE_JACK
+#if (defined (_MSCVER) || defined (_MSC_VER))
+   #pragma warning ( push )
+   #if (_MSVC_LANG > 201703L) // or (__cplusplus > 201703L)
+      // Disable warning C5033: "'register' is no longer a supported storage class" when using C++20 (generated in header file ...Jack/includes/jack/types.h.h)
+      #pragma warning ( disable: 5033)
+   #endif
+#endif
 #include "jackaudio.h"
+#if (defined (_MSCVER) || defined (_MSC_VER))
+   #pragma warning ( pop )
+#endif
 #endif
 
 
