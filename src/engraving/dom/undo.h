@@ -147,6 +147,7 @@ enum class CommandType : signed char {
 
     // ChordRest
     ChangeChordStaffMove,
+    ChangeChordRestTuplet,
     SwapCR,
 
     // Brackets
@@ -1067,6 +1068,23 @@ public:
     UNDO_TYPE(CommandType::ChangeChordStaffMove)
     UNDO_NAME("ChangeChordStaffMove")
     UNDO_CHANGED_OBJECTS({ chordRest })
+};
+
+class ChangeChordRestTuplet : public UndoCommand
+{
+    OBJECT_ALLOCATOR(engraving, ChangeChordRestTuplet)
+
+    ChordRest* chordRest = nullptr;
+    Tuplet* tuplet = nullptr;
+
+    void flip(EditData*) override;
+
+public:
+    ChangeChordRestTuplet(ChordRest* cr, Tuplet* t);
+
+    UNDO_TYPE(CommandType::ChangeChordRestTuplet)
+    UNDO_NAME("ChangeChordRestTuplet")
+    UNDO_CHANGED_OBJECTS({ chordRest, tuplet })
 };
 
 class ChangeVelocity : public UndoCommand
