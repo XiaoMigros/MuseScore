@@ -275,8 +275,6 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
     }
 
     Fraction f(destinationChordRest->ticks());
-    Tuplet* ot  = destinationChordRest->tuplet();
-
     f.reduce();         //measure duration might not be reduced
 
     Fraction _ratio;
@@ -311,30 +309,25 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
     tuplet->setTicks(f);
     tuplet->setBaseLen(fr);
 
-    tuplet->setTrack(destinationChordRest->track());
-    tuplet->setTick(destinationChordRest->tick());
     tuplet->setParent(measure);
-
-    if (ot) {
-        tuplet->setTuplet(ot);
-    }
 
     cmdCreateTuplet(destinationChordRest, tuplet);
 
-    const std::vector<DurationElement*>& elements = tuplet->elements();
-    DurationElement* elementForSelect = nullptr;
-    if (!elements.empty()) {
-        DurationElement* firstElement = elements.front();
-        if (firstElement->isRest()) {
-            elementForSelect = firstElement;
-        } else if (elements.size() > 1) {
-            elementForSelect = elements[1];
+    if (score()->inputState().noteEntryMode()) {
+        const std::vector<DurationElement*>& elements = tuplet->elements();
+        DurationElement* elementForSelect = nullptr;
+        if (!elements.empty()) {
+            DurationElement* firstElement = elements.front();
+            if (firstElement->isRest()) {
+                elementForSelect = firstElement;
+            } else if (elements.size() > 1) {
+                elementForSelect = elements[1];
+            }
+            if (elementForSelect) {
+                score()->select(elementForSelect, SelectType::SINGLE, 0);
+                score()->inputState().setDuration(tuplet->baseLen());
+            }
         }
-    }
-
-    if (elementForSelect) {
-        score()->select(elementForSelect, SelectType::SINGLE, 0);
-        score()->inputState().setDuration(tuplet->baseLen());
     }
 
     return tuplet;
@@ -4389,44 +4382,25 @@ Hairpin* Score::addHairpinToDynamicOnGripDrag(Dynamic* dynamic, bool isLeftGrip,
 void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
 {
     track_idx_t track = ocr->track();
-    Measure* measure = ocr->measure();
     Fraction tick = ocr->tick();
+    tuplet->setTrack(track);
+    tuplet->setTick(tick);
+
+    if (ocr->tuplet()) {
+        tuplet->setTuplet(ocr->tuplet());
+    }
+
     Fraction an = (tuplet->ticks() * tuplet->ratio()) / tuplet->baseLen().fraction();
     if (!an.denominator()) {
         return;
     }
 
-    if (ocr->tuplet()) {
-        tuplet->setTuplet(ocr->tuplet());
-    }
-    removeChordRest(ocr, false);
-
-    ChordRest* cr;
-    if (ocr->isChord()) {
-        cr = Factory::createChord(this->dummy()->segment());
-        toChord(cr)->setStemDirection(toChord(ocr)->stemDirection());
-        for (Note* oldNote : toChord(ocr)->notes()) {
-            Note* note = Factory::createNote(toChord(cr));
-            note->setPitch(oldNote->pitch());
-            note->setTpc1(oldNote->tpc1());
-            note->setTpc2(oldNote->tpc2());
-            cr->add(note);
-        }
-    } else {
-        cr = Factory::createRest(this->dummy()->segment());
-    }
+    undoChangeChordRestLen(ocr, tuplet->baseLen());
+    undo(new ChangeChordRestTuplet(ocr, tuplet));
 
     int actualNotes = an.numerator() / an.denominator();
-
-    tuplet->setTrack(track);
-    cr->setTuplet(tuplet);
-    cr->setTrack(track);
-    cr->setDurationType(tuplet->baseLen());
-    cr->setTicks(tuplet->baseLen().fraction());
-
-    undoAddCR(cr, measure, tick);
-
-    Fraction ticks = cr->actualTicks();
+    Fraction ticks = ocr->actualTicks();
+    Measure* measure = ocr->measure();
 
     for (int i = 0; i < (actualNotes - 1); ++i) {
         tick += ticks;
