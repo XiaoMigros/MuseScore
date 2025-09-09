@@ -28,7 +28,7 @@ import Muse.Ui 1.0
 import Muse.UiComponents 1.0
 import MuseScore.NotationScene 1.0
 
-StyledPopupView {
+AbstractElementPopup {
     id: root
     margins: 0
 
@@ -40,25 +40,29 @@ StyledPopupView {
     property int navigationOrderEnd: tieMenuList.navigation.order
 
     showArrow: false
+    placementPolicies: partialTiePopupModel.tieDirection ? PopupView.PreferAbove : PopupView.PreferBelow
 
     onClosed: {
         partialTiePopupModel.onClosed()
     }
 
-    signal elementRectChanged(var elementRect)
+    model: PartialTiePopupModel {
+        id: partialTiePopupModel
+
+        onItemsChanged: function() {
+            tieMenuList.model = partialTiePopupModel.items
+        }
+    }
 
     function updatePosition() {
         const opensUp = partialTiePopupModel.tieDirection
         const popupHeight = content.height + root.margins * 2 + root.padding * 2
         root.x = partialTiePopupModel.dialogPosition.x - root.parent.x
         root.y = partialTiePopupModel.dialogPosition.y - root.parent.y - (opensUp ? popupHeight : 0)
-        root.setOpensUpward(opensUp)
+
+        root.setPopupPosition(opensUp ? PopupPosition.Top : PopupPosition.Bottom)
 
         tieMenuList.calculateWidth()
-    }
-
-    Component.onCompleted: {
-        partialTiePopupModel.init()
     }
 
     Column {
@@ -66,18 +70,6 @@ StyledPopupView {
         width: tieMenuList.width
         height: tieMenuList.height
         spacing: 0
-
-        PartialTiePopupModel {
-            id: partialTiePopupModel
-
-            onItemRectChanged: function(rect) {
-                root.elementRectChanged(rect)
-            }
-
-            onItemsChanged: function() {
-                tieMenuList.model = partialTiePopupModel.items
-            }
-        }
 
         StyledListView {
             id: tieMenuList

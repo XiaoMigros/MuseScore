@@ -102,7 +102,7 @@ async::Promise<Color> InteractiveProvider::selectColor(const Color& color, const
 
         dlg->setCurrentColor(color.toQColor());
 
-        QObject::connect(dlg, &QFileDialog::finished, [this, dlg, resolve, reject](int result) {
+        QObject::connect(dlg, &QColorDialog::finished, [this, dlg, resolve, reject](int result) {
             dlg->deleteLater();
 
             m_isSelectColorOpened = false;
@@ -129,7 +129,7 @@ bool InteractiveProvider::isSelectColorOpened() const
     return m_isSelectColorOpened;
 }
 
-RetVal<Val> InteractiveProvider::openSync(const UriQuery& q_)
+RetVal<Val> InteractiveProvider::openSync(const UriQuery& q)
 {
 #ifndef MUSE_MODULE_UI_SYNCINTERACTIVE_SUPPORTED
     NOT_SUPPORTED;
@@ -141,16 +141,11 @@ RetVal<Val> InteractiveProvider::openSync(const UriQuery& q_)
     }
 #endif
 
-    UriQuery q = q_;
-
-    //! NOTE Disable Dialog.exec()
-    q.set("sync", false);
-
     RetVal<Val> rv;
     QEventLoop loop;
     Promise<Val>::Resolve resolve;
     Promise<Val>::Reject reject;
-    Promise<Val> promise = make_promise<Val>([&resolve, &reject](auto res, auto rej) {
+    Promise<Val> promise = async::make_promise<Val>([&resolve, &reject](auto res, auto rej) {
         resolve = res;
         reject = rej;
         return Promise<Val>::Result::unchecked();
@@ -183,15 +178,15 @@ RetVal<Val> InteractiveProvider::openSync(const UriQuery& q_)
 
 Promise<Val> InteractiveProvider::openAsync(const UriQuery& q)
 {
-    return make_promise<Val>(openFunc(q), PromiseType::AsyncByBody);
+    return async::make_promise<Val>(openFunc(q), PromiseType::AsyncByBody);
 }
 
 async::Promise<Val> InteractiveProvider::openAsync(const Uri& uri, const QVariantMap& params)
 {
-    return make_promise<Val>(openFunc(UriQuery(uri), params), PromiseType::AsyncByBody);
+    return async::make_promise<Val>(openFunc(UriQuery(uri), params), PromiseType::AsyncByBody);
 }
 
-Promise<Val>::Body InteractiveProvider::openFunc(const UriQuery& q)
+Promise<Val>::BodyResolveReject InteractiveProvider::openFunc(const UriQuery& q)
 {
     QVariantMap params;
     const UriQuery::Params& p = q.params();
@@ -202,7 +197,7 @@ Promise<Val>::Body InteractiveProvider::openFunc(const UriQuery& q)
     return openFunc(q, params);
 }
 
-Promise<Val>::Body InteractiveProvider::openFunc(const UriQuery& q, const QVariantMap& params)
+Promise<Val>::BodyResolveReject InteractiveProvider::openFunc(const UriQuery& q, const QVariantMap& params)
 {
     auto func = [this, q, params](Promise<Val>::Resolve resolve, Promise<Val>::Reject reject) {
         IF_ASSERT_FAILED(!m_openingObject.objectId.isValid()) {
@@ -375,7 +370,6 @@ void InteractiveProvider::fillExtData(QmlLaunchData* data, const UriQuery& q, co
     }
 
     data->setValue("uri", QString::fromStdString(VIEWER_URI.toString()));
-    data->setValue("sync", params.value("sync", false));
     data->setValue("params", params);
 }
 
@@ -386,7 +380,6 @@ void InteractiveProvider::fillData(QmlLaunchData* data, const Uri& uri, const QV
     data->setValue("type", meta.type);
     data->setValue("uri", QString::fromStdString(uri.toString()));
     data->setValue("params", params);
-    data->setValue("sync", params.value("sync", false));
     data->setValue("modal", params.value("modal", ""));
 }
 
@@ -639,8 +632,12 @@ void InteractiveProvider::onOpen(const QVariant& type, const QVariant& objectId,
     }
 
     if (ContainerType::PrimaryPage == containerType) {
-        m_stack.clear();
-        m_stack.push(m_openingObject);
+        // Replace bottom item of the stack, because that always reflects the current PrimaryPage
+        if (m_stack.empty()) {
+            m_stack.push(m_openingObject);
+        } else {
+            m_stack[0] = m_openingObject;
+        }
     } else if (ContainerType::QmlDialog == containerType) {
         m_stack.push(m_openingObject);
     } else if (ContainerType::QWidgetDialog == containerType) {

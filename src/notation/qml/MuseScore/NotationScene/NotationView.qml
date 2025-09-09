@@ -158,12 +158,12 @@ FocusScope {
                         contextMenuLoader.close()
                     }
 
-                    onShowElementPopupRequested: function (popupType, elementRect) {
-                        Qt.callLater(popUpLoader.show, popupType, elementRect)
+                    onShowElementPopupRequested: function (popupType) {
+                        popUpLoader.updateShow(popupType);
                     }
 
                     onHideElementPopupRequested: {
-                        Qt.callLater(popUpLoader.close)
+                        popUpLoader.updateShow(AbstractElementPopupModel.TYPE_UNDEFINED);
                     }
 
                     onViewportChanged: {
@@ -187,11 +187,34 @@ FocusScope {
                         notationViewNavigationSection: navSec
                         navigationOrderStart: notationView.navigationPanel.order + 1
 
+                        property int popupType: AbstractElementPopupModel.TYPE_UNDEFINED
+                        property bool updateShowScheduled: false
+
+                        function updateShow(popupType) {
+                            this.popupType = popupType;
+                            if (!updateShowScheduled) {
+                                Qt.callLater(doUpdateShow)
+                                updateShowScheduled = true;
+                            }
+                        }
+
+                        function doUpdateShow() {
+                            if (popupType !== AbstractElementPopupModel.TYPE_UNDEFINED) {
+                                show(popupType);
+                            } else {
+                                close();
+                            }
+
+                            updateShowScheduled = false;
+                        }
+
                         onOpened: function(popupType) {
                             paintView.onElementPopupIsOpenChanged(popupType)
                         }
 
-                        onClosed: paintView.onElementPopupIsOpenChanged()
+                        onClosed: {
+                            paintView.onElementPopupIsOpenChanged(AbstractElementPopupModel.TYPE_UNDEFINED)
+                        }
                     }
 
                     NotationRegionsBeingProcessedView {

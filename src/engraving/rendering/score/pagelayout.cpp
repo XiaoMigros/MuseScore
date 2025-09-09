@@ -43,6 +43,7 @@
 #include "dom/spacer.h"
 #include "dom/spannermap.h"
 #include "dom/staff.h"
+#include "dom/staffvisibilityindicator.h"
 #include "dom/system.h"
 #include "dom/systemdivider.h"
 #include "dom/tremolosinglechord.h"
@@ -355,6 +356,10 @@ void PageLayout::collectPage(LayoutContext& ctx)
             MeasureLayout::layout2(m, ctx);
         }
         SystemLayout::layoutSystemLockIndicators(s, ctx);
+
+        if (StaffVisibilityIndicator* visibilityIndicator = s->staffVisibilityIndicator()) {
+            TLayout::layoutIndicatorIcon(visibilityIndicator, visibilityIndicator->mutldata());
+        }
     }
 
     // If this is the last page we layout, we must also relayout the first barlines of the
@@ -433,8 +438,18 @@ void PageLayout::layoutCrossStaffSlurs(LayoutContext& ctx, System* system)
         if (!sp->isSlur() || sp->tick() == system->endTick()) {
             continue;
         }
-        if (toSlur(sp)->isCrossStaff()) {
-            SlurTieLayout::layoutSystem(toSlur(sp), system, ctx);
+        Slur* slur = toSlur(sp);
+        if (slur->isCrossStaff()) {
+            SlurTieLayout::layoutSystem(slur, system, ctx);
+
+            ChordRest* scr = toChordRest(slur->startElement());
+            ChordRest* ecr = toChordRest(slur->endElement());
+            if (scr && scr->isChord()) {
+                ChordLayout::layoutArticulations3(toChord(scr), slur, ctx);
+            }
+            if (ecr && ecr->isChord()) {
+                ChordLayout::layoutArticulations3(toChord(ecr), slur, ctx);
+            }
         }
     }
 }

@@ -117,6 +117,7 @@ enum class CommandType : signed char {
     InsertStaves,
     RemoveStaves,
     ChangeMStaffProperties,
+    ChangeMStaffHideIfEmpty,
 
     // Instruments
     ChangeInstrumentShort,
@@ -159,12 +160,7 @@ enum class CommandType : signed char {
     FretBarre,
     FretClear,
     FretLinkHarmony,
-
-    // FBox
-    ReorderFBox,
-    RenameChordFBox,
-    AddChordFBox,
-    RemoveChordFBox,
+    RemoveFretDiagramFromFretBox,
 
     // Harmony
     TransposeHarmony,
@@ -288,8 +284,11 @@ public:
 
     const InputState& undoInputState() const;
     const InputState& redoInputState() const;
+
     const SelectionInfo& undoSelectionInfo() const;
     const SelectionInfo& redoSelectionInfo() const;
+
+    void excludeElementFromSelectionInfo(EngravingItem* element);
 
     struct ChangesInfo {
         ElementTypeSet changedObjectTypes;
@@ -856,8 +855,9 @@ public:
 
     bool isFiltered(UndoCommand::Filter f, const EngravingItem* target) const override;
 
+    std::vector<EngravingObject*> objectItems() const override;
+
     UNDO_TYPE(CommandType::RemoveElement)
-    UNDO_CHANGED_OBJECTS({ element })
 };
 
 class AddSystemLock : public UndoCommand
@@ -935,8 +935,6 @@ class ChangeStaff : public UndoCommand
     bool visible = false;
     ClefTypeList clefType;
     Spatium userDist = Spatium(0.0);
-    Staff::HideMode hideMode = Staff::HideMode::AUTO;
-    bool showIfEmpty = false;
     bool cutaway = false;
     bool hideSystemBarLine = false;
     AutoOnOff mergeMatchingRests = AutoOnOff::AUTO;
@@ -947,8 +945,8 @@ class ChangeStaff : public UndoCommand
 public:
     ChangeStaff(Staff*);
 
-    ChangeStaff(Staff*, bool _visible, ClefTypeList _clefType, Spatium userDist, Staff::HideMode _hideMode, bool _showIfEmpty,
-                bool _cutaway, bool _hideSystemBarLine, AutoOnOff _mergeRests, bool _reflectTranspositionInLinkedTab);
+    ChangeStaff(Staff*, bool _visible, ClefTypeList _clefType, Spatium userDist, bool _cutaway, bool _hideSystemBarLine,
+                AutoOnOff _mergeRests, bool _reflectTranspositionInLinkedTab);
 
     UNDO_TYPE(CommandType::ChangeStaff)
     UNDO_NAME("ChangeStaff")
@@ -1093,17 +1091,35 @@ class ChangeMStaffProperties : public UndoCommand
     OBJECT_ALLOCATOR(engraving, ChangeMStaffProperties)
 
     Measure* measure = nullptr;
-    int staffIdx = 0;
+    staff_idx_t staffIdx = 0;
     bool visible = false;
     bool stemless = false;
 
     void flip(EditData*) override;
 
 public:
-    ChangeMStaffProperties(Measure*, int staffIdx, bool visible, bool stemless);
+    ChangeMStaffProperties(Measure*, staff_idx_t staffIdx, bool visible, bool stemless);
 
     UNDO_TYPE(CommandType::ChangeMStaffProperties)
     UNDO_NAME("ChangeMStaffProperties")
+    UNDO_CHANGED_OBJECTS({ measure })
+};
+
+class ChangeMStaffHideIfEmpty : public UndoCommand
+{
+    OBJECT_ALLOCATOR(engraving, ChangeMStaffHideIfEmpty)
+
+    Measure* measure = nullptr;
+    staff_idx_t staffIdx = 0;
+    AutoOnOff hideIfEmpty = AutoOnOff::AUTO;
+
+    void flip(EditData*) override;
+
+public:
+    ChangeMStaffHideIfEmpty(Measure*, staff_idx_t staffIdx, AutoOnOff hideIfEmpty);
+
+    UNDO_TYPE(CommandType::ChangeMStaffHideIfEmpty)
+    UNDO_NAME("ChangeMStaffHideIfEmpty")
     UNDO_CHANGED_OBJECTS({ measure })
 };
 
@@ -1809,91 +1825,40 @@ public:
     UNDO_CHANGED_OBJECTS({ m_fretDiagram })
 };
 
-class ReorderFBox : public UndoCommand
+class RemoveFretDiagramFromFretBox : public UndoCommand
 {
-    OBJECT_ALLOCATOR(engraving, ReorderFBox)
+    OBJECT_ALLOCATOR(engraving, RemoveFretDiagramFromFretBox)
 
-    FBox* m_fretBox = nullptr;
-    std::vector<EID> m_orderElementsIds;
+    FretDiagram* m_fretDiagram = nullptr;
+    size_t m_idx = muse::nidx;
 
-    void flip(EditData*) override;
+    void redo(EditData*) override;
+    void undo(EditData*) override;
 
 public:
-    ReorderFBox(FBox* fbox, const std::vector<EID>& newOrderElementsIds);
+    RemoveFretDiagramFromFretBox(FretDiagram* f);
 
-    UNDO_TYPE(CommandType::ReorderFBox)
-    UNDO_NAME("ReorderFBox")
-    UNDO_CHANGED_OBJECTS({ m_fretBox })
+    UNDO_TYPE(CommandType::RemoveFretDiagramFromFretBox)
+    UNDO_NAME("RemoveFretDiagramFromFretBox")
+    UNDO_CHANGED_OBJECTS({ m_fretDiagram })
 };
 
-class RenameChordFBox : public UndoCommand
+class AddFretDiagramToFretBox : public UndoCommand
 {
-    OBJECT_ALLOCATOR(engraving, RenameChordFBox)
+    OBJECT_ALLOCATOR(engraving, RemoveFretDiagramFromFretBox)
 
-    FBox* m_fretBox = nullptr;
-    const Harmony* m_harmony = nullptr;
-    String m_harmonyOldName;
-    bool m_onlyRemove = false;
+    FretDiagram* m_fretDiagram = nullptr;
+    size_t m_idx = muse::nidx;
 
-    std::vector<std::pair<size_t, FretDiagram*> > m_diagramsForRestore;
-    FretDiagram* m_diagramForRemove = nullptr;
-
-    void undo(EditData*) override;
     void redo(EditData*) override;
+    void undo(EditData*) override;
 
 public:
-    RenameChordFBox(FBox* box, const Harmony* harmony, const String& oldName);
+    AddFretDiagramToFretBox(FretDiagram* f, size_t idx);
 
-    UNDO_TYPE(CommandType::RenameChordFBox)
-    UNDO_NAME("RenameChordFBox")
-    UNDO_CHANGED_OBJECTS({ m_fretBox })
-};
-
-class AddChordFBox : public UndoCommand
-{
-    OBJECT_ALLOCATOR(engraving, AddChordFBox)
-
-    FBox* m_fretBox = nullptr;
-    bool m_added = false;
-    Fraction m_tick;
-    String m_chordNewName;
-
-    std::vector<std::pair<size_t, FretDiagram*> > m_diagramsForRestore;
-
-    void undo(EditData*) override;
-    void redo(EditData*) override;
-
-public:
-    AddChordFBox(FBox* box, const String& chordNewName, const Fraction& tick);
-
-    UNDO_TYPE(CommandType::AddChordFBox)
-    UNDO_NAME("AddChordFBox")
-    UNDO_CHANGED_OBJECTS({ m_fretBox })
-};
-
-class RemoveChordFBox : public UndoCommand
-{
-    OBJECT_ALLOCATOR(engraving, RemoveChordFBox)
-
-    FBox* m_fretBox = nullptr;
-    bool m_removed = false;
-    Fraction m_tick;
-    String m_chordName;
-
-    FretDiagram* m_removedFretDiagram = nullptr;
-    size_t m_removedFretDiagramIndex = 0;
-
-    FretDiagram* m_addedFretDiagram = nullptr;
-
-    void undo(EditData*) override;
-    void redo(EditData*) override;
-
-public:
-    RemoveChordFBox(FBox* box, const String& chordName, const Fraction& tick);
-
-    UNDO_TYPE(CommandType::RemoveChordFBox)
-    UNDO_NAME("RemoveChordFBox")
-    UNDO_CHANGED_OBJECTS({ m_fretBox })
+    UNDO_TYPE(CommandType::RemoveFretDiagramFromFretBox)
+    UNDO_NAME("RemoveFretDiagramFromFretBox")
+    UNDO_CHANGED_OBJECTS({ m_fretDiagram })
 };
 
 class MoveTremolo : public UndoCommand

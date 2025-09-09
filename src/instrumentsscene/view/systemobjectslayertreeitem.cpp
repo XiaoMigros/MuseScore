@@ -141,9 +141,10 @@ bool SystemObjectsLayerTreeItem::canAcceptDrop(const QVariant&) const
     return m_staffIdx != 0; // all except the first
 }
 
-void SystemObjectsLayerTreeItem::onScoreChanged(const mu::engraving::ScoreChangesRange& changes)
+void SystemObjectsLayerTreeItem::onScoreChanged(const mu::engraving::ScoreChanges& changes)
 {
-    if (muse::contains(changes.changedStyleIdSet, Sid::timeSigPlacement)) {
+    if (muse::contains(changes.changedStyleIdSet, Sid::timeSigPlacement)
+        || muse::contains(changes.changedStyleIdSet, Sid::measureNumberPlacementMode)) {
         m_systemObjectGroups = collectSystemObjectGroups(m_staff);
         updateState();
         return;
@@ -161,7 +162,7 @@ void SystemObjectsLayerTreeItem::onScoreChanged(const mu::engraving::ScoreChange
             continue;
         }
 
-        bool isSystemObj = item->systemFlag();
+        bool isSystemObj = item->systemFlag() || (item->isStaff() && toStaff(item)->isSystemObjectStaff());
         if (!isSystemObj && item->isTimeSig()) {
             isSystemObj = toTimeSig(item)->timeSigPlacement() != TimeSigPlacement::NORMAL;
         }
@@ -175,7 +176,8 @@ void SystemObjectsLayerTreeItem::onScoreChanged(const mu::engraving::ScoreChange
             continue;
         }
 
-        if (item->staffIdx() != m_staffIdx) {
+        staff_idx_t staffIdx = item->isStaff() ? toStaff(item)->idx() : item->staffIdx();
+        if (staffIdx != m_staffIdx) {
             continue;
         }
 
@@ -190,6 +192,7 @@ void SystemObjectsLayerTreeItem::onScoreChanged(const mu::engraving::ScoreChange
             shouldUpdateState |= addSystemObject(item);
         } else if (muse::contains(pair.second, CommandType::ChangeProperty)) {
             shouldUpdateState |= muse::contains(changes.changedPropertyIdSet, Pid::VISIBLE);
+            shouldUpdateState |= muse::contains(changes.changedPropertyIdSet, Pid::SHOW_MEASURE_NUMBERS);
         }
     }
 

@@ -587,7 +587,7 @@ std::vector<Note*> Note::compoundNotes() const
 }
 
 Note::Note(const Note& n, bool link)
-    : EngravingItem(n)
+    : EngravingItem(n, link)
 {
     if (link) {
         score()->undo(new Link(this, const_cast<Note*>(&n)));
@@ -1081,7 +1081,7 @@ void Note::updateHeadGroup(const NoteHeadGroup headGroup)
 
     if (links()) {
         for (EngravingObject* scoreElement : *links()) {
-            scoreElement->undoChangeProperty(Pid::HEAD_GROUP, static_cast<int>(group));
+            scoreElement->undoChangeProperty(Pid::HEAD_GROUP, group);
             Note* note = toNote(scoreElement);
 
             if (note->staff() && !note->staff()->isDrumStaff(chord()->tick()) && group == NoteHeadGroup::HEAD_CROSS) {
@@ -1089,7 +1089,7 @@ void Note::updateHeadGroup(const NoteHeadGroup headGroup)
             }
         }
     } else {
-        undoChangeProperty(Pid::HEAD_GROUP, int(group));
+        undoChangeProperty(Pid::HEAD_GROUP, group);
     }
 }
 
@@ -1783,14 +1783,14 @@ EngravingItem* Note::drop(EditData& data)
         if (group != m_headGroup) {
             if (links()) {
                 for (EngravingObject* se : *links()) {
-                    se->undoChangeProperty(Pid::HEAD_GROUP, int(group));
+                    se->undoChangeProperty(Pid::HEAD_GROUP, group);
                     Note* note = toNote(se);
                     if (note->staff() && !note->staff()->isDrumStaff(ch->tick())) {
                         se->undoChangeProperty(Pid::DEAD, group == NoteHeadGroup::HEAD_CROSS);
                     }
                 }
             } else {
-                undoChangeProperty(Pid::HEAD_GROUP, int(group));
+                undoChangeProperty(Pid::HEAD_GROUP, group);
                 if (!staff()->isDrumStaff(ch->tick())) {
                     undoChangeProperty(Pid::DEAD, group == NoteHeadGroup::HEAD_CROSS);
                 }
@@ -2727,7 +2727,7 @@ void Note::verticalDrag(EditData& ed)
     int lineOffset      = lrint(ed.moveDelta.y() / step);
 
     if (tab) {
-        const StringData* strData = staff()->part()->stringData(_tick, stf->idx());
+        const StringData* strData = part()->stringData(_tick, stf->idx());
         const int pitchOffset = stf->pitchOffset(_tick);
         int nString = ned->string + (st->upsideDown() ? -lineOffset : lineOffset);
         int nFret   = strData->fret(m_pitch + pitchOffset, nString, staff());
@@ -2743,10 +2743,7 @@ void Note::verticalDrag(EditData& ed)
             }
         }
     } else {
-        Key key = staff()->key(_tick);
-        Key cKey = staff()->concertKey(_tick);
         staff_idx_t idx = chord()->vStaffIdx();
-        Interval interval = staff()->part()->instrument(_tick)->transpose();
         bool error = false;
         AccidentalVal accOffs = firstTiedNote()->chord()->measure()->findAccidental(
             firstTiedNote()->chord()->segment(), idx, ned->line + lineOffset, error);
@@ -2759,15 +2756,15 @@ void Note::verticalDrag(EditData& ed)
         int newPitch = step2pitch(nStep) + octave * 12 + int(accOffs);
         newPitch = std::clamp(newPitch, 0, 127);
 
-        if (!concertPitch()) {
-            newPitch += interval.chromatic;
+        int newTpc1 = step2tpc(nStep % 7, accOffs);
+        int newTpc2 = newTpc1;
+        if (concertPitch()) {
+            newTpc2 = transposeTpc(newTpc1);
         } else {
-            interval.flip();
-            key = transposeKey(cKey, interval, staff()->part()->preferSharpFlat());
+            newPitch += staff()->transpose(_tick).chromatic;
+            newTpc1 = transposeTpc(newTpc2);
         }
 
-        int newTpc1 = pitch2tpc(newPitch, cKey, Prefer::NEAREST);
-        int newTpc2 = pitch2tpc(newPitch - transposition(), key, Prefer::NEAREST);
         for (Note* nn : tiedNotes()) {
             nn->setAccidentalType(AccidentalType::NONE);
             nn->setPitch(newPitch, newTpc1, newTpc2);
@@ -2889,6 +2886,7 @@ void Note::updateLine()
 void Note::setNval(const NoteVal& nval, Fraction tick)
 {
     setPitch(nval.pitch);
+    m_userVelocity = nval.velocityOverride;
     m_fret   = nval.fret;
     m_string = nval.string;
 
@@ -2957,7 +2955,7 @@ PropertyValue Note::getProperty(Pid propertyId) const
     case Pid::HEAD_SCHEME:
         return int(headScheme());
     case Pid::HEAD_GROUP:
-        return int(headGroup());
+        return headGroup();
     case Pid::USER_VELOCITY:
         return userVelocity();
     case Pid::TUNING:
@@ -3088,6 +3086,18 @@ bool Note::setProperty(Pid propertyId, const PropertyValue& v)
     case Pid::FIXED_LINE:
         setFixedLine(v.toInt());
         break;
+    case Pid::HAS_PARENTHESES:
+        setParenthesesMode(v.value<ParenthesesMode>());
+        if (links()) {
+            for (EngravingObject* scoreElement : *links()) {
+                Note* note = toNote(scoreElement);
+                Staff* linkedStaff = note ? note->staff() : nullptr;
+                if (linkedStaff && linkedStaff->isTabStaff(tick())) {
+                    note->setGhost(v.toBool());
+                }
+            }
+        }
+        break;
     case Pid::POSITION_LINKED_TO_MASTER:
     case Pid::APPEARANCE_LINKED_TO_MASTER:
         if (v.toBool() == true && chord()) {
@@ -3147,8 +3157,11 @@ PropertyValue Note::propertyDefault(Pid propertyId) const
     case Pid::TPC1:
         return PropertyValue();
     case Pid::VISIBLE:
-        if (staffType() && staffType()->isTabStaff() && bendBack()) {
-            return false;
+        if (staffType() && staffType()->isTabStaff()) {
+            GuitarBend* bend = bendBack();
+            if (bend && !bend->isFullRelease()) {
+                return false;
+            }
         }
         return EngravingItem::propertyDefault(propertyId);
     case Pid::COLOR: {
@@ -3360,19 +3373,17 @@ String Note::accessibleExtraInfo() const
     return rez;
 }
 
-//---------------------------------------------------------
-//   noteVal
-//---------------------------------------------------------
-
 NoteVal Note::noteVal() const
 {
     NoteVal nval;
-    nval.pitch     = pitch();
-    nval.tpc1      = tpc1();
-    nval.tpc2      = tpc2();
-    nval.fret      = fret();
-    nval.string    = string();
+    nval.pitch = pitch();
+    nval.velocityOverride = userVelocity();
+    nval.tpc1 = tpc1();
+    nval.tpc2 = tpc2();
+    nval.fret = fret();
+    nval.string = string();
     nval.headGroup = headGroup();
+
     return nval;
 }
 
@@ -3818,6 +3829,9 @@ void Note::undoUnlink()
     }
     for (Spanner* s : m_spannerFor) {
         s->undoUnlink();
+    }
+    if (m_tieFor) {
+        m_tieFor->undoUnlink();
     }
 }
 

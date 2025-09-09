@@ -167,9 +167,6 @@ Score::Score(const modularity::ContextPtr& iocCtx)
     m_rootItem = new RootItem(this);
     m_rootItem->init();
 
-    //! NOTE Looks like a bug, `minimumPaddingUnit` is set using the default style's spatium value
-    //! and does not change if the style or the spatium of this score is changed
-    m_paddingTable.setMinimumPaddingUnit(0.1 * style().spatium());
     createPaddingTable();
 
     m_shadowNote = new ShadowNote(this);
@@ -722,42 +719,15 @@ Measure* Score::pos2measure(const PointF& p, staff_idx_t* rst, int* pitch, Segme
 ///              \b output: new segment for drag position
 //---------------------------------------------------------
 
-void Score::dragPosition(const PointF& p, staff_idx_t* rst, Segment** seg, double spacingFactor, bool allowTimeAnchor) const
+void Score::dragPosition(const PointF& pos, staff_idx_t* rst, Segment** seg, double spacingFactor, bool allowTimeAnchor) const
 {
-    const System* preferredSystem = (*seg) ? (*seg)->system() : nullptr;
-    Measure* m = searchMeasure(p, preferredSystem, spacingFactor);
-    if (m == 0 || m->isMMRest()) {
+    Measure* m = nullptr;
+
+    if (!dragPositionToMeasure(pos, this, &m, rst, spacingFactor)) {
         return;
     }
 
-    System* s = m->system();
-    double y   = p.y() - s->canvasPos().y();
-
-    const staff_idx_t i = s->searchStaff(y, *rst, spacingFactor);
-
-    // search for segment + offset
-    PointF pppp = p - m->canvasPos();
-    track_idx_t strack = staff2track(i);
-    if (!staff(i)) {
-        return;
-    }
-    track_idx_t etrack = staff2track(i + 1);
-
-    SegmentType st = allowTimeAnchor ? Segment::CHORD_REST_OR_TIME_TICK_TYPE : SegmentType::ChordRest;
-    Segment* segment = m->searchSegment(pppp.x(), st, strack, etrack, *seg, spacingFactor);
-    if (segment) {
-        if (segment->isTimeTickType()) {
-            if (Segment* crAtSamePos = m->findSegmentR(SegmentType::ChordRest, segment->rtick())) {
-                // If TimeTick and ChordRest at same position, prefer ChordRest
-                segment = crAtSamePos;
-            }
-        }
-        *rst = i;
-        *seg = segment;
-        return;
-    }
-
-    return;
+    dragPositionToSegment(pos, m, *rst, seg, spacingFactor, allowTimeAnchor);
 }
 
 //---------------------------------------------------------
@@ -1621,7 +1591,9 @@ void Score::addElement(EngravingItem* element)
     }
     case ElementType::HARMONY:
     case ElementType::FRET_DIAGRAM:
-        element->part()->updateHarmonyChannels(true);
+        if (element->part()) {
+            element->part()->updateHarmonyChannels(true);
+        }
         break;
     case ElementType::GUITAR_BEND:
     {
@@ -1820,7 +1792,9 @@ void Score::removeElement(EngravingItem* element)
 
     case ElementType::HARMONY:
     case ElementType::FRET_DIAGRAM:
-        element->part()->updateHarmonyChannels(true, true);
+        if (element->part()) {
+            element->part()->updateHarmonyChannels(true, true);
+        }
         break;
 
     default:
@@ -2715,7 +2689,7 @@ void Score::removeStaff(Staff* staff)
     muse::remove(m_staves, staff);
     staff->part()->removeStaff(staff);
 
-    if (isSystemObjectStaff(staff)) {
+    if (staff->isSystemObjectStaff()) {
         muse::remove(m_systemObjectStaves, staff);
     }
 
@@ -3417,7 +3391,7 @@ static void onFocusedItemChanged(EngravingItem* item)
     AccessibleRoot* accRoot = score->rootItem()->accessible()->accessibleRoot();
     AccessibleRoot* dummyAccRoot = score->dummy()->rootItem()->accessible()->accessibleRoot();
 
-    if (accRoot && currAccRoot == accRoot && accRoot->registered()) {
+    if (accRoot && currAccRoot == accRoot && accRoot->registered() && accRoot->enabled()) {
         accRoot->setFocusedElement(accessible);
 
         if (AccessibleItemPtr focusedElement = dummyAccRoot->focusedElement().lock()) {
@@ -3427,7 +3401,7 @@ static void onFocusedItemChanged(EngravingItem* item)
         dummyAccRoot->setFocusedElement(nullptr);
     }
 
-    if (dummyAccRoot && currAccRoot == dummyAccRoot && dummyAccRoot->registered()) {
+    if (dummyAccRoot && currAccRoot == dummyAccRoot && dummyAccRoot->registered() && dummyAccRoot->enabled()) {
         dummyAccRoot->setFocusedElement(accessible);
 
         if (AccessibleItemPtr focusedElement = accRoot->focusedElement().lock()) {
@@ -3619,16 +3593,23 @@ static Segment* findElementEndSegment(Score* score, EngravingItem* e, Segment* d
         return score->tick2segmentMM(sp->tick2(), true, Segment::CHORD_REST_OR_TIME_TICK_TYPE);
     }
 
-    if (Segment* ancestor = toSegment(e->findAncestor(ElementType::SEGMENT))) {
-        if (ancestor->isType(Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
+    if (Segment* seg = toSegment(e->findAncestor(ElementType::SEGMENT))) {
+        if (seg->isType(Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
             // https://github.com/musescore/MuseScore/pull/25821#issuecomment-2617369881
-            if (Segment* next = ancestor->nextCR(e->track(), true)) {
-                return next;
-            }
+            return seg->nextCR(e->track(), true);
+        }
+        // Strictly speaking redundant, but more efficient than `tick2segmentMM`
+        else if (Segment* crSegAtSameTick = seg->measure()->findSegmentR(Segment::CHORD_REST_OR_TIME_TICK_TYPE, seg->rtick())) {
+            return crSegAtSameTick;
         }
     }
 
-    if (Segment* seg = score->tick2segmentMM(e->tick(), true, Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
+    const Fraction& tick = e->tick();
+    if (tick == score->endTick()) {
+        return nullptr;
+    }
+
+    if (Segment* seg = score->tick2segmentMM(tick, true, Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
         return seg;
     }
 
@@ -3817,7 +3798,7 @@ bool Score::tryExtendSingleSelectionToRange(EngravingItem* newElement, staff_idx
         }
 
         Segment* newEndSegment = findElementEndSegment(this, newElement, newStartSegment);
-        if (endSegment && newEndSegment->tick() > endSegment->tick()) {
+        if (endSegment && (!newEndSegment || newEndSegment->tick() > endSegment->tick())) {
             endSegment = newEndSegment;
         }
 
@@ -4496,15 +4477,9 @@ void Score::appendPart(const InstrumentTemplate* t)
     for (staff_idx_t i = 0; i < t->staffCount; ++i) {
         Staff* staff = Factory::createStaff(part);
         StaffType* stt = staff->staffType(Fraction(0, 1));
-        stt->setLines(t->staffLines[i]);
-        stt->setSmall(t->smallStaff[i]);
-        if (i == 0) {
-            staff->setBracketType(0, t->bracket[0]);
-            staff->setBracketSpan(0, t->staffCount);
-        }
+        staff->init(t, stt, int(i));
         undoInsertStaff(staff, i);
     }
-    part->staves().front()->setBarLineSpan(static_cast<int>(part->nstaves()));
     undoInsertPart(part, m_parts.size());
     setUpTempoMapLater();
     masterScore()->rebuildMidiMapping();
@@ -5133,7 +5108,7 @@ String Score::extractLyrics()
         const RepeatList& rlist = repeatList();
         for (const RepeatSegment* rs : rlist) {
             Fraction startTick  = Fraction::fromTicks(rs->tick);
-            Fraction endTick    = startTick + Fraction::fromTicks(rs->len());
+            Fraction endTick    = Fraction::fromTicks(rs->endTick());
             for (Measure* m = tick2measure(startTick); m; m = m->nextMeasure()) {
                 size_t playCount = m->playbackCount();
                 for (Segment* seg = m->first(st); seg; seg = seg->next(st)) {
@@ -5830,11 +5805,6 @@ void Score::removeSystemObjectStaff(Staff* staff)
     muse::remove(m_systemObjectStaves, staff);
 }
 
-bool Score::isSystemObjectStaff(Staff* staff) const
-{
-    return muse::contains(m_systemObjectStaves, staff);
-}
-
 const std::vector<Part*>& Score::parts() const
 {
     return m_parts;
@@ -6272,7 +6242,7 @@ TempoMap* Score::tempomap() const { return m_masterScore->tempomap(); }
 TimeSigMap* Score::sigmap() const { return m_masterScore->sigmap(); }
 //QQueue<MidiInputEvent>* Score::midiInputQueue() { return _masterScore->midiInputQueue(); }
 std::list<MidiInputEvent>& Score::activeMidiPitches() { return m_masterScore->activeMidiPitches(); }
-muse::async::Channel<ScoreChangesRange> Score::changesChannel() const { return m_masterScore->changesChannel(); }
+muse::async::Channel<ScoreChanges> Score::changesChannel() const { return m_masterScore->changesChannel(); }
 
 void Score::setUpdateAll() { m_masterScore->setUpdateAll(); }
 

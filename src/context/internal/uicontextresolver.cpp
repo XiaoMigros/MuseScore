@@ -21,6 +21,8 @@
  */
 #include "uicontextresolver.h"
 
+#include <QTimer>
+
 #include "diagnostics/diagnosticutils.h"
 
 #include "shortcutcontext.h"
@@ -41,11 +43,17 @@ static const muse::Uri DEVTOOLS_PAGE_URI("musescore://devtools");
 static const muse::Uri EXTENSIONS_DIALOG_URI("muse://extensions/viewer");
 
 static const QString NOTATION_NAVIGATION_PANEL("ScoreView");
+static const QString BRAILLE_NAVIGATION_PANEL("BrailleView");
+
+constexpr int CURRENT_URI_CHANGED_TIMEOUT = 500; // msec
 
 void UiContextResolver::init()
 {
     interactive()->currentUri().ch.onReceive(this, [this](const Uri&) {
-        notifyAboutContextChanged();
+        //! NOTE Let the page/dialog open and show itself first
+        QTimer::singleShot(CURRENT_URI_CHANGED_TIMEOUT, [this]() {
+            notifyAboutContextChanged();
+        });
     });
 
     playbackController()->isPlayingChanged().onNotify(this, [this]() {
@@ -115,8 +123,11 @@ UiContext UiContextResolver::currentUiContext() const
 
         INavigationPanel* activePanel = navigationController()->activePanel();
         if (activePanel) {
-            if (activePanel->name() == NOTATION_NAVIGATION_PANEL) {
+            const QString panelName = activePanel->name();
+            if (panelName == NOTATION_NAVIGATION_PANEL) {
                 return context::UiCtxProjectFocused;
+            } else if (panelName == BRAILLE_NAVIGATION_PANEL) {
+                return context::UiCtxBrailleFocused;
             }
         }
 
@@ -189,6 +200,8 @@ bool UiContextResolver::isShortcutContextAllowed(const std::string& scContext) c
     //! allow/disallow shortcuts based on any property of the currentNotation. [M.S.]
 
     if (CTX_NOTATION_OPENED == scContext) {
+        return matchWithCurrent(context::UiCtxProjectOpened);
+    } else if (CTX_NOTATION_OPENED_PRIORITY == scContext) {
         return matchWithCurrent(context::UiCtxProjectOpened);
     } else if (CTX_NOTATION_FOCUSED == scContext) {
         return matchWithCurrent(context::UiCtxProjectFocused);

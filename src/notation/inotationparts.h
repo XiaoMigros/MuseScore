@@ -72,6 +72,7 @@ public:
                             InsertMode mode = InsertMode::Before) = 0;
 
     virtual bool appendStaff(Staff* staff, const muse::ID& destinationPartId) = 0;
+    virtual bool appendStaffLinkedToMaster(Staff* staff, Staff* masterSourceStaff, const muse::ID& destinationPartId) = 0;
     virtual bool appendLinkedStaff(Staff* staff, const muse::ID& sourceStaffId, const muse::ID& destinationPartId) = 0;
 
     virtual void insertPart(Part* part, size_t index) = 0;
@@ -87,6 +88,8 @@ public:
     virtual void addSystemObjects(const muse::IDList& stavesIds) = 0;
     virtual void removeSystemObjects(const muse::IDList& stavesIds) = 0;
     virtual void moveSystemObjects(const muse::ID& sourceStaffId, const muse::ID& destinationStaffId) = 0;
+    virtual void moveSystemObjectLayerBelowBottomStaff() = 0;
+    virtual void moveSystemObjectLayerAboveBottomStaff() = 0;
 
     virtual muse::async::Notification partsChanged() const = 0;
     virtual muse::async::Notification scoreOrderChanged() const = 0;

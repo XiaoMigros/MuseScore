@@ -29,6 +29,7 @@
 #include "modularity/ioc.h"
 #include "imainwindow.h"
 #include "internal/iplatformtheme.h"
+#include "io/filewatcher.h"
 
 #include "types/val.h"
 #include "uiarrangement.h"
@@ -86,6 +87,10 @@ public:
     std::string musicalFontFamily() const override;
     int musicalFontSize() const override;
     async::Notification musicalFontChanged() const override;
+
+    std::string musicalTextFontFamily() const override;
+    int musicalTextFontSize() const override;
+    async::Notification musicalTextFontChanged() const override;
 
     std::string defaultFontFamily() const override;
     int defaultFontSize() const override;
@@ -154,6 +159,7 @@ private:
     async::Notification m_currentThemeChanged;
     async::Notification m_fontChanged;
     async::Notification m_musicalFontChanged;
+    async::Notification m_musicalTextFontChanged;
     async::Notification m_iconsFontChanged;
     async::Notification m_windowGeometryChanged;
 
@@ -166,5 +172,7 @@ private:
     QStringList m_nonTextFonts;
 
     Config m_config;
+
+    mutable io::FileWatcher m_themeWatcher;
 };
 }

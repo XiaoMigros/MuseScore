@@ -158,10 +158,18 @@ public:
 
     PropertyValue getProperty(Pid propertyId) const override;
     PropertyValue propertyDefault(Pid) const override;
+    bool setProperty(Pid propertyId, const PropertyValue&) override;
 
     void startEditDrag(EditData&) override;
 
     std::vector<PointF> gripsPositions(const EditData&) const override;
+
+    Spatium paddingToNotationAbove() const { return m_paddingToNotationAbove; }
+    Spatium paddingToNotationBelow() const { return m_paddingToNotationBelow; }
+
+private:
+    Spatium m_paddingToNotationAbove;
+    Spatium m_paddingToNotationBelow;
 };
 
 //---------------------------------------------------------
@@ -181,24 +189,14 @@ public:
     void init();
 
     void add(EngravingItem*) override;
+    void addAtIdx(FretDiagram* fretDiagram, size_t idx);
 
     double textScale() const { return m_textScale; }
-    void setTextScale(double scale) { m_textScale = scale; }
-
     double diagramScale() const { return m_diagramScale; }
-    void setDiagramScale(double scale) { m_diagramScale = scale; }
-
     Spatium columnGap() const { return m_columnGap; }
-    void setColumnGap(Spatium gap) { m_columnGap = gap; }
-
     Spatium rowGap() const { return m_rowGap; }
-    void setRowGap(Spatium gap) { m_rowGap = gap; }
-
     int chordsPerRow() const { return m_chordsPerRow; }
-    void setChordsPerRow(int chords) { m_chordsPerRow = chords; }
-
-    AlignH contentHorizontallAlignment() const { return m_contentAlignmentH; }
-    void setContentHorizontallAlignment(AlignH alignment) { m_contentAlignmentH = alignment; }
+    AlignH contentHorizontalAlignment() const { return m_contentAlignmentH; }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue& val) override;
@@ -209,17 +207,19 @@ public:
     Grip defaultGrip() const override;
     std::vector<PointF> gripsPositions(const EditData&) const override;
 
-    void undoReorderElements(const std::vector<EID>& newOrderElementsIds);
+    bool needStartEditingAfterSelecting() const override { return false; }
 
-    struct LayoutData : public VBox::LayoutData {
-        double totalTableHeight = 0.0;
-        double totalTableWidth = 0.0;
-    };
+    void undoReorderElements(const StringList& newOrder);
+    void reorderElements(const StringList& newOrder);
+    StringList diagramsOrder() const;
 
-    DECLARE_LAYOUTDATA_METHODS(FBox)
+    bool needsRebuild() const { return m_needsRebuild; }
+    void setNeedsRebuild(bool v) { m_needsRebuild = v; }
 
 private:
-    void resolveContentRect();
+
+    void updateInvisibleDiagrams(const StringList& currentDiagrams);
+    size_t computeInsertionIdx(const String& nameOfDiagramBeforeThis);
 
     double m_textScale = 0.0;
     double m_diagramScale = 0.0;
@@ -227,7 +227,11 @@ private:
     Spatium m_rowGap;
     int m_chordsPerRow = 0;
 
+    bool m_needsRebuild = false;
+
     AlignH m_contentAlignmentH = AlignH::HCENTER;
+
+    StringList m_diagramsOrderInScore;
 };
 
 //---------------------------------------------------------

@@ -26,24 +26,25 @@ import Muse.Ui 1.0
 import Muse.UiComponents 1.0
 import MuseScore.NotationScene 1.0
 
-StyledPopupView {
+AbstractElementPopup {
     id: root
 
     property alias notationViewNavigationSection: capoSettingsNavPanel.section
     property alias navigationOrderStart: capoSettingsNavPanel.order
     readonly property alias navigationOrderEnd: capoSettingsNavPanel.order
 
-
     contentWidth: content.width
     contentHeight: content.height
 
+    placementPolicies: PopupView.PreferRight
     showArrow: false
 
-    signal elementRectChanged(var elementRect)
+    model: CapoSettingsModel {
+        id: capoModel
+    }
 
     function updatePosition() {
         var h = Math.max(root.contentHeight, capoModel.capoIsOn ? 360 : 160)
-        root.x = root.parent.width + 12
         root.y = (root.parent.y + root.parent.height / 2) - root.parent.y - h / 2
     }
 
@@ -55,18 +56,6 @@ StyledPopupView {
         width: 294
 
         spacing: 12
-
-        CapoSettingsModel {
-            id: capoModel
-
-            onItemRectChanged: function(rect) {
-                root.elementRectChanged(rect)
-            }
-        }
-
-        Component.onCompleted: {
-            capoModel.init()
-        }
 
         NavigationPanel {
             id: capoSettingsNavPanel

@@ -215,11 +215,10 @@ public:
         NOTE_HEAD_HALF = 0xF342,
         NOTE_HEAD_WHOLE = 0xF343,
         NOTE_HEAD_BREVIS = 0xF344,
-        DOUBLE_BAR_LINE = 0xF347,
-        NOTE_HEAD = 0xF42F,
-        NOTE_HEAD_PARENTHESES = 0xF430,
 
         PLAY_REPEATS = 0xF345,
+
+        DOUBLE_BAR_LINE = 0xF347,
         BARLINE_WINGED = 0xF34C,
         BARLINE_UNWINGED = 0xF34D,
         ORIENTATION_PORTRAIT = 0xF350,
@@ -375,9 +374,10 @@ public:
         GRACE8_AFTER = 0xF42C,
         GRACE16_AFTER = 0xF42D,
         GRACE32_AFTER = 0xF42E,
+        NOTE_HEAD = 0xF42F,
+        NOTE_HEAD_PARENTHESES = 0xF430,
 
         MEASURE_REPEAT = 0xF431,
-
         INSERT_ONE_MEASURE = 0xF432,
         STAFF_TYPE_CHANGE = 0xF433,
 
@@ -404,6 +404,7 @@ public:
         SPECTROGRAM = 0xF442,
         SPECTROGRAM_BOX_SELECTION = 0xF443,
         BRUSH = 0xF444,
+        SPLIT_TOOL = 0xF494,
 
         PLAY_FILL = 0xF446,
         STOP_FILL = 0xF447,
@@ -493,6 +494,9 @@ public:
         DURATION_CURSOR = 0xF492,
         WARNING_SMALL = 0xF493,
 
+        HIDE_EMPTY_STAVES = 0xF497,
+        SHOW_EMPTY_STAVES = 0xF498,
+
         NOTE_ALIGN_LEFT = 0xF4A3,
         NOTE_ALIGN_CENTER = 0xF4A4,
         NOTE_ALIGN_RIGHT = 0xF4A5,
@@ -507,8 +511,13 @@ public:
         HP_LOWER_CASE = 0xF49E,
         HP_UPPER_CASE = 0xF49F,
 
+        MUSESCORE_COM_LOGO = 0xF4A0,
+        AUDIO_COM_LOGO = 0xF4A2,
+
         TUPLET_GRAPHICAL_CENTER = 0xF4AC,
         TUPLET_RYTHMIC_CENTER = 0xF4AD,
+
+        EYE_OPEN_THICK = 0xF4AE,
 
         NONE = 0xFFFF
     };

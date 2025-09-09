@@ -50,6 +50,7 @@ public:
         TYPE_CAPO,
         TYPE_STRING_TUNINGS,
         TYPE_SOUND_FLAG,
+        TYPE_STAFF_VISIBILITY,
         TYPE_DYNAMIC,
         TYPE_TEXT,
         TYPE_PARTIAL_TIE,
@@ -74,6 +75,7 @@ signals:
 
 protected:
     virtual void updateItemRect();
+    virtual bool ignoreTextEditingChanges() const { return true; }
 
     muse::PointF fromLogical(muse::PointF point) const;
     muse::RectF fromLogical(muse::RectF rect) const;

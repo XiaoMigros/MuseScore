@@ -5,7 +5,7 @@ import Muse.Ui 1.0
 import Muse.UiComponents 1.0
 import MuseScore.NotationScene 1.0
 
-StyledPopupView {
+AbstractElementPopup {
     id: root
 
     property NavigationSection notationViewNavigationSection: null
@@ -24,12 +24,10 @@ StyledPopupView {
     showArrow: false
 
     focusPolicies: PopupView.DefaultFocus & ~PopupView.ClickFocus
+    placementPolicies: PopupView.PreferBelow
 
-    signal elementRectChanged(var elementRect)
-
-    function updatePosition() {
-        root.x = root.parent.width / 2 - root.contentWidth / 2
-        root.y = root.parent.height
+    model: DynamicPopupModel {
+        id: dynamicModel
     }
 
     RowLayout {
@@ -37,18 +35,6 @@ StyledPopupView {
 
         width: 208
         spacing: 1
-
-        DynamicPopupModel {
-            id: dynamicModel
-
-            onItemRectChanged: function(rect) {
-                root.elementRectChanged(rect)
-            }
-        }
-
-        Component.onCompleted: {
-            dynamicModel.init()
-        }
 
         NavigationPanel {
             id: dynamicsNavPanel
@@ -124,7 +110,7 @@ StyledPopupView {
 
                 contentItem: modelData.type === DynamicPopupModel.Dynamic ? dynamicComp :
                                 modelData.type === DynamicPopupModel.Crescendo ? crescHairpinComp :
-                                modelData.type === DynamicPopupModel.Decrescendo ? dimHairpinComp : null
+                                modelData.type === DynamicPopupModel.Diminuendo ? dimHairpinComp : null
 
                 navigation.panel: dynamicsNavPanel
                 navigation.order: index

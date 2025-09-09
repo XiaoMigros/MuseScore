@@ -389,6 +389,7 @@ bool MeiExporter::writePgHead(const VBox* vBox)
     m_currentNode = m_currentNode.append_child();
 
     libmei::PgHead pgHead;
+    pgHead.SetFunc(libmei::PGFUNC_first);
     pgHead.Write(m_currentNode);
 
     std::list<std::pair<libmei::Rend, String> > cells[CellCount];
@@ -861,10 +862,10 @@ bool MeiExporter::writeMeasure(const Measure* measure, int& measureN, bool& isFi
             success = success && this->writeArpeg(dynamic_cast<const Arpeggio*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isBreath()) {
             success = success && this->writeBreath(dynamic_cast<const Breath*>(controlEvent.first), controlEvent.second);
-        } else if (controlEvent.first->isExpression() || controlEvent.first->isPlayTechAnnotation() || controlEvent.first->isStaffText()) {
-            success = success && this->writeDir(dynamic_cast<const TextBase*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isDynamic()) {
             success = success && this->writeDynam(dynamic_cast<const Dynamic*>(controlEvent.first), controlEvent.second);
+        } else if (controlEvent.first->isExpression() || controlEvent.first->isPlayTechAnnotation()) {
+            success = success && this->writeDir(dynamic_cast<const TextBase*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isFermata()) {
             success = success && this->writeFermata(dynamic_cast<const Fermata*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isFiguredBass()) {
@@ -889,6 +890,10 @@ bool MeiExporter::writeMeasure(const Measure* measure, int& measureN, bool& isFi
             success = success && this->writeRehearsalMark(dynamic_cast<const RehearsalMark*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isSlur()) {
             success = success && this->writeSlur(dynamic_cast<const Slur*>(controlEvent.first), controlEvent.second);
+        } else if (controlEvent.first->isStaffText()) {
+            success = success && this->writeDir(dynamic_cast<const TextBase*>(controlEvent.first), controlEvent.second);
+        } else if (controlEvent.first->isSystemText()) {
+            success = success && this->writeDir(dynamic_cast<const TextBase*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isTempoText()) {
             success = success && this->writeTempo(dynamic_cast<const TempoText*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isTie()) {
@@ -2286,9 +2291,11 @@ void MeiExporter::fillControlEventMap(const std::string& xmlId, const ChordRest*
 
     track_idx_t trackIdx = chordRest->track();
 
-    for (const EngravingItem* element : chordRest->segment()->annotations()) {
-        if (element->track() == trackIdx) {
-            m_startingControlEventList.push_back(std::make_pair(element, "#" + xmlId));
+    if (!chordRest->isGrace()) {
+        for (const EngravingItem* element : chordRest->segment()->annotations()) {
+            if (element->track() == trackIdx) {
+                m_startingControlEventList.push_back(std::make_pair(element, "#" + xmlId));
+            }
         }
     }
     // Breath is handled differently

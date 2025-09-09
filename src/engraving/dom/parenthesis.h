@@ -44,6 +44,11 @@ public:
 
     String accessibleInfo() const override;
 
+    bool followParentCurColor() const;
+    void setFollowParentColor(bool val);
+
+    Color curColor() const override;
+
     struct LayoutData : public EngravingItem::LayoutData
     {
         ld_field<muse::draw::PainterPath> path = "[Parenthesis] path";
@@ -51,8 +56,12 @@ public:
         ld_field<double> height = { "[Parenthesis] height", 0.0 };
         ld_field<double> midPointThickness = { "[Parenthesis] midPointThickness", 0.0 };
         ld_field<double> endPointThickness = { "[Parenthesis] endPointThickness", PARENTHESIS_END_WIDTH };
+        ld_field<double> shoulderWidth = { "[Parenthesis] endPointThickness", 0.0 };
         ld_field<SymId> symId = { "[Parenthesis] symId", SymId::noSym };
     };
     DECLARE_LAYOUTDATA_METHODS(Parenthesis);
+
+private:
+    bool m_followParentColor = false;
 };
 } // namespace engraving

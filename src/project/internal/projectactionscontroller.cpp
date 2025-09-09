@@ -82,7 +82,7 @@ void ProjectActionsController::init()
     dispatcher()->reg(this, "file-save-as", [this]() { saveProject(SaveMode::SaveAs); });
     dispatcher()->reg(this, "file-save-a-copy", [this]() { saveProject(SaveMode::SaveCopy); });
     dispatcher()->reg(this, "file-save-selection", [this]() { saveProject(SaveMode::SaveSelection, SaveLocationType::Local); });
-    dispatcher()->reg(this, "file-save-to-cloud", [this]() { saveProject(SaveMode::SaveAs, SaveLocationType::Cloud); });
+    dispatcher()->reg(this, "file-save-to-cloud", [this]() { saveProject(SaveMode::Save, SaveLocationType::Cloud); });
     dispatcher()->reg(this, "file-save-at", [this](const ActionData& args) { saveProjectAt(args); });
 
     dispatcher()->reg(this, "file-publish", this, &ProjectActionsController::publish);
@@ -407,19 +407,19 @@ Ret ProjectActionsController::doFinishOpenProject()
 {
     extensionsProvider()->performPointAsync(EXEC_ONPOST_PROJECT_OPENED);
 
-    //! Show Tours & MuseSounds update if need
-    auto showToursAndMuseSoundsUpdate = [=](){
+    //! Show MuseSounds / MuseSampler update if need
+    auto showUpdateNotification = [=](){
         QTimer::singleShot(1000, [this]() {
             if (museSoundsCheckUpdateScenario()->hasUpdate()) {
                 museSoundsCheckUpdateScenario()->showUpdate();
+            } else if (!museSamplerCheckUpdateScenario()->alreadyChecked()) {
+                museSamplerCheckUpdateScenario()->checkAndShowUpdateIfNeed();
             }
-
-            toursService()->onEvent(u"project_opened");
         });
     };
 
     if (interactive()->isOpened(NOTATION_PAGE_URI).val) {
-        showToursAndMuseSoundsUpdate();
+        showUpdateNotification();
     } else {
         async::Channel<Uri> opened = interactive()->opened();
         opened.onReceive(this, [=](const Uri&) {
@@ -427,7 +427,7 @@ Ret ProjectActionsController::doFinishOpenProject()
                 async::Channel<Uri> mut = opened;
                 mut.resetOnReceive(this);
 
-                showToursAndMuseSoundsUpdate();
+                showUpdateNotification();
             });
         });
     }
@@ -797,12 +797,17 @@ bool ProjectActionsController::saveProject(SaveMode saveMode, SaveLocationType s
 
     INotationProjectPtr project = currentNotationProject();
 
-    if (saveMode == SaveMode::Save && !project->isNewlyCreated()) {
+    const bool isExistingSave = saveMode == SaveMode::Save && !project->isNewlyCreated();
+    const bool wantNewCloudSave = saveLocationType == SaveLocationType::Cloud && !project->isCloudProject();
+    if (isExistingSave && !wantNewCloudSave) {
+        // Under these conditions, we can save without asking...
+        SaveLocation location;
         if (project->isCloudProject()) {
-            return saveProjectAt(SaveLocation(SaveLocationType::Cloud, project->cloudInfo()));
+            location = SaveLocation(SaveLocationType::Cloud, project->cloudInfo());
+        } else {
+            location = SaveLocation(SaveLocationType::Local);
         }
-
-        return saveProjectAt(SaveLocation(SaveLocationType::Local));
+        return saveProjectAt(location, saveMode, force);
     }
 
     RetVal<SaveLocation> response = openSaveProjectScenario()->askSaveLocation(project, saveMode, saveLocationType);
@@ -1891,8 +1896,9 @@ void ProjectActionsController::printScore()
 
 async::Promise<io::path_t> ProjectActionsController::selectScoreOpeningFile() const
 {
+
     std::string allExt = "*.mscz *.mxl *.musicxml *.xml *.mid *.midi *.kar *.md *.mgu *.sgu *.cap *.capx *.musx *.enigmaxml "
-                         "*.ove *.scw *.bmw *.bww *.gtp *.gp3 *.gp4 *.gp5 *.gpx *.gp *.ptb *.mei *.mscx *.mscs *.mscz~";
+                         "*.ove *.scw *.bmw *.bww *.gtp *.gp3 *.gp4 *.gp5 *.gpx *.gp *.ptb *.mei *.tef *.mscx *.mscs *.mscz~";
 
     std::vector<std::string> filter { muse::trc("project", "All supported files") + " (" + allExt + ")",
                                       muse::trc("project", "MuseScore files") + " (*.mscz)",
@@ -1907,6 +1913,7 @@ async::Promise<io::path_t> ProjectActionsController::selectScoreOpeningFile() co
                                       muse::trc("project", "Guitar Pro files") + " (*.gtp *.gp3 *.gp4 *.gp5 *.gpx *.gp)",
                                       muse::trc("project", "Power Tab Editor files (experimental)") + " (*.ptb)",
                                       muse::trc("project", "MEI files") + " (*.mei)",
+                                      muse::trc("project", "TablEdit files (experimental)") + " (*.tef)",
                                       muse::trc("project", "Uncompressed MuseScore folders (experimental)") + " (*.mscx)",
                                       muse::trc("project", "MuseScore developer files") + " (*.mscs)",
                                       muse::trc("project", "MuseScore backup files") + " (*.mscz~)" };

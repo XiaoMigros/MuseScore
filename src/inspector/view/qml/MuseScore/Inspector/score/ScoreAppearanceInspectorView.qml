@@ -44,18 +44,19 @@ InspectorSectionView {
             width: parent.width
             spacing: 4
 
-            VisibilityBox {
+            CheckBox {
                 Layout.fillWidth: true
-                isVisible: root.model ? !root.model.hideEmptyStaves : true
-                text: qsTrc("inspector", "Empty staves")
+
+                text: qsTrc("inspector", "Automatically hide all empty staves")
 
                 navigation.name: "EmptyStaves"
                 navigation.panel: root.navigationPanel
                 navigation.row: root.navigationRow(1)
 
-                onVisibleToggled: {
+                checked: root.model?.hideEmptyStaves ?? false
+                onClicked: {
                     if (root.model) {
-                        root.model.hideEmptyStaves = !!isVisible
+                        root.model.hideEmptyStaves = !checked
                     }
                 }
             }
@@ -65,7 +66,6 @@ InspectorSectionView {
                 Layout.fillWidth: false
                 Layout.minimumWidth: implicitWidth
 
-                enabled: root.model ? root.model.hideEmptyStaves : false
                 icon: IconCode.SETTINGS_COG
                 transparent: !isOpened
 
@@ -79,12 +79,6 @@ InspectorSectionView {
                 popupContent: HideEmptyStavesSettings {
                     model: root.model
                     navigationPanel: hideEmptyStavesSettingsPopupButton.popupNavigationPanel
-                }
-
-                onEnabledChanged: {
-                    if (!enabled) {
-                        closePopup()
-                    }
                 }
 
                 onEnsureContentVisibleRequested: function(invisibleContentHeight) {

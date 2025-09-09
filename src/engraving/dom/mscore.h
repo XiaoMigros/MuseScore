@@ -70,7 +70,7 @@ static constexpr double DPI       = 72.0 * DPI_F;
 static constexpr double SPATIUM20 = 5.0 * (DPI / 72.0);
 static constexpr double DPMM      = DPI / INCH;
 
-// NOTE: the Smufl default is actually 20pt. We use 10 for historical reasons
+// NOTE: the SMuFL default is actually 20pt. We use 10 for historical reasons
 // and back-compatibility, but this will be multiplied x2 during layout.
 static constexpr double MUSICAL_SYMBOLS_DEFAULT_FONT_SIZE = 10.0;
 
@@ -203,7 +203,6 @@ public:
     static double nudgeStep;
     static double nudgeStep10;
     static double nudgeStep50;
-    static int defaultPlayDuration;
 
 // #ifndef NDEBUG
     static bool noHorizontalStretch;
@@ -213,12 +212,10 @@ public:
     static bool debugMode;
     static bool testMode;
     static bool testWriteStyleToScore;
-    static bool useRead302InTestMode;
 
     static bool saveTemplateMode;
     static bool noGui;
 
-    static bool noExcerpts;
     static bool noImages;
 
     static bool pdfPrinting;

@@ -174,7 +174,7 @@ MenuView {
         margins: 0
 
         showArrow: root.showArrow
-        opensUpward: root.opensUpward
+        popupPosition: root.popupPosition
         isOpened: root.isOpened
 
         animationEnabled: false //! NOTE disabled - because trouble with simultaneous opening of submenu
@@ -251,7 +251,7 @@ MenuView {
 
         Component.onCompleted: {
             var menuLoaderComponent = Qt.createComponent("../StyledMenuLoader.qml");
-            root.subMenuLoader = menuLoaderComponent.createObject(root)
+            root.subMenuLoader = menuLoaderComponent.createObject(root.window)
             root.subMenuLoader.menuAnchorItem = root.anchorItem
             root.subMenuLoader.hasSiblingMenus = root.hasSiblingMenus
 

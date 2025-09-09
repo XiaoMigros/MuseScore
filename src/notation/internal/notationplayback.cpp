@@ -82,7 +82,7 @@ void NotationPlayback::init()
     m_playbackModel.load(score());
 
     updateTotalPlayTime();
-    m_playbackModel.dataChanged().onNotify(this, [this]() {
+    m_playbackModel.tracksDataChanged().onReceive(this, [this](const InstrumentTrackIdSet&) {
         updateTotalPlayTime();
     });
 
@@ -126,6 +126,11 @@ void NotationPlayback::reload()
     m_playbackModel.reload();
 }
 
+muse::async::Channel<InstrumentTrackIdSet> NotationPlayback::tracksDataChanged() const
+{
+    return m_playbackModel.tracksDataChanged();
+}
+
 const engraving::InstrumentTrackId& NotationPlayback::metronomeTrackId() const
 {
     return m_playbackModel.metronomeTrackId();
@@ -146,9 +151,10 @@ const muse::mpe::PlaybackData& NotationPlayback::trackPlaybackData(const engravi
     return m_playbackModel.resolveTrackPlaybackData(trackId);
 }
 
-void NotationPlayback::triggerEventsForItems(const std::vector<const EngravingItem*>& items)
+void NotationPlayback::triggerEventsForItems(const std::vector<const EngravingItem*>& items, muse::mpe::duration_t duration,
+                                             bool flushSound)
 {
-    m_playbackModel.triggerEventsForItems(items);
+    m_playbackModel.triggerEventsForItems(items, duration, flushSound);
 }
 
 void NotationPlayback::triggerMetronome(muse::midi::tick_t tick)
@@ -156,11 +162,36 @@ void NotationPlayback::triggerMetronome(muse::midi::tick_t tick)
     m_playbackModel.triggerMetronome(tick);
 }
 
-void NotationPlayback::triggerCountIn(muse::midi::tick_t tick, muse::secs_t& totalCountInDuration)
+void NotationPlayback::triggerCountIn(muse::midi::tick_t tick, muse::secs_t& countInDuration)
 {
     muse::mpe::duration_t durationInMicrosecs = 0;
     m_playbackModel.triggerCountIn(tick, durationInMicrosecs);
-    totalCountInDuration = audio::microsecsToSecs(durationInMicrosecs);
+    countInDuration = audio::microsecsToSecs(durationInMicrosecs);
+}
+
+void NotationPlayback::triggerControllers(const muse::mpe::ControllerChangeEventList& list, notation::staff_idx_t staffIdx, int tick)
+{
+    if (list.empty()) {
+        return;
+    }
+
+    const Staff* staff = score()->staff(staffIdx);
+    if (!staff) {
+        return;
+    }
+
+    const Part* part = staff->part();
+    const InstrumentTrackId trackId {
+        part->id(),
+        part->instrumentId(Fraction::fromTicks(tick))
+    };
+
+    const mpe::PlaybackEventsMap events {
+        { 0, mpe::PlaybackEventList(list.begin(), list.end()) }
+    };
+
+    mpe::PlaybackData& data = m_playbackModel.resolveTrackPlaybackData(trackId);
+    data.offStream.send(events, {}, false /*flushOffstream*/);
 }
 
 InstrumentTrackIdSet NotationPlayback::existingTrackIdSet() const
@@ -357,22 +388,7 @@ const Tempo& NotationPlayback::multipliedTempo(tick_t tick) const
 
 MeasureBeat NotationPlayback::beat(tick_t tick) const
 {
-    MeasureBeat measureBeat;
-
-    if (score() && score()->checkHasMeasures()) {
-        int ticks = 0;
-        int beatIndex = 0;
-        score()->sigmap()->tickValues(tick, &measureBeat.measureIndex, &beatIndex, &ticks);
-
-        const TimeSigFrac timeSig = score()->sigmap()->timesig(Fraction::fromTicks(tick)).timesig();
-        const int ticksB = ticks_beat(timeSig.denominator());
-
-        measureBeat.beat = beatIndex + ticks / static_cast<float>(ticksB);
-        measureBeat.maxMeasureIndex = score()->measures()->size() - 1;
-        measureBeat.maxBeatIndex = timeSig.numerator() - 1;
-    }
-
-    return measureBeat;
+    return mu::engraving::findBeat(m_getScore->score(), tick);
 }
 
 tick_t NotationPlayback::beatToRawTick(int measureIndex, int beatIndex) const

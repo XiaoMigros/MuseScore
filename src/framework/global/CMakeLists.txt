@@ -25,6 +25,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/async/async.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/thirdparty/kors_logger/logger.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/thirdparty/kors_profiler/profiler/profiler.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/thirdparty/kors_modularity/modularity/modularity.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/thirdparty/utfcpp/utfcpp.cmake)
 
 find_package(TinyXml REQUIRED)
 set(MODULE_SRC
@@ -32,6 +33,7 @@ set(MODULE_SRC
     ${ASYNC_SRC}
     ${KORS_LOGGER_SRC}
     ${KORS_PROFILER_SRC}
+    ${UTFCPP_SRC}
     ${CMAKE_CURRENT_LIST_DIR}/globaltypes.h
     ${CMAKE_CURRENT_LIST_DIR}/iapplication.h
     ${CMAKE_CURRENT_LIST_DIR}/iinteractive.h
@@ -53,7 +55,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/translation.cpp
     ${CMAKE_CURRENT_LIST_DIR}/translation.h
     ${CMAKE_CURRENT_LIST_DIR}/timer.h
-    ${CMAKE_CURRENT_LIST_DIR}/threadutils.h
     ${CMAKE_CURRENT_LIST_DIR}/progress.h
     ${CMAKE_CURRENT_LIST_DIR}/utils.cpp
     ${CMAKE_CURRENT_LIST_DIR}/utils.h
@@ -116,6 +117,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/io/iodevice.h
     ${CMAKE_CURRENT_LIST_DIR}/io/file.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/file.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/filewatcher.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/filewatcher.h
     ${CMAKE_CURRENT_LIST_DIR}/io/buffer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/io/ifilesystem.h
@@ -149,9 +152,17 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/serialization/msgpack.h
     ${CMAKE_CURRENT_LIST_DIR}/serialization/msgpack_forward.h
 
-    ${CMAKE_CURRENT_LIST_DIR}/concurrency/taskscheduler.h
-    ${CMAKE_CURRENT_LIST_DIR}/concurrency/concurrent.h
+    ${CMAKE_CURRENT_LIST_DIR}/thirdparty/pugixml/pugixml.hpp
+    ${CMAKE_CURRENT_LIST_DIR}/thirdparty/pugixml/pugixml.cpp
 )
+
+if (MUSE_THREADS_SUPPORT)
+    set(MODULE_SRC ${MODULE_SRC}
+        ${CMAKE_CURRENT_LIST_DIR}/concurrency/taskscheduler.h
+        ${CMAKE_CURRENT_LIST_DIR}/concurrency/concurrent.h
+        ${CMAKE_CURRENT_LIST_DIR}/concurrency/threadutils.h
+    )
+endif()
 
 if (GLOBAL_NO_INTERNAL)
     set(MODULE_DEF ${MODULE_DEF} -DGLOBAL_NO_INTERNAL)
@@ -253,6 +264,10 @@ else ()
     set(Z_LIB z)
 endif ()
 
+list(APPEND MODULE_INCLUDE_PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/thirdparty/pugixml
+)
+
 list(APPEND MODULE_INCLUDE_PRIVATE ${Z_INCLUDE})
 list(APPEND MODULE_LINK ${Z_LIB})
 
@@ -281,11 +296,6 @@ endif()
 
 if (MUSE_MODULE_GLOBAL_MULTI_IOC)
     set(MODULE_DEF ${MODULE_DEF} -DMUSE_MODULE_GLOBAL_MULTI_IOC)
-
-target_sources(muse_global
-  PRIVATE
-    types/secs.h
-)
 endif()
 
 setup_module()

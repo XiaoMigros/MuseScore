@@ -627,35 +627,43 @@ void AccidentalsLayout::computeCompactOrdering(std::vector<Accidental*>& acciden
             }
         }
 
-        auto startIter = pickFromTop ? accidentalsToPlace.begin() : --accidentalsToPlace.end();
-        auto endIter = pickFromTop ? accidentalsToPlace.end() : --accidentalsToPlace.begin();
-        auto moveIter = [pickFromTop](auto& iter) {
-            pickFromTop ? ++iter : --iter;
-        };
-
-        auto iter = startIter;
-        while (iter != endIter) {
-            Accidental* acc2 = *iter;
-            if ((pickFromTop && acc2->line() < acc->line()) || (!pickFromTop && acc2->line() > acc->line())) {
-                moveIter(iter);
-                continue;
-            }
-            if (canFitInSameColumn(acc, acc2, ctx)) {
-                if (acc2->ldata()->octaves.value().size() > 0) {
-                    moveIter(iter);
+        const auto fitOthersIntoColumn = [&](const auto startIter, auto endIter) {
+            auto iter = startIter;
+            while (iter != endIter) {
+                Accidental* const acc2 = *iter;
+                if ((pickFromTop && acc2->line() < acc->line()) || (!pickFromTop && acc2->line() > acc->line())) {
+                    ++iter;
                     continue;
                 }
-                foundOneThatFits = true;
-                accidentalsPlaced.push_back(acc2);
-                acc = acc2;
-                if (acc2 == bottomAcc) {
-                    hitBottom = true;
+                if (canFitInSameColumn(acc, acc2, ctx)) {
+                    if (acc2->ldata()->octaves.value().size() > 0) {
+                        ++iter;
+                        continue;
+                    }
+                    foundOneThatFits = true;
+                    accidentalsPlaced.push_back(acc2);
+                    acc = acc2;
+                    if (acc2 == bottomAcc) {
+                        hitBottom = true;
+                    }
+                    if constexpr (std::is_same_v<decltype(iter), decltype(accidentalsToPlace.begin())>) {
+                        iter = accidentalsToPlace.erase(iter);
+                        endIter = accidentalsToPlace.end();
+                    } else {
+                        static_assert(std::is_same_v<decltype(iter), decltype(accidentalsToPlace.rbegin())>);
+                        iter = std::reverse_iterator(accidentalsToPlace.erase(std::next(iter).base()));
+                        endIter = accidentalsToPlace.rend();
+                    }
+                    continue;
                 }
-                moveIter(iter);
-                accidentalsToPlace.remove(acc2);
-                continue;
+                ++iter;
             }
-            moveIter(iter);
+        };
+
+        if (pickFromTop) {
+            fitOthersIntoColumn(accidentalsToPlace.begin(), accidentalsToPlace.end());
+        } else {
+            fitOthersIntoColumn(accidentalsToPlace.rbegin(), accidentalsToPlace.rend());
         }
 
         if (ctx.keepSecondsTogether()) {

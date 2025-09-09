@@ -63,6 +63,7 @@
 #include "engraving/dom/slur.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stafftext.h"
+#include "engraving/dom/systemtext.h"
 #include "engraving/dom/tempotext.h"
 #include "engraving/dom/text.h"
 #include "engraving/dom/textline.h"
@@ -78,7 +79,7 @@
 #include "thirdparty/libmei/shared.h"
 #include "thirdparty/libmei/midi.h"
 
-#include "thirdparty/pugixml.hpp"
+#include "pugixml.hpp"
 
 using namespace muse;
 using namespace mu;
@@ -443,7 +444,7 @@ bool MeiImporter::addGraceNotesToChord(ChordRest* chordRest, bool isAfter)
 EngravingItem* MeiImporter::addAnnotation(const libmei::Element& meiElement, Measure* measure)
 {
     const ChordRest* chordRest = this->findStart(meiElement, measure);
-    if (!chordRest) {
+    if (!chordRest || chordRest->isGrace()) {
         return nullptr;
     }
 
@@ -461,6 +462,8 @@ EngravingItem* MeiImporter::addAnnotation(const libmei::Element& meiElement, Mea
                 chordRest->segment(), PlayingTechniqueType::Natural, TextStyleType::STAFF);
             break;
         case (ElementType::STAFF_TEXT): item = Factory::createStaffText(chordRest->segment());
+            break;
+        case (ElementType::SYSTEM_TEXT): item = Factory::createSystemText(chordRest->segment());
             break;
         default:
             item = Factory::createExpression(chordRest->segment());

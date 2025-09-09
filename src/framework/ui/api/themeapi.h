@@ -53,6 +53,7 @@ class ThemeApi : public api::ApiObject, public async::Asyncable
     Q_PROPERTY(QColor fontSecondaryColor READ fontSecondaryColor NOTIFY themeChanged)
     Q_PROPERTY(QColor linkColor READ linkColor NOTIFY themeChanged)
     Q_PROPERTY(QColor focusColor READ focusColor NOTIFY themeChanged)
+    Q_PROPERTY(QVariantMap extra READ extra NOTIFY themeChanged FINAL)
 
     Q_PROPERTY(qreal borderWidth READ borderWidth NOTIFY themeChanged)
     Q_PROPERTY(qreal navCtrlBorderWidth READ navCtrlBorderWidth NOTIFY themeChanged)
@@ -81,6 +82,7 @@ class ThemeApi : public api::ApiObject, public async::Asyncable
     Q_PROPERTY(QFont toolbarIconsFont READ toolbarIconsFont NOTIFY themeChanged)
 
     Q_PROPERTY(QFont musicalFont READ musicalFont NOTIFY themeChanged)
+    Q_PROPERTY(QFont musicalTextFont READ musicalTextFont NOTIFY themeChanged)
 
     Q_PROPERTY(QFont defaultFont READ defaultFont CONSTANT)
 
@@ -130,6 +132,7 @@ public:
     QFont iconsFont() const;
     QFont toolbarIconsFont() const;
     QFont musicalFont() const;
+    QFont musicalTextFont() const;
 
     QFont defaultFont() const;
 
@@ -150,6 +153,8 @@ public:
 
     int tooltipDelay() const;
 
+    QVariantMap extra() const;
+
 signals:
     void themeChanged();
 
@@ -160,10 +165,12 @@ private:
     void initUiFonts();
     void initIconsFont();
     void initMusicalFont();
+    void initMusicalTextFont();
 
     void setupUiFonts();
     void setupIconsFont();
     void setupMusicFont();
+    void setupMusicTextFont();
 
     void calculateDefaultButtonSize();
 
@@ -183,6 +190,7 @@ private:
     QFont m_iconsFont;
     QFont m_toolbarIconsFont;
     QFont m_musicalFont;
+    QFont m_musicalTextFont;
     QFont m_defaultFont;
 
     QColor m_backgroundPrimaryColor;
@@ -198,6 +206,8 @@ private:
     QColor m_fontSecondaryColor;
     QColor m_linkColor;
     QColor m_focusColor;
+
+    QVariantMap m_extra;
 
     qreal m_defaultButtonSize = 0;
     qreal m_borderWidth = 0;

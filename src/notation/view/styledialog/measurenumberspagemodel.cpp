@@ -35,9 +35,10 @@ MeasureNumbersPageModel::MeasureNumbersPageModel(QObject* parent)
                                          StyleId::measureNumberSystem,
                                          StyleId::measureNumberVPlacement,
                                          StyleId::measureNumberHPlacement,
-                                         StyleId::measureNumberAllStaves,
+                                         StyleId::measureNumberPlacementMode,
                                          StyleId::measureNumberPosAbove,
                                          StyleId::measureNumberPosBelow,
+                                         StyleId::measureNumberAlternatePosBelow,
                                          StyleId::measureNumberAlignToBarline,
 
                                          StyleId::mmRestShowMeasureNumberRange,
@@ -64,7 +65,7 @@ StyleItem* MeasureNumbersPageModel::measureNumberInterval() const { return style
 StyleItem* MeasureNumbersPageModel::measureNumberSystem() const { return styleItem(StyleId::measureNumberSystem); }
 StyleItem* MeasureNumbersPageModel::measureNumberVPlacement() const { return styleItem(StyleId::measureNumberVPlacement); }
 StyleItem* MeasureNumbersPageModel::measureNumberHPlacement() const { return styleItem(StyleId::measureNumberHPlacement); }
-StyleItem* MeasureNumbersPageModel::measureNumberAllStaves() const { return styleItem(StyleId::measureNumberAllStaves); }
+StyleItem* MeasureNumbersPageModel::measureNumberPlacementMode() const { return styleItem(StyleId::measureNumberPlacementMode); }
 
 StyleItem* MeasureNumbersPageModel::measureNumberPosAbove() const
 {
@@ -74,7 +75,14 @@ StyleItem* MeasureNumbersPageModel::measureNumberPosAbove() const
     return styleItem(ts->at(offsetPropertyIdx).sid);
 }
 
-StyleItem* MeasureNumbersPageModel::measureNumberPosBelow() const { return styleItem(StyleId::measureNumberPosBelow); }
+StyleItem* MeasureNumbersPageModel::measureNumberPosBelow() const
+{
+    TextStyleType textStyleType = styleItem(StyleId::measureNumberTextStyle)->value().value<TextStyleType>();
+    return textStyleType == TextStyleType::MEASURE_NUMBER_ALTERNATE
+           ? styleItem(StyleId::measureNumberAlternatePosBelow)
+           : styleItem(StyleId::measureNumberPosBelow);
+}
+
 StyleItem* MeasureNumbersPageModel::measureNumberAlignToBarline() const { return styleItem(StyleId::measureNumberAlignToBarline); }
 
 StyleItem* MeasureNumbersPageModel::mmRestShowMeasureNumberRange() const { return styleItem(StyleId::mmRestShowMeasureNumberRange); }

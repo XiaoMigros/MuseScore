@@ -112,15 +112,20 @@ void PlaybackControllerStub::setTrackSoloMuteState(const engraving::InstrumentTr
 {
 }
 
-void PlaybackControllerStub::playElements(const std::vector<const notation::EngravingItem*>&, bool)
+void PlaybackControllerStub::playElements(const std::vector<const notation::EngravingItem*>&, const PlayParams&, bool)
 {
 }
 
-void PlaybackControllerStub::playNotes(const notation::NoteValList&, const notation::staff_idx_t, const notation::Segment*)
+void PlaybackControllerStub::playNotes(const notation::NoteValList&, notation::staff_idx_t, const notation::Segment*,
+                                       const PlayParams&)
 {
 }
 
 void PlaybackControllerStub::playMetronome(int)
+{
+}
+
+void PlaybackControllerStub::triggerControllers(const muse::mpe::ControllerChangeEventList&, notation::staff_idx_t, int)
 {
 }
 
@@ -198,9 +203,9 @@ void PlaybackControllerStub::setIsExportingAudio(bool)
 {
 }
 
-const std::set<muse::audio::TrackId>& PlaybackControllerStub::onlineSounds() const
+const std::map<muse::audio::TrackId, muse::audio::AudioResourceMeta>& PlaybackControllerStub::onlineSounds() const
 {
-    static const std::set<muse::audio::TrackId> dummy;
+    static const std::map<muse::audio::TrackId, muse::audio::AudioResourceMeta> dummy;
     return dummy;
 }
 

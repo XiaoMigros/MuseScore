@@ -40,6 +40,7 @@ public:
     void removeStaves(const muse::IDList& stavesIds) override;
 
     bool appendStaff(Staff* staff, const muse::ID& destinationPartId) override;
+    bool appendStaffLinkedToMaster(Staff*, Staff*, const muse::ID&) override { return false; }
     bool appendLinkedStaff(Staff* staff, const muse::ID& sourceStaffId, const muse::ID& destinationPartId) override;
 
     void replaceInstrument(const InstrumentKey& instrumentKey, const Instrument& newInstrument,
@@ -49,6 +50,8 @@ public:
     void addSystemObjects(const muse::IDList& stavesIds) override;
     void removeSystemObjects(const muse::IDList& stavesIds) override;
     void moveSystemObjects(const muse::ID& sourceStaffId, const muse::ID& destinationStaffId) override;
+    void moveSystemObjectLayerBelowBottomStaff() override;
+    void moveSystemObjectLayerAboveBottomStaff() override;
 
 private:
     void startGlobalEdit(const muse::TranslatableString& actionName);

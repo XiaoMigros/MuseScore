@@ -92,7 +92,7 @@ EngravingItem::EngravingItem(const ElementType& type, EngravingObject* parent, E
     m_minDistance   = Spatium(0.0);
 }
 
-EngravingItem::EngravingItem(const EngravingItem& e)
+EngravingItem::EngravingItem(const EngravingItem& e, bool link)
     : EngravingObject(e)
 {
     m_offset     = e.m_offset;
@@ -106,6 +106,23 @@ EngravingItem::EngravingItem(const EngravingItem& e)
     itemDiscovered = false;
 
     m_accessibleEnabled = e.m_accessibleEnabled;
+
+    if (e.m_leftParenthesis) {
+        m_leftParenthesis = e.m_leftParenthesis->clone();
+        m_leftParenthesis->setParent(this);
+        m_leftParenthesis->setTrack(track());
+        if (link) {
+            score()->undo(new Link(m_leftParenthesis, e.m_leftParenthesis));
+        }
+    }
+    if (e.m_rightParenthesis) {
+        m_rightParenthesis = e.m_rightParenthesis->clone();
+        m_rightParenthesis->setParent(this);
+        m_rightParenthesis->setTrack(track());
+        if (link) {
+            score()->undo(new Link(m_rightParenthesis, e.m_rightParenthesis));
+        }
+    }
 }
 
 EngravingItem::~EngravingItem()
@@ -263,6 +280,11 @@ bool EngravingItem::isInteractionAvailable() const
 bool EngravingItem::offsetIsSpatiumDependent() const
 {
     return sizeIsSpatiumDependent() || (m_flags & ElementFlag::ON_STAFF);
+}
+
+PlacementV EngravingItem::placement() const
+{
+    return flag(ElementFlag::PLACE_ABOVE) && !isSystemObjectBelowBottomStaff() ? PlacementV::ABOVE : PlacementV::BELOW;
 }
 
 //---------------------------------------------------------
@@ -455,6 +477,10 @@ staff_idx_t EngravingItem::effectiveStaffIdx() const
         return vStaffIdx();
     }
 
+    if (isSystemObjectBelowBottomStaff()) {
+        return system->lastVisibleStaff();
+    }
+
     staff_idx_t originalStaffIdx = staffIdx();
     if (originalStaffIdx == muse::nidx) {
         return muse::nidx;
@@ -544,16 +570,6 @@ Fraction EngravingItem::rtick() const
         e = e->parentItem();
     }
     return Fraction(0, 1);
-}
-
-//---------------------------------------------------------
-//   playTick
-//---------------------------------------------------------
-
-Fraction EngravingItem::playTick() const
-{
-    // Play from the element's tick position by default.
-    return tick();
 }
 
 //---------------------------------------------------------
@@ -1041,6 +1057,7 @@ void EngravingItem::add(EngravingItem* e)
     switch (e->type()) {
     case ElementType::PARENTHESIS: {
         Parenthesis* p = toParenthesis(e);
+        p->setVisible(visible());
         if (p->direction() == DirectionH::LEFT) {
             m_leftParenthesis = p;
         } else if (p->direction() == DirectionH::RIGHT) {
@@ -1248,15 +1265,6 @@ bool EngravingItem::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::HAS_PARENTHESES:
         setParenthesesMode(v.value<ParenthesesMode>());
-        if (links()) {
-            for (EngravingObject* scoreElement : *links()) {
-                Note* note = toNote(scoreElement);
-                Staff* linkedStaff = note ? note->staff() : nullptr;
-                if (linkedStaff && linkedStaff->isTabStaff(tick())) {
-                    note->setGhost(v.toBool());
-                }
-            }
-        }
         break;
     default:
         if (explicitParent()) {
@@ -1659,6 +1667,11 @@ bool EngravingItem::isPlayable() const
     default:
         return false;
     }
+}
+
+bool EngravingItem::isSystemObjectBelowBottomStaff() const
+{
+    return systemFlag() && staff() && staff()->hasSystemObjectsBelowBottomStaff();
 }
 
 //---------------------------------------------------------
@@ -2416,7 +2429,7 @@ bool EngravingItem::colorsInversionEnabled() const
     return m_colorsInversionEnabled;
 }
 
-void EngravingItem::setColorsInverionEnabled(bool enabled)
+void EngravingItem::setColorsInversionEnabled(bool enabled)
 {
     m_colorsInversionEnabled = enabled;
 }

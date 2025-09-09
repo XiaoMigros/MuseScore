@@ -96,7 +96,7 @@ QVariant NotationRegionsBeingProcessedModel::data(const QModelIndex& index, int 
     const RegionInfo& region = m_regions.at(index.row());
 
     switch (role) {
-    case RectRole: return region.rect;
+    case RectRole: return region.viewRect;
     case ProgressRole: {
         auto it = m_tracksBeingProcessed.find(region.trackId);
         return it != m_tracksBeingProcessed.end() ? it->second.progress : 0;
@@ -182,7 +182,7 @@ void NotationRegionsBeingProcessedModel::setNotationViewMatrix(const QVariant& m
     m_notationViewMatrix = matrix;
     emit notationViewMatrixChanged();
 
-    updateRegionsBeingProcessed(m_tracksBeingProcessed);
+    onViewMatrixChanged();
 }
 
 bool NotationRegionsBeingProcessedModel::isPlaying() const
@@ -209,17 +209,18 @@ void NotationRegionsBeingProcessedModel::clear()
 
 void NotationRegionsBeingProcessedModel::onOnlineSoundsChanged()
 {
-    const std::set<TrackId>& newSounds = playbackController()->onlineSounds();
+    const std::map<TrackId, AudioResourceMeta>& newSounds = playbackController()->onlineSounds();
 
-    for (const TrackId& trackId : newSounds) {
-        if (!muse::contains(m_onlineSounds, trackId)) {
-            startListeningToProgress(trackId);
+    for (const auto& pair : newSounds) {
+        auto it = m_onlineSounds.find(pair.first);
+        if (it == m_onlineSounds.end() || it->second != pair.second) {
+            startListeningToProgress(pair.first);
         }
     }
 
-    for (const TrackId trackId : m_onlineSounds) {
-        if (!muse::contains(newSounds, trackId)) {
-            stopListeningToProgress(trackId);
+    for (const auto& pair : m_onlineSounds) {
+        if (!muse::contains(newSounds, pair.first)) {
+            stopListeningToProgress(pair.first);
         }
     }
 
@@ -258,24 +259,31 @@ void NotationRegionsBeingProcessedModel::startListeningToProgress(const TrackId 
 
     playback()->inputProcessingProgress(sequenceId, trackId)
     .onResolve(this, [this, instrumentTrackId](InputProcessingProgress inputProgress) {
-        if (inputProgress.progress.isStarted()) {
+        if (inputProgress.isStarted) {
             onProgressStarted(instrumentTrackId);
         }
 
-        inputProgress.progress.started().onNotify(this, [this, instrumentTrackId]() {
-            onProgressStarted(instrumentTrackId);
-        });
-
-        inputProgress.chunksBeingProcessedChannel.onReceive(this, [this, instrumentTrackId](const ChunkInfoList& chunks) {
-            onChunksReceived(instrumentTrackId, chunks);
-        });
-
-        inputProgress.progress.progressChanged().onReceive(this, [this, instrumentTrackId](int64_t current, int64_t, const std::string&) {
-            onProgressChanged(instrumentTrackId, current);
-        });
-
-        inputProgress.progress.finished().onReceive(this, [this, instrumentTrackId](const muse::ProgressResult&) {
-            onProgressFinished(instrumentTrackId);
+        inputProgress.processedChannel.onReceive(this, [this, instrumentTrackId]
+                                                 (const InputProcessingProgress::StatusInfo& status,
+                                                  const InputProcessingProgress::ChunkInfoList& chunks,
+                                                  const InputProcessingProgress::ProgressInfo& progress)
+        {
+            switch (status.status) {
+                case InputProcessingProgress::Undefined:
+                    break;
+                case InputProcessingProgress::Started: {
+                    onProgressStarted(instrumentTrackId);
+                } break;
+                case InputProcessingProgress::Processing: {
+                    if (!chunks.empty()) {
+                        onChunksReceived(instrumentTrackId, chunks);
+                    }
+                    onProgressChanged(instrumentTrackId, progress.current);
+                } break;
+                case InputProcessingProgress::Finished: {
+                    onProgressFinished(instrumentTrackId);
+                } break;
+            }
         });
     });
 }
@@ -389,6 +397,20 @@ void NotationRegionsBeingProcessedModel::onProgressFinished(const InstrumentTrac
     }
 }
 
+void NotationRegionsBeingProcessedModel::onViewMatrixChanged()
+{
+    if (m_regions.empty()) {
+        return;
+    }
+
+    const QTransform matrix = m_notationViewMatrix.value<QTransform>();
+    for (RegionInfo& region : m_regions) {
+        region.viewRect = matrix.mapRect(region.logicRect);
+    }
+
+    emit dataChanged(index(0), index(m_regions.size() - 1), { RectRole });
+}
+
 void NotationRegionsBeingProcessedModel::initShouldShowRegions()
 {
     switch (configuration()->onlineSoundsShowProgressBarMode()) {
@@ -415,6 +437,7 @@ void NotationRegionsBeingProcessedModel::updateRegionsBeingProcessed(const Track
         return;
     }
 
+    const QTransform matrix = m_notationViewMatrix.value<QTransform>();
     QList<RegionInfo> newRegions = m_regions;
 
     newRegions.removeIf([&tracks](const RegionInfo& r) {
@@ -432,7 +455,8 @@ void NotationRegionsBeingProcessedModel::updateRegionsBeingProcessed(const Track
         for (const QRectF& rect : newRects) {
             RegionInfo region;
             region.trackId = pair.first;
-            region.rect = rect;
+            region.logicRect = rect;
+            region.viewRect = matrix.mapRect(rect);
 
             newRegions.push_back(region);
         }
@@ -474,7 +498,6 @@ std::vector<QRectF> NotationRegionsBeingProcessedModel::calculateRects(const Par
     const Score* score = system->score();
     const Measure* lastMeasure = score->lastMeasure();
     const double lastMeasureEndX = lastMeasure ? lastMeasure->canvasPos().x() + lastMeasure->width() : 0.0;
-    const QTransform matrix = m_notationViewMatrix.value<QTransform>();
 
     std::vector<QRectF> result;
 
@@ -488,7 +511,7 @@ std::vector<QRectF> NotationRegionsBeingProcessedModel::calculateRects(const Par
         }
 
         const muse::PointF systemPos = system->canvasPos();
-        muse::RectF logicRect = sysStaff->bbox().translated(systemPos);
+        QRectF logicRect = sysStaff->bbox().translated(systemPos).toQRectF();
 
         const Segment* segmentFrom = findSegmentFrom(score, system, range.tickFrom, staffIdx);
         if (segmentFrom) {
@@ -510,19 +533,18 @@ std::vector<QRectF> NotationRegionsBeingProcessedModel::calculateRects(const Par
             logicRect.setWidth(width);
         }
 
-        const QRectF newRect = matrix.mapRect(logicRect.toQRectF());
         bool shouldAdd = true;
 
         for (QRectF& rect: result) {
-            if (rect.intersects(newRect)) {
-                rect = rect.united(newRect);
+            if (rect.intersects(logicRect)) {
+                rect = rect.united(logicRect);
                 shouldAdd = false;
                 break;
             }
         }
 
         if (shouldAdd) {
-            result.push_back(newRect);
+            result.push_back(logicRect);
         }
     }
 

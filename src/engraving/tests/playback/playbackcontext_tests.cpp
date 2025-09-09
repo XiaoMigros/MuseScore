@@ -46,26 +46,6 @@ static constexpr int TICKS_STEP = 480;
 
 class Engraving_PlaybackContextTests : public ::testing::Test
 {
-protected:
-    void SetUp() override
-    {
-        //! NOTE: allows to read test files using their version readers
-        //! instead of using 302 (see mscloader.cpp, makeReader)
-        MScore::useRead302InTestMode = false;
-    }
-
-    void TearDown() override
-    {
-        MScore::useRead302InTestMode = true;
-    }
-
-    static void addParamToStaff(const PlaybackParam& param, staff_idx_t staffIdx, timestamp_t timestamp, PlaybackParamLayers& dest)
-    {
-        for (voice_idx_t voiceIdx = 0; voiceIdx < VOICES; ++voiceIdx) {
-            layer_idx_t layerIdx = static_cast<layer_idx_t>(staff2track(staffIdx, voiceIdx));
-            dest[layerIdx][timestamp].push_back(param);
-        }
-    }
 };
 
 //! Checks that hairpins outside/inside repeats don't overlap. See:
@@ -507,58 +487,77 @@ TEST_F(Engraving_PlaybackContextTests, PlayTechniques)
     // [GIVEN] Context for parsing techniques
     PlaybackContext ctx;
 
-    // [THEN] No technique parsed, returns the "Standard" acticulation
+    // [THEN] No technique parsed, returns the "Natural" type
     int maxTick = score->endTick().ticks();
 
     for (int tick = 0; tick <= maxTick; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        EXPECT_EQ(actualType, ArticulationType::Standard);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        EXPECT_EQ(actualType.first, 0);
+        EXPECT_EQ(actualType.second, PlayingTechniqueType::Natural);
     }
 
     // [WHEN] Parse techniques
     ctx.update(parts.front()->id(), score);
 
     // [THEN] The techniques successfully parsed
-    std::map<int /*tick*/, ArticulationType> expectedArticulationTypes {
-        { 0, ArticulationType::Pizzicato },
-        { 1440, ArticulationType::Open },
-        { 1920, ArticulationType::Mute },
-        { 3840, ArticulationType::Tremolo64th },
-        { 5760, ArticulationType::Detache },
-        { 7680, ArticulationType::Martele },
-        { 9600, ArticulationType::ColLegno },
-        { 11520, ArticulationType::SulPont },
-        { 13440, ArticulationType::SulTasto },
-//        { 15360, ArticulationType::Vibrato },
-//        { 17280, ArticulationType::Legato },
-        { 19200, ArticulationType::Distortion },
-        { 21120, ArticulationType::Overdrive },
-        { 23040, ArticulationType::Harmonic },
-        { 24960, ArticulationType::JazzTone },
+    constexpr int ticksPerMeasure = 1920;
+
+    const std::map<int /*tick*/, PlayingTechniqueType> expectedTypes {
+        { 0, PlayingTechniqueType::Pizzicato },
+        { 1440, PlayingTechniqueType::Open },
+        { ticksPerMeasure* 1, PlayingTechniqueType::Mute },
+        { ticksPerMeasure* 2, PlayingTechniqueType::Tremolo },
+        { ticksPerMeasure* 3, PlayingTechniqueType::Detache },
+        { ticksPerMeasure* 4, PlayingTechniqueType::Martele },
+        { ticksPerMeasure* 5, PlayingTechniqueType::ColLegno },
+        { ticksPerMeasure* 6, PlayingTechniqueType::SulPonticello },
+        { ticksPerMeasure* 7, PlayingTechniqueType::SulTasto },
+        { ticksPerMeasure* 8, PlayingTechniqueType::Vibrato },
+        { ticksPerMeasure* 9, PlayingTechniqueType::Legato },
+        { ticksPerMeasure* 10, PlayingTechniqueType::Distortion },
+        { ticksPerMeasure* 11, PlayingTechniqueType::Overdrive },
+        { ticksPerMeasure* 12, PlayingTechniqueType::Harmonics },
+        { ticksPerMeasure* 13, PlayingTechniqueType::JazzTone },
+        { ticksPerMeasure* 14, PlayingTechniqueType::HandbellsSwing },
+        { ticksPerMeasure* 15, PlayingTechniqueType::HandbellsSwingUp },
+        { ticksPerMeasure* 16, PlayingTechniqueType::HandbellsSwingDown },
+        { ticksPerMeasure* 17, PlayingTechniqueType::HandbellsEcho1 },
+        { ticksPerMeasure* 18, PlayingTechniqueType::HandbellsEcho2 },
+        { ticksPerMeasure* 19, PlayingTechniqueType::HandbellsR },
+        { ticksPerMeasure* 20, PlayingTechniqueType::HandbellsLV },
+        { ticksPerMeasure* 21, PlayingTechniqueType::HandbellsDamp },
     };
 
-    auto findExpectedType = [&expectedArticulationTypes](int tick) {
-        auto it = muse::findLessOrEqual(expectedArticulationTypes, tick);
-        if (it == expectedArticulationTypes.end()) {
-            return ArticulationType::Standard;
+    auto findExpectedType = [&expectedTypes, score](int tick) -> std::pair<timestamp_t, PlayingTechniqueType> {
+        auto it = muse::findLessOrEqual(expectedTypes, tick);
+        if (it == expectedTypes.end()) {
+            return std::make_pair(0, PlayingTechniqueType::Natural);
         }
 
-        return it->second;
+        return std::make_pair(timestampFromTicks(score, it->first), it->second);
     };
 
     for (int tick = 0; tick <= maxTick; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        ArticulationType expectedType = findExpectedType(tick);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        std::pair<timestamp_t, PlayingTechniqueType> expectedType = findExpectedType(tick);
         EXPECT_EQ(actualType, expectedType);
     }
+
+    // [WHEN] Find position of Damp
+    const timestamp_t actualDampPosition = ctx.findPlayingTechniqueTimestamp(score, PlayingTechniqueType::HandbellsDamp,
+                                                                             ticksPerMeasure * 20);
+
+    // [THEN] Position is correct
+    EXPECT_EQ(actualDampPosition, timestampFromTicks(score, ticksPerMeasure * 21));
 
     // [WHEN] Clear the context
     ctx.clear();
 
-    // [THEN] No technique parsed, returns the "Standard" acticulation
+    // [THEN] No technique parsed, returns the "Natural" type
     for (int tick = 0; tick <= maxTick; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        EXPECT_EQ(actualType, ArticulationType::Standard);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        EXPECT_EQ(actualType.first, 0);
+        EXPECT_EQ(actualType.second, PlayingTechniqueType::Natural);
     }
 
     delete score;
@@ -582,31 +581,32 @@ TEST_F(Engraving_PlaybackContextTests, PlayTechniques_MeasureRepeats)
     // [WHEN] Parse playing techniques
     ctx.update(parts.front()->id(), score);
 
-    // [THEN] The articulation map matches the expectation
-    std::map<int, mpe::ArticulationType> expectedArticulations {
+    // [THEN] The playing technique map matches the expectation
+    std::map<int, PlayingTechniqueType> expectedTypes {
         // 1st measure
-        { 0, mpe::ArticulationType::Standard },
+        { 0, PlayingTechniqueType::Natural },
 
         // 2nd measure
-        { 1920 + repeatOffsetTick, mpe::ArticulationType::Mute }, // 1st quarter note
+        { 1920 + repeatOffsetTick, PlayingTechniqueType::Mute }, // 1st quarter note
 
         // 3rd measure
-        { 4320 + repeatOffsetTick, mpe::ArticulationType::Distortion }, // 2nd quarter note
+        { 4320 + repeatOffsetTick, PlayingTechniqueType::Distortion }, // 2nd quarter note
 
         // copy of 2nd measure
-        { 5760 + repeatOffsetTick, mpe::ArticulationType::Mute },
+        { 5760 + repeatOffsetTick, PlayingTechniqueType::Mute },
 
         // copy of 3rd measure
-        { 8160 + repeatOffsetTick, mpe::ArticulationType::Distortion },
+        { 8160 + repeatOffsetTick, PlayingTechniqueType::Distortion },
     };
 
-    for (const auto& pair : expectedArticulations) {
-        mpe::ArticulationType actualArticulation = ctx.persistentArticulationType(pair.first);
-        EXPECT_EQ(actualArticulation, pair.second);
+    for (const auto& pair : expectedTypes) {
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, pair.first);
+        EXPECT_EQ(actualType.first, timestampFromTicks(score, pair.first));
+        EXPECT_EQ(actualType.second, pair.second);
     }
 }
 
-TEST_F(Engraving_PlaybackContextTests, SoundFlags)
+TEST_F(Engraving_PlaybackContextTests, SoundFlags_TextArticulations)
 {
     // [GIVEN] Score (piano with 2 staves) with sound flags
     Score* score = ScoreRW::readScore(PLAYBACK_CONTEXT_TEST_FILES_DIR + "sound_flags/sound_flags.mscx");
@@ -621,55 +621,78 @@ TEST_F(Engraving_PlaybackContextTests, SoundFlags)
     const Part* part = parts.front();
     ctx.update(part->id(), score);
 
-    // [WHEN] Get the actual params
-    PlaybackParamLayers actualParams = ctx.playbackParamLayers(score);
+    // [WHEN] Get the actual articulations
+    std::map<timestamp_t, TextArticulationEventList> actualArticulations = ctx.textArticulations(score);
 
-    // [THEN] Expected params
-    PlaybackParam sulTasto(PlaybackParam::PlayingTechnique, u"Sul Tasto");
-    PlaybackParam bartok(PlaybackParam::PlayingTechnique, u"bartok");
-    PlaybackParam pizz(PlaybackParam::PlayingTechnique, u"pizzicato");
-    PlaybackParam espressivo(PlaybackParam::PlayingTechnique, u"Espressivo");
+    // [THEN] Expected articulations
+    const layer_idx_t secondStaffLayer = static_cast<layer_idx_t>(staff2track(1));
 
-    PlaybackParamLayers expectedParams;
+    TextArticulationEvent sulTasto1Staff, sulTasto2Staff;
+    sulTasto1Staff.text = u"Sul Tasto";
+    sulTasto1Staff.layerIdx = 0;
+    sulTasto2Staff.text = sulTasto1Staff.text;
+    sulTasto2Staff.layerIdx = secondStaffLayer;
 
-    for (staff_idx_t staffIdx = 0; staffIdx < score->nstaves(); ++staffIdx) {
-        addParamToStaff(sulTasto, staffIdx, timestampFromTicks(score, 1920), expectedParams);
-    }
+    TextArticulationEvent bartok;  // "apply to all staves" is OFF (apply to 1st staff)
+    bartok.text = u"bartok";
+    bartok.layerIdx = 0;
 
-    addParamToStaff(bartok, 0, timestampFromTicks(score, 3840), expectedParams); // "apply to all staves" is OFF (apply to 1st staff)
-    addParamToStaff(pizz, 1, timestampFromTicks(score, 3840), expectedParams); // "apply to all staves" is ON (apply to 2nd staff)
-    addParamToStaff(espressivo, 1, timestampFromTicks(score, 7680), expectedParams); // "apply to all staves" is OFF (apply to 1st staff)
+    TextArticulationEvent pizz; // "apply to all staves" is ON (apply to 2nd staff)
+    pizz.text = u"pizzicato";
+    pizz.layerIdx = secondStaffLayer;
 
-    EXPECT_EQ(actualParams, expectedParams);
+    TextArticulationEvent espressivo; // "apply to all staves" is OFF (apply to 1st staff)
+    espressivo.text = u"Espressivo";
+    espressivo.layerIdx = secondStaffLayer;
 
-    // [THEN] We can get the params for a specific track & tick
+    std::map<timestamp_t, TextArticulationEventList> expectedArticulations {
+        { timestampFromTicks(score, 1920), { sulTasto1Staff, sulTasto2Staff } },
+        { timestampFromTicks(score, 3840), { bartok, pizz } },
+        { timestampFromTicks(score, 7680), { espressivo } },
+    };
+
+    EXPECT_EQ(actualArticulations, expectedArticulations);
+
+    // [THEN] We can get articulations for a specific track & tick
     for (track_idx_t trackIdx = part->startTrack(); trackIdx < part->endTrack(); ++trackIdx) {
-        PlaybackParamList params = ctx.playbackParams(trackIdx, 0);
-        EXPECT_TRUE(params.empty());
+        TextArticulationEvent event = ctx.textArticulation(trackIdx, 0);
+        EXPECT_TRUE(event.text.empty());
 
-        params = ctx.playbackParams(trackIdx, 2000);
-        sulTasto.flags.setFlag(PlaybackParam::IsPersistent, true);
-        EXPECT_EQ(params, PlaybackParamList { sulTasto });
-
-        params = ctx.playbackParams(trackIdx, 4500);
+        event = ctx.textArticulation(trackIdx, 2000);
         staff_idx_t staffIdx = track2staff(trackIdx);
 
-        if (staffIdx == 1) {
-            pizz.flags.setFlag(PlaybackParam::IsPersistent, true);
-            EXPECT_EQ(params, PlaybackParamList { pizz });
+        if (staffIdx == 0) {
+            sulTasto1Staff.flags.setFlag(TextArticulationEvent::StartsAtPlaybackPosition, false);
+            sulTasto1Staff.layerIdx = static_cast<layer_idx_t>(trackIdx);
+            EXPECT_EQ(event, sulTasto1Staff);
         } else {
-            bartok.flags.setFlag(PlaybackParam::IsPersistent, true);
-            EXPECT_EQ(params, PlaybackParamList { bartok });
+            sulTasto2Staff.flags.setFlag(TextArticulationEvent::StartsAtPlaybackPosition, false);
+            sulTasto2Staff.layerIdx = static_cast<layer_idx_t>(trackIdx);
+            EXPECT_EQ(event, sulTasto2Staff);
         }
 
-        params = ctx.playbackParams(trackIdx, 7680);
+        event = ctx.textArticulation(trackIdx, 4500);
 
-        if (staffIdx == 1) {
-            espressivo.flags.setFlag(PlaybackParam::IsPersistent, false);
-            EXPECT_EQ(params, PlaybackParamList { espressivo });
+        if (staffIdx == 0) {
+            bartok.flags.setFlag(TextArticulationEvent::StartsAtPlaybackPosition, false);
+            bartok.layerIdx = static_cast<layer_idx_t>(trackIdx);
+            EXPECT_EQ(event, bartok);
         } else {
-            bartok.flags.setFlag(PlaybackParam::IsPersistent, true);
-            EXPECT_EQ(params, PlaybackParamList { bartok });
+            pizz.flags.setFlag(TextArticulationEvent::StartsAtPlaybackPosition, false);
+            pizz.layerIdx = static_cast<layer_idx_t>(trackIdx);
+            EXPECT_EQ(event, pizz);
+        }
+
+        event = ctx.textArticulation(trackIdx, 7680);
+
+        if (staffIdx == 0) {
+            bartok.flags.setFlag(TextArticulationEvent::StartsAtPlaybackPosition, false);
+            bartok.layerIdx = static_cast<layer_idx_t>(trackIdx);
+            EXPECT_EQ(event, bartok);
+        } else {
+            espressivo.flags.setFlag(TextArticulationEvent::StartsAtPlaybackPosition, true);
+            espressivo.layerIdx = static_cast<layer_idx_t>(trackIdx);
+            EXPECT_EQ(event, espressivo);
         }
     }
 
@@ -691,24 +714,20 @@ TEST_F(Engraving_PlaybackContextTests, SoundFlags_MeasureRepeats)
     // [WHEN] Parse sound flags
     ctx.update(parts.front()->id(), score);
 
-    // [THEN] The actual params match the expectation
-    PlaybackParamList secondMeasureParams { { PlaybackParam::PlayingTechnique, u"Espressivo" } };
-    PlaybackParamList thirdMeasureParams { { PlaybackParam::PlayingTechnique, u"bartok" } };
+    // [THEN] The actual text articulations match the expectation
+    TextArticulationEvent espressivo, bartok;
+    espressivo.text = u"Espressivo";
+    bartok.text = u"bartok";
 
-    PlaybackParamMap expectedParams {
-        { timestampFromTicks(score, 1920), secondMeasureParams },
-        { timestampFromTicks(score, 3840), thirdMeasureParams },
-        { timestampFromTicks(score, 5760), secondMeasureParams }, // measure repeat
-        { timestampFromTicks(score, 7680), thirdMeasureParams }, // measure repeat
+    std::map<timestamp_t, TextArticulationEventList> expectedArticulations {
+        { timestampFromTicks(score, 1920), { espressivo } }, // 2nd measure
+        { timestampFromTicks(score, 3840), { bartok } }, // 3rd measure
+        { timestampFromTicks(score, 5760), { espressivo } }, // measure repeat
+        { timestampFromTicks(score, 7680), { bartok } }, // measure repeat
     };
 
-    PlaybackParamLayers layers = ctx.playbackParamLayers(score);
-    EXPECT_FALSE(layers.empty());
-
-    for (const auto& layer : layers) {
-        const PlaybackParamMap& actualParams = layer.second;
-        EXPECT_EQ(actualParams, expectedParams);
-    }
+    std::map<timestamp_t, TextArticulationEventList> actualArticulations = ctx.textArticulations(score);
+    EXPECT_EQ(expectedArticulations, actualArticulations);
 }
 
 /**
@@ -733,34 +752,37 @@ TEST_F(Engraving_PlaybackContextTests, SoundFlags_CancelPlayingTechniques)
 
     // [THEN] 1st measure: Pizz.
     for (int tick = 0; tick < 1920; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        EXPECT_EQ(actualType, ArticulationType::Pizzicato);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        EXPECT_EQ(actualType.first, 0);
+        EXPECT_EQ(actualType.second, PlayingTechniqueType::Pizzicato);
     }
 
-    // [THEN] "Standard" for all the other measures, as Pizz. was canceled with "Ord." in the 2nd measure
+    // [THEN] "Natural" for all the other measures, as Pizz. was canceled with "Ord." in the 2nd measure
+    const timestamp_t expectedNaturalTimestamp = timestampFromTicks(score, 1920);
     int lastTick = score->lastMeasure()->tick().ticks();
     for (int tick = 1920; tick < lastTick; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        EXPECT_EQ(actualType, ArticulationType::Standard);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        EXPECT_EQ(actualType.first, expectedNaturalTimestamp);
+        EXPECT_EQ(actualType.second, PlayingTechniqueType::Natural);
     }
 
-    // [THEN] The actual params match the expectation
-    PlaybackParam ordinary(PlaybackParam::PlayingTechnique, mpe::ORDINARY_PLAYING_TECHNIQUE_CODE);
-    PlaybackParam bartok(PlaybackParam::PlayingTechnique, u"bartok");
+    // [THEN] The actual text articulations match the expectation
+    TextArticulationEvent ordinary;
+    ordinary.text = mpe::ORDINARY_PLAYING_TECHNIQUE_CODE;
+    ordinary.layerIdx = 0;
 
-    PlaybackParamMap expectedParams {
+    TextArticulationEvent bartok;
+    bartok.text = u"bartok";
+    bartok.layerIdx = 0;
+
+    std::map<timestamp_t, TextArticulationEventList> expectedArticulations {
         { timestampFromTicks(score, 1920), { ordinary } }, // 2nd measure (cancels Pizz.)
         { timestampFromTicks(score, 3840), { bartok } }, // 3rd measure
         { timestampFromTicks(score, 5760), { ordinary } }, // 4th (canceled by Arco)
     };
 
-    PlaybackParamLayers layers = ctx.playbackParamLayers(score);
-    EXPECT_FALSE(layers.empty());
-
-    for (const auto& layer : layers) {
-        const PlaybackParamMap& actualParams = layer.second;
-        EXPECT_EQ(actualParams, expectedParams);
-    }
+    std::map<timestamp_t, TextArticulationEventList> actualArticulations = ctx.textArticulations(score);
+    EXPECT_EQ(expectedArticulations, actualArticulations);
 
     // [WHEN] Parse the brass part
     const Part* brassPart = parts.at(1);
@@ -769,31 +791,34 @@ TEST_F(Engraving_PlaybackContextTests, SoundFlags_CancelPlayingTechniques)
 
     // [THEN] 1st measure: Standard
     for (int tick = 0; tick < 1920; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        EXPECT_EQ(actualType, ArticulationType::Standard);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        EXPECT_EQ(actualType.first, 0);
+        EXPECT_EQ(actualType.second, PlayingTechniqueType::Natural);
     }
 
     // [THEN] "Open" starting from the 2nd measure
+    const timestamp_t expectedOpenTimestamp = timestampFromTicks(score, 1920);
     for (int tick = 1920; tick < lastTick; tick += TICKS_STEP) {
-        ArticulationType actualType = ctx.persistentArticulationType(tick);
-        EXPECT_EQ(actualType, ArticulationType::Open);
+        std::pair<timestamp_t, PlayingTechniqueType> actualType = ctx.playingTechnique(score, tick);
+        EXPECT_EQ(actualType.first, expectedOpenTimestamp);
+        EXPECT_EQ(actualType.second, PlayingTechniqueType::Open);
     }
 
-    // [THEN] The actual params match the expectation
-    PlaybackParam mute(PlaybackParam::PlayingTechnique, u"mute");
+    // [THEN] The actual text articulations match the expectation
+    const layer_idx_t secondStaffLayer = static_cast<layer_idx_t>(staff2track(1));
+    ordinary.layerIdx = secondStaffLayer;
 
-    expectedParams = {
+    TextArticulationEvent mute;
+    mute.text = u"mute";
+    mute.layerIdx = secondStaffLayer;
+
+    expectedArticulations = {
         { timestampFromTicks(score, 0), { mute } }, // 1st measure
         { timestampFromTicks(score, 1920), { ordinary } }, // 2nd measure (canceled by Open)
     };
 
-    layers = ctx.playbackParamLayers(score);
-    EXPECT_FALSE(layers.empty());
-
-    for (const auto& layer : layers) {
-        const PlaybackParamMap& actualParams = layer.second;
-        EXPECT_EQ(actualParams, expectedParams);
-    }
+    actualArticulations = ctx.textArticulations(score);
+    EXPECT_EQ(expectedArticulations, actualArticulations);
 
     delete score;
 }

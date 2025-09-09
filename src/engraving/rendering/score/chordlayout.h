@@ -98,7 +98,7 @@ public:
     static void computeUp(const Chord* item, ChordRest::LayoutData* ldata, const LayoutContext& ctx);
     static void computeUp(ChordRest* item, const LayoutContext& ctx);
     static int computeAutoStemDirection(const std::vector<int>& noteDistances);
-    static bool isChordPosBelowBeam(Chord* item, Beam* beam);
+    static bool isChordPosBelowBeam(const Chord* item, Beam* beam);
     static bool isChordPosBelowTrem(const Chord* item, TremoloTwoChord* trem);
 
     static void layoutChords1(LayoutContext& ctx, Segment* segment, staff_idx_t staffIdx);
@@ -110,10 +110,7 @@ public:
     static void appendGraceNotes(Chord* chord);
     static void clearLineAttachPoints(Measure* measure);
     static void updateLineAttachPoints(Chord* chord, bool isFirstInMeasure, LayoutContext& ctx);
-    static void resolveVerticalRestConflicts(LayoutContext& ctx, Segment* segment, staff_idx_t staffIdx);
-    static void resolveRestVSChord(std::vector<Rest*>& rests, std::vector<Chord*>& chords, const Staff* staff, Segment* segment);
-    static void resolveRestVSRest(std::vector<Rest*>& rests, const Staff* staff, Segment* segment, LayoutContext& ctx,
-                                  bool considerBeams = false);
+
     static void layoutChordBaseFingering(Chord* chord, System* system, LayoutContext& ctx);
 
     static void crossMeasureSetup(Chord* chord, bool on, LayoutContext& ctx);
@@ -123,9 +120,7 @@ public:
     static void checkAndFillShape(const ChordRest* item, ChordRest::LayoutData* ldata, const LayoutConfiguration& conf);
     static void fillShape(const ChordRest* item, Chord::LayoutData* ldata, const LayoutConfiguration& conf);
     static void fillShape(const Chord* item, Chord::LayoutData* ldata);
-    static void fillShape(const Rest* item, Rest::LayoutData* ldata);
     static void fillShape(const MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutConfiguration& conf);
-    static void fillShape(const MMRest* item, MMRest::LayoutData* ldata, const LayoutConfiguration& conf);
 
     static void addLineAttachPoints(Spanner* spanner);
 
@@ -134,6 +129,8 @@ public:
     static double centerX(const Chord* chord);
 
 private:
+    friend class RestLayout;
+
     static void layoutPitched(Chord* item, LayoutContext& ctx);
     static void layoutTablature(Chord* item, LayoutContext& ctx);
 
@@ -152,7 +149,8 @@ private:
 
     static bool leaveSpaceForTie(const Articulation* item);
 
-    static void computeUpBeamCase(Chord* item, Beam* beam);
+    static bool computeUpBeamCase(const Chord* item, Beam* beam);
+    static bool computeUpTremoloCase(const Chord* item, TremoloTwoChord* tremolo, const LayoutContext& ctx);
 
     static void updateLedgerLines(Chord* item, LayoutContext& ctx);
 

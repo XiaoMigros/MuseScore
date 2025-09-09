@@ -121,7 +121,7 @@ enum class ElementFlag {
     ENABLED                = 0x04000000,      // used for segments
     EMPTY                  = 0x08000000,
     WRITTEN                = 0x10000000,
-    END_OF_MEASURE_CHANGE         = 0x20000000
+    END_OF_MEASURE_CHANGE  = 0x20000000,
 };
 
 typedef muse::Flags<ElementFlag> ElementFlags;
@@ -226,7 +226,7 @@ public:
     void setSizeIsSpatiumDependent(bool v) { setFlag(ElementFlag::SIZE_SPATIUM_DEPENDENT, !v); }
     bool offsetIsSpatiumDependent() const override;
 
-    PlacementV placement() const { return PlacementV(!flag(ElementFlag::PLACE_ABOVE)); }
+    PlacementV placement() const;
     void setPlacement(PlacementV val) { setFlag(ElementFlag::PLACE_ABOVE, !bool(val)); }
     bool placeAbove() const { return placement() == PlacementV::ABOVE; }
     bool placeBelow() const { return placement() == PlacementV::BELOW; }
@@ -256,7 +256,6 @@ public:
 
     virtual Fraction tick() const;
     virtual Fraction rtick() const;
-    virtual Fraction playTick() const;   ///< muse::Returns the tick at which playback should begin when this element is selected. Defaults to the element's own tick position.
 
     Fraction beat() const;
 
@@ -411,6 +410,8 @@ public:
     bool systemFlag() const { return flag(ElementFlag::SYSTEM); }
     void setSystemFlag(bool v) const { setFlag(ElementFlag::SYSTEM, v); }
 
+    virtual bool isSystemObjectBelowBottomStaff() const;
+
     bool header() const { return flag(ElementFlag::HEADER); }
     void setHeader(bool v) { setFlag(ElementFlag::HEADER, v); }
 
@@ -492,7 +493,7 @@ public:
     double styleP(Sid idx) const;
 
     bool colorsInversionEnabled() const;
-    void setColorsInverionEnabled(bool enabled);
+    void setColorsInversionEnabled(bool enabled);
 
     virtual void setParenthesesMode(const ParenthesesMode& v, bool addToLinked = true, bool generated = false);
     ParenthesesMode parenthesesMode() const;
@@ -713,7 +714,7 @@ public:
 
 protected:
     EngravingItem(const ElementType& type, EngravingObject* parent = nullptr, ElementFlags = ElementFlag::NOTHING);
-    EngravingItem(const EngravingItem&);
+    EngravingItem(const EngravingItem&, bool link = false);
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
     virtual AccessibleItemPtr createAccessible();

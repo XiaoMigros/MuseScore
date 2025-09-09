@@ -45,7 +45,7 @@ Rectangle {
         }
 
         RadioButtonGroup {
-            orientation: ListView.horizontal
+            orientation: ListView.Horizontal
             spacing: 8
 
             model: [
@@ -56,7 +56,8 @@ Rectangle {
             delegate: FlatRadioButton {
                 width: 140
                 height: 65
-                text: modelData.text
+
+                navigation.accessible.name: modelData.text
 
                 Column {
                     anchors.centerIn: parent

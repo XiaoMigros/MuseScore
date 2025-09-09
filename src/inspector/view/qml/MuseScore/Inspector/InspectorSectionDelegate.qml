@@ -28,6 +28,7 @@ import MuseScore.Inspector 1.0
 import "common"
 import "general"
 import "measures"
+import "emptystaves"
 import "notation"
 import "text"
 import "score"
@@ -53,7 +54,9 @@ ExpandableBlank {
     navigation.panel: root.navigationPanel
     navigation.row: 0
 
-    title: root.sectionModel ? root.sectionModel.title : ""
+    title: root.sectionModel?.title ?? ""
+
+    headerAccessory: contentItem?.headerAccessory
 
     contentItemComponent: {
         if (!root.sectionModel) {
@@ -63,6 +66,7 @@ ExpandableBlank {
         switch (root.sectionModel.sectionType) {
         case Inspector.SECTION_GENERAL: return generalSection
         case Inspector.SECTION_MEASURES: return measuresSection
+        case Inspector.SECTION_EMPTY_STAVES: return emptyStavesSection
         case Inspector.SECTION_TEXT: return textSection
         case Inspector.SECTION_NOTATION:
             if (sectionModel.isMultiModel) {
@@ -101,6 +105,25 @@ ExpandableBlank {
         id: measuresSection
 
         MeasuresInspectorView {
+            model: root.sectionModel
+            navigationPanel: root.navigationPanel
+            navigationRowStart: root.navigation.row + 1
+            anchorItem: root.anchorItem
+
+            onEnsureContentVisibleRequested: function(invisibleContentHeight) {
+                root.ensureContentVisibleRequested(-invisibleContentHeight)
+            }
+
+            onPopupOpened: function(openedPopup, control) {
+                root.popupOpened(openedPopup, control)
+            }
+        }
+    }
+
+    Component {
+        id: emptyStavesSection
+
+        EmptyStavesVisibilityInspectorView {
             model: root.sectionModel
             navigationPanel: root.navigationPanel
             navigationRowStart: root.navigation.row + 1

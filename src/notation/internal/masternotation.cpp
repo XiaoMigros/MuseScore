@@ -131,8 +131,10 @@ void MasterNotation::initAfterSettingScore(const MasterScore* score)
 
     TRACEFUNC;
 
-    score->changesChannel().onReceive(this, [this](const ScoreChangesRange&) {
-        updateExcerpts();
+    score->changesChannel().onReceive(this, [this](const ScoreChanges& changes) {
+        if (!changes.isTextEditing) {
+            updateExcerpts();
+        }
     });
 
     m_notationPlayback->init();
@@ -186,126 +188,49 @@ static void clearMeasures(mu::engraving::MasterScore* masterScore)
     masterScore->updateRepeatList();
 }
 
-static void createMeasures(mu::engraving::Score* score, const ScoreCreateOptions& scoreOptions)
+static void createMeasures(MasterScore* masterScore, const ScoreCreateOptions& scoreOptions)
 {
     TRACEFUNC;
 
-    mu::engraving::Fraction timesig(scoreOptions.timesigNumerator, scoreOptions.timesigDenominator);
-    score->sigmap()->add(0, timesig);
-    bool pickupMeasure = scoreOptions.withPickupMeasure;
-    int measures = scoreOptions.measures;
-    if (pickupMeasure) {
-        measures += 1;
-    }
-    mu::engraving::Fraction firstMeasureTicks = pickupMeasure ? mu::engraving::Fraction(scoreOptions.measureTimesigNumerator,
-                                                                                        scoreOptions.measureTimesigDenominator) : timesig;
+    masterScore->sigmap()->add(0, scoreOptions.globalTimesig);
 
-    KeySigEvent ks;
+    KeySigEvent keySigEvent;
     if (scoreOptions.key == Key::INVALID) {
         // Make atonal key signature
-        ks.setCustom(true);
-        ks.setMode(KeyMode::NONE);
+        keySigEvent.setCustom(true);
+        keySigEvent.setMode(KeyMode::NONE);
     } else {
-        ks.setConcertKey(scoreOptions.key);
+        keySigEvent.setConcertKey(scoreOptions.key);
     }
 
-    for (int i = 0; i < measures; ++i) {
-        mu::engraving::Fraction tick = firstMeasureTicks + timesig * (i - 1);
-        if (i == 0) {
-            tick = mu::engraving::Fraction(0, 1);
+    const int totalMeasures = scoreOptions.withPickupMeasure ? scoreOptions.totalMeasures + 1 : scoreOptions.totalMeasures;
+    for (int i = 0; i < totalMeasures; ++i) {
+        MeasureBase* measureBase = masterScore->insertMeasure();
+        Measure* measure = measureBase && measureBase->isMeasure() ? toMeasure(measureBase) : nullptr;
+        IF_ASSERT_FAILED(measure) {
+            break;
         }
-        QList<mu::engraving::Rest*> puRests;
-        for (mu::engraving::Score* _score : score->scoreList()) {
-            mu::engraving::Rest* rest = 0;
-            mu::engraving::Measure* measure = mu::engraving::Factory::createMeasure(_score->dummy()->system());
-            measure->setTimesig(timesig);
-            measure->setTicks(timesig);
-            measure->setTick(tick);
 
-            if (pickupMeasure && tick.isZero()) {
-                measure->setIrregular(true);                // don’t count pickup measure
-                measure->setTicks(mu::engraving::Fraction(scoreOptions.measureTimesigNumerator,
-                                                          scoreOptions.measureTimesigDenominator));
-            }
-            _score->measures()->append(measure);
+        measure->setTimesig(scoreOptions.globalTimesig);
 
-            for (mu::engraving::Staff* staff : _score->staves()) {
-                mu::engraving::staff_idx_t staffIdx = staff->idx();
-                if (tick.isZero()) {
-                    mu::engraving::Measure* m = _score->firstMeasure();
-                    mu::engraving::Segment* s = m->getSegment(mu::engraving::SegmentType::TimeSig, mu::engraving::Fraction(0, 1));
-                    mu::engraving::TimeSig* ts = mu::engraving::Factory::createTimeSig(s);
-                    ts->setTrack(staffIdx * mu::engraving::VOICES);
-                    ts->setSig(timesig, scoreOptions.timesigType);
-                    s->add(ts);
-                    Part* part = staff->part();
-                    mu::engraving::KeySigEvent nKey;
-                    // use atonal keysig for drums
-                    if (part->instrument()->useDrumset()) {
-                        nKey.setConcertKey(Key::C);
-                        nKey.setCustom(true);
-                        nKey.setMode(KeyMode::NONE);
-                    } else {
-                        //
-                        // transpose key
-                        //
-                        nKey = ks;
-                        mu::engraving::Interval v = part->instrument()->transpose();
-                        if (!nKey.isAtonal() && !v.isZero() && !score->style().styleB(mu::engraving::Sid::concertPitch)) {
-                            v.flip();
-                            nKey.setKey(mu::engraving::transposeKey(nKey.concertKey(), v, part->preferSharpFlat()));
-                        }
-                    }
-                    staff->setKey(mu::engraving::Fraction(0, 1), nKey);
-                    mu::engraving::Segment* ss
-                        = measure->getSegment(mu::engraving::SegmentType::KeySig, mu::engraving::Fraction(0, 1));
-                    mu::engraving::KeySig* keysig = mu::engraving::Factory::createKeySig(ss);
-                    keysig->setTrack(staffIdx * mu::engraving::VOICES);
-                    keysig->setKeySigEvent(nKey);
-                    ss->add(keysig);
-                }
+        if (i > 0) {
+            measure->setTicks(scoreOptions.globalTimesig);
+            continue;
+        }
 
-                // determined if this staff is linked to previous so we can reuse rests
-                bool linkedToPrevious = staffIdx && staff->isLinked(_score->staff(staffIdx - 1));
-                if (measure->timesig() != measure->ticks()) {
-                    if (!linkedToPrevious) {
-                        puRests.clear();
-                    }
-                    std::vector<mu::engraving::TDuration> dList = mu::engraving::toRhythmicDurationList(
-                        measure->ticks(), true, mu::engraving::Fraction(0, 1),
-                        measure->score()->sigmap()->timesig(measure->tick().ticks()).nominal(), measure, 0);
-                    if (!dList.empty()) {
-                        mu::engraving::Fraction ltick = tick;
-                        int k = 0;
-                        for (mu::engraving::TDuration d : dList) {
-                            mu::engraving::Segment* seg = measure->getSegment(mu::engraving::SegmentType::ChordRest, ltick);
-                            if (k < puRests.count()) {
-                                rest = static_cast<mu::engraving::Rest*>(puRests[k]->linkedClone());
-                            } else {
-                                rest = mu::engraving::Factory::createRest(seg, d);
-                                puRests.append(rest);
-                            }
-                            rest->setScore(_score);
-                            rest->setTicks(d.isMeasure() ? measure->ticks() : d.fraction());
-                            rest->setTrack(staffIdx * mu::engraving::VOICES);
-                            seg->add(rest);
-                            ltick += rest->actualTicks();
-                            k++;
-                        }
-                    }
-                } else {
-                    mu::engraving::Segment* seg = measure->getSegment(mu::engraving::SegmentType::ChordRest, tick);
-                    if (linkedToPrevious && rest) {
-                        rest = static_cast<mu::engraving::Rest*>(rest->linkedClone());
-                    } else {
-                        rest = mu::engraving::Factory::createRest(seg, mu::engraving::TDuration(mu::engraving::DurationType::V_MEASURE));
-                    }
-                    rest->setScore(_score);
-                    rest->setTicks(measure->ticks());
-                    rest->setTrack(staffIdx * mu::engraving::VOICES);
-                    seg->add(rest);
-                }
-            }
+        // Special handling for first measure (apply pickups, timesigs, and keysigs)...
+
+        measure->setIrregular(scoreOptions.withPickupMeasure);
+        measure->adjustToLen(scoreOptions.withPickupMeasure ? scoreOptions.pickupTimesig : scoreOptions.globalTimesig);
+
+        // Add timesigs...
+        TimeSig* timesig = Factory::createTimeSig(masterScore->dummy()->segment());
+        timesig->setSig(scoreOptions.globalTimesig, scoreOptions.timesigType);
+        masterScore->cmdAddTimeSig(measure, /*staffIdx*/ 0, timesig, /*local*/ false);
+
+        for (Staff* staff : masterScore->staves()) {
+            // Add keysig for each staff...
+            masterScore->undoChangeKeySig(staff, measure->tick(), keySigEvent);
         }
     }
 }
@@ -375,21 +300,23 @@ void MasterNotation::applyOptions(mu::engraving::MasterScore* score, const Score
     createMeasures(score, scoreOptions);
 
     {
-        QString title = score->metaTag(u"workTitle");
-        QString subtitle = score->metaTag(u"subtitle");
-        QString composer = score->metaTag(u"composer");
-        QString lyricist = score->metaTag(u"lyricist");
+        const QString title = score->metaTag(u"workTitle");
+        const QString subtitle = score->metaTag(u"subtitle");
+        const QString composer = score->metaTag(u"composer");
+        const QString lyricist = score->metaTag(u"lyricist");
 
         if (!title.isEmpty() || !subtitle.isEmpty() || !composer.isEmpty() || !lyricist.isEmpty()) {
             mu::engraving::MeasureBase* measure = score->measures()->first();
             if (measure->type() != ElementType::VBOX) {
-                mu::engraving::MeasureBase* nm = nvb ? nvb : Factory::createTitleVBox(score->dummy()->system());
-                nm->setTick(mu::engraving::Fraction(0, 1));
-                nm->setExcludeFromOtherParts(false);
-                nm->setNext(measure);
-                score->measures()->add(nm);
+                if (!nvb) {
+                    nvb = Factory::createTitleVBox(score->dummy()->system());
+                }
+                nvb->setTick(mu::engraving::Fraction(0, 1));
+                nvb->setNext(measure);
+                score->measures()->add(nvb);
             } else if (nvb) {
                 delete nvb;
+                nvb = nullptr;
             }
 
             auto setText = [score](mu::engraving::TextStyleType textItemId, const QString& text) {
@@ -418,60 +345,69 @@ void MasterNotation::applyOptions(mu::engraving::MasterScore* score, const Score
             }
         } else if (nvb) {
             delete nvb;
+            nvb = nullptr;
+        }
+
+        if (nvb) {
+            nvb->manageExclusionFromParts(/*exclude*/ false);
         }
     }
 
     if (scoreOptions.withTempo) {
-        mu::engraving::Fraction ts(scoreOptions.timesigNumerator, scoreOptions.timesigDenominator);
+        String text { u"<sym>metNoteQuarterUp</sym> = %1" };
+        const double bpm = scoreOptions.tempo.valueBpm;
+        double qpm = bpm; // internal tempo value is always expressed in quarter notes
 
-        QString text("<sym>metNoteQuarterUp</sym> = %1");
-        double bpm = scoreOptions.tempo.valueBpm;
-
-        bool withDot = scoreOptions.tempo.withDot;
+        const bool withDot = scoreOptions.tempo.withDot;
         switch (scoreOptions.tempo.duration) {
         case DurationType::V_WHOLE:
             text = "<sym>metNoteWhole</sym> = %1";
+            qpm *= 4.0;
             break;
         case DurationType::V_HALF:
             if (withDot) {
                 text = "<sym>metNoteHalfUp</sym><sym>space</sym><sym>metAugmentationDot</sym> = %1";
+                qpm *= 3.0;
             } else {
                 text = "<sym>metNoteHalfUp</sym> = %1";
+                qpm *= 2.0;
             }
             break;
         case DurationType::V_QUARTER:
             if (withDot) {
                 text = "<sym>metNoteQuarterUp</sym><sym>space</sym><sym>metAugmentationDot</sym> = %1";
+                qpm *= 1.5;
             } else {
                 text = "<sym>metNoteQuarterUp</sym> = %1";
+                //qpm *= 1.0;
             }
             break;
         case DurationType::V_EIGHTH:
             if (withDot) {
                 text = "<sym>metNote8thUp</sym><sym>space</sym><sym>metAugmentationDot</sym> = %1";
+                qpm *= 0.75;
             } else {
                 text = "<sym>metNote8thUp</sym> = %1";
+                qpm *= 0.5;
             }
             break;
         case DurationType::V_16TH:
             if (withDot) {
                 text = "<sym>metNote16thUp</sym><sym>space</sym><sym>metAugmentationDot</sym> = %1";
+                qpm *= 0.375;
             } else {
                 text = "<sym>metNote16thUp</sym> = %1";
+                qpm *= 0.25;
             }
             break;
         default:
             break;
         }
 
-        mu::engraving::Segment* seg = score->firstMeasure()->first(mu::engraving::SegmentType::ChordRest);
-        mu::engraving::TempoText* tt = new mu::engraving::TempoText(seg);
+        engraving::Segment* seg = score->firstMeasure()->first(engraving::SegmentType::ChordRest);
+        engraving::TempoText* tt = new engraving::TempoText(seg);
         tt->setXmlText(text.arg(bpm));
-
-        double tempo = scoreOptions.tempo.valueBpm;
-        tempo /= 60; // bpm -> bps
-
-        tt->setTempo(tempo);
+        tt->setTempo(qpm / 60.0); // qpm -> qps
         tt->setFollowText(true);
         tt->setTrack(0);
         seg->add(tt);
@@ -491,6 +427,10 @@ void MasterNotation::applyOptions(mu::engraving::MasterScore* score, const Score
         for (mu::engraving::Score* s : score->scoreList()) {
             s->doLayout();
         }
+    }
+
+    if (m_notationPlayback) {
+        m_notationPlayback->reload();
     }
 }
 
@@ -682,6 +622,8 @@ void MasterNotation::updateExcerpts()
         if (open) {
             excerptNotation->notation()->elements()->msScore()->doLayout();
         }
+
+        initNotationSoloMuteState(excerptNotation->notation());
 
         updatedExcerpts.push_back(excerptNotation);
     }

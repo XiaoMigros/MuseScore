@@ -63,8 +63,12 @@ public:
     bool isEmpty() const override;
 
     void updateModels(const ElementKeySet& newElementKeySet);
+    bool shouldUpdateOnEmptyPropertyAndStyleIdSets() const override;
 
     void onCurrentNotationChanged() override;
+
+    void onNotationChanged(const mu::engraving::PropertyIdSet& changedPropertyIdSet,
+                           const mu::engraving::StyleIdSet& changedStyleIdSet) override;
 
 public slots:
     void setDefaultSubModelType(mu::inspector::InspectorModelType modelType);

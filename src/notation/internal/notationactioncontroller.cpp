@@ -39,6 +39,7 @@
 using namespace mu;
 using namespace muse;
 using namespace muse::io;
+using namespace muse::ui;
 using namespace mu::notation;
 using namespace muse::actions;
 using namespace mu::context;
@@ -73,6 +74,7 @@ const std::unordered_map<ActionCode, bool EngravingDebuggingOptions::*> Notation
     { "show-system-bounding-rects", &EngravingDebuggingOptions::showSystemBoundingRects },
     { "show-element-masks", &EngravingDebuggingOptions::showElementMasks },
     { "show-line-attach-points", &EngravingDebuggingOptions::showLineAttachPoints },
+    { "mark-empty-staff-visibility-overrides", &EngravingDebuggingOptions::markEmptyStaffVisibilityOverrides },
     { "mark-corrupted-measures", &EngravingDebuggingOptions::markCorruptedMeasures }
 };
 
@@ -681,16 +683,6 @@ muse::async::Notification NotationActionController::currentNotationStyleChanged(
     return currentNotationStyle() ? currentNotationStyle()->styleChanged() : muse::async::Notification();
 }
 
-INotationAccessibilityPtr NotationActionController::currentNotationAccessibility() const
-{
-    auto notation = currentNotation();
-    if (!notation) {
-        return nullptr;
-    }
-
-    return notation->accessibility();
-}
-
 void NotationActionController::resetState()
 {
     TRACEFUNC;
@@ -737,13 +729,11 @@ void NotationActionController::toggleNoteInput()
 
     if (noteInput->isNoteInputMode()) {
         noteInput->endNoteInput();
-    } else {
-        noteInput->startNoteInput(configuration()->defaultNoteInputMethod());
+        return;
     }
 
-    muse::ui::UiActionState state = actionRegister()->actionState("note-input");
-    std::string stateTitle = state.checked ? muse::trc("notation", "Note input mode") : muse::trc("notation", "Normal mode");
-    notifyAccessibilityAboutVoiceInfo(stateTitle);
+    // If the Braille panel or Note Input toolbar has focus, stay there.
+    noteInput->startNoteInput(configuration()->defaultNoteInputMethod(), /*focusNotation*/ false);
 }
 
 void NotationActionController::toggleNoteInputMethod(NoteInputMethod method)
@@ -1711,8 +1701,6 @@ void NotationActionController::startEditSelectedElement(const ActionData& args)
     if (interaction->textEditingAllowed(element)) {
         PointF cursorPos = !args.empty() ? args.arg<PointF>(0) : PointF();
         interaction->startEditText(element, cursorPos);
-    } else if (element->hasGrips()) {
-        interaction->startEditGrip(element, element->defaultGrip());
     } else {
         interaction->startEditElement(element);
     }
@@ -2130,29 +2118,29 @@ bool NotationActionController::isNotNoteInputMode() const
 
 void NotationActionController::openTupletOtherDialog()
 {
-    interactive()->open("musescore://notation/othertupletdialog?sync=false");
+    interactive()->open("musescore://notation/othertupletdialog");
 }
 
 void NotationActionController::openStaffTextPropertiesDialog()
 {
-    interactive()->open("musescore://notation/stafftextproperties?sync=false");
+    interactive()->open("musescore://notation/stafftextproperties");
 }
 
 void NotationActionController::openMeasurePropertiesDialog()
 {
     if (currentNotationInteraction()->selectedMeasure() != nullptr) {
-        interactive()->open("musescore://notation/measureproperties?sync=false");
+        interactive()->open("musescore://notation/measureproperties");
     }
 }
 
 void NotationActionController::openEditGridSizeDialog()
 {
-    interactive()->open("musescore://notation/editgridsize?sync=false");
+    interactive()->open("musescore://notation/editgridsize");
 }
 
 void NotationActionController::openRealizeChordSymbolsDialog()
 {
-    interactive()->open("musescore://notation/realizechordsymbols?sync=false");
+    interactive()->open("musescore://notation/realizechordsymbols");
 }
 
 void NotationActionController::toggleScoreConfig(ScoreConfigType configType)
@@ -2230,12 +2218,16 @@ void NotationActionController::playSelectedElement(bool playChord)
 
 bool NotationActionController::startNoteInputAllowed() const
 {
-    if (isEditingElement()) {
+    if (isEditingElement() || QGuiApplication::applicationState() != Qt::ApplicationActive) {
         return false;
     }
 
-    const muse::ui::UiContext ctx = uiContextResolver()->currentUiContext();
-    return ctx == muse::ui::UiCtxProjectFocused && QGuiApplication::applicationState() == Qt::ApplicationActive;
+    const UiContext ctx = uiContextResolver()->currentUiContext();
+    const INavigationControl* ctrl = navigationController()->activeControl();
+
+    return ctx == ui::UiCtxProjectFocused
+           || ctx == ui::UiCtxBrailleFocused
+           || (ctrl && ctrl->name().startsWith("note-input")); // Toolbar buttons.
 }
 
 void NotationActionController::startNoteInput()
@@ -2424,7 +2416,6 @@ void NotationActionController::registerPadNoteAction(const ActionCode& code, Pad
     registerAction(code, [this, padding, code]()
     {
         padNote(padding);
-        notifyAccessibilityAboutActionTriggered(code);
     });
 }
 
@@ -2433,7 +2424,6 @@ void NotationActionController::registerTabPadNoteAction(const ActionCode& code, 
     registerAction(code, [this, padding, code]()
     {
         padNote(padding);
-        notifyAccessibilityAboutActionTriggered(code);
     }, &NotationActionController::isTablatureStaff);
 }
 
@@ -2556,20 +2546,4 @@ void NotationActionController::registerAction(const ActionCode& code, void (INot
             }
         }
     }, enabler);
-}
-
-void NotationActionController::notifyAccessibilityAboutActionTriggered(const ActionCode& ActionCode)
-{
-    const muse::ui::UiAction& action = actionRegister()->action(ActionCode);
-    std::string titleStr = action.title.qTranslatedWithoutMnemonic().toStdString();
-
-    notifyAccessibilityAboutVoiceInfo(titleStr);
-}
-
-void NotationActionController::notifyAccessibilityAboutVoiceInfo(const std::string& info)
-{
-    auto notationAccessibility = currentNotationAccessibility();
-    if (notationAccessibility) {
-        notationAccessibility->setTriggeredCommand(info);
-    }
 }

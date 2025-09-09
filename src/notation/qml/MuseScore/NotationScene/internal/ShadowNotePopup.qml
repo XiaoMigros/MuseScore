@@ -26,7 +26,7 @@ import Muse.Ui 1.0
 import Muse.UiComponents 1.0
 import MuseScore.NotationScene 1.0
 
-StyledPopupView {
+AbstractElementPopup {
     id: root
 
     property NavigationSection notationViewNavigationSection: null
@@ -40,11 +40,14 @@ StyledPopupView {
     showArrow: false
     openPolicies: PopupView.NoActivateFocus
     focusPolicies: PopupView.DefaultFocus & ~PopupView.ClickFocus
+    placementPolicies: PopupView.PreferRight
 
     padding: 0 // The popup will "steal" mouse events if the padding overlaps with the shadow note area
     margins: 3
 
-    signal elementRectChanged(var elementRect)
+    model: ShadowNotePopupModel {
+        id: shadowNotePopupModel
+    }
 
     function updatePosition() {
         root.x = root.parent.width * 1.5
@@ -61,16 +64,7 @@ StyledPopupView {
             return null
         }
 
-        ShadowNotePopupModel {
-            id: shadowNotePopupModel
-
-            onItemRectChanged: function(rect) {
-                root.elementRectChanged(rect)
-            }
-        }
-
         Component.onCompleted: {
-            shadowNotePopupModel.init()
             contentLoader.sourceComponent = contentLoader.contentByType(shadowNotePopupModel.currentPopupType)
         }
 

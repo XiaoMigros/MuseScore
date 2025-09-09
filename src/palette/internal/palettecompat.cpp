@@ -33,6 +33,8 @@
 #include "engraving/dom/expression.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/fret.h"
+#include "engraving/dom/hammeronpulloff.h"
+#include "engraving/dom/harmony.h"
 #include "engraving/dom/ornament.h"
 #include "engraving/dom/pedal.h"
 #include "engraving/dom/score.h"
@@ -40,6 +42,7 @@
 #include "engraving/dom/stringtunings.h"
 #include "engraving/dom/capo.h"
 #include "engraving/dom/marker.h"
+#include "engraving/dom/tapping.h"
 #include "engraving/types/symid.h"
 #include "engraving/types/typesconv.h"
 
@@ -54,6 +57,36 @@ static const std::unordered_set<ActionIconType> BENDS_ACTION_TYPES = {
     ActionIconType::PRE_BEND,
     ActionIconType::GRACE_NOTE_BEND,
     ActionIconType::SLIGHT_BEND
+};
+
+static const std::unordered_map<String, String> FRET_DIAGRAMS_MIGRATION_MAP = {
+    { u"X[3-O][2-O]O[1-O]O", u"C" },
+    { u"X-[5-O][5-O][4-O]-;B3[1-5]", u"Cm" },
+    { u"X[3-O][2-O][3-O][1-O]O", u"C7" },
+
+    { u"XXO[2-O][3-O][2-O]", u"D" },
+    { u"XXO[2-O][3-O][1-O]", u"Dm" },
+    { u"XXO[2-O][1-O][2-O]", u"D7" },
+
+    { u"O[2-O][2-O][1-O]OO", u"E" },
+    { u"O[2-O][2-O]OOO", u"Em" },
+    { u"O[2-O]O[1-O]OO", u"E7" },
+
+    { u"-[3-O][3-O][2-O]--;B1[0-5]", u"F" },
+    { u"-[3-O][3-O]---;B1[0-5]", u"Fm" },
+    { u"-[3-O]-[2-O]--;B1[0-5]", u"F7" },
+
+    { u"[3-O][2-O]OOO[3-O]", u"G" },
+    { u"-[5-O][5-O]---;B3[0-5]", u"Gm" },
+    { u"[3-O][2-O]OOO[1-O]", u"G7" },
+
+    { u"XO[2-O][2-O][2-O]O", u"A" },
+    { u"XO[2-O][2-O][1-O]O", u"Am" },
+    { u"XO[2-O]O[2-O]O", u"A7" },
+
+    { u"X-[4-O][4-O][4-O]-;B2[1-5]", u"B" },
+    { u"X-[4-O][4-O][3-O]-;B2[1-5]", u"Bm" },
+    { u"X[2-O][1-O][2-O]O[2-O]", u"B7" }
 };
 
 void PaletteCompat::migrateOldPaletteItemIfNeeded(ElementPtr& element, Score* paletteScore)
@@ -105,10 +138,16 @@ void PaletteCompat::migrateOldPaletteItemIfNeeded(ElementPtr& element, Score* pa
     }
 
     if (item->isFretDiagram()) {
-        FretDiagram* newFretDiagram = Factory::createFretDiagram(paletteScore->dummy()->segment());
         FretDiagram* oldFretDiagram = toFretDiagram(item);
+        String oldFretDiagramPattern = FretDiagram::patternFromDiagram(oldFretDiagram);
+        std::vector<String> oldFretDiagramPatternHarmonies = FretDiagram::patternHarmonies(oldFretDiagramPattern);
 
-        String harmonyName = oldFretDiagram->harmonyText();
+        String harmonyName = muse::value(FRET_DIAGRAMS_MIGRATION_MAP, oldFretDiagramPattern);
+        if (harmonyName.empty() || muse::contains(oldFretDiagramPatternHarmonies, harmonyName)) {
+            return;
+        }
+
+        FretDiagram* newFretDiagram = Factory::createFretDiagram(paletteScore->dummy()->segment());
 
         if (harmonyName.empty()) {
             newFretDiagram->clear();
@@ -159,6 +198,8 @@ void PaletteCompat::addNewGuitarItems(Palette& guitarPalette, Score* paletteScor
     bool containsStringTunings = false;
     bool containsGuitarBends = false;
     bool containsFFrame = false;
+    bool containsTapping = false;
+    bool containsHammerOnPullOff = false;
 
     for (const PaletteCellPtr& cell : guitarPalette.cells()) {
         const ElementPtr element = cell->element;
@@ -178,18 +219,22 @@ void PaletteCompat::addNewGuitarItems(Palette& guitarPalette, Score* paletteScor
             if (icon->actionType() == ActionIconType::FFRAME) {
                 containsFFrame = true;
             }
+        } else if (element->isTapping()) {
+            containsTapping = true;
+        } else if (element->isHammerOnPullOff()) {
+            containsHammerOnPullOff = true;
         }
     }
 
     if (!containsCapo) {
-        auto capo = std::make_shared<Capo>(paletteScore->dummy()->segment());
+        auto capo = Factory::makeCapo(paletteScore->dummy()->segment());
         capo->setXmlText(String::fromAscii(QT_TRANSLATE_NOOP("palette", "Capo")));
         int defaultPosition = std::min(7, guitarPalette.cellsCount());
         guitarPalette.insertElement(defaultPosition, capo, QT_TRANSLATE_NOOP("palette", "Capo"))->setElementTranslated(true);
     }
 
     if (!containsStringTunings) {
-        auto stringTunings = std::make_shared<StringTunings>(paletteScore->dummy()->segment());
+        auto stringTunings = Factory::makeStringTunings(paletteScore->dummy()->segment());
         stringTunings->setXmlText(u"<sym>guitarString6</sym> - D");
         stringTunings->initTextStyleType(TextStyleType::STAFF);
         int defaultPosition = std::min(8, guitarPalette.cellsCount());
@@ -205,8 +250,26 @@ void PaletteCompat::addNewGuitarItems(Palette& guitarPalette, Score* paletteScor
         guitarPalette.insertActionIcon(defaultPosition, ActionIconType::SLIGHT_BEND, "slight-bend", 1.25);
     }
 
+    if (!containsTapping) {
+        int defaultPosition = std::min(30, guitarPalette.cellsCount());
+        auto lhTapping = Factory::makeTapping(paletteScore->dummy()->chord());
+        lhTapping->setHand(TappingHand::LEFT);
+        guitarPalette.insertElement(defaultPosition, lhTapping, QT_TRANSLATE_NOOP("palette", "Left-hand tapping"), 1.0);
+
+        auto rhTapping = Factory::makeTapping(paletteScore->dummy()->chord());
+        rhTapping->setHand(TappingHand::RIGHT);
+        guitarPalette.insertElement(defaultPosition + 1, rhTapping, QT_TRANSLATE_NOOP("palette", "Right-hand tapping"), 1.0);
+    }
+
+    if (!containsHammerOnPullOff) {
+        int defaultPosition = std::min(32, guitarPalette.cellsCount());
+        auto hopo = Factory::makeHammerOnPullOff(paletteScore->dummy());
+        guitarPalette.insertElement(defaultPosition, hopo, QT_TRANSLATE_NOOP("palette", "Hammer-on / pull-off"), 0.8);
+    }
+
     if (!containsFFrame) {
-        guitarPalette.appendActionIcon(ActionIconType::FFRAME, "insert-fretframe");
+        static const qreal FRAME_MAG = 1.25;
+        guitarPalette.appendActionIcon(ActionIconType::FFRAME, "insert-fretframe", FRAME_MAG);
     }
 }
 
@@ -235,12 +298,14 @@ void PaletteCompat::addNewFretboardDiagramItems(Palette& fretboardDiagramPalette
     bool containsBlankItem = false;
     for (const PaletteCellPtr& cell : fretboardDiagramPalette.cells()) {
         const ElementPtr element = cell->element;
-        if (!element) {
+        if (!element || !element->isFretDiagram()) {
             continue;
         }
 
-        if (element->isFretDiagram() && toFretDiagram(element.get())->harmonyText().empty()) {
+        FretDiagram* fretDiagram = toFretDiagram(element.get());
+        if (!fretDiagram->harmony() || fretDiagram->harmony()->harmonyName().empty()) {
             containsBlankItem = true;
+            break;
         }
     }
 

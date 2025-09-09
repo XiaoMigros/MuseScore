@@ -22,6 +22,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
+import QtQuick.Window
 
 import Muse.Ui 1.0
 import Muse.UiComponents 1.0
@@ -77,6 +78,12 @@ FocusScope {
     }
 
     function ensureActiveFocus() {
+        if (Window.window && Window.window.objectName.includes("PopupWindow_QQuickView")) {
+            // See also PopupWindow_QQuickView::eventFilter
+            Window.window.flags &= ~Qt.WindowDoesNotAcceptFocus
+            Window.window.requestActivate()
+        }
+
         if (!root.activeFocus) {
             root.forceActiveFocus()
         }
@@ -117,6 +124,9 @@ FocusScope {
                 root.ensureActiveFocus()
             }
         }
+
+        // Focus the text input field with Enter/Space when it is the navigation-active control.
+        onTriggered: root.ensureActiveFocus()
     }
 
     Rectangle {
@@ -189,6 +199,12 @@ FocusScope {
                         || event.key === Qt.Key_Escape) {
                     event.accepted = true
                     return
+                }
+
+                // Pass the UP/DOWN arrow keys on without defocusing the text input field
+                // to allow the containing control (e.g. IncrementalPropertyControl) to react to them.
+                if (event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
+                    return;
                 }
 
                 if (textInputModel.isShortcutAllowedOverride(event.key, event.modifiers)) {

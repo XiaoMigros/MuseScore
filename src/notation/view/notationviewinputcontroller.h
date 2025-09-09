@@ -19,8 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_NOTATION_NOTATIONVIEWINPUTCONTROLLER_H
-#define MU_NOTATION_NOTATIONVIEWINPUTCONTROLLER_H
+#pragma once
 
 #include <QtEvents>
 
@@ -75,9 +74,9 @@ public:
     virtual void showContextMenu(const ElementType& elementType, const QPointF& pos) = 0;
     virtual void hideContextMenu() = 0;
 
-    virtual void showElementPopup(const ElementType& elementType, const muse::RectF& elementRect) = 0;
+    virtual void showElementPopup(const ElementType& elementType) = 0;
     virtual void hideElementPopup(const ElementType& elementType = ElementType::INVALID) = 0;
-    virtual void toggleElementPopup(const ElementType& elementType, const muse::RectF& elementRect) = 0;
+    virtual void toggleElementPopup(const ElementType& elementType) = 0;
 
     virtual bool elementPopupIsOpen(const ElementType& elementType) const = 0;
 
@@ -190,6 +189,7 @@ private:
     void mousePress_considerSelect(const ClickContext& ctx);
     void cycleOverlappingHitElements(const std::vector<EngravingItem*>& hitElements, staff_idx_t hitStaffIndex);
     bool mousePress_considerDragOutgoingRange(const ClickContext& ctx);
+    bool mousePress_considerStartPasteRangeOnRelease(const ClickContext& ctx);
     void handleLeftClick(const ClickContext& ctx);
     void handleRightClick(const ClickContext& ctx);
     void handleLeftClickRelease(const QPointF& releasePoint);
@@ -197,7 +197,7 @@ private:
     bool startTextEditingAllowed() const;
     void updateTextCursorPosition();
 
-    bool anchorEditingKeysFound(QKeyEvent* event) const;
+    bool isAnchorEditingEvent(QKeyEvent* event) const;
 
     bool tryPercussionShortcut(QKeyEvent* event);
 
@@ -215,6 +215,7 @@ private:
         enum DragAction {
             DragOutgoingElement,
             DragOutgoingRange,
+            PasteRangeOnRelease,
             Other,
             Nothing
         } dragAction = Other;
@@ -232,12 +233,10 @@ private:
     bool dropEvent(const DragMoveEvent& event, const QMimeData* mimeData = nullptr);
     DragMoveEvent m_lastDragMoveEvent;
 
-    const mu::engraving::EngravingItem* m_prevHitElement = nullptr;
     const mu::engraving::EngravingItem* m_prevSelectedElement = nullptr;
 
+    bool m_hitElementWasAlreadySingleSelected = false;
+    bool m_shouldSelectOnLeftClickRelease = false;
     bool m_shouldStartEditOnLeftClickRelease = false;
-    bool m_shouldTogglePopupOnLeftClickRelease = false;
 };
 }
-
-#endif // MU_NOTATION_NOTATIONVIEWINPUTCONTROLLER_H

@@ -145,9 +145,8 @@ bool MasterNotationParts::appendStaff(Staff* staff, const ID& destinationPartId)
 
     for (const INotationPartsPtr& parts : excerptsParts()) {
         Staff* excerptStaff = staff->clone();
-        if (parts->appendStaff(excerptStaff, destinationPartId)) {
-            excerptStaff->linkTo(staff);
-        } else {
+        if (!parts->appendStaffLinkedToMaster(excerptStaff, staff, destinationPartId)) {
+            excerptStaff->undoUnlink();
             delete excerptStaff;
         }
     }
@@ -290,6 +289,32 @@ void MasterNotationParts::moveSystemObjects(const muse::ID& sourceStaffId, const
     for (const INotationPartsPtr& parts : excerptsParts()) {
         parts->moveSystemObjects(sourceStaffId, destinationStaffId);
     }
+
+    endGlobalEdit();
+}
+
+void MasterNotationParts::moveSystemObjectLayerBelowBottomStaff()
+{
+    IF_ASSERT_FAILED(score()->nstaves() > 1) {
+        return;
+    }
+
+    startGlobalEdit(TranslatableString("undoableAction", "Add system object layer below the bottom staff"));
+
+    NotationParts::moveSystemObjectLayerBelowBottomStaff();
+
+    endGlobalEdit();
+}
+
+void MasterNotationParts::moveSystemObjectLayerAboveBottomStaff()
+{
+    IF_ASSERT_FAILED(score()->nstaves() > 1) {
+        return;
+    }
+
+    startGlobalEdit(TranslatableString("undoableAction", "Remove system object layer below the bottom staff"));
+
+    NotationParts::moveSystemObjectLayerAboveBottomStaff();
 
     endGlobalEdit();
 }

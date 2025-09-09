@@ -123,9 +123,9 @@ public:
     void showContextMenu(const ElementType& elementType, const QPointF& pos) override;
     void hideContextMenu() override;
 
-    void showElementPopup(const ElementType& elementType, const muse::RectF& elementRect) override;
+    void showElementPopup(const ElementType& elementType) override;
     void hideElementPopup(const ElementType& elementType = ElementType::INVALID) override;
-    void toggleElementPopup(const ElementType& elementType, const muse::RectF& elementRect) override;
+    void toggleElementPopup(const ElementType& elementType) override;
 
     bool elementPopupIsOpen(const ElementType& elementType) const override;
 
@@ -155,7 +155,7 @@ signals:
     void showContextMenuRequested(int elementType, const QPointF& viewPos);
     void hideContextMenuRequested();
 
-    void showElementPopupRequested(mu::notation::PopupModelType modelType, const QRectF& elementRect);
+    void showElementPopupRequested(mu::notation::PopupModelType modelType);
     void hideElementPopupRequested();
     void isPopupOpenChanged(bool isPopupOpen);
 
@@ -258,6 +258,7 @@ private:
     void onPlaybackCursorRectChanged();
 
     void updateLoopMarkers();
+    void updateShadowNoteVisibility();
 
     const Page* pageByPoint(const muse::PointF& point) const;
     muse::PointF alignToCurrentPageBorder(const muse::RectF& showRect, const muse::PointF& pos) const;

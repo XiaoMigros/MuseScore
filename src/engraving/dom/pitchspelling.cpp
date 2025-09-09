@@ -473,7 +473,7 @@ static const int enharmonicSpelling[15][34] = {
 //As  f  c  g  d  a  e  b
         1, 1, 1, 1, 1, 1,  // bb
         1, 1, 0, 0, 0, 0, 0, // b
-        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 1, 1, 1,
         0, 1, 1, 1, 1, 1, 1, // #
         1, 1, 1, 1, 1, 1, 1 // ##
     },
@@ -747,11 +747,11 @@ void Score::spellNotelist(std::vector<Note*>& notes)
             case 3:
                 k = end - start - 3;
                 changeAllTpcs(notes[end - 3], tab[(notes[end - 3]->pitch() % 12) * 2 + ((opt & (1 << k)) >> k)]);
-            // FALLTHROUGH
+                [[fallthrough]];
             case 2:
                 k = end - start - 2;
                 changeAllTpcs(notes[end - 2], tab[(notes[end - 2]->pitch() % 12) * 2 + ((opt & (1 << k)) >> k)]);
-            // FALLTHROUGH
+                [[fallthrough]];
             case 1:
                 k = end - start - 1;
                 changeAllTpcs(notes[end - 1], tab[(notes[end - 1]->pitch() % 12) * 2 + ((opt & (1 << k)) >> k)]);

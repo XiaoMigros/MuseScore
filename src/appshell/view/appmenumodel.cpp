@@ -117,7 +117,7 @@ void AppMenuModel::setupConnections()
     });
 
 #ifdef MUSE_MODULE_WORKSPACE
-    connect(m_workspacesMenuModel.get(), &WorkspacesMenuModel::itemsChanged, this, [this](){
+    connect(m_workspacesMenuModel.get(), &WorkspacesMenuModel::itemsChanged, this, [this]() {
         MenuItem& workspacesItem = findMenu("menu-workspaces");
         workspacesItem.setSubitems(m_workspacesMenuModel->items());
     });
@@ -159,6 +159,15 @@ void AppMenuModel::onActionsStateChanges(const muse::actions::ActionCodeList& co
     }
 }
 
+bool AppMenuModel::isMuseSamplerModuleAdded() const
+{
+#ifdef MUSE_MODULE_MUSESAMPLER
+    return museSamplerInfo() != nullptr;
+#else
+    return false;
+#endif
+}
+
 MenuItemList AppMenuModel::makeChordAndFretboardDiagramsItems()
 {
     MenuItemList items {
@@ -191,18 +200,16 @@ MenuItem* AppMenuModel::makeFileMenu()
         makeMenuItem("file-new"),
         makeMenuItem("file-open"),
         makeMenu(TranslatableString("appshell/menu/file", "Open &recent"), recentScoresList, "menu-file-open", openRecentEnabled),
-        makeSeparator(),
         makeMenuItem("file-close"),
+        makeSeparator(),
         makeMenuItem("file-save"),
         makeMenuItem("file-save-as"),
-        makeMenuItem("file-save-a-copy"),
-        makeMenuItem("file-save-selection"),
         makeMenuItem("file-save-to-cloud"),
-        makeMenuItem("file-publish"),
+        makeMenu(TranslatableString("appshell/menu/file", "Save o&ther"), makeSaveOtherSubItems()),
+        makeMenu(TranslatableString("appshell/menu/file", "Pu&blish online"), makePublishOnlineSubItems()),
         makeSeparator(),
         makeMenuItem("file-import-pdf"),
         makeMenuItem("file-export"),
-        makeMenuItem("file-share-audio"),
         makeSeparator(),
         makeMenuItem("project-properties"),
         makeMenuItem("parts", TranslatableString("action", "Parts…")),
@@ -213,6 +220,24 @@ MenuItem* AppMenuModel::makeFileMenu()
     };
 
     return makeMenu(TranslatableString("appshell/menu/file", "&File"), fileItems, "menu-file");
+}
+
+MenuItemList AppMenuModel::makeSaveOtherSubItems()
+{
+    MenuItemList subItems {
+        makeMenuItem("file-save-a-copy"),
+        makeMenuItem("file-save-selection"),
+    };
+    return subItems;
+}
+
+MenuItemList AppMenuModel::makePublishOnlineSubItems()
+{
+    MenuItemList subItems {
+        makeMenuItem("file-publish"),
+        makeMenuItem("file-share-audio"),
+    };
+    return subItems;
 }
 
 MenuItem* AppMenuModel::makeEditMenu()
@@ -376,6 +401,8 @@ MenuItem* AppMenuModel::makeToolsMenu()
         makeMenuItem("slash-fill"),
         makeMenuItem("slash-rhythm"),
         makeSeparator(),
+        makeMenuItem("enh-both"),
+        makeMenuItem("enh-current"),
         makeMenuItem("pitch-spell"),
         makeMenuItem("reset-groupings"),
         makeMenuItem("resequence-rehearsal-marks"),
@@ -434,8 +461,15 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
     helpItems << makeMenuItem("about-musescore", MenuItemRole::AboutRole);
     helpItems << makeMenuItem("about-qt", MenuItemRole::AboutQtRole);
     helpItems << makeMenuItem("about-musicxml");
-
     helpItems << makeSeparator();
+
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
+    if (isMuseSamplerModuleAdded()) {
+        helpItems << makeMenuItem("clear-online-sounds-cache");
+        helpItems << makeSeparator();
+    }
+#endif
+
     helpItems << makeMenuItem("revert-factory");
 
     return makeMenu(TranslatableString("appshell/menu/help", "&Help"), helpItems, "menu-help");
@@ -455,9 +489,7 @@ MenuItem* AppMenuModel::makeDiagnosticsMenu()
         makeMenu(TranslatableString("appshell/menu/diagnostics", "&System"), systemItems, "menu-system")
     };
 
-#ifdef MUSE_MODULE_MUSESAMPLER
-    bool isMuseSamplerModuleAdded = museSamplerInfo() != nullptr;
-    if (isMuseSamplerModuleAdded) {
+    if (isMuseSamplerModuleAdded()) {
         MenuItemList museSamplerItems {
             makeMenuItem("musesampler-check"),
         };
@@ -468,7 +500,6 @@ MenuItem* AppMenuModel::makeDiagnosticsMenu()
 
         items << makeMenu(TranslatableString("appshell/menu/diagnostics", "&MuseSampler"), museSamplerItems, "menu-musesampler");
     }
-#endif
 
     if (globalConfiguration()->devModeEnabled()) {
         MenuItemList actionsItems {
@@ -495,6 +526,7 @@ MenuItem* AppMenuModel::makeDiagnosticsMenu()
             makeMenuItem("show-system-bounding-rects"),
             makeMenuItem("show-element-masks"),
             makeMenuItem("show-line-attach-points"),
+            makeMenuItem("mark-empty-staff-visibility-overrides"),
             makeMenuItem("mark-corrupted-measures"),
             makeMenuItem("check-for-score-corruptions")
         };
@@ -605,6 +637,7 @@ MenuItemList AppMenuModel::makeIntervalsItems()
         makeMenuItem("interval7"),
         makeMenuItem("interval8"),
         makeMenuItem("interval9"),
+        makeMenuItem("interval10"),
         makeSeparator(),
         makeMenuItem("interval-2"),
         makeMenuItem("interval-3"),
@@ -613,7 +646,8 @@ MenuItemList AppMenuModel::makeIntervalsItems()
         makeMenuItem("interval-6"),
         makeMenuItem("interval-7"),
         makeMenuItem("interval-8"),
-        makeMenuItem("interval-9")
+        makeMenuItem("interval-9"),
+        makeMenuItem("interval-10")
     };
 
     return items;

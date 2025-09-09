@@ -72,10 +72,12 @@
 #include "rendering/score/parenthesislayout.h"
 #include "tlayout.h"
 #include "slurtielayout.h"
+#include "systemlayout.h"
 #include "beamlayout.h"
 #include "tremololayout.h"
 #include "autoplace.h"
 #include "stemlayout.h"
+#include "restlayout.h"
 
 using namespace muse;
 using namespace mu::engraving;
@@ -987,7 +989,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
                 }
             }
         }
-        x -= 0.5 * a->ldata()->bbox().width();
+        x -= a->ldata()->opticalCenter();
         a->setPos(x, y);
         if (a->visible()) {
             prevVisibleArticulation = a;
@@ -1142,7 +1144,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
                     staffBotY = a->y() + a->height() + minDist + yOffset;
                 }
             }
-            a->mutldata()->moveX(-0.5 * a->width());
+            a->mutldata()->moveX(-a->ldata()->opticalCenter());
         }
 
         if (!a->isOnCrossBeamSide()) {
@@ -1180,16 +1182,22 @@ void ChordLayout::layoutArticulations3(Chord* item, Slur* slur, LayoutContext& c
     }
     Segment* s = item->segment();
     Measure* m = item->measure();
-    SysStaff* sstaff = m->system() ? m->system()->staff(item->vStaffIdx()) : nullptr;
+    SysStaff* itemStaff = m->system() ? m->system()->staff(item->vStaffIdx()) : nullptr;
+    SysStaff* slurStaff = m->system() ? m->system()->staff(ss->vStaffIdx()) : nullptr;
+    PointF itemStaffPos = itemStaff ? PointF(0.0, itemStaff->y()) : PointF();
+    PointF slurStaffPos = itemStaff ? PointF(0.0, slurStaff->y()) : PointF();
     for (auto iter = item->articulations().begin(); iter != item->articulations().end(); ++iter) {
         Articulation* a = *iter;
         if (a->layoutCloseToNote() || !a->autoplace() || !slur->addToSkyline()) {
             continue;
         }
-        Shape aShape = a->shape().translate(a->pos() + item->pos() + s->pos() + m->pos() + item->staffOffset());
-        Shape sShape = ss->shape().translate(ss->pos());
+        Shape aShape
+            = a->shape().translate(a->pos() + item->pos() + s->pos() + m->pos() + item->staffOffset() + itemStaffPos);
+        Shape sShape = ss->shape().translate(ss->pos() + slurStaffPos);
+        sShape.removeTypes({ ElementType::HAMMER_ON_PULL_OFF_TEXT });
         double minDist = ctx.conf().styleMM(Sid::articulationMinDistance);
-        double vertClearance = a->up() ? aShape.verticalClearance(sShape) : sShape.verticalClearance(aShape);
+        bool slurBelowArticulation = a->up() && !(ss->vStaffIdx() < item->vStaffIdx());
+        double vertClearance = slurBelowArticulation ? aShape.verticalClearance(sShape) : sShape.verticalClearance(aShape);
         if (vertClearance < minDist) {
             minDist += slur->up()
                        ? std::max(aShape.minVerticalDistance(sShape), 0.0)
@@ -1198,9 +1206,9 @@ void ChordLayout::layoutArticulations3(Chord* item, Slur* slur, LayoutContext& c
             for (auto iter2 = iter; iter2 != item->articulations().end(); ++iter2) {
                 Articulation* aa = *iter2;
                 aa->mutldata()->moveY(minDist);
-                if (sstaff && aa->addToSkyline()) {
-                    sstaff->skyline().add(aa->shape().translate(aa->pos() + item->pos() + s->pos() + m->pos() + item->staffOffset()));
-                    for (ShapeElement& sh : s->staffShape(item->staffIdx()).elements()) {
+                if (itemStaff && aa->addToSkyline()) {
+                    SystemLayout::updateSkylineForElement(aa, m->system(), minDist);
+                    for (ShapeElement& sh : s->staffShape(item->vStaffIdx()).elements()) {
                         if (sh.item() == aa) {
                             sh.translate(0.0, minDist);
                         }
@@ -1254,15 +1262,15 @@ void ChordLayout::layoutStem(Chord* item, const LayoutContext& ctx)
     }
 }
 
-void ChordLayout::computeUpBeamCase(Chord* item, Beam* beam)
+bool ChordLayout::computeUpBeamCase(const Chord* item, Beam* beam)
 {
-    if (beam->userModified()) {
-        item->setUp(isChordPosBelowBeam(item, beam));
-    } else if (beam->cross()) {
-        item->setUp(item->isBelowCrossBeam(beam));
-    } else {
-        item->setUp(beam->up());
+    if (beam->cross()) {
+        return item->isBelowCrossBeam(beam);
+    } else if (beam->userModified()) {
+        return isChordPosBelowBeam(item, beam);
     }
+
+    return beam->up();
 }
 
 void ChordLayout::updateLedgerLines(Chord* item, LayoutContext& ctx)
@@ -1422,7 +1430,7 @@ void ChordLayout::updateLedgerLines(Chord* item, LayoutContext& ctx)
     }
 }
 
-bool ChordLayout::isChordPosBelowBeam(Chord* item, Beam* beam)
+bool ChordLayout::isChordPosBelowBeam(const Chord* item, Beam* beam)
 {
     assert(!beam->beamFragments().empty());
 
@@ -1460,12 +1468,22 @@ bool ChordLayout::isChordPosBelowTrem(const Chord* item, TremoloTwoChord* trem)
     }
     Note* baseNote = item->up() ? item->downNote() : item->upNote();
     double noteY = baseNote->pagePos().y();
-    double tremY = trem->chordBeamAnchor(item, ChordBeamAnchorType::Middle).y();
 
-    return noteY > tremY;
+    PointF startAnchor = trem->startAnchor();
+    PointF endAnchor = trem->endAnchor();
+
+    if (startAnchor.isNull() || endAnchor.isNull()) {
+        return trem->crossStaffBeamBetween() ? item->isBelowCrossBeam(trem) : trem->up();
+    }
+
+    if (item == trem->chord1()) {
+        return noteY > startAnchor.y();
+    }
+
+    return noteY > endAnchor.y();
 }
 
-static bool computeUp_TremoloTwoNotesCase(const Chord* item, TremoloTwoChord* tremolo, const LayoutContext& ctx)
+bool ChordLayout::computeUpTremoloCase(const Chord* item, TremoloTwoChord* tremolo, const LayoutContext& ctx)
 {
     const Chord* c1 = tremolo->chord1();
     const Chord* c2 = tremolo->chord2();
@@ -1493,21 +1511,15 @@ static bool computeUp_TremoloTwoNotesCase(const Chord* item, TremoloTwoChord* tr
 
     if (tremolo->userModified()) {
         return ChordLayout::isChordPosBelowTrem(item, tremolo);
-    } else if (cross) {
-        // unmodified cross-staff trem, should be one note per staff
-        if (item->staffMove() != 0) {
-            return item->staffMove() > 0;
-        } else {
-            int otherStaffMove = item->staffMove() == c1->staffMove() ? c2->staffMove() : c1->staffMove();
-            return otherStaffMove < 0;
-        }
     }
 
-    if (!cross && !tremolo->userModified()) {
-        return tremolo->up();
+    // unmodified cross-staff trem, should be one note per staff
+    if (item->staffMove() != 0) {
+        return item->staffMove() > 0;
     }
 
-    return item->ldata()->up;
+    int otherStaffMove = item->staffMove() == c1->staffMove() ? c2->staffMove() : c1->staffMove();
+    return otherStaffMove < 0;
 }
 
 void ChordLayout::computeUp(const Chord* item, Chord::LayoutData* ldata, const LayoutContext& ctx)
@@ -1551,10 +1563,10 @@ void ChordLayout::computeUp(const Chord* item, Chord::LayoutData* ldata, const L
     }
 
     if (hasBeam) {
-        computeUpBeamCase(const_cast<Chord*>(item), item->beam());
+        ldata->up = computeUpBeamCase(item, item->beam());
         return;
     } else if (item->tremoloTwoChord()) {
-        ldata->up = computeUp_TremoloTwoNotesCase(item, item->tremoloTwoChord(), ctx);
+        ldata->up = computeUpTremoloCase(item, item->tremoloTwoChord(), ctx);
         return;
     }
 
@@ -2998,259 +3010,6 @@ void ChordLayout::updateLineAttachPoints(Chord* chord, bool isFirstInMeasure, La
     SlurTieLayout::layoutLaissezVibChord(chord, ctx);
 }
 
-void ChordLayout::resolveVerticalRestConflicts(LayoutContext& ctx, Segment* segment, staff_idx_t staffIdx)
-{
-    std::vector<Rest*> rests;
-    std::vector<Chord*> chords;
-
-    collectChordsAndRest(segment, staffIdx, chords, rests);
-
-    if (rests.empty()) {
-        return;
-    }
-
-    collectChordsOverlappingRests(segment, staffIdx, chords);
-
-    for (Rest* rest : rests) {
-        rest->verticalClearance().reset();
-    }
-
-    const Staff* staff = ctx.dom().staff(staffIdx);
-    if (!chords.empty()) {
-        resolveRestVSChord(rests, chords, staff, segment);
-    }
-
-    if (rests.size() < 2) {
-        return;
-    }
-
-    resolveRestVSRest(rests, staff, segment, ctx);
-}
-
-void ChordLayout::resolveRestVSChord(std::vector<Rest*>& rests, std::vector<Chord*>& chords, const Staff* staff, Segment* segment)
-{
-    Fraction tick = segment->tick();
-    int lines = staff->lines(tick);
-    double spatium = staff->spatium(tick);
-    double lineDistance = staff->lineDistance(tick) * spatium;
-    double minRestToChordClearance = 0.35 * spatium;
-
-    for (Rest* rest : rests) {
-        if (!rest->visible() || !rest->autoplace()) {
-            continue;
-        }
-        RestVerticalClearance& restVerticalClearance = rest->verticalClearance();
-        for (Chord* chord : chords) {
-            if (!chord->visible() || !chord->autoplace()) {
-                continue;
-            }
-
-            bool restAbove = rest->voice() < chord->voice() || (chord->slash() && !(rest->voice() % 2));
-            int upSign = restAbove ? -1 : 1;
-            double restYOffset = rest->offset().y();
-            bool ignoreYOffset = (restAbove && restYOffset > 0) || (!restAbove && restYOffset < 0);
-            PointF offset = ignoreYOffset ? PointF(0, restYOffset) : PointF(0, 0);
-
-            Shape chordShape = chord->shape().translate(chord->pos());
-            chordShape.removeInvisibles();
-            chordShape.removeTypes({ ElementType::ARPEGGIO });
-            if (chordShape.empty()) {
-                continue;
-            }
-
-            double clearance = 0.0;
-            Shape restShape = rest->shape().translate(rest->pos() - offset);
-            if (chord->segment() == rest->segment()) {
-                clearance = restAbove
-                            ? restShape.verticalClearance(chordShape)
-                            : chordShape.verticalClearance(restShape);
-            } else {
-                Note* limitNote = restAbove ? chord->upNote() : chord->downNote();
-                Shape noteShape = limitNote->shape().translate(limitNote->pos());
-                clearance = restAbove ? noteShape.top() - restShape.bottom() : restShape.top() - noteShape.bottom();
-                minRestToChordClearance = 0.0;
-            }
-
-            double margin = clearance - minRestToChordClearance;
-            int marginInSteps = floor(margin / lineDistance);
-            if (restAbove) {
-                restVerticalClearance.setBelow(marginInSteps);
-            } else {
-                restVerticalClearance.setAbove(marginInSteps);
-            }
-            if (margin > 0) {
-                continue;
-            }
-
-            rest->verticalClearance().setLocked(true);
-            bool isWholeOrHalf = rest->isWholeRest() || rest->durationType() == DurationType::V_HALF;
-            bool outAboveStaff = restAbove && restShape.bottom() + margin < minRestToChordClearance;
-            bool outBelowStaff = !restAbove && restShape.top() - margin > (lines - 1) * lineDistance - minRestToChordClearance;
-            bool useHalfSpaceSteps = (outAboveStaff || outBelowStaff) && !isWholeOrHalf;
-            double yMove;
-            if (useHalfSpaceSteps) {
-                int steps = ceil(std::abs(margin) / (lineDistance / 2));
-                yMove = steps * lineDistance / 2 * upSign;
-                rest->mutldata()->moveY(yMove);
-            } else {
-                int steps = ceil(std::abs(margin) / lineDistance);
-                yMove = steps * lineDistance * upSign;
-                rest->mutldata()->moveY(yMove);
-            }
-            for (Rest* mergedRest : rest->ldata()->mergedRests) {
-                mergedRest->mutldata()->moveY(yMove);
-            }
-            if (isWholeOrHalf) {
-                double y = rest->pos().y();
-                int line = y < 0 ? floor(y / lineDistance) : floor(y / lineDistance);
-                rest->updateSymbol(line, lines, rest->mutldata()); // Because it may need to use the symbol with ledger line now
-            }
-        }
-    }
-}
-
-void ChordLayout::resolveRestVSRest(std::vector<Rest*>& rests, const Staff* staff,
-                                    Segment* segment, LayoutContext& ctx,
-                                    bool considerBeams)
-{
-    if (rests.empty()) {
-        return;
-    }
-
-    Fraction tick = segment->tick();
-    double spatium = staff->spatium(tick);
-    double lineDistance = staff->lineDistance(tick) * spatium;
-    int lines = staff->lines(tick);
-    const double minRestToRestClearance = 0.35 * spatium;
-
-    for (size_t i = 0; i < rests.size() - 1; ++i) {
-        Rest* rest1 = rests[i];
-        if (!rest1->visible() || !rest1->autoplace()) {
-            continue;
-        }
-
-        RestVerticalClearance& rest1Clearance = rest1->verticalClearance();
-        Shape shape1 = rest1->shape().translate(rest1->pos() - rest1->offset());
-
-        Rest* rest2 = rests[i + 1];
-        if (!rest2->visible() || !rest2->autoplace()) {
-            continue;
-        }
-
-        if (muse::contains(rest1->ldata()->mergedRests, rest2) || muse::contains(rest2->ldata()->mergedRests, rest1)) {
-            continue;
-        }
-
-        Shape shape2 = rest2->shape().translate(rest2->pos() - rest2->offset());
-        RestVerticalClearance& rest2Clearance = rest2->verticalClearance();
-
-        double clearance;
-        bool firstAbove = rest1->voice() < rest2->voice();
-        if (firstAbove) {
-            clearance = shape1.verticalClearance(shape2);
-        } else {
-            clearance = shape2.verticalClearance(shape1);
-        }
-        double margin = clearance - minRestToRestClearance;
-        int marginInSteps = floor(margin / lineDistance);
-        if (firstAbove) {
-            rest1Clearance.setBelow(marginInSteps);
-            rest2Clearance.setAbove(marginInSteps);
-        } else {
-            rest1Clearance.setAbove(marginInSteps);
-            rest2Clearance.setBelow(marginInSteps);
-        }
-
-        if (margin > 0) {
-            continue;
-        }
-
-        int steps = ceil(std::abs(margin) / lineDistance);
-        // Move the two rests away from each other
-        int step1 = floor(double(steps) / 2);
-        int step2 = ceil(double(steps) / 2);
-        int maxStep1 = firstAbove ? rest1Clearance.above() : rest1Clearance.below();
-        int maxStep2 = firstAbove ? rest2Clearance.below() : rest2Clearance.above();
-        maxStep1 = std::max(maxStep1, 0);
-        maxStep2 = std::max(maxStep2, 0);
-        if (step1 > maxStep1) {
-            step2 += step1 - maxStep1; // First rest is locked, try move the second more
-        }
-        if (step2 > maxStep2) {
-            step1 += step2 - maxStep2; // Second rest is locked, try move the first more
-        }
-        step1 = std::min(step1, maxStep1);
-        step2 = std::min(step2, maxStep2);
-        rest1->mutldata()->moveY(step1 * lineDistance * (firstAbove ? -1 : 1));
-        rest2->mutldata()->moveY(step2 * lineDistance * (firstAbove ? 1 : -1));
-
-        Beam* beam1 = rest1->beam();
-        Beam* beam2 = rest2->beam();
-        if (beam1 && beam2 && considerBeams) {
-            shape1 = rest1->shape().translate(rest1->pos() - rest1->offset());
-            shape2 = rest2->shape().translate(rest2->pos() - rest2->offset());
-
-            ChordRest* beam1Start = beam1->elements().front();
-            ChordRest* beam1End = beam1->elements().back();
-            double y1Start = BeamLayout::chordBeamAnchorY(beam1, beam1Start) - beam1Start->pagePos().y();
-            double y1End = BeamLayout::chordBeamAnchorY(beam1, beam1End) - beam1End->pagePos().y();
-            double beam1Ymid = 0.5 * (y1Start + y1End);
-
-            ChordRest* beam2Start = beam2->elements().front();
-            ChordRest* beam2End = beam2->elements().back();
-            double y2Start = BeamLayout::chordBeamAnchorY(beam2, beam2Start) - beam2Start->pagePos().y();
-            double y2End = BeamLayout::chordBeamAnchorY(beam2, beam2End) - beam2End->pagePos().y();
-            double beam2Ymid = 0.5 * (y2Start + y2End);
-
-            double centerY = 0.5 * (beam1Ymid + beam2Ymid);
-
-            double upperBound = shape1.bottom();
-            double lowerBound = shape2.top();
-            int steps2 = 0;
-            if (centerY < upperBound) {
-                steps2 = floor((centerY - upperBound) / lineDistance);
-            } else if (centerY > lowerBound) {
-                steps2 = ceil((centerY - lowerBound) / lineDistance);
-            }
-            double moveY = steps2 * lineDistance;
-            rest1->mutldata()->moveY(moveY);
-            rest2->mutldata()->moveY(moveY);
-            shape1.translate(PointF(0.0, moveY));
-            shape2.translate(PointF(0.0, moveY));
-
-            double halfLineDistance = 0.5 * lineDistance;
-            if (shape1.bottom() < -halfLineDistance) {
-                rest1->mutldata()->moveY(halfLineDistance);
-            } else if (centerY >= (lines - 1) * lineDistance + halfLineDistance) {
-                rest2->mutldata()->moveY(-halfLineDistance);
-            }
-
-            rest1->verticalClearance().setLocked(true);
-            rest2->verticalClearance().setLocked(true);
-            TLayout::layoutBeam(beam1, ctx);
-            TLayout::layoutBeam(beam2, ctx);
-        }
-
-        bool rest1IsWholeOrHalf = rest1->isWholeRest() || rest1->durationType() == DurationType::V_HALF;
-        bool rest2IsWholeOrHalf = rest2->isWholeRest() || rest2->durationType() == DurationType::V_HALF;
-        double y = 0.0;
-        int line = 0;
-
-        if (rest1IsWholeOrHalf) {
-            Rest::LayoutData* rest1LayoutData = rest1->mutldata();
-            y = rest1->pos().y();
-            line = y < 0 ? floor(y / lineDistance) : floor(y / lineDistance);
-            rest1->updateSymbol(line, lines, rest1LayoutData);
-        }
-        if (rest2IsWholeOrHalf) {
-            Rest::LayoutData* rest2LayoutData = rest2->mutldata();
-            y = rest2->pos().y();
-            line = y < 0 ? floor(y / lineDistance) : floor(y / lineDistance);
-            rest2->updateSymbol(line, lines, rest2LayoutData);
-        }
-    }
-}
-
 void ChordLayout::layoutChordBaseFingering(Chord* chord, System* system, LayoutContext&)
 {
     std::set<staff_idx_t> shapesToRecreate;
@@ -3503,17 +3262,11 @@ void ChordLayout::fillShape(const ChordRest* item, Chord::LayoutData* ldata, con
     case ElementType::CHORD:
         fillShape(static_cast<const Chord*>(item), static_cast<Chord::LayoutData*>(ldata));
         break;
-    case ElementType::REST:
-        fillShape(static_cast<const Rest*>(item), static_cast<Rest::LayoutData*>(ldata));
-        break;
     case ElementType::MEASURE_REPEAT:
         fillShape(static_cast<const MeasureRepeat*>(item), static_cast<MeasureRepeat::LayoutData*>(ldata), conf);
         break;
-    case ElementType::MMREST:
-        fillShape(static_cast<const MMRest*>(item), static_cast<MMRest::LayoutData*>(ldata), conf);
-        break;
     default:
-        DO_ASSERT(false);
+        RestLayout::fillShape(static_cast<const Rest*>(item), static_cast<Rest::LayoutData*>(ldata), conf);
         break;
     }
 }
@@ -3662,57 +3415,12 @@ void ChordLayout::fillShape(const Chord* item, ChordRest::LayoutData* ldata)
     ldata->setShape(shape);
 }
 
-void ChordLayout::fillShape(const Rest* item, Rest::LayoutData* ldata)
-{
-    Shape shape(Shape::Type::Composite);
-
-    if (!item->isGap() && !item->shouldNotBeDrawn()) {
-        shape.add(chordRestShape(item));
-        shape.add(item->symBbox(ldata->sym), item);
-        for (const NoteDot* dot : item->dotList()) {
-            if (dot->addToSkyline()) {
-                shape.add(item->symBbox(SymId::augmentationDot).translated(dot->pos()), dot);
-            }
-        }
-    }
-
-    for (const EngravingItem* e : item->el()) {
-        if (e->addToSkyline()) {
-            shape.add(e->shape().translate(e->pos()));
-        }
-    }
-
-    const Parenthesis* leftParen = item->leftParen();
-    if (leftParen && leftParen->addToSkyline()) {
-        shape.add(leftParen->ldata()->shape().translated(leftParen->pos()));
-    }
-    const Parenthesis* rightParen = item->rightParen();
-    if (rightParen && rightParen->addToSkyline()) {
-        shape.add(rightParen->ldata()->shape().translated(rightParen->pos()));
-    }
-
-    ldata->setShape(shape);
-}
-
 void ChordLayout::fillShape(const MeasureRepeat* item, MeasureRepeat::LayoutData* ldata, const LayoutConfiguration&)
 {
     Shape shape(Shape::Type::Composite);
 
     shape.add(item->numberRect(), item);
     shape.add(item->symBbox(ldata->symId), item);
-
-    ldata->setShape(shape);
-}
-
-void ChordLayout::fillShape(const MMRest* item, MMRest::LayoutData* ldata, const LayoutConfiguration& conf)
-{
-    Shape shape(Shape::Type::Composite);
-
-    double vStrokeHeight = conf.styleMM(Sid::mmRestHBarVStrokeHeight);
-    shape.add(RectF(0.0, -(vStrokeHeight * .5), ldata->restWidth, vStrokeHeight), item);
-    if (item->shouldShowNumber()) {
-        shape.add(item->numberRect().translated(item->numberPos()), item);
-    }
 
     ldata->setShape(shape);
 }
