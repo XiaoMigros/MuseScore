@@ -609,6 +609,7 @@
   <SC>
     <key>pad-dot</key>
     <seq>.</seq>
+    <seq>NumPad+\,</seq>
     </SC>
   <SC>
     <key>tie</key>
