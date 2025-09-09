@@ -25,6 +25,7 @@
 #include "types/typesconv.h"
 
 #include "masterscore.h"
+#include "measure.h"
 #include "score.h"
 #include "segment.h"
 #include "staff.h"
@@ -152,7 +153,7 @@ bool KeySig::isChange() const
     if (!segment() || segment()->segmentType() != SegmentType::KeySig) {
         return false;
     }
-    Fraction keyTick = tick();
+    const Fraction keyTick = tick();
     return staff()->currentKeyTick(keyTick) == keyTick;
 }
 
@@ -197,12 +198,32 @@ PointF KeySig::staffOffset() const
     return PointF(0.0, 0.0);
 }
 
+EngravingItem* KeySig::propertyDelegate(Pid propertyId)
+{
+    switch (propertyId) {
+    case Pid::KEY:
+    case Pid::KEY_CONCERT:
+    case Pid::SHOW_COURTESY:
+    case Pid::KEYSIG_MODE:
+    case Pid::IS_COURTESY: {
+        return changeElement();
+    }
+    default:
+        break;
+    }
+
+    return nullptr;
+}
+
 //---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 
 PropertyValue KeySig::getProperty(Pid propertyId) const
 {
+    if (EngravingItem* e = const_cast<KeySig*>(this)->propertyDelegate(propertyId)) {
+        return e->getProperty(propertyId);
+    }
     switch (propertyId) {
     case Pid::KEY:
         return int(key());
@@ -225,29 +246,20 @@ PropertyValue KeySig::getProperty(Pid propertyId) const
 
 bool KeySig::setProperty(Pid propertyId, const PropertyValue& v)
 {
+    if (EngravingItem* e = const_cast<KeySig*>(this)->propertyDelegate(propertyId)) {
+        return e->setProperty(propertyId, v);
+    }
     switch (propertyId) {
     case Pid::KEY:
-        if (generated()) {
-            return false;
-        }
         setKey(m_sig.concertKey(), Key(v.toInt()));
         break;
     case Pid::KEY_CONCERT:
-        if (generated()) {
-            return false;
-        }
         setKey(Key(v.toInt()));
         break;
     case Pid::SHOW_COURTESY:
-        if (generated()) {
-            return false;
-        }
         setShowCourtesy(v.toBool());
         break;
     case Pid::KEYSIG_MODE:
-        if (generated()) {
-            return false;
-        }
         setMode(KeyMode(v.toInt()));
         staff()->setKey(tick(), keySigEvent());
         break;

@@ -400,6 +400,10 @@ void MeasureRead::readVoice(Measure* measure, XmlReader& e, ReadContext& ctx, in
                     segment->setEndOfMeasureChange(true);
                     measure->setEndOfMeasureChange(true);
                 }
+                const Segment* s = measure->findSegment(SegmentType::KeySigAnnounce, curTick);
+                if (s && s->element(ctx.track())) {
+                    toKeySig(s->element(ctx.track()))->setChangeElement(ks);
+                }
 
                 staff->setKey(curTick, ks->keySigEvent());
             }

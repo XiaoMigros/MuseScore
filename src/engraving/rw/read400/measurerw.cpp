@@ -426,6 +426,10 @@ void MeasureRead::readVoice(Measure* measure, XmlReader& e, ReadContext& ctx, in
             segment = measure->getSegment(courtesySig ? SegmentType::KeySigAnnounce : SegmentType::KeySig, curTick);
             segment->add(ks);
             if (!courtesySig) {
+                const Segment* s = measure->findSegment(SegmentType::KeySigAnnounce, curTick);
+                if (s && s->element(ctx.track())) {
+                    toKeySig(s->element(ctx.track()))->setChangeElement(ks);
+                }
                 staff->setKey(curTick, ks->keySigEvent());
             }
         } else if (tag == "Text") {
