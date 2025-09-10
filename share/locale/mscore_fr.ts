@@ -27863,32 +27863,32 @@ a échoué</translation>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="356"/>
         <source>Unison</source>
-        <translation type="unfinished"></translation>
+        <translation>Unisson</translation>
     </message>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="357"/>
         <source>Enter unison</source>
-        <translation type="unfinished"></translation>
+        <translation>Entrer un unisson</translation>
     </message>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="419"/>
         <source>Tenth Above</source>
-        <translation type="unfinished"></translation>
+        <translation>Dixième au-dessus</translation>
     </message>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="420"/>
         <source>Enter tenth above</source>
-        <translation type="unfinished"></translation>
+        <translation>Entrer une dixième au-dessus</translation>
     </message>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="482"/>
         <source>Tenth Below</source>
-        <translation type="unfinished"></translation>
+        <translation>Dixième au-dessous</translation>
     </message>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="483"/>
         <source>Enter tenth below</source>
-        <translation type="unfinished"></translation>
+        <translation>Entrer une dixième au-dessous</translation>
     </message>
     <message>
         <location filename="../../mscore/shortcut.cpp" line="1965"/>
