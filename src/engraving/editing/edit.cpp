@@ -4396,7 +4396,10 @@ void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
     }
 
     undoChangeChordRestLen(ocr, tuplet->baseLen());
-    undo(new ChangeChordRestTuplet(ocr, tuplet));
+    for (EngravingObject* e : ocr->linkList()) {
+        Tuplet* linkedTuplet = toTuplet(tuplet->findLinkedInScore(e->score()));
+        undo(new ChangeChordRestTuplet(toChordRest(e), linkedTuplet));
+    }
 
     int actualNotes = an.numerator() / an.denominator();
     Fraction ticks = ocr->actualTicks();
