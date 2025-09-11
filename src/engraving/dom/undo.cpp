@@ -2278,6 +2278,23 @@ void ChangeChordRestTuplet::flip(EditData*)
     chordRest->setTuplet(tuplet);
     undoAddTuplet(chordRest);
     chordRest->triggerLayout();
+    for (EngravingObject* e : chordRest->linkList()) {
+        ChordRest* cr = toChordRest(e);
+        if (cr == chordRest) {
+            continue;
+        }
+        undoRemoveTuplet(cr);
+        Tuplet* linkedTuplet = tuplet ? toTuplet(tuplet->findLinkedInStaff(cr->staff())) : nullptr;
+        if (tuplet && !linkedTuplet) {
+            linkedTuplet = toTuplet(tuplet->linkedClone());
+            linkedTuplet->setScore(cr->score());
+            linkedTuplet->setTrack(cr->track());
+            linkedTuplet->setParent(cr->measure());
+        }
+        cr->setTuplet(linkedTuplet);
+        undoAddTuplet(cr);
+        cr->triggerLayout();
+    }
     tuplet = t;
 }
 
