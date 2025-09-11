@@ -255,8 +255,6 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
     }
 
     Fraction f(destinationChordRest->ticks());
-    Tuplet* ot  = destinationChordRest->tuplet();
-
     f.reduce();         //measure duration might not be reduced
 
     Fraction _ratio;
@@ -291,30 +289,25 @@ Tuplet* Score::addTuplet(ChordRest* destinationChordRest, Fraction ratio, Tuplet
     tuplet->setTicks(f);
     tuplet->setBaseLen(fr);
 
-    tuplet->setTrack(destinationChordRest->track());
-    tuplet->setTick(destinationChordRest->tick());
     tuplet->setParent(measure);
-
-    if (ot) {
-        tuplet->setTuplet(ot);
-    }
 
     cmdCreateTuplet(destinationChordRest, tuplet);
 
-    const std::vector<DurationElement*>& elements = tuplet->elements();
-    DurationElement* elementForSelect = nullptr;
-    if (!elements.empty()) {
-        DurationElement* firstElement = elements.front();
-        if (firstElement->isRest()) {
-            elementForSelect = firstElement;
-        } else if (elements.size() > 1) {
-            elementForSelect = elements[1];
+    if (score()->inputState().noteEntryMode()) {
+        const std::vector<DurationElement*>& elements = tuplet->elements();
+        DurationElement* elementForSelect = nullptr;
+        if (!elements.empty()) {
+            DurationElement* firstElement = elements.front();
+            if (firstElement->isRest()) {
+                elementForSelect = firstElement;
+            } else if (elements.size() > 1) {
+                elementForSelect = elements[1];
+            }
+            if (elementForSelect) {
+                score()->select(elementForSelect, SelectType::SINGLE, 0);
+                score()->inputState().setDuration(tuplet->baseLen());
+            }
         }
-    }
-
-    if (elementForSelect) {
-        score()->select(elementForSelect, SelectType::SINGLE, 0);
-        score()->inputState().setDuration(tuplet->baseLen());
     }
 
     return tuplet;
@@ -3138,8 +3131,8 @@ void Score::deleteItem(EngravingItem* el)
         }
         break;
     case ElementType::PLAY_COUNT_TEXT: {
-        BarLine* bl = toBarLine(el->explicitParent());
-        bl->undoChangeProperty(Pid::PLAY_COUNT_TEXT_SETTING, AutoCustomHide::HIDE);
+        PlayCountText* pct = toPlayCountText(el);
+        pct->barline()->undoChangeProperty(Pid::PLAY_COUNT_TEXT_SETTING, AutoCustomHide::HIDE);
     } break;
     case ElementType::INSTRUMENT_CHANGE:
     {
@@ -3969,7 +3962,11 @@ void Score::cmdDeleteSelection()
                     FretDiagram* fretDiagram = toFretDiagram(e);
                     Harmony* harmony = fretDiagram->harmony();
                     if (harmony) {
-                        undo(new FretLinkHarmony(fretDiagram, harmony, true /* unlink */));
+                        for (EngravingObject* o: fretDiagram->linkList()) {
+                            FretDiagram* linkedDiagram = toFretDiagram(o);
+                            Harmony* linkedHarmony = linkedDiagram->harmony();
+                            undo(new FretLinkHarmony(linkedDiagram, linkedHarmony, true /* unlink */));
+                        }
                         elSelectedAfterDeletion = harmony;
                     }
                 } else if (e->isHarmony()) {
@@ -4326,44 +4323,25 @@ Hairpin* Score::addHairpinToDynamicOnGripDrag(Dynamic* dynamic, bool isLeftGrip,
 void Score::cmdCreateTuplet(ChordRest* ocr, Tuplet* tuplet)
 {
     track_idx_t track = ocr->track();
-    Measure* measure = ocr->measure();
     Fraction tick = ocr->tick();
+    tuplet->setTrack(track);
+    tuplet->setTick(tick);
+
+    if (ocr->tuplet()) {
+        tuplet->setTuplet(ocr->tuplet());
+    }
+
     Fraction an = (tuplet->ticks() * tuplet->ratio()) / tuplet->baseLen().fraction();
     if (!an.denominator()) {
         return;
     }
 
-    if (ocr->tuplet()) {
-        tuplet->setTuplet(ocr->tuplet());
-    }
-    removeChordRest(ocr, false);
-
-    ChordRest* cr;
-    if (ocr->isChord()) {
-        cr = Factory::createChord(this->dummy()->segment());
-        toChord(cr)->setStemDirection(toChord(ocr)->stemDirection());
-        for (Note* oldNote : toChord(ocr)->notes()) {
-            Note* note = Factory::createNote(toChord(cr));
-            note->setPitch(oldNote->pitch());
-            note->setTpc1(oldNote->tpc1());
-            note->setTpc2(oldNote->tpc2());
-            cr->add(note);
-        }
-    } else {
-        cr = Factory::createRest(this->dummy()->segment());
-    }
+    undoChangeChordRestLen(ocr, tuplet->baseLen());
+    undo(new ChangeChordRestTuplet(ocr, tuplet));
 
     int actualNotes = an.numerator() / an.denominator();
-
-    tuplet->setTrack(track);
-    cr->setTuplet(tuplet);
-    cr->setTrack(track);
-    cr->setDurationType(tuplet->baseLen());
-    cr->setTicks(tuplet->baseLen().fraction());
-
-    undoAddCR(cr, measure, tick);
-
-    Fraction ticks = cr->actualTicks();
+    Fraction ticks = ocr->actualTicks();
+    Measure* measure = ocr->measure();
 
     for (int i = 0; i < (actualNotes - 1); ++i) {
         tick += ticks;
@@ -5521,64 +5499,33 @@ void Score::undoResetPlayCountTextSettings(BarLine* bl)
 
 void Score::undoUpdatePlayCountText(Measure* m)
 {
-    if (!m || !m->repeatEnd()) {
+    if (!m) {
         return;
     }
     const MStyle& _style = style();
     const bool showText = _style.styleB(Sid::repeatPlayCountShow);
     const bool singleRepeats = _style.styleB(Sid::repeatPlayCountShowSingleRepeats);
     const int playCount = m->repeatCount();
-    const bool showPlayCount = showText && (playCount == 2 ? singleRepeats : true);
+    const bool showPlayCount = showText && (playCount == 2 ? singleRepeats : true) && m->repeatEnd();
 
-    const std::vector<MStaff*>& measureStaves = m->mstaves();
+    Segment* endBarSeg = m->last(SegmentType::BarLineType);
+    BarLine* topBl = endBarSeg ? toBarLine(endBarSeg->element(0)) : nullptr;
+    if (!topBl) {
+        return;
+    }
 
-    for (staff_idx_t staffIdx = 0; staffIdx < nstaves(); ++staffIdx) {
-        if (staffIdx >= measureStaves.size()) {
-            break;
+    PlayCountText* topPlayCountText = toPlayCountText(endBarSeg->findAnnotation(ElementType::PLAY_COUNT_TEXT, 0, 0));
+    if (showPlayCount) {
+        if (!topPlayCountText) {
+            topPlayCountText = Factory::createPlayCountText(endBarSeg);
+            topPlayCountText->setTrack(0);
+            topPlayCountText->setParent(endBarSeg);
+            topPlayCountText->setSelected(topBl->selected());
+            undoAddElement(topPlayCountText);
         }
-
-        Staff* curStaff = staff(staffIdx);
-
-        Segment* endBarSeg = m->last(SegmentType::BarLineType);
-        BarLine* bl = endBarSeg ? toBarLine(endBarSeg->element(staff2track(staffIdx))) : nullptr;
-        if (!bl) {
-            continue;
-        }
-        PlayCountText* playCountText = bl->playCountText();
-
-        bool blShowPlayCount = (showPlayCount && bl->playCountTextSetting() == AutoCustomHide::AUTO)
-                               || bl->playCountTextSetting() == AutoCustomHide::CUSTOM;
-
-        if (blShowPlayCount && curStaff->shouldShowPlayCount()) {
-            if (!playCountText) {
-                playCountText = Factory::createPlayCountText(bl);
-                playCountText->setTrack(staff2track(staffIdx));
-                playCountText->setParent(bl);
-                playCountText->setSystemFlag(true);
-                playCountText->setSelected(bl->selected());
-                bl->undoChangeProperty(Pid::GENERATED, false, PropertyFlags::NOSTYLE);
-                undoAddElement(playCountText);
-                // set generated flag before and after so it sticks on type change and also works on undo/redo
-                bl->undoChangeProperty(Pid::GENERATED, false, PropertyFlags::NOSTYLE);
-            } else {
-                if (playCountText->parent() != bl) {
-                    undoRemoveElement(playCountText);
-
-                    playCountText->setParent(bl);
-                    undoAddElement(playCountText);
-                }
-            }
-        } else if (playCountText) {
-            Staff* staff = playCountText->staff();
-            // Remove this play count text and MMR links
-            for (EngravingObject* obj : playCountText->linkList()) {
-                PlayCountText* item = toPlayCountText(obj);
-                if (staff != item->staff() || item->barline()->playCountText() != item) {
-                    continue;
-                }
-                undoRemoveElement(item, false);
-            }
-        }
+    } else {
+        undoRemoveElement(topPlayCountText);
+        return;
     }
 }
 
@@ -6633,13 +6580,12 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                 toMeasure(element->explicitParent())->undoChangeProperty(Pid::MEASURE_NUMBER_MODE,
                                                                          static_cast<int>(MeasureNumberMode::SHOW));
             } else if (et == ElementType::PLAY_COUNT_TEXT) {
-                BarLine* bl = toBarLine(element->explicitParent());
-                Fraction tick = bl->tick();
-                Measure* m = score->tick2measure(tick - Fraction::eps());
-                Segment* blSeg = m->last(SegmentType::EndBarLine);
-                BarLine* linkedBl = toBarLine(blSeg->element(ntrack));
+                Segment* segment  = toSegment(element->explicitParent());
+                Fraction tick     = segment->tick();
+                Measure* m        = score->tick2measure(tick - Fraction::eps());
+                Segment* seg      = m->undoGetSegment(SegmentType::EndBarLine, tick);
                 ne->setTrack(ntrack);
-                ne->setParent(linkedBl);
+                ne->setParent(seg);
                 doUndoAddElement(ne);
             } else {
                 Segment* segment  = toSegment(element->explicitParent());

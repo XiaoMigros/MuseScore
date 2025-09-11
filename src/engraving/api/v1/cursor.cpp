@@ -528,16 +528,6 @@ void Cursor::addTuplet(FractionWrapper* ratio, FractionWrapper* duration)
         return;
     }
 
-    mu::engraving::Measure* tupletMeasure = segment()->measure();
-    const mu::engraving::Fraction tupletTick = segment()->tick();
-    if (tupletTick + fDuration > tupletMeasure->endTick()) {
-        LOGW(
-            "Cursor::addTuplet: cannot add cross-measure tuplet (measure %d, rel.tick %s, duration %s)",
-            tupletMeasure->no() + 1, qPrintable(segment()->rtick().toString()), qPrintable(fDuration.toString()));
-
-        return;
-    }
-
     const mu::engraving::Fraction baseLen = fDuration * Fraction(1, fRatio.denominator());
     if (!TDuration::isValid(baseLen)) {
         LOGW(
@@ -553,12 +543,21 @@ void Cursor::addTuplet(FractionWrapper* ratio, FractionWrapper* duration)
         return;
     }
 
+    mu::engraving::Measure* tupletMeasure = segment()->measure();
+    const mu::engraving::Fraction tupletTick = segment()->tick();
+    const mu::engraving::Fraction actualDuration = (fDuration / cr->ticks()) * cr->actualTicks();
+    if (tupletTick + actualDuration > tupletMeasure->endTick()) {
+        LOGW(
+            "Cursor::addTuplet: Tuplet crosses into next measure or tuplet (measure %d, rel.tick %s, duration %s)",
+            tupletMeasure->no() + 1, qPrintable(segment()->rtick().toString()), qPrintable(fDuration.toString()));
+
+        return;
+    }
+
     m_score->changeCRlen(cr, fDuration);
 
     mu::engraving::Tuplet* tuplet = new mu::engraving::Tuplet(tupletMeasure);
     tuplet->setParent(tupletMeasure);
-    tuplet->setTrack(track());
-    tuplet->setTick(tupletTick);
     tuplet->setRatio(fRatio);
     tuplet->setTicks(fDuration);
     tuplet->setBaseLen(baseLen);

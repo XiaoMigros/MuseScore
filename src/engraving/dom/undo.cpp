@@ -2263,6 +2263,46 @@ void ChangeChordStaffMove::flip(EditData*)
 }
 
 //---------------------------------------------------------
+//   ChangeChordRestTuplet
+//---------------------------------------------------------
+
+ChangeChordRestTuplet::ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
+    : chordRest(cr), tuplet(t)
+{
+}
+
+void ChangeChordRestTuplet::flip(EditData*)
+{
+    Tuplet* t = chordRest->tuplet();
+    if (t && t->elements().size() <= 1) {
+        for (EngravingObject* e : t->linkList()) {
+            e->score()->doUndoRemoveElement(toEngravingItem(e));
+        }
+    }
+    undoRemoveTuplet(chordRest);
+    chordRest->setTuplet(tuplet);
+    undoAddTuplet(chordRest);
+    for (EngravingObject* e : chordRest->linkList()) {
+        ChordRest* cr = toChordRest(e);
+        if (cr == chordRest) {
+            continue;
+        }
+        undoRemoveTuplet(cr);
+        Tuplet* linkedTuplet = tuplet ? toTuplet(tuplet->findLinkedInStaff(cr->staff())) : nullptr;
+        if (tuplet && !linkedTuplet) {
+            linkedTuplet = toTuplet(tuplet->linkedClone());
+            linkedTuplet->setScore(cr->score());
+            linkedTuplet->setTrack(cr->track());
+            linkedTuplet->setParent(cr->measure());
+        }
+        cr->setTuplet(linkedTuplet);
+        undoAddTuplet(cr);
+    }
+    chordRest->triggerLayout();
+    tuplet = t;
+}
+
+//---------------------------------------------------------
 //   ChangeVelocity
 //---------------------------------------------------------
 
@@ -2613,16 +2653,9 @@ void InsertRemoveMeasures::removeMeasures()
             Page* page = s->page();
             if (page) {
                 // erase system from page
-                std::vector<System*>& sl = page->systems();
-                auto i = std::find(sl.begin(), sl.end(), s);
-                if (i != sl.end()) {
-                    sl.erase(i);
-                }
+                muse::remove(page->systems(), s);
                 // erase system from score
-                auto k = std::find(score->systems().begin(), score->systems().end(), s);
-                if (k != score->systems().end()) {
-                    score->systems().erase(k);
-                }
+                muse::remove(score->systems(), s);
                 // finally delete system
                 score->deleteLater(s);
             }
