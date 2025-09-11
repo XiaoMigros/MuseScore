@@ -2274,55 +2274,29 @@ ChangeChordRestTuplet::ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
 void ChangeChordRestTuplet::flip(EditData*)
 {
     Tuplet* t = chordRest->tuplet();
-    Staff* ostaff = chordRest->staff();
-    track_idx_t strack = chordRest->track();
-
     if (t && t->elements().size() <= 1) {
-        score->doUndoRemoveElement(t);
+        chordRest->score()->doUndoRemoveElement(t);
     }
-
-    for (const Staff* staff : ostaff->staffList()) {
-        track_idx_t linkedTrack = ostaff->getLinkedTrackInStaff(staff, strack);
-
-        if (linkedTrack == muse::nidx || linkedTrack < staff->part()->startTrack() || linkedTrack >= staff->part()->endTrack()) {
+    undoRemoveTuplet(chordRest);
+    chordRest->setTuplet(tuplet);
+    undoAddTuplet(chordRest);
+    chordRest->triggerLayout();
+    for (EngravingObject* e : chordRest->linkList()) {
+        ChordRest* cr = toChordRest(e);
+        if (cr == chordRest) {
             continue;
         }
-
-        Score* score = staff->score();
-        Measure* m   = (score == ostaff->score()) ? measure : score->tick2measure(chordRest->tick());
-        if (!m) {
-            LOGD("measure not found");
-            break;
+        undoRemoveTuplet(cr);
+        Tuplet* linkedTuplet = tuplet ? toTuplet(tuplet->findLinkedInStaff(cr->staff())) : nullptr;
+        if (tuplet && !linkedTuplet) {
+            linkedTuplet = toTuplet(tuplet->linkedClone());
+            linkedTuplet->setScore(cr->score());
+            linkedTuplet->setTrack(cr->track());
+            linkedTuplet->setParent(cr->measure());
         }
-        Segment* seg = m->findSegment(SegmentType::ChordRest, chordRest->tick());
-
-        // Climb up the (possibly nested) tuplets from this chordRest
-        // Make sure all tuplets are cloned and correctly nested
-        DurationElement* elementBelow = chordRest;
-        Tuplet* tupletAbove = tuplet;
-        while (tupletAbove) {
-            DurationElement* linkedElementBelow = (DurationElement*)elementBelow->findLinkedInStaff(staff);
-            if (!linkedElementBelow) {     // shouldn't happen
-                break;
-            }
-            Tuplet* linkedTuplet = (Tuplet*)tupletAbove->findLinkedInStaff(staff);
-            if (!linkedTuplet) {
-                linkedTuplet = toTuplet(tupletAbove->linkedClone());
-                linkedTuplet->setScore(score);
-                linkedTuplet->setTrack(newcr->track());
-                linkedTuplet->setParent(m);
-            }
-            linkedElementBelow->setTuplet(linkedTuplet);
-
-            elementBelow = tupletAbove;
-            tupletAbove = tupletAbove->tuplet();
-        }
-
-        if (isUndo) {
-            undoRemoveTuplet(toChordRest(newcr));
-        } else {
-            undoAddTuplet(toChordRest(newcr));
-        }
+        cr->setTuplet(linkedTuplet);
+        undoAddTuplet(cr);
+        cr->triggerLayout();
     }
     tuplet = t;
 }
