@@ -2275,12 +2275,13 @@ void ChangeChordRestTuplet::flip(EditData*)
 {
     Tuplet* t = chordRest->tuplet();
     if (t && t->elements().size() <= 1) {
-        chordRest->score()->doUndoRemoveElement(t);
+        for (EngravingObject* e : t->linkList()) {
+            e->score()->doUndoRemoveElement(toEngravingItem(e));
+        }
     }
     undoRemoveTuplet(chordRest);
     chordRest->setTuplet(tuplet);
     undoAddTuplet(chordRest);
-    chordRest->triggerLayout();
     for (EngravingObject* e : chordRest->linkList()) {
         ChordRest* cr = toChordRest(e);
         if (cr == chordRest) {
@@ -2296,8 +2297,8 @@ void ChangeChordRestTuplet::flip(EditData*)
         }
         cr->setTuplet(linkedTuplet);
         undoAddTuplet(cr);
-        cr->triggerLayout();
     }
+    chordRest->triggerLayout();
     tuplet = t;
 }
 
