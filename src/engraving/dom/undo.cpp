@@ -2283,7 +2283,7 @@ void ChangeChordRestTuplet::flip(EditData*)
         if (cr == chordRest) {
             continue;
         }
-        undoRemoveTuplet(cr);
+        // undoRemoveTuplet(cr);
         Tuplet* linkedTuplet = tuplet ? toTuplet(tuplet->findLinkedInStaff(cr->staff())) : nullptr;
         if (tuplet && !linkedTuplet) {
             linkedTuplet = toTuplet(tuplet->linkedClone());
@@ -2292,7 +2292,7 @@ void ChangeChordRestTuplet::flip(EditData*)
             linkedTuplet->setParent(cr->measure());
         }
         cr->setTuplet(linkedTuplet);
-        undoAddTuplet(cr);
+        // undoAddTuplet(cr);
         cr->triggerLayout();
     }
     tuplet = t;
