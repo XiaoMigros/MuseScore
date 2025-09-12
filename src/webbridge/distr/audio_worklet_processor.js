@@ -6,6 +6,10 @@ class MuseDriverProcessor extends AudioWorkletProcessor {
 
         this.port.onmessage = this.onMessageFromMain.bind(this);
 
+        this.buffer = [];
+        this.channel_inited = false;
+        this.audio_requested = false;
+
         this.debugLog("end of constructor MuseDriverProcessor")
     }
 
@@ -39,35 +43,52 @@ class MuseDriverProcessor extends AudioWorkletProcessor {
 
         if (event.data.type == "response_audio") {
             this.onResponseAudio(event.data)
+        } else if (event.data.type == "channel_inited") {
+            this.channel_inited = true;
         }
     }
 
     requestAudio() {
+        if (!this.channel_inited) {
+            return;
+        }
+
+        if (this.audio_requested) {
+            return;
+        }
+
         this.sendToWorker({type: "request_audio", samplesPerChannel: 1024})
+        this.audio_requested = true;
     }
 
     onResponseAudio(msg) {
-        let data = msg.data;
-        this.debugLog("received data: " + data.length)
+        this.buffer.push(...msg.data);
+        this.audio_requested = false;
     }
 
     process(inputs, outputs, parameters) {
 
-        this.requestAudio()
-
-        const input = inputs[0];
         const output = outputs[0];
 
-        for (let channel = 0; channel < input.length; ++channel) {
-            for (let i = 0; i < input[channel].length; ++i) {
-                output[channel][i] = input[channel][i] * 0.8; 
+        let totalWriten = 0;
+        for (let ci = 0; ci < output.length; ++ci) {
+            let channel = output[ci];
+            const samplesToWrite = Math.min(this.buffer.length, channel.length);
+            for (let i = 0; i < samplesToWrite; i++) {
+                channel[i] = this.buffer[i * 2 + ci];
             }
+
+            totalWriten += samplesToWrite;
         }
+
+        this.buffer = this.buffer.slice(totalWriten);
+
+        if (this.buffer.length <= (totalWriten * 10)) {
+            this.requestAudio()
+        }
+
         return true; 
     }
-
-
-
 }
 
 registerProcessor('musedriver-processor', MuseDriverProcessor);

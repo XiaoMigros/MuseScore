@@ -1408,7 +1408,8 @@ void TLayout::layoutHBox(const HBox* item, HBox::LayoutData* ldata, const Layout
         if (!ldata->isSetPos()) {
             ldata->setPos(PointF());
         }
-        ldata->setBbox(0.0, 0.0, item->absoluteFromSpatium(item->boxWidth()), parentSystem->ldata()->bbox().height());
+        ldata->setBbox(item->absoluteFromSpatium(item->topGap()), 0.0, item->absoluteFromSpatium(item->boxWidth()),
+                       parentSystem->ldata()->bbox().height());
     } else {
         ldata->setPos(PointF());
         ldata->setBbox(0.0, 0.0, 50, 50);
@@ -2852,6 +2853,15 @@ void TLayout::layoutFretDiagram(const FretDiagram* item, FretDiagram::LayoutData
 void TLayout::layoutGlissando(Glissando* item, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
+
+    if (item->startElement()) {
+        item->setTick(item->startElement()->tick());
+    }
+
+    if (item->endElement()) {
+        item->setTick2(item->endElement()->tick());
+    }
+
     TLayout::layoutLine(const_cast<Glissando*>(item), ctx);
 
     if (item->spannerSegments().empty()) {
@@ -4632,7 +4642,7 @@ void TLayout::layoutPlayCountText(PlayCountText* item, TextBase::LayoutData* lda
 {
     LAYOUT_CALL_ITEM(item);
     BarLine* bl = item->barline();
-    Segment* seg = bl->segment();
+    Segment* seg = item->segment();
 
     layoutBaseTextBase(item, ldata);
 
@@ -5184,6 +5194,15 @@ void TLayout::layoutNoteAnchoredLine(SLine* item, EngravingItem::LayoutData* lda
 void TLayout::layoutNoteLine(NoteLine* item, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
+
+    if (item->startElement()) {
+        item->setTick(item->startElement()->tick());
+    }
+
+    if (item->endElement()) {
+        item->setTick2(item->endElement()->tick());
+    }
+
     TLayout::layoutLine(item, ctx);
 
     if (item->lineEndPlacement() == NoteLineEndPlacement::OFFSET_ENDS) {
