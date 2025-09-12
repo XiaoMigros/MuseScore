@@ -643,8 +643,8 @@ bool FinaleParser::positionFixedRests(const std::unordered_map<Rest*, musx::dom:
             const StaffType* staffType = targetStaff->staffTypeForElement(rest);
             // following code copied from TLayout::layoutRest:
             Rest::LayoutData layoutData;
-            const int naturalLine = RestLayout::computeNaturalLine(staffType->lines()); // Measured in 1sp steps
-            const int voiceOffset = RestLayout::computeVoiceOffset(rest, &layoutData); // Measured in 1sp steps
+            const int naturalLine = rendering::score::RestLayout::computeNaturalLine(staffType->lines()); // Measured in 1sp steps
+            const int voiceOffset = rendering::score::RestLayout::computeVoiceOffset(rest, &layoutData); // Measured in 1sp steps
             // omit call to computeWholeOrBreveRestOffset because it requires layout rectangles to have been created
             int finalLine = naturalLine + voiceOffset;
             // convert finalLine to staff position offset for Finale rest. This value is measured in 0.5sp steps.
