@@ -30678,7 +30678,7 @@ fehlgeschlagen</translation>
     <message>
         <location filename="../../libmscore/clef.cpp" line="74"/>
         <source>Tenor clef 8va bassa</source>
-        <translation>Tenor clef 8va bassa</translation>
+        <translation>Tenorschlüssel 8va bassa</translation>
     </message>
     <message>
         <location filename="../../libmscore/clef.cpp" line="75"/>
