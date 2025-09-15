@@ -4158,7 +4158,7 @@ Par défaut, elles seront palcées à droite et au même niveau. Cochez cette ca
     <message>
         <location filename="../../mscore/editstyle.ui" line="4032"/>
         <source>Only for a change to C Major / A minor</source>
-        <translation type="unfinished"></translation>
+        <translation>Uniquement pour les changements vers Do Majeur / La mineur</translation>
     </message>
     <message>
         <location filename="../../mscore/editstyle.ui" line="5593"/>
@@ -4275,7 +4275,7 @@ Par défaut, elles seront palcées à droite et au même niveau. Cochez cette ca
     <message>
         <location filename="../../mscore/editstyle.ui" line="4026"/>
         <source>♮ in Key Signature Changes</source>
-        <translation type="unfinished"></translation>
+        <translation>♮ dans les changements d&apos;Armure</translation>
     </message>
     <message>
         <location filename="../../mscore/editstyle.ui" line="5644"/>
