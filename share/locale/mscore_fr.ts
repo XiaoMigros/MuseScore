@@ -5874,12 +5874,12 @@ Par défaut, elles seront palcées à droite et au même niveau. Cochez cette ca
     <message>
         <location filename="../../mscore/inspector/inspector_ambitus.ui" line="14"/>
         <source>Ambitus Inspector</source>
-        <translation>Inspecteur de tessiture</translation>
+        <translation>Inspecteur de l&apos;Ambitus</translation>
     </message>
     <message>
         <location filename="../../mscore/inspector/inspector_ambitus.ui" line="57"/>
         <source>Ambitus</source>
-        <translation>Tessiture</translation>
+        <translation>Ambitus</translation>
     </message>
     <message>
         <location filename="../../mscore/inspector/inspector_ambitus.ui" line="596"/>
@@ -18215,7 +18215,7 @@ veuillez choisir un nom différent :</translation>
     <message>
         <location filename="../../mscore/menus.cpp" line="1500"/>
         <source>Ambitus</source>
-        <translation>Tessiture</translation>
+        <translation>Ambitus</translation>
     </message>
     <message>
         <location filename="../../mscore/menus.cpp" line="1504"/>
@@ -31235,7 +31235,7 @@ a échoué</translation>
     <message>
         <location filename="../../libmscore/scoreElement.cpp" line="54"/>
         <source>Ambitus</source>
-        <translation>Tessiture</translation>
+        <translation>Ambitus</translation>
     </message>
     <message>
         <location filename="../../libmscore/scoreElement.cpp" line="55"/>
@@ -34548,7 +34548,7 @@ Cette partition contient des parties. La modification des indications de mesure 
     <message>
         <location filename="../../libmscore/sym.cpp" line="5849"/>
         <source>Tuplet 3</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Chiffre 3 de division irrégulière</translation>
     </message>
     <message>
         <location filename="../../libmscore/sym.cpp" line="5903"/>
