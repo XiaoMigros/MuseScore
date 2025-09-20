@@ -34548,7 +34548,7 @@ Cette partition contient des parties. La modification des indications de mesure 
     <message>
         <location filename="../../libmscore/sym.cpp" line="5849"/>
         <source>Tuplet 3</source>
-        <translation type="unfinished">Chiffre 3 de division irrégulière</translation>
+        <translation>Chiffre 3 de division irrégulière</translation>
     </message>
     <message>
         <location filename="../../libmscore/sym.cpp" line="5903"/>
