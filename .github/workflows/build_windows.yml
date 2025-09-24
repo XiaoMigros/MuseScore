@@ -116,7 +116,7 @@ jobs:
     if: contains(needs.plan.outputs.platforms, 'windows_x64')
     needs:
       - plan
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -198,7 +198,7 @@ jobs:
     if: contains(needs.plan.outputs.platforms, 'windows_x32')
     needs:
       - plan
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -280,7 +280,7 @@ jobs:
     if: contains(needs.plan.outputs.platforms, 'windows_portable_x32')
     needs:
       - plan
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -361,7 +361,7 @@ jobs:
     if: contains(needs.plan.outputs.platforms, 'windows_portable_x64')
     needs:
       - plan
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
