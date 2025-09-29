@@ -123,7 +123,7 @@ String instrTemplateIdfromUuid(std::string uuid)
         { uuid::Violin,                    u"violin" },
         { uuid::Viola,                     u"viola" },
         { uuid::Cello,                     u"violoncello" },
-        { uuid::DoubleBass,                u"double-bass" },
+        { uuid::DoubleBass,                u"contrabass" },
         { uuid::ViolinSection,             u"violins" },
         { uuid::ViolaSection,              u"violas" },
         { uuid::CelloSection,              u"violoncellos" },
@@ -131,7 +131,7 @@ String instrTemplateIdfromUuid(std::string uuid)
         { uuid::DoubleBassSection,         u"contrabasses" },
         { uuid::ContrabassSection,         u"contrabasses" },
         { uuid::StringEnsemble,            u"strings" },
-        { uuid::ViolaDAmore,               u"viola" },
+        { uuid::ViolaDAmore,               u"violoncello" }, //
         { uuid::Ajaeng,                    u"erhu" }, //
         { uuid::Arpeggione,                u"viola-da-gamba" }, //
         { uuid::Baryton,                   u"baryton" },
@@ -165,7 +165,7 @@ String instrTemplateIdfromUuid(std::string uuid)
         { uuid::SarangiDrone,              u"violin" }, //
         { uuid::StrohViolin,               u"violin" }, //
         { uuid::Trombamarina,              u"violoncello" }, //
-        { uuid::Vielle,                    u"violin" },
+        { uuid::Vielle,                    u"viola" }, //
         { uuid::Viol,                      u"viola-da-gamba" }, //
         { uuid::ViolaDaGamba,              u"viola-da-gamba" },
         { uuid::ViolinoPiccolo,            u"violin" }, //
@@ -188,7 +188,7 @@ String instrTemplateIdfromUuid(std::string uuid)
         { uuid::SynthLead,                 u"saw-synth" }, //
         { uuid::SynthBrass,                u"brass-synthesizer" },
         { uuid::SynthSoundtrack,           u"soundtrack-synth" },
-        { uuid::SoundFX,                   u"soundtrack-synth" },
+        { uuid::SoundFX,                   u"piano" }, //
         { uuid::Harmonium,                 u"harmonium" },
         { uuid::OndesMartenot,             u"ondes-martenot" },
         { uuid::Theremin,                  u"theremin" },
