@@ -228,7 +228,7 @@ String instrTemplateIdfromUuid(std::string uuid)
         { uuid::ClarinetEFlat,             u"eb-clarinet" },
         { uuid::AltoClarinet,              u"alto-clarinet" },
         { uuid::ContraltoClarinet,         u"contra-alto-clarinet" },
-        { uuid::BassClarinet,              u"bb-bass-clarinet" },
+        { uuid::BassClarinet,              u"bass-clarinet" },
         { uuid::ContrabassClarinet,        u"contrabass-clarinet" },
         { uuid::Bassoon,                   u"bassoon" },
         { uuid::Contrabassoon,             u"contrabassoon" },
