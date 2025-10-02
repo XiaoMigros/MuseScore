@@ -697,18 +697,25 @@ void createInstruments(Score* score, QList<MTrack>& tracks)
             tracks[idx].staff = part->staff(i);
         }
 
-        InstrChannel* ch = part->instrument()->channel(0);
         if (std::optional<int> volume = firstChannelValue(track.volumes)) {
-            ch->setVolume(volume.value());
+            for (InstrChannel* ch : part->instrument()->channel()) {
+                ch->setVolume(volume.value());
+            }
         }
         if (std::optional<int> pan = firstChannelValue(track.pans)) {
-            ch->setPan(pan.value());
+            for (InstrChannel* ch : part->instrument()->channel()) {
+                ch->setPan(pan.value());
+            }
         }
         if (std::optional<int> reverb = firstChannelValue(track.reverbs)) {
-            ch->setReverb(reverb.value());
+            for (InstrChannel* ch : part->instrument()->channel()) {
+                ch->setReverb(reverb.value());
+            }
         }
         if (std::optional<int> chorus = firstChannelValue(track.choruses)) {
-            ch->setChorus(chorus.value());
+            for (InstrChannel* ch : part->instrument()->channel()) {
+                ch->setChorus(chorus.value());
+            }
         }
 
         score->appendPart(part);
