@@ -34,6 +34,8 @@ class MarkerSettingsModel : public AbstractInspectorModel
     Q_PROPERTY(PropertyItem * position READ position CONSTANT)
     Q_PROPERTY(PropertyItem * centerOnSymbol READ centerOnSymbol CONSTANT)
 
+    Q_PROPERTY(QString markerTypeName READ markerTypeName NOTIFY markerTypeNameChanged)
+
 public:
     explicit MarkerSettingsModel(QObject* parent, IElementRepositoryService* repository);
 
@@ -47,7 +49,7 @@ public:
     PropertyItem* position() const;
     PropertyItem* centerOnSymbol() const;
 
-    Q_INVOKABLE QString markerTypeName() const;
+    QString markerTypeName() const;
 
 private:
     PropertyItem* m_type = nullptr;
