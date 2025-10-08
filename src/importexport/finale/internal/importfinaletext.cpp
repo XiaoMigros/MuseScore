@@ -344,6 +344,7 @@ ReadableExpression::ReadableExpression(const FinaleParser& context, const MusxIn
         std::string utf8Tag = xmlText.toStdString();
 
         // Dynamics (adapted from engraving/dom/dynamic.cpp)
+        /// @todo This regex fails for `dynamicMF` and `dynamicMP`, among several others.
         auto begin = std::sregex_iterator(utf8Tag.begin(), utf8Tag.end(), dynamicRegex);
         for (auto it = begin; it != std::sregex_iterator(); ++it) {
             const std::smatch match = *it;

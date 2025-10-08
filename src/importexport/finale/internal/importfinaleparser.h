@@ -122,7 +122,6 @@ struct FontTracker
                && fontStyle == src.fontStyle && spatiumIndependent == src.spatiumIndependent;
     }
     bool operator!=(const FontTracker& src) const { return !(*this == src); }
-
 };
 
 struct EnigmaParsingOptions
