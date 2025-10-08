@@ -59,26 +59,16 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
-static const std::regex pedalRegex(R"(\bped(ale?)?\b)", std::regex_constants::icase);
-static const std::regex hairpinRegex(R"(\b(((de)?cresc)|(dim))\.?\b)", std::regex_constants::icase);
-static const std::regex gtcRegex(R"(\b((rit(\.|ardando)?)|(rall(\.|entando)?))\b)", std::regex_constants::icase);
-static const std::regex letRingRegex(R"(\blet ring\b)", std::regex_constants::icase);
-static const std::regex ottavaRegex(R"(\b(?:(?:8v)|(?:(?:15|22)m))(a|b)\b)", std::regex_constants::icase);
-static const std::regex wbarRegex(R"(\bw(?:\/|(?:hammy ))bar\b)", std::regex_constants::icase);
-static const std::regex rasgueadoRegex(R"(\brasg(?:ueado)?\b)", std::regex_constants::icase);
-static const std::regex pickScrapeRegex(R"(\bp(?:\.|ick) ?s(?:\.\B|crape\b))", std::regex_constants::icase);
-static const std::regex palmMuteRegex(R"(\bp(?:\.|alm) ?m(?:\.\B|ute\b))", std::regex_constants::icase);
-
-static const std::unordered_map<std::regex, ElementType> elementByRegexTable = {
-    { pedalRegex,      ElementType::PEDAL },
-    { hairpinRegex,    ElementType::HAIRPIN },
-    { gtcRegex,        ElementType::GRADUAL_TEMPO_CHANGE },
-    { letRingRegex,    ElementType::LET_RING },
-    { ottavaRegex,     ElementType::OTTAVA },
-    { wbarRegex,       ElementType::WHAMMY_BAR },
-    { rasgueadoRegex,  ElementType::RASGUEADO },
-    { pickScrapeRegex, ElementType::PICK_SCRAPE },
-    { palmMuteRegex,   ElementType::PALM_MUTE },
+static const std::map<std::string, ElementType> elementByRegexTable = {
+    { R"(\bped(ale?)?\b)",                               ElementType::PEDAL },
+    { R"(\b(((de)?cresc)|(dim))\.?\b)",                  ElementType::HAIRPIN },
+    { R"(\b((rit(\.|ardando)?)|(rall(\.|entando)?))\b)", ElementType::GRADUAL_TEMPO_CHANGE },
+    { R"(\blet ring\b)",                                 ElementType::LET_RING },
+    { R"(\b(?:(?:8v)|(?:(?:15|22)m))(a|b)\b)",           ElementType::OTTAVA },
+    { R"(\bw(?:\/|(?:hammy ))bar\b)",                    ElementType::WHAMMY_BAR },
+    { R"(\brasg(?:ueado)?\b)",                           ElementType::RASGUEADO },
+    { R"(\bp(?:\.|ick) ?s(?:\.\B|crape\b))",             ElementType::PICK_SCRAPE },
+    { R"(\bp(?:\.|alm) ?m(?:\.\B|ute\b))",               ElementType::PALM_MUTE },
 };
 
 ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxInstance<musx::dom::others::SmartShapeCustomLine>& customLine)
@@ -137,7 +127,8 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxIn
             /// @todo TremoloBar?
         }
 
-        for (auto [regex, elementType] : elementByRegexTable) {
+        for (auto [regexStr, elementType] : elementByRegexTable) {
+            static const std::regex regex(regexStr, std::regex_constants::icase);
             if (std::regex_search(beginText.toStdString(), regex) || std::regex_search(continueText.toStdString(), regex)) {
                 return elementType;
             }
