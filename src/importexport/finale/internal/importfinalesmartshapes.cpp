@@ -59,9 +59,27 @@ using namespace musx::dom;
 
 namespace mu::iex::finale {
 
-static const std::regex pedalRegex(R"(\bped(ale?)?\b)", std::regex_constants::icase); /// @todo add smufl/glyphs, other pedal names?
+static const std::regex pedalRegex(R"(\bped(ale?)?\b)", std::regex_constants::icase);
 static const std::regex hairpinRegex(R"(\b(((de)?cresc)|(dim))\.?\b)", std::regex_constants::icase);
 static const std::regex gtcRegex(R"(\b((rit(\.|ardando)?)|(rall(\.|entando)?))\b)", std::regex_constants::icase);
+static const std::regex letRingRegex(R"(\blet ring\b)", std::regex_constants::icase);
+static const std::regex ottavaRegex(R"(\b(?:(?:8v)|(?:(?:15|22)m))(a|b)\b)", std::regex_constants::icase);
+static const std::regex wbarRegex(R"(\bw(?:\/|(?:hammy ))bar\b)", std::regex_constants::icase);
+static const std::regex rasgueadoRegex(R"(\brasg(?:ueado)?\b)", std::regex_constants::icase);
+static const std::regex pickScrapeRegex(R"(\bp(?:\.|ick) ?s(?:\.\B|crape\b))", std::regex_constants::icase);
+static const std::regex palmMuteRegex(R"(\bp(?:\.|alm) ?m(?:\.\B|ute\b))", std::regex_constants::icase);
+
+static const std::unordered_map<std::regex, ElementType> elementByRegexTable = {
+    { pedalRegex,      ElementType::PEDAL },
+    { hairpinRegex,    ElementType::HAIRPIN },
+    { gtcRegex,        ElementType::GRADUAL_TEMPO_CHANGE },
+    { letRingRegex,    ElementType::LET_RING },
+    { ottavaRegex,     ElementType::OTTAVA },
+    { wbarRegex,       ElementType::WHAMMY_BAR },
+    { rasgueadoRegex,  ElementType::RASGUEADO },
+    { pickScrapeRegex, ElementType::PICK_SCRAPE },
+    { palmMuteRegex,   ElementType::PALM_MUTE },
+};
 
 ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxInstance<musx::dom::others::SmartShapeCustomLine>& customLine)
 {
@@ -71,9 +89,12 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxIn
     centerLongText  = context.stringFromEnigmaText(customLine->getCenterFullRawTextCtx(context.currentMusxPartId()));
     centerShortText = context.stringFromEnigmaText(customLine->getCenterAbbrRawTextCtx(context.currentMusxPartId()));
 
+    SymId lineSym = SymId::noSym;
+
     switch (customLine->lineStyle) {
     case others::SmartShapeCustomLine::LineStyle::Char:
-        lineVisible = customLine->charParams->lineChar != U' '; /// @todo general space symbols
+        lineSym = FinaleTextConv::symIdFromFinaleChar(customLine->charParams->lineChar, customLine->charParams->font);
+        lineVisible = customLine->charParams->lineChar != U' ' && lineSym != SymId::space; /// @todo general space symbols
         break;
     case others::SmartShapeCustomLine::LineStyle::Solid:
         lineStyle   = LineType::SOLID;
@@ -91,7 +112,6 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxIn
 
     elementType = [&]() {
         if (customLine->lineStyle == others::SmartShapeCustomLine::LineStyle::Char && lineVisible) {
-            SymId lineSym = FinaleTextConv::symIdFromFinaleChar(customLine->charParams->lineChar, customLine->charParams->font);
             switch (lineSym) {
                 // Trills
                 case SymId::wiggleTrill:
@@ -114,26 +134,22 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxIn
 
                 default: break;
             }
-            /// @todo use customLine->charParams->lineChar and customLine->charParams->font
-            /// to decide between trill, vibrato, tremolobar. For now, assume trill.
+            /// @todo TremoloBar?
         }
-        // MusxInstanceList<texts::SmartShapeText> customLineTexts = m_doc->getTexts()->getArray<texts::SmartShapeText>();
-        if (std::regex_search(beginText.toStdString(), pedalRegex) || std::regex_search(continueText.toStdString(), pedalRegex)
-            || endText == u"*" /*maestro symbol for pedal star*/) {
+
+        for (auto [regex, elementType] : elementByRegexTable) {
+            if (std::regex_search(beginText.toStdString(), regex) || std::regex_search(continueText.toStdString(), regex)) {
+                return elementType;
+            }
+        }
+        if (endText == u"*" /*maestro symbol for pedal star*/) {
             return ElementType::PEDAL;
         }
-        if (std::regex_search(beginText.toStdString(), hairpinRegex) || std::regex_search(continueText.toStdString(), hairpinRegex)) {
-            return ElementType::HAIRPIN;
-        }
-        if (std::regex_search(beginText.toStdString(), gtcRegex) || std::regex_search(continueText.toStdString(), gtcRegex)) {
-            return ElementType::GRADUAL_TEMPO_CHANGE;
-        }
-        /// @todo lines with up hooks below piano staves as pedal
-        /// @todo :
-        /// ElementType::HAIRPIN, ElementType::PEDAL, ElementType::OTTAVA, ElementType::TRILL, ElementType::TEXTLINE, ElementType::PALM_MUTE,
-        /// ElementType::WHAMMY_BAR, ElementType::RASGUEADO, ElementType::HARMONIC_MARK, ElementType::PICK_SCRAPE, ElementType::LET_RING, ElementType::VIBRATO,
-        /// ElementType::GLISSANDO, ElementType::GUITAR_BEND, ElementType::NOTELINE, ElementType::GRADUAL_TEMPO_CHANGE, ElementType::VIBRATO, /* ElementType::VOLTA, */
-        /// /* ElementType::SLUR, *//* ElementType::HAMMER_ON_PULL_OFF */
+        // MusxInstanceList<texts::SmartShapeText> customLineTexts = m_doc->getTexts()->getArray<texts::SmartShapeText>();
+        /// @todo lines with up hooks below piano staves as pedal, detect other pedal types (sostenuto)
+        /// @todo use symbols to detect line types before resorting to plaintext regex searches
+        /// @todo regex search with font style/size/face tags removed
+        /// Not detected / needed: VOLTA, SLUR, HAMMER_ON_PULL_OFF, GLISSANDO, NOTELINE, HARMONIC_MARK, GUITAR_BEND
         return ElementType::TEXTLINE;
     }();
 
