@@ -312,6 +312,7 @@ void FinaleParser::importMeasures()
                 /// @todo support?
                 [[fallthrough]];
             default:
+                /// @todo: if Normal barline on last measure, check options::BarlineOptions to see if it should be a final barline.
                 blt = toMuseScoreBarLineType(type);
                 break;
             }
