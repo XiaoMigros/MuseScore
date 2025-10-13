@@ -35,6 +35,7 @@
 #include "engraving/dom/chordrest.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/glissando.h"
+#include "engraving/dom/line.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/note.h"
@@ -321,7 +322,6 @@ void FinaleParser::importSmartShapes()
         logger()->logInfo(String(u"Creating spanner of %1 type").arg(TConv::userName(type).translated()));
         Spanner* newSpanner = toSpanner(Factory::createItem(type, m_score->dummy()));
         newSpanner->setScore(m_score);
-        newSpanner->styleChanged();
 
         if (smartShape->entryBased) {
             if (!startElement || !endElement) {
@@ -434,22 +434,16 @@ void FinaleParser::importSmartShapes()
                 textLine->setLineStyle(lineTypeFromShapeType(smartShape->shapeType));
                 /// @todo read more settings from smartshape options, set styles for more elements
                 auto [beginHook, endHook] = hookHeightsFromShapeType(smartShape->shapeType);
+                textLine->setBeginHookType(beginHook ? HookType::HOOK_90 : HookType::NONE);
+                textLine->setEndHookType(endHook ? HookType::HOOK_90 : HookType::NONE);
                 if (beginHook) {
-                    textLine->setBeginHookType(HookType::HOOK_90);
-                    textLine->setBeginHookHeight(Spatium(beginHook * doubleFromEvpu(musxOptions().smartShapeOptions->hookLength)));
-                    // continue doesn't have no hook
+                    textLine->setBeginHookHeight(absoluteSpatiumFromEvpu(beginHook * musxOptions().smartShapeOptions->hookLength, textLine));
                 }
                 if (endHook) {
-                    textLine->setEndHookType(HookType::HOOK_90);
-                    textLine->setEndHookHeight(Spatium(endHook * doubleFromEvpu(musxOptions().smartShapeOptions->hookLength)));
+                    textLine->setEndHookHeight(absoluteSpatiumFromEvpu(endHook * musxOptions().smartShapeOptions->hookLength, textLine));
                 }
             }
         }
-
-        /// Not needed? segments don't exist yet
-        // for (auto ss : newSpanner->spannerSegments()) {
-            // ss->setTrack(newSpanner->track());
-        // }
 
         // if (isMeasureAnchor) {
             // Measure* endMeasure = tick2measureMM(tick2);
@@ -467,6 +461,82 @@ void FinaleParser::importSmartShapes()
         } else {
             m_score->addSpanner(newSpanner);
             logger()->logInfo(String(u"Added spanner of %1 type at tick %2, end: %3").arg(TConv::userName(type).translated(), startTick.toString(), endTick.toString()));
+        }
+
+        // Calculate position in score
+        m_score->renderer()->layoutItem(newSpanner);
+        if (!newSpanner->isSLine()) {
+            continue;
+        }
+
+        logger()->logInfo(String(u"Repositioning %1 spanner segments...").arg(newSpanner->spannerSegments().size()));
+
+        for (SpannerSegment* ss : newSpanner->spannerSegments()) {
+            ss->setOffset(PointF());
+            ss->setAutoplace(false);
+            ss->setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
+            // We might end up needing another layout call, if we need to compute position relative to calculated position
+
+            auto positionSegmentFromEndPoints = [ss](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {
+                Fraction leftTick = std::max(ss->system()->firstMeasure()->tick(), ss->tick());
+                if (leftPoint->active) {
+                    ss->setOffset(evpuToPointF(leftPoint->horzOffset, -leftPoint->vertOffset) * SPATIUM20);
+                    if (leftPoint->contextDir == smartshape::DirectionType::Under) {
+                        ss->ryoffset() +=  ss->staff()->staffHeight(leftTick);
+                    }
+                }
+                if (rightPoint->active) {
+                    ss->setUserOff2(evpuToPointF(rightPoint->horzOffset, -rightPoint->vertOffset) * SPATIUM20);
+                    // For non-diagonal line segments, MS resets userOff2's Y component.
+                    // If the left point doesn't set the value, get it from the right point instead.
+                    if (!leftPoint->active && !(ss->isLineSegment() && toLineSegment(ss)->line()->diagonal())) {
+                        ss->setOffset(PointF(0.0, ss->userOff2().y()));
+                    }
+                }
+                // In MuseScore, userOff2 is relative/added to offset
+                ss->setUserOff2(ss->userOff2() - ss->offset());
+            };
+
+            switch (ss->spannerSegmentType()) {
+            case SpannerSegmentType::SINGLE: {
+                // std::shared_ptr<smartshape::ControlPointAdjustment> adj = smartShape->fullCtlPtAdj;
+                // if (adj->active) {
+                    // ss->setOffset(evpuToPointF(adj->startCtlPtX, -adj->startCtlPtY) * SPATIUM20);
+                    // ss->setUserOff2(evpuToPointF(adj->endCtlPtX, -adj->endCtlPtY) * SPATIUM20 - ss->offset());
+                    // ss->ryoffset() += adj->contextDir == smartshape::DirectionType::Under ? ss->staff()->staffHeight(ss->tick()) : 0.0;
+                // } else {
+                    // ss->resetProperty(Pid::OFFSET);
+                    // ss->setAutoplace(true);
+                // }
+                positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->endTermSeg->endPointAdj);
+                break;
+            }
+            case SpannerSegmentType::BEGIN: {
+                positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->startTermSeg->breakAdj);
+                break;
+            }
+            case SpannerSegmentType::END: {
+                positionSegmentFromEndPoints(smartShape->endTermSeg->breakAdj, smartShape->endTermSeg->endPointAdj);
+                break;
+            }
+            case SpannerSegmentType::MIDDLE: {
+                MeasCmper measId = muse::value(m_tick2Meas, ss->system()->firstMeasure()->tick(), MeasCmper());
+                if (auto measure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, measId)) {
+                    if (!measure->hasSmartShape) {
+                        continue;
+                    }
+                    auto assigns = m_doc->getOthers()->getArray<others::SmartShapeMeasureAssign>(m_currentMusxPartId, measId);
+                    for (const auto& assign : assigns) {
+                        if (assign->shapeNum != smartShape->getCmper()) {
+                            continue;
+                        }
+                        const auto& centerShape = m_doc->getDetails()->get<details::CenterShape>(m_currentMusxPartId, assign->shapeNum, assign->centerShapeNum);
+                        positionSegmentFromEndPoints(centerShape->startBreakAdj, centerShape->endBreakAdj);
+                    }
+                }
+                break;
+            }
+            }
         }
     }
     logger()->logInfo(String(u"Import smart shapes: Finished importing smart shapes"));
