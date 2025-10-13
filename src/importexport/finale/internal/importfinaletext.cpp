@@ -461,6 +461,7 @@ void FinaleParser::importTextExpressions()
         logger()->logInfo(String(u"Creating a %1 at tick %2 on track %3.").arg(TConv::userName(elementType).translated(), s->tick().toString(), String::number(curTrackIdx)));
         TextBase* item = toTextBase(Factory::createItem(elementType, s));
         const MusxInstance<others::TextExpressionDef> expressionDef = expressionAssignment->getTextExpression();
+        item->setParent(s);
         item->setTrack(curTrackIdx);
         item->setVisible(!expressionAssignment->hidden);
         item->setXmlText(expression->xmlText);
@@ -484,49 +485,35 @@ void FinaleParser::importTextExpressions()
                 if (expressionAssignment->layer != 0) {
                     dynamic->setVoiceAssignment(VoiceAssignment::CURRENT_VOICE_ONLY);
                 }
-                switch (expressionDef->playbackType) {
-                case others::PlaybackType::None: break;
-                case others::PlaybackType::KeyVelocity: {
+                if (expressionDef->playbackType == others::PlaybackType::KeyVelocity) {
                     dynamic->setVelocity(expressionDef->value);
-                    break;
-                }
-                default: break;
+                } else {
+                    dynamic->setPlayDynamic(false);
                 }
                 break;
             }
             case ElementType::REHEARSAL_MARK: {
                 if (expressionDef->hideMeasureNum && measure->measureNumber(curStaffIdx)) {
-                    /// @todo needs to be created via layout first???
                     measure->measureNumber(curStaffIdx)->setVisible(false);
                 }
                 break;
             }
             case ElementType::TEMPO_TEXT: {
                 TempoText* tt = toTempoText(item);
-                switch (expressionDef->playbackType) {
-                case others::PlaybackType::None: break;
-                case others::PlaybackType::Tempo: {
+                if (expressionDef->playbackType == others::PlaybackType::Tempo) {
                     tt->setFollowText(false); /// @todo detect this
                     tt->setTempo(expressionDef->value / 60.0); // Assume quarter for now
-                    break;
-                }
-                default: break;
                 }
                 break;
             }
             case ElementType::STAFF_TEXT:
             case ElementType::SYSTEM_TEXT: {
                 StaffTextBase* stb = toStaffTextBase(item);
-                switch (expressionDef->playbackType) {
-                case others::PlaybackType::None: break;
-                case others::PlaybackType::Swing: {
+                if (expressionDef->playbackType == others::PlaybackType::Swing) {
                     int swingValue = expressionDef->value;
                     int swingUnit = Fraction(1, measure->timesig().denominator() > 8 ? 16 : 8).ticks();
                     stb->setSwing(swingValue != 0);
                     stb->setSwingParameters(swingUnit, 50 + (swingValue / 6));
-                    break;
-                }
-                default: break;
                 }
                 break;
             }
