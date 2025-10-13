@@ -70,6 +70,8 @@ public:
     bool isCustom() const { return m_sig.custom(); }
     bool isAtonal() const { return m_sig.isAtonal(); }
     bool isChange() const;
+    KeySig* changeElement() const { return m_changeElement; }
+    void setChangeElement(KeySig* ks) {m_changeElement = ks; }
     const KeySigEvent& keySigEvent() const { return m_sig; }
     bool operator==(const KeySig&) const;
     void changeKeySigEvent(const KeySigEvent&);
@@ -94,6 +96,7 @@ public:
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid id) const override;
+    virtual EngravingItem* propertyDelegate(Pid) override;
 
     EngravingItem* nextSegmentElement() override;
     EngravingItem* prevSegmentElement() override;
@@ -118,6 +121,7 @@ private:
     bool m_showCourtesy;
     bool m_hideNaturals;       // used in layout to override score style (needed for the Continuous panel)
     KeySigEvent m_sig;
+    KeySig* m_changeElement;
 };
 } // namespace mu::engraving
 #endif

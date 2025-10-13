@@ -1934,8 +1934,8 @@ void MeasureLayout::setCourtesyKeySig(Measure* m, const Fraction& refSigTick, co
         const Measure* refMeasure = ctx.dom().tick2measureMM(refSigElementTick);
         const Segment* actualKeySigSeg
             = refMeasure ? refMeasure->findSegmentR(SegmentType::KeySig, refSigElementTick - refMeasure->tick()) : nullptr;
-        const EngravingItem* el = actualKeySigSeg ? actualKeySigSeg->element(track) : nullptr;
-        const KeySig* actualKeySig = el ? toKeySig(el) : nullptr;
+        EngravingItem* el = actualKeySigSeg ? actualKeySigSeg->element(track) : nullptr;
+        KeySig* actualKeySig = el ? toKeySig(el) : nullptr;
 
         const KeySigEvent refKey = staff->keySigEvent(refSigTick);
         // Get info from correct tick for repeats
@@ -1990,6 +1990,7 @@ void MeasureLayout::setCourtesyKeySig(Measure* m, const Fraction& refSigTick, co
             courtesyKeySig->setGenerated(true);
             courtesyKeySig->setParent(courtesySigSeg);
             courtesyKeySig->setIsCourtesy(true);
+            courtesyKeySig->setChangeElement(actualKeySig);
             courtesySigSeg->add(courtesyKeySig);
         }
         courtesyKeySig->setKeySigEvent(refKey);
@@ -2568,7 +2569,7 @@ Segment* MeasureLayout::addHeaderKeySig(Measure* m, bool isFirstKeysig, const St
     KeySigEvent keyIdx = staff->keySigEvent(m->tick());
     KeySig* ksAnnounce = 0;
     if ((isFirstKeysig || ctx.conf().styleB(Sid::genKeysig)) && (keyIdx.key() == Key::C)) {
-        Measure* pm = m->prevMeasure();
+        Measure* pm = m->prevMeasureMM();
         if (pm && pm->hasCourtesyKeySig()) {
             Segment* ks = pm->first(SegmentType::KeySigAnnounce);
             if (ks) {
@@ -2605,6 +2606,9 @@ Segment* MeasureLayout::addHeaderKeySig(Measure* m, bool isFirstKeysig, const St
             keysig->setTrack(track);
             keysig->setGenerated(true);
             keysig->setParent(kSegment);
+            const Fraction changeTick = staff->currentKeyTick(m->tick());
+            const Segment* s = staff->score()->tick2segment(changeTick, true, SegmentType::KeySig);
+            keysig->setChangeElement(s ? toKeySig(s->element(track)) : nullptr);
             kSegment->add(keysig);
         }
         keysig->setKeySigEvent(keyIdx);
