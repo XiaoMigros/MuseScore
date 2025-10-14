@@ -432,16 +432,24 @@ void FinaleParser::importSmartShapes()
             } else if (type == ElementType::TEXTLINE) {
                 TextLineBase* textLine = toTextLineBase(newSpanner);
                 textLine->setLineStyle(lineTypeFromShapeType(smartShape->shapeType));
-                /// @todo read more settings from smartshape options, set styles for more elements
+                /// @todo read more settings from smartshape options
                 auto [beginHook, endHook] = hookHeightsFromShapeType(smartShape->shapeType);
-                textLine->setBeginHookType(beginHook ? HookType::HOOK_90 : HookType::NONE);
-                textLine->setEndHookType(endHook ? HookType::HOOK_90 : HookType::NONE);
                 if (beginHook) {
-                    textLine->setBeginHookHeight(absoluteSpatiumFromEvpu(beginHook * musxOptions().smartShapeOptions->hookLength, textLine));
+                    textLine->setBeginHookType(HookType::HOOK_90);
+                    Spatium s = absoluteSpatiumFromEvpu(beginHook * musxOptions().smartShapeOptions->hookLength, textLine);
+                    setAndStyleProperty(textLine, Pid::BEGIN_HOOK_HEIGHT, s, true);
+                } else {
+                    textLine->setBeginHookType(HookType::NONE);
                 }
                 if (endHook) {
-                    textLine->setEndHookHeight(absoluteSpatiumFromEvpu(endHook * musxOptions().smartShapeOptions->hookLength, textLine));
+                    textLine->setBeginHookType(HookType::NONE);
+                    Spatium s = absoluteSpatiumFromEvpu(endHook * musxOptions().smartShapeOptions->hookLength, textLine);
+                    setAndStyleProperty(textLine, Pid::END_HOOK_HEIGHT, s, true);
+                } else {
+                    textLine->setBeginHookType(HookType::NONE);
                 }
+                setAndStyleProperty(textLine, Pid::BEGIN_HOOK_TYPE, PropertyValue());
+                setAndStyleProperty(textLine, Pid::END_HOOK_TYPE, PropertyValue());
             }
         }
 
@@ -463,18 +471,19 @@ void FinaleParser::importSmartShapes()
             logger()->logInfo(String(u"Added spanner of %1 type at tick %2, end: %3").arg(TConv::userName(type).translated(), startTick.toString(), endTick.toString()));
         }
 
-        // Calculate position in score
-        m_score->renderer()->layoutItem(newSpanner);
         if (!newSpanner->isSLine()) {
             continue;
         }
 
+        // Calculate position in score
         logger()->logInfo(String(u"Repositioning %1 spanner segments...").arg(newSpanner->spannerSegments().size()));
+        m_score->renderer()->layoutItem(newSpanner);
+
+        setAndStyleProperty(newSpanner, Pid::PLACEMENT, PlacementV::ABOVE);
 
         for (SpannerSegment* ss : newSpanner->spannerSegments()) {
-            ss->setOffset(PointF());
             ss->setAutoplace(false);
-            ss->setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
+            setAndStyleProperty(ss, Pid::OFFSET, PointF());
             // We might end up needing another layout call, if we need to compute position relative to calculated position
 
             auto positionSegmentFromEndPoints = [ss](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {

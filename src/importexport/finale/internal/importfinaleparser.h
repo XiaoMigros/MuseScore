@@ -336,4 +336,7 @@ private:
     ReadableExpressionMap m_expressions;
 };
 
+extern void setAndStyleProperty(mu::engraving::EngravingObject* e, mu::engraving::Pid id,
+                                mu::engraving::PropertyValue v, bool leaveStyled = false);
+
 }
