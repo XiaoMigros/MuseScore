@@ -449,6 +449,7 @@ void FinaleParser::importSmartShapes()
                 TextLineBase* textLine = toTextLineBase(newSpanner);
                 textLine->setLineStyle(lineTypeFromShapeType(smartShape->shapeType));
                 /// @todo read more settings from smartshape options
+                /// @todo these values will need to be flipped depending on placement
                 auto [beginHook, endHook] = hookHeightsFromShapeType(smartShape->shapeType);
                 if (beginHook) {
                     textLine->setBeginHookType(HookType::HOOK_90);
@@ -482,8 +483,9 @@ void FinaleParser::importSmartShapes()
         }
 
         // Calculate position in score
-        logger()->logInfo(String(u"Repositioning %1 spanner segments...").arg(newSpanner->spannerSegments().size()));
         m_score->renderer()->layoutItem(newSpanner);
+        logger()->logInfo(String(u"Repositioning %1 spanner segments...").arg(newSpanner->spannerSegments().size()));
+        /// @todo for textlines, offset positioning seems to be measured from different positions in each software
 
         // Determine placement by spanner position
         setAndStyleProperty(newSpanner, Pid::PLACEMENT, PlacementV::ABOVE, true);
@@ -495,10 +497,8 @@ void FinaleParser::importSmartShapes()
 
         for (SpannerSegment* ss : newSpanner->spannerSegments()) {
             ss->setAutoplace(false);
-            setAndStyleProperty(ss, Pid::OFFSET, PointF());
-            // We might need to layout these segments again, if we need to compute position relative to calculated position
 
-            auto positionSegmentFromEndPoints = [ss, staffHeight, diagonal](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {
+            auto positionSegmentFromEndPoints = [&](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {
                 if (leftPoint->active) {
                     ss->setOffset(evpuToPointF(leftPoint->horzOffset, -leftPoint->vertOffset) * SPATIUM20);
                     if (leftPoint->contextDir == smartshape::DirectionType::Under) {
@@ -513,19 +513,14 @@ void FinaleParser::importSmartShapes()
                         ss->ryoffset() = ss->userOff2().y();
                     }
                 }
-                // In MuseScore, userOff2 is relative/added to offset
-                ss->setUserOff2(ss->userOff2() - ss->offset());
             };
 
             if (ss->isSingleType()) {
                 positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->endTermSeg->endPointAdj);
-                ss->rUserYoffset2() += ss->spatium();
             } else if (ss->isBeginType()) {
                 positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->startTermSeg->breakAdj);
-                ss->rUserYoffset2() += ss->style().styleMM(Sid::lineEndToBarlineDistance);
             } else if (ss->isEndType()) {
                 positionSegmentFromEndPoints(smartShape->endTermSeg->breakAdj, smartShape->endTermSeg->endPointAdj);
-                ss->rUserYoffset2() += ss->spatium();
             } else if (ss->isMiddleType()) {
                 MeasCmper measId = muse::value(m_tick2Meas, ss->system()->firstMeasure()->tick(), MeasCmper());
                 if (auto measure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, measId)) {
@@ -542,10 +537,51 @@ void FinaleParser::importSmartShapes()
                         break;
                     }
                 }
-                ss->rUserYoffset2() += ss->style().styleMM(Sid::lineEndToBarlineDistance);
+            }
+
+            // Adjust start pos
+            if (ss->isSingleBeginType()) {
+                Segment* startSeg = m_score->tick2segmentMM(ss->tick(), true, Segment::CHORD_REST_OR_TIME_TICK_TYPE);
+                if (startSeg) {
+                    System* s;
+                    ss->rxoffset() += startSeg->x() + startSeg->measure()->x() - ((SLine*)newSpanner)->linePos(Grip::START, &s).x();
+                }
+            } else {
+                Segment* firstCRseg = ss->system()->firstMeasure()->first(SegmentType::ChordRest);
+                for (Segment* s = firstCRseg->prevActive(); s; s = s->prev(SegmentType::HeaderClef | SegmentType::KeySig | SegmentType::TimeSigType)) {
+                    if (!s->isActive() || s->allElementsInvisible() || s->hasTimeSigAboveStaves()) {
+                        continue;
+                    }
+                    ss->rxoffset() += firstCRseg->x() + firstCRseg->measure()->x() - ss->system()->firstNoteRestSegmentX(true);
+                    if (s->isHeaderClefType()) {
+                        ss->rxoffset() -= doubleFromEvpu(musxOptions().clefOptions->clefBackSepar) * SPATIUM20;
+                    } else if (s->isKeySigType()) {
+                        ss->rxoffset() -= doubleFromEvpu(musxOptions().keyOptions->keyBack) * SPATIUM20;
+                    } else if (s->isTimeSigType()) {
+                        ss->rxoffset() -= doubleFromEvpu(currentMusxPartId() ? musxOptions().timeOptions->timeBackParts
+                                                 : musxOptions().timeOptions->timeBack) * SPATIUM20;
+                    }
+                    break;
+                }
+            }
+
+            // In MuseScore, userOff2 is relative/added to offset
+            ss->setUserOff2(ss->userOff2() - ss->offset());
+
+            // Adjust end pos
+            if (ss->isSingleEndType()) {
+                System* s;
+                Segment* endSeg = ss->spanner()->endElement() && (ss->spanner()->isOttava() || ss->spanner()->isTrill() || ss->spanner()->isVibrato())
+                    ? ss->spanner()->endElement()->findAncestor(ElementType::SEGMENT)
+                    : m_score->tick2segmentMM(ss->spanner()->tick2(), true, Segment::CHORD_REST_OR_TIME_TICK_TYPE);
+                ss->rUserXoffset2() += endSeg->x() + endSeg->measure()->x() - ((SLine*)newSpanner)->linePos(Grip::END, &s).x();
+                // @todo account for when shape ends on barline, not first CR
+            } else {
+                ss->rUserXoffset2() += ss->style().styleMM(Sid::lineEndToBarlineDistance);
             }
             canPlaceBelow = canPlaceBelow && ss->offset().y() > 0;
             isEntirelyInStaff = isEntirelyInStaff && canPlaceBelow && (ss->offset().y() < staffHeight);
+            setAndStyleProperty(ss, Pid::OFFSET, PropertyValue(), true);
         }
 
         const bool shouldPlaceBelow = canPlaceBelow && (!isEntirelyInStaff || newSpanner->propertyDefault(Pid::PLACEMENT) == PlacementV::BELOW);
@@ -577,6 +613,11 @@ void FinaleParser::importSmartShapes()
             }
         }
 
+        /// @todo fix hairpin placement
+        if (type == ElementType::HAIRPIN) {
+            // todo: declare hairpin placement in hairpin elementStyle
+            newSpanner->setPropertyFlags(Pid::PLACEMENT, PropertyFlags::UNSTYLED);
+        }
     }
     logger()->logInfo(String(u"Import smart shapes: Finished importing smart shapes"));
 }
