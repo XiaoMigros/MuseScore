@@ -356,6 +356,9 @@ void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
     const double timeSigSpaceBefore = context.currentMusxPartId()
                                           ? prefs.timeOptions->timeFrontParts
                                           : prefs.timeOptions->timeFront;
+    const double timeSigSpaceAfter = context.currentMusxPartId()
+                                          ? prefs.timeOptions->timeBackParts
+                                          : prefs.timeOptions->timeBack;
     writeEvpuSpace(style, Sid::timesigLeftMargin, timeSigSpaceBefore);
 
     writeEvpuSpace(style, Sid::clefKeyDistance,
@@ -367,6 +370,7 @@ void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
     writeEvpuSpace(style, Sid::keyBarlineDistance, prefs.repeatOptions->afterKeySpace);
 
     // Skipped: systemHeaderDistance, systemHeaderTimeSigDistance: these do not translate well from Finale
+    // writeEvpuSpace(style, Sid::headerToLineStartDistance, (prefs.keyOptions->keyBack + timeSigSpaceAfter) / 2);
 
     writeEvpuSpace(style, Sid::clefBarlineDistance, -prefs.clefOptions->clefChangeOffset);
     writeEvpuSpace(style, Sid::timesigBarlineDistance, prefs.repeatOptions->afterClefSpace);

@@ -184,8 +184,9 @@ struct ReadableCustomLine
     // Type-specific settings
     engraving::TrillType trillType;
     engraving::VibratoType vibratoType;
-    // engraving::OttavaType ottavaType;
+    // OttavaType requires placement, so must be computed after layout
     engraving::GlissandoType glissandoType = GlissandoType::STRAIGHT;
+    engraving::HairpinType hairpinType = HairpinType::CRESC_LINE;
 
     // Begin text
     engraving::TextPlace beginTextPlace;

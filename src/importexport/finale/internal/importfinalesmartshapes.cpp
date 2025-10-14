@@ -148,6 +148,13 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxIn
         return ElementType::TEXTLINE;
     }();
 
+    if (elementType == ElementType::HAIRPIN) {
+        if (beginText.contains(u"decresc", CaseSensitivity::CaseInsensitive)
+            || beginText.contains(u"decresc", CaseSensitivity::CaseInsensitive)) {
+            hairpinType = HairpinType::DIM_LINE;
+        }
+    }
+
     beginHookType = customLine->lineCapStartType == others::SmartShapeCustomLine::LineCapType::Hook ? HookType::HOOK_90 : HookType::NONE;
     endHookType   = customLine->lineCapEndType == others::SmartShapeCustomLine::LineCapType::Hook ? HookType::HOOK_90 : HookType::NONE;
     beginHookHeight = Spatium(doubleFromEfix(customLine->lineCapStartHookLength));
@@ -421,7 +428,13 @@ void FinaleParser::importSmartShapes()
             if (type == ElementType::OTTAVA) {
                 toOttava(newSpanner)->setOttavaType(ottavaTypeFromShapeType(smartShape->shapeType));
             } else if (type == ElementType::HAIRPIN) {
-                toHairpin(newSpanner)->setHairpinType(hairpinTypeFromShapeType(smartShape->shapeType));
+                HairpinType ht = hairpinTypeFromShapeType(smartShape->shapeType);
+                toHairpin(newSpanner)->setHairpinType(ht);
+                // Hairpin height: A per-system setting in Finale; We just read the first or last one.
+                const auto& termSeg = ht == HairpinType::DIM_HAIRPIN ? smartShape->startTermSeg : smartShape->endTermSeg;
+                if (termSeg->ctlPtAdj->active) {
+                    setAndStyleProperty(newSpanner, Pid::HAIRPIN_HEIGHT, absoluteSpatiumFromEvpu(termSeg->ctlPtAdj->startCtlPtY, newSpanner), true);
+                }
             } else if (type == ElementType::SLUR) {
                 toSlur(newSpanner)->setStyleType(slurStyleTypeFromShapeType(smartShape->shapeType));
                 /// @todo is there a way to read the calculated direction
@@ -429,6 +442,9 @@ void FinaleParser::importSmartShapes()
             } else if (type == ElementType::GLISSANDO) {
                 toGlissando(newSpanner)->setGlissandoType(glissandoTypeFromShapeType(smartShape->shapeType));
                 toGlissando(newSpanner)->setShowText(false); /// @todo Is this the correct default?
+            } else if (type == ElementType::TRILL) {
+                // Selecting trills and opening properties causes a crash
+                toTrill(newSpanner)->setTrillType(TrillType::TRILL_LINE);
             } else if (type == ElementType::TEXTLINE) {
                 TextLineBase* textLine = toTextLineBase(newSpanner);
                 textLine->setLineStyle(lineTypeFromShapeType(smartShape->shapeType));
@@ -453,16 +469,6 @@ void FinaleParser::importSmartShapes()
             }
         }
 
-        // if (isMeasureAnchor) {
-            // Measure* endMeasure = tick2measureMM(tick2);
-            // if (endMeasure->tick() != tick2) {
-                // tick2 = endMeasure->endTick();
-            // }
-        // }
-        // if (newSpanner->hasVoiceAssignmentProperties()) {
-            // newSpanner->setInitialTrackAndVoiceAssignment(newSpanner->track(), false);
-        // }
-
         if (newSpanner->anchor() == Spanner::Anchor::NOTE) {
             toNote(startElement)->add(newSpanner);
             logger()->logInfo(String(u"Added spanner of %1 type to note at tick %2, end: %3").arg(TConv::userName(type).translated(), startTick.toString(), endTick.toString()));
@@ -479,56 +485,48 @@ void FinaleParser::importSmartShapes()
         logger()->logInfo(String(u"Repositioning %1 spanner segments...").arg(newSpanner->spannerSegments().size()));
         m_score->renderer()->layoutItem(newSpanner);
 
-        setAndStyleProperty(newSpanner, Pid::PLACEMENT, PlacementV::ABOVE);
+        // Determine placement by spanner position
+        setAndStyleProperty(newSpanner, Pid::PLACEMENT, PlacementV::ABOVE, true);
+        const bool diagonal = newSpanner->isSLine() && ((SLine*)newSpanner)->diagonal();
+        bool canPlaceBelow = !diagonal;
+        bool isEntirelyInStaff = !diagonal;
+        // Current layout code only uses staff height at start tick
+        const double staffHeight = newSpanner->staff()->staffHeight(newSpanner->tick());
 
         for (SpannerSegment* ss : newSpanner->spannerSegments()) {
             ss->setAutoplace(false);
             setAndStyleProperty(ss, Pid::OFFSET, PointF());
-            // We might end up needing another layout call, if we need to compute position relative to calculated position
+            // We might need to layout these segments again, if we need to compute position relative to calculated position
 
-            auto positionSegmentFromEndPoints = [ss](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {
-                Fraction leftTick = std::max(ss->system()->firstMeasure()->tick(), ss->tick());
+            auto positionSegmentFromEndPoints = [ss, staffHeight, diagonal](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {
                 if (leftPoint->active) {
                     ss->setOffset(evpuToPointF(leftPoint->horzOffset, -leftPoint->vertOffset) * SPATIUM20);
                     if (leftPoint->contextDir == smartshape::DirectionType::Under) {
-                        ss->ryoffset() +=  ss->staff()->staffHeight(leftTick);
+                        ss->ryoffset() += staffHeight;
                     }
                 }
                 if (rightPoint->active) {
                     ss->setUserOff2(evpuToPointF(rightPoint->horzOffset, -rightPoint->vertOffset) * SPATIUM20);
                     // For non-diagonal line segments, MS resets userOff2's Y component.
                     // If the left point doesn't set the value, get it from the right point instead.
-                    if (!leftPoint->active && !(ss->isLineSegment() && toLineSegment(ss)->line()->diagonal())) {
-                        ss->setOffset(PointF(0.0, ss->userOff2().y()));
+                    if (!leftPoint->active && !diagonal) {
+                        ss->ryoffset() = ss->userOff2().y();
                     }
                 }
                 // In MuseScore, userOff2 is relative/added to offset
                 ss->setUserOff2(ss->userOff2() - ss->offset());
             };
 
-            switch (ss->spannerSegmentType()) {
-            case SpannerSegmentType::SINGLE: {
-                // std::shared_ptr<smartshape::ControlPointAdjustment> adj = smartShape->fullCtlPtAdj;
-                // if (adj->active) {
-                    // ss->setOffset(evpuToPointF(adj->startCtlPtX, -adj->startCtlPtY) * SPATIUM20);
-                    // ss->setUserOff2(evpuToPointF(adj->endCtlPtX, -adj->endCtlPtY) * SPATIUM20 - ss->offset());
-                    // ss->ryoffset() += adj->contextDir == smartshape::DirectionType::Under ? ss->staff()->staffHeight(ss->tick()) : 0.0;
-                // } else {
-                    // ss->resetProperty(Pid::OFFSET);
-                    // ss->setAutoplace(true);
-                // }
+            if (ss->isSingleType()) {
                 positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->endTermSeg->endPointAdj);
-                break;
-            }
-            case SpannerSegmentType::BEGIN: {
+                ss->rUserYoffset2() += ss->spatium();
+            } else if (ss->isBeginType()) {
                 positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->startTermSeg->breakAdj);
-                break;
-            }
-            case SpannerSegmentType::END: {
+                ss->rUserYoffset2() += ss->style().styleMM(Sid::lineEndToBarlineDistance);
+            } else if (ss->isEndType()) {
                 positionSegmentFromEndPoints(smartShape->endTermSeg->breakAdj, smartShape->endTermSeg->endPointAdj);
-                break;
-            }
-            case SpannerSegmentType::MIDDLE: {
+                ss->rUserYoffset2() += ss->spatium();
+            } else if (ss->isMiddleType()) {
                 MeasCmper measId = muse::value(m_tick2Meas, ss->system()->firstMeasure()->tick(), MeasCmper());
                 if (auto measure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, measId)) {
                     if (!measure->hasSmartShape) {
@@ -541,12 +539,44 @@ void FinaleParser::importSmartShapes()
                         }
                         const auto& centerShape = m_doc->getDetails()->get<details::CenterShape>(m_currentMusxPartId, assign->shapeNum, assign->centerShapeNum);
                         positionSegmentFromEndPoints(centerShape->startBreakAdj, centerShape->endBreakAdj);
+                        break;
                     }
                 }
-                break;
+                ss->rUserYoffset2() += ss->style().styleMM(Sid::lineEndToBarlineDistance);
             }
+            canPlaceBelow = canPlaceBelow && ss->offset().y() > 0;
+            isEntirelyInStaff = isEntirelyInStaff && canPlaceBelow && (ss->offset().y() < staffHeight);
+        }
+
+        const bool shouldPlaceBelow = canPlaceBelow && (!isEntirelyInStaff || newSpanner->propertyDefault(Pid::PLACEMENT) == PlacementV::BELOW);
+        if (customLine && type == ElementType::OTTAVA) {
+            int below = 0;
+            const std::regex belowRegex(R"((?:v|m)b)", std::regex_constants::icase);
+            const std::regex aboveRegex(R"((?:v|m)(?:a|e))", std::regex_constants::icase);
+            if (std::regex_search(customLine->beginText.toStdString(), belowRegex)) {
+                below = 1;
+            } else if (!std::regex_search(customLine->beginText.toStdString(), aboveRegex)) {
+                below = shouldPlaceBelow;
+            }
+            if (customLine->beginText.contains(u"15") || customLine->beginText.contains(u"16")) {
+                toOttava(newSpanner)->setOttavaType(OttavaType(int(OttavaType::OTTAVA_15MA) + below));
+            } else if (customLine->beginText.contains(u"22")) {
+                toOttava(newSpanner)->setOttavaType(OttavaType(int(OttavaType::OTTAVA_22MA) + below));
+            } else {
+                toOttava(newSpanner)->setOttavaType(OttavaType(int(OttavaType::OTTAVA_8VA) + below));
+            }
+            newSpanner->setPlaySpanner(false); // Can custom ottavas have playback?
+        }
+
+        // Apply placement changes after setting ottava type, to inherit style if possible
+        if (shouldPlaceBelow) {
+            setAndStyleProperty(newSpanner, Pid::PLACEMENT, PlacementV::BELOW, true);
+            for (SpannerSegment* ss : newSpanner->spannerSegments()) {
+                ss->ryoffset() -= staffHeight;
+                setAndStyleProperty(ss, Pid::OFFSET, PropertyValue(), true);
             }
         }
+
     }
     logger()->logInfo(String(u"Import smart shapes: Finished importing smart shapes"));
 }
