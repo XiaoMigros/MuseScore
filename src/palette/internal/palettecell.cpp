@@ -341,7 +341,24 @@ PaletteCellPtr PaletteCell::fromElementMimeData(const QByteArray& data)
         }
     }
 
-    const String name = (element->isFretDiagram()) ? toFretDiagram(element.get())->harmonyText() : element->translatedTypeUserName();
+    String name = (element->isFretDiagram()) ? toFretDiagram(element.get())->harmonyText() : element->translatedTypeUserName();
+    if (element->isBox()) {
+        Text* t = nullptr;
+        if (element->isTBox()) {
+            t = toTBox(element.get())->text();
+        } else {
+            for (EngravingItem* e : toBox(element.get())->el()) {
+                if (e->isText()) {
+                    t = toText(e);
+                    break;
+                }
+            }
+        }
+        String text = t ? t->plainText().simplified() : String();
+        if (!text.empty()) {
+            name = String("%1: %2").arg(name, text);
+        }
+    }
 
     return std::make_shared<PaletteCell>(element, name);
 }
