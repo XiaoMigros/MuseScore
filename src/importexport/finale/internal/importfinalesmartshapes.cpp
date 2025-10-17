@@ -445,7 +445,7 @@ void FinaleParser::importSmartShapes()
 
                 // Account for odd text offset
                 muse::draw::Font f(score()->engravingFont()->family(), muse::draw::Font::Type::MusicSymbol);
-                f.setPointSizeF(2.0 * m_score->style().styleD(Sid::ottavaFontSize) * MScore::pixelRatio * newSpanner->magS());
+                f.setPointSizeF(2.0 * m_score->style().styleD(Sid::ottavaFontSize) * MScore::pixelRatio * newSpanner->magS() / newSpanner->spatium());
                 muse::draw::FontMetrics fm(f);
                 const PointF textoffset(0.0, -fm.boundingRect(String::fromUcs4(score()->engravingFont()->symCode(SymId::ottavaAlta))).bottom() - fm.descent()); // Assume 8va symbol for now
                 toOttava(newSpanner)->setBeginTextOffset(textoffset);
@@ -634,6 +634,7 @@ void FinaleParser::importSmartShapes()
                 }
                 System* s;
                 ss->rUserXoffset2() += endSeg->x() + endSeg->measure()->x() - ((SLine*)newSpanner)->linePos(Grip::END, &s).x();
+                /// @todo account for presence of text
             } else {
                 ss->rUserXoffset2() += ss->style().styleMM(Sid::lineEndToBarlineDistance);
             }
@@ -682,17 +683,20 @@ void FinaleParser::importSmartShapes()
             }
         }
 
-        /// @todo fix hairpin placement
         if (type == ElementType::HAIRPIN) {
             // todo: declare hairpin placement in hairpin elementStyle?
-            newSpanner->setPropertyFlags(Pid::PLACEMENT, PropertyFlags::UNSTYLED);
-            SpannerSegment* ss = toHairpin(newSpanner)->hairpinType() == HairpinType::DIM_HAIRPIN ? newSpanner->frontSegment() : newSpanner->backSegment();
-            if (ss->ipos2().x() > (doubleFromEvpu(musxOptions().smartShapeOptions->shortHairpinOpeningWidth) * SPATIUM20)) {
-                setAndStyleProperty(newSpanner, Pid::HAIRPIN_HEIGHT,
-                                    absoluteSpatiumFromEvpu(musxOptions().smartShapeOptions->crescHeight, newSpanner), true);
-            } else {
-                setAndStyleProperty(newSpanner, Pid::HAIRPIN_HEIGHT,
-                                    absoluteSpatiumFromEvpu(musxOptions().smartShapeOptions->shortHairpinOpeningWidth, newSpanner), true);
+            setAndStyleProperty(newSpanner, Pid::DIRECTION, newSpanner->placeAbove() ? DirectionV::UP : DirectionV::DOWN);
+
+            // If not otherwise set, determine hairpin height by length
+            if (newSpanner->isStyled(Pid::HAIRPIN_HEIGHT)) {
+                SpannerSegment* ss = toHairpin(newSpanner)->hairpinType() == HairpinType::DIM_HAIRPIN ? newSpanner->frontSegment() : newSpanner->backSegment();
+                if (ss->ipos2().x() > (doubleFromEvpu(musxOptions().smartShapeOptions->shortHairpinOpeningWidth) * SPATIUM20)) {
+                    setAndStyleProperty(newSpanner, Pid::HAIRPIN_HEIGHT,
+                                        absoluteSpatiumFromEvpu(musxOptions().smartShapeOptions->crescHeight, newSpanner), true);
+                } else {
+                    setAndStyleProperty(newSpanner, Pid::HAIRPIN_HEIGHT,
+                                        absoluteSpatiumFromEvpu(musxOptions().smartShapeOptions->shortHairpinOpeningWidth, newSpanner), true);
+                }
             }
         }
     }
