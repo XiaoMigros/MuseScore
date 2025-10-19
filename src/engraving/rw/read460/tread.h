@@ -345,7 +345,6 @@ public:
     static bool readBoxProperties(Box* b, XmlReader& xml, ReadContext& ctx);
     static bool readTextProperties(TextBase* t, XmlReader& xml, ReadContext& ctx);
 
-    static bool readProperties(Ambitus* a, XmlReader& xml, ReadContext& ctx);
     static bool readProperties(Articulation* a, XmlReader& xml, ReadContext& ctx);
     static bool readProperties(BSymbol* sym, XmlReader& xml, ReadContext& ctx);
     static bool readProperties(Chord* ch, XmlReader& xml, ReadContext& ctx);

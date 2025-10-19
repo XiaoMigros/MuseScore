@@ -646,7 +646,7 @@ void TLayout::layoutAmbitus(const Ambitus* item, Ambitus::LayoutData* ldata, con
         if (!pitchIsValid(item->topPitch()) || !tpcIsValid(item->topTpc())) {
             ldata->topPos.setY(0.0); // if uninitialized, set to top staff line
         } else {
-            int topLine = Ambitus::staffLine(item->topTpc(), item->topPitch(), clf);
+            int topLine = Ambitus::staffLine(item->topTpc(), item->topOctave(), clf);
             ldata->topPos.setY(topLine * lineDist * 0.5);
             // compute accidental
             AccidentalType accidType = Ambitus::accidentalType(item->topTpc(), key);
@@ -660,7 +660,7 @@ void TLayout::layoutAmbitus(const Ambitus* item, Ambitus::LayoutData* ldata, con
             const int numOfLines = stf->lines(tick);
             ldata->bottomPos.setY((numOfLines - 1) * lineDist);         // if uninitialized, set to last staff line
         } else {
-            int bottomLine = Ambitus::staffLine(item->bottomTpc(), item->bottomPitch(), clf);
+            int bottomLine = Ambitus::staffLine(item->bottomTpc(), item->bottomOctave(), clf);
             ldata->bottomPos.setY(bottomLine * lineDist * 0.5);
             // compute accidental
             AccidentalType accidType = Ambitus::accidentalType(item->bottomTpc(), key);

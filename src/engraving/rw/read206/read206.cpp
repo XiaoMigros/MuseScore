@@ -890,19 +890,21 @@ void Read206::readPart206(Part* part, XmlReader& e, ReadContext& ctx)
 //   readAmbitus
 //---------------------------------------------------------
 
-static void readAmbitus(Ambitus* ambitus, XmlReader& e, ReadContext& ctx)
+static void readAmbitus(Ambitus* a, XmlReader& e, ReadContext& ctx)
 {
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (tag == "head") {
-            ambitus->setNoteHeadGroup(Read206::convertHeadGroup(e.readInt()));
+            a->setNoteHeadGroup(Read206::convertHeadGroup(e.readInt()));
         } else if (tag == "headType") {
-            ambitus->setNoteHeadType(convertHeadType(e.readInt()));
-        } else if (read400::TRead::readProperties(ambitus, e, ctx)) {
+            a->setNoteHeadType(convertHeadType(e.readInt()));
+        } else if (read400::TRead::readProperties(a, e, ctx)) {
         } else {
             e.unknown();
         }
     }
+    a->setTopOctave(pitch2octave(a->topOctave(), a->topTpc()));
+    a->setBottomOctave(pitch2octave(a->bottomOctave(), a->bottomTpc()));
 }
 
 //---------------------------------------------------------

@@ -67,10 +67,10 @@ public:
     DirectionH direction() const { return m_direction; }
     bool hasLine() const { return m_hasLine; }
     Spatium lineWidth() const { return m_lineWidth; }
-    int topOctave() const { return (m_topPitch / PITCH_DELTA_OCTAVE) - 1; }
-    int bottomOctave() const { return (m_bottomPitch / PITCH_DELTA_OCTAVE) - 1; }
-    int topPitch() const { return m_topPitch; }
-    int bottomPitch() const { return m_bottomPitch; }
+    int topOctave() const { return m_topOctave; }
+    int bottomOctave() const { return m_bottomOctave; }
+    int topPitch() const;
+    int bottomPitch() const;
     int topTpc() const { return m_topTpc; }
     int bottomTpc() const { return m_bottomTpc; }
 
@@ -82,8 +82,8 @@ public:
     void setDirection(DirectionH val) { m_direction = val; }
     void setHasLine(bool val) { m_hasLine = val; }
     void setLineWidth(Spatium val) { m_lineWidth = val; }
-    void setTopPitch(int val) { m_topPitch = val; }
-    void setBottomPitch(int val) { m_bottomPitch = val; }
+    void setTopOctave(int val) { m_topOctave = val; }
+    void setBottomOctave(int val) { m_bottomOctave = val; }
     void setTopTpc(int val) { m_topTpc = val; }
     void setBottomTpc(int val) { m_bottomTpc = val; }
 
@@ -143,7 +143,7 @@ private:
     Spatium m_lineWidth;
     Accidental* m_topAccidental = nullptr;
     Accidental* m_bottomAccidental = nullptr;
-    int m_topPitch = INVALID_PITCH, m_bottomPitch = INVALID_PITCH;
+    int m_topOctave = -1, m_bottomOctave = -1;
     int m_topTpc = Tpc::TPC_INVALID, m_bottomTpc = Tpc::TPC_INVALID;
 };
 }

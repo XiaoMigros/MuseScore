@@ -19,8 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_INSPECTOR_AMBITUSSETTINGSMODEL_H
-#define MU_INSPECTOR_AMBITUSSETTINGSMODEL_H
+#pragma once
 
 #include "models/abstractinspectormodel.h"
 
@@ -36,8 +35,6 @@ class AmbitusSettingsModel : public AbstractInspectorModel
     Q_PROPERTY(PropertyItem * bottomTpc READ bottomTpc CONSTANT)
     Q_PROPERTY(PropertyItem * topOctave READ topOctave CONSTANT)
     Q_PROPERTY(PropertyItem * bottomOctave READ bottomOctave CONSTANT)
-    Q_PROPERTY(PropertyItem * topPitch READ topPitch CONSTANT)
-    Q_PROPERTY(PropertyItem * bottomPitch READ bottomPitch CONSTANT)
 
     Q_PROPERTY(PropertyItem * direction READ direction CONSTANT)
     Q_PROPERTY(PropertyItem * lineThickness READ lineThickness CONSTANT)
@@ -59,8 +56,6 @@ public:
     PropertyItem* bottomTpc() const;
     PropertyItem* topOctave() const;
     PropertyItem* bottomOctave() const;
-    PropertyItem* topPitch() const;
-    PropertyItem* bottomPitch() const;
 
     PropertyItem* direction() const;
     PropertyItem* lineThickness() const;
@@ -73,12 +68,8 @@ private:
     PropertyItem* m_bottomTpc = nullptr;
     PropertyItem* m_topOctave = nullptr;
     PropertyItem* m_bottomOctave = nullptr;
-    PropertyItem* m_topPitch = nullptr;
-    PropertyItem* m_bottomPitch = nullptr;
 
     PropertyItem* m_direction = nullptr;
     PropertyItem* m_lineThickness = nullptr;
 };
 }
-
-#endif // MU_INSPECTOR_AMBITUSSETTINGSMODEL_H

@@ -836,9 +836,7 @@ String Note::tpcUserName(int tpc, int pitch, bool explicitAccidental, bool full)
 
     pitchStr = muse::mtrc("global", pitchStr);
 
-    const String octaveStr = String::number(((pitch - static_cast<int>(tpc2alter(tpc))) / PITCH_DELTA_OCTAVE) - 1);
-
-    return pitchStr + (explicitAccidental ? u" " : u"") + octaveStr;
+    return pitchStr + (explicitAccidental ? u" " : u"") + String::number(pitch2octave(pitch, tpc));
 }
 
 //---------------------------------------------------------

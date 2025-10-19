@@ -1668,55 +1668,50 @@ void TRead::read(Beam* b, XmlReader& e, ReadContext& ctx)
 
 void TRead::read(Ambitus* a, XmlReader& e, ReadContext& ctx)
 {
+    int topPitch;
+    int bottomPitch;
     while (e.readNextStartElement()) {
-        if (!readProperties(a, e, ctx)) {
+        const AsciiStringView tag(e.name());
+        if (tag == "head") {
+            TRead::readProperty(a, e, ctx, Pid::HEAD_GROUP);
+        } else if (tag == "headType") {
+            TRead::readProperty(a, e, ctx, Pid::HEAD_TYPE);
+        } else if (tag == "mirror") {
+            TRead::readProperty(a, e, ctx, Pid::MIRROR_HEAD);
+        } else if (tag == "hasLine") {
+            a->setHasLine(e.readInt());
+        } else if (tag == "lineWidth") {
+            TRead::readProperty(a, e, ctx, Pid::LINE_WIDTH);
+        } else if (tag == "topPitch") {
+            topPitch = e.readInt();
+        } else if (tag == "bottomPitch") {
+            bottomPitch = e.readInt();
+        } else if (tag == "topTpc") {
+            a->setTopTpc(e.readInt());
+        } else if (tag == "bottomTpc") {
+            a->setBottomTpc(e.readInt());
+        } else if (tag == "topAccidental") {
+            while (e.readNextStartElement()) {
+                if (e.name() == "Accidental") {
+                    TRead::read(a->topAccidental(), e, ctx);
+                } else {
+                    e.skipCurrentElement();
+                }
+            }
+        } else if (tag == "bottomAccidental") {
+            while (e.readNextStartElement()) {
+                if (e.name() == "Accidental") {
+                    TRead::read(a->bottomAccidental(), e, ctx);
+                } else {
+                    e.skipCurrentElement();
+                }
+            }
+        } else if (!readItemProperties(a, e, ctx)) {
             e.unknown();
         }
     }
-}
-
-bool TRead::readProperties(Ambitus* a, XmlReader& e, ReadContext& ctx)
-{
-    const AsciiStringView tag(e.name());
-    if (tag == "head") {
-        TRead::readProperty(a, e, ctx, Pid::HEAD_GROUP);
-    } else if (tag == "headType") {
-        TRead::readProperty(a, e, ctx, Pid::HEAD_TYPE);
-    } else if (tag == "mirror") {
-        TRead::readProperty(a, e, ctx, Pid::MIRROR_HEAD);
-    } else if (tag == "hasLine") {
-        a->setHasLine(e.readInt());
-    } else if (tag == "lineWidth") {
-        TRead::readProperty(a, e, ctx, Pid::LINE_WIDTH);
-    } else if (tag == "topPitch") {
-        a->setTopPitch(e.readInt());
-    } else if (tag == "bottomPitch") {
-        a->setBottomPitch(e.readInt());
-    } else if (tag == "topTpc") {
-        a->setTopTpc(e.readInt());
-    } else if (tag == "bottomTpc") {
-        a->setBottomTpc(e.readInt());
-    } else if (tag == "topAccidental") {
-        while (e.readNextStartElement()) {
-            if (e.name() == "Accidental") {
-                TRead::read(a->topAccidental(), e, ctx);
-            } else {
-                e.skipCurrentElement();
-            }
-        }
-    } else if (tag == "bottomAccidental") {
-        while (e.readNextStartElement()) {
-            if (e.name() == "Accidental") {
-                TRead::read(a->bottomAccidental(), e, ctx);
-            } else {
-                e.skipCurrentElement();
-            }
-        }
-    } else if (readItemProperties(a, e, ctx)) {
-    } else {
-        return false;
-    }
-    return true;
+    a->setTopOctave(pitch2octave(topPitch, a->topTpc()));
+    a->setBottomOctave(pitch2octave(bottomPitch, a->bottomTpc()));
 }
 
 void TRead::read(Accidental* a, XmlReader& e, ReadContext& ctx)
