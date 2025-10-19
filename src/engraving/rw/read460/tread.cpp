@@ -1689,13 +1689,13 @@ bool TRead::readProperties(Ambitus* a, XmlReader& e, ReadContext& ctx)
     } else if (tag == "lineWidth") {
         TRead::readProperty(a, e, ctx, Pid::LINE_WIDTH);
     } else if (tag == "topPitch") {
-        a->setTopPitch(e.readInt(), false);
+        a->setTopPitch(e.readInt());
     } else if (tag == "bottomPitch") {
-        a->setBottomPitch(e.readInt(), false);
+        a->setBottomPitch(e.readInt());
     } else if (tag == "topTpc") {
-        a->setTopTpc(e.readInt(), false);
+        a->setTopTpc(e.readInt());
     } else if (tag == "bottomTpc") {
-        a->setBottomTpc(e.readInt(), false);
+        a->setBottomTpc(e.readInt());
     } else if (tag == "topAccidental") {
         while (e.readNextStartElement()) {
             if (e.name() == "Accidental") {

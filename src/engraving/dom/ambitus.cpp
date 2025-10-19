@@ -147,81 +147,6 @@ void Ambitus::setTrack(track_idx_t t)
 }
 
 //---------------------------------------------------------
-//   setTop/BottomPitch
-//
-//    setting either pitch requires to adjust the corresponding tpc
-//---------------------------------------------------------
-
-void Ambitus::setTopPitch(int val, bool applyLogic)
-{
-    if (!applyLogic) {
-        m_topPitch = val;
-        return;
-    }
-
-    // if pitch difference is not an integer number of octaves, adjust tpc
-    // (to avoid 'wild' tpc changes with octave changes)
-    if ((val - topPitch()) % PITCH_DELTA_OCTAVE != 0) {
-        Key key = (staff() && segment()) ? staff()->key(segment()->tick()) : Key::C;
-        m_topTpc = pitch2tpc(val, key, Prefer::NEAREST);
-    }
-    m_topPitch = val;
-    normalize();
-}
-
-void Ambitus::setBottomPitch(int val, bool applyLogic)
-{
-    if (!applyLogic) {
-        m_bottomPitch = val;
-        return;
-    }
-
-    // if pitch difference is not an integer number of octaves, adjust tpc
-    // (to avoid 'wild' tpc changes with octave changes)
-    if ((val - bottomPitch()) % PITCH_DELTA_OCTAVE != 0) {
-        Key key = (staff() && segment()) ? staff()->key(segment()->tick()) : Key::C;
-        m_bottomTpc = pitch2tpc(val, key, Prefer::NEAREST);
-    }
-    m_bottomPitch = val;
-    normalize();
-}
-
-//---------------------------------------------------------
-//   setTop/BottomTpc
-//
-//    setting either tpc requires to adjust the corresponding pitch
-//    (but remaining in the same octave)
-//---------------------------------------------------------
-
-void Ambitus::setTopTpc(int val, bool applyLogic)
-{
-    m_topTpc = val;
-
-    if (!applyLogic) {
-        return;
-    }
-
-    int octave = topPitch() / PITCH_DELTA_OCTAVE;
-    int newOctavedPitch = (tpc2pitch(val) + PITCH_DELTA_OCTAVE) % PITCH_DELTA_OCTAVE;
-    m_topPitch = (octave * PITCH_DELTA_OCTAVE) + newOctavedPitch;
-    normalize();
-}
-
-void Ambitus::setBottomTpc(int val, bool applyLogic)
-{
-    m_bottomTpc = val;
-
-    if (!applyLogic) {
-        return;
-    }
-
-    int octave = bottomPitch() / PITCH_DELTA_OCTAVE;
-    int newOctavedPitch = (tpc2pitch(val) + PITCH_DELTA_OCTAVE) % PITCH_DELTA_OCTAVE;
-    m_bottomPitch = (octave * PITCH_DELTA_OCTAVE) + newOctavedPitch;
-    normalize();
-}
-
-//---------------------------------------------------------
 //   scanElements
 //---------------------------------------------------------
 
@@ -285,20 +210,6 @@ PointF Ambitus::pagePos() const
         yp += system->staff(staffIdx())->y() + system->y();
     }
     return PointF(pageX(), yp);
-}
-
-//---------------------------------------------------------
-//   normalize
-//
-//    makes sure topPitch is not < bottomPitch
-//---------------------------------------------------------
-
-void Ambitus::normalize()
-{
-    if (m_topPitch < m_bottomPitch) {
-        std::swap(m_topPitch, m_bottomPitch);
-        std::swap(m_topTpc, m_bottomTpc);
-    }
 }
 
 //---------------------------------------------------------
@@ -463,6 +374,66 @@ PropertyValue Ambitus::propertyDefault(Pid id) const
         return EngravingItem::propertyDefault(id);
     }
     //return QVariant();
+}
+
+void Ambitus::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps)
+{
+    switch (id) {
+    case Pid::PITCH: {
+        // if pitch difference is not an integer number of octaves, adjust tpc
+        // (to avoid 'wild' tpc changes with octave changes)
+        if ((v.toInt() - topPitch()) % PITCH_DELTA_OCTAVE != 0) {
+            Key key = (staff() && segment()) ? staff()->key(segment()->tick()) : Key::C;
+            EngravingItem::undoChangeProperty(Pid::TPC1, pitch2tpc(v.toInt(), key, Prefer::NEAREST), ps);
+        }
+        break;
+    }
+    case Pid::FBPARENTHESIS2: {
+        // if pitch difference is not an integer number of octaves, adjust tpc
+        // (to avoid 'wild' tpc changes with octave changes)
+        if ((v.toInt() - bottomPitch()) % PITCH_DELTA_OCTAVE != 0) {
+            Key key = (staff() && segment()) ? staff()->key(segment()->tick()) : Key::C;
+            EngravingItem::undoChangeProperty(Pid::FBPARENTHESIS1, pitch2tpc(v.toInt(), key, Prefer::NEAREST), ps);
+        }
+        break;
+    }
+    case Pid::TPC1: {
+        int octave = topPitch() / PITCH_DELTA_OCTAVE;
+        int newOctavedPitch = (tpc2pitch(v.toInt()) + PITCH_DELTA_OCTAVE) % PITCH_DELTA_OCTAVE;
+        EngravingItem::undoChangeProperty(Pid::PITCH, (octave * PITCH_DELTA_OCTAVE) + newOctavedPitch, ps);
+        break;
+    }
+    case Pid::FBPARENTHESIS1: {
+        int octave = bottomPitch() / PITCH_DELTA_OCTAVE;
+        int newOctavedPitch = (tpc2pitch(v.toInt()) + PITCH_DELTA_OCTAVE) % PITCH_DELTA_OCTAVE;
+        EngravingItem::undoChangeProperty(Pid::FBPARENTHESIS2, (octave * PITCH_DELTA_OCTAVE) + newOctavedPitch, ps);
+        break;
+    }
+    default:
+        break;
+    }
+
+    EngravingItem::undoChangeProperty(id, v, ps);
+
+    // Normalise values if needed
+    if (pitchIsValid(topPitch()) && pitchIsValid(bottomPitch()) && topPitch() < bottomPitch()) {
+    if (m_topPitch < m_bottomPitch) {
+        int tp = m_topPitch;
+        int tt = m_topTpc;
+        EngravingItem::undoChangeProperty(Pid::PITCH, m_bottomPitch, ps);
+        EngravingItem::undoChangeProperty(Pid::TPC1, m_bottomTpc, ps);
+        EngravingItem::undoChangeProperty(Pid::FBPARENTHESIS2, tp, ps);
+        EngravingItem::undoChangeProperty(Pid::FBPARENTHESIS1, tt, ps);
+    }
+}
+
+void Ambitus::undoResetProperty(Pid id)
+{
+    PropertyFlags f = propertyFlags(id);
+    if (f == PropertyFlags::UNSTYLED) {
+        f = PropertyFlags::STYLED;
+    }
+    EngravingItem::undoChangeProperty(id, propertyDefault(id), f);
 }
 
 //---------------------------------------------------------

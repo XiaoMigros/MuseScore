@@ -99,10 +99,23 @@ void AmbitusSettingsModel::resetProperties()
 
 void AmbitusSettingsModel::matchRangesToStaff()
 {
-    m_topTpc->resetToDefault();
-    m_bottomTpc->resetToDefault();
-    m_topPitch->resetToDefault();
-    m_bottomPitch->resetToDefault();
+    beginCommand(muse::TranslatableString("undoableAction", "Update ambitus(es) to match notes on the stave", nullptr,
+                                          int(m_elementList.size())));
+
+    for (mu::engraving::EngravingItem* item : m_elementList) {
+        IF_ASSERT_FAILED(item) {
+            continue;
+        }
+
+        item->undoResetProperty(mu::engraving::Pid::FBPARENTHESIS3);
+        item->undoResetProperty(mu::engraving::Pid::FBPARENTHESIS4);
+        item->undoResetProperty(mu::engraving::Pid::TPC1);
+        item->undoResetProperty(mu::engraving::Pid::FBPARENTHESIS1);
+    }
+
+    updateNotation();
+    endCommand();
+    loadProperties();
 }
 
 PropertyItem* AmbitusSettingsModel::noteheadGroup() const

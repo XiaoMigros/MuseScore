@@ -82,10 +82,10 @@ public:
     void setDirection(DirectionH val) { m_direction = val; }
     void setHasLine(bool val) { m_hasLine = val; }
     void setLineWidth(Spatium val) { m_lineWidth = val; }
-    void setTopPitch(int val, bool applyLogic = true);
-    void setBottomPitch(int val, bool applyLogic = true);
-    void setTopTpc(int val, bool applyLogic = true);
-    void setBottomTpc(int val, bool applyLogic = true);
+    void setTopPitch(int val) { m_topPitch = val; }
+    void setBottomPitch(int val) { m_bottomPitch = val; }
+    void setTopTpc(int val) { m_topTpc = val; }
+    void setBottomTpc(int val) { m_bottomTpc = val; }
 
     // some utility functions
     Segment* segment() const { return (Segment*)explicitParent(); }
@@ -105,6 +105,8 @@ public:
     PropertyValue getProperty(Pid) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid id) const override;
+    void undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps = PropertyFlags::NOSTYLE) override;
+    void undoResetProperty(Pid id);
 
     EngravingItem* nextSegmentElement() override;
     EngravingItem* prevSegmentElement() override;
@@ -124,8 +126,6 @@ private:
     friend class Factory;
     Ambitus(Segment* parent);
     Ambitus(const Ambitus& a);
-
-    void normalize();
 
     struct Ranges {
         int topTpc = Tpc::TPC_INVALID;
