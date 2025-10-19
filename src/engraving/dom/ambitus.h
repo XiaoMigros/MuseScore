@@ -67,10 +67,10 @@ public:
     DirectionH direction() const { return m_direction; }
     bool hasLine() const { return m_hasLine; }
     Spatium lineWidth() const { return m_lineWidth; }
-    int topOctave() const { return (m_topPitch / PITCH_DELTA_OCTAVE) - 1; }
-    int bottomOctave() const { return (m_bottomPitch / PITCH_DELTA_OCTAVE) - 1; }
-    int topPitch() const { return m_topPitch; }
-    int bottomPitch() const { return m_bottomPitch; }
+    int topOctave() const { return m_topOctave; }
+    int bottomOctave() const { return m_bottomOctave; }
+    int topPitch() const;
+    int bottomPitch() const;
     int topTpc() const { return m_topTpc; }
     int bottomTpc() const { return m_bottomTpc; }
 
@@ -82,10 +82,10 @@ public:
     void setDirection(DirectionH val) { m_direction = val; }
     void setHasLine(bool val) { m_hasLine = val; }
     void setLineWidth(Spatium val) { m_lineWidth = val; }
-    void setTopPitch(int val, bool applyLogic = true);
-    void setBottomPitch(int val, bool applyLogic = true);
-    void setTopTpc(int val, bool applyLogic = true);
-    void setBottomTpc(int val, bool applyLogic = true);
+    void setTopOctave(int val) { m_topOctave = val; }
+    void setBottomOctave(int val) { m_bottomOctave = val; }
+    void setTopTpc(int val) { m_topTpc = val; }
+    void setBottomTpc(int val) { m_bottomTpc = val; }
 
     // some utility functions
     Segment* segment() const { return (Segment*)explicitParent(); }
@@ -105,6 +105,8 @@ public:
     PropertyValue getProperty(Pid) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid id) const override;
+    void undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps = PropertyFlags::NOSTYLE) override;
+    void undoResetProperty(Pid id);
 
     EngravingItem* nextSegmentElement() override;
     EngravingItem* prevSegmentElement() override;
@@ -125,8 +127,6 @@ private:
     Ambitus(Segment* parent);
     Ambitus(const Ambitus& a);
 
-    void normalize();
-
     struct Ranges {
         int topTpc = Tpc::TPC_INVALID;
         int bottomTpc = Tpc::TPC_INVALID;
@@ -143,7 +143,7 @@ private:
     Spatium m_lineWidth;
     Accidental* m_topAccidental = nullptr;
     Accidental* m_bottomAccidental = nullptr;
-    int m_topPitch = INVALID_PITCH, m_bottomPitch = INVALID_PITCH;
+    int m_topOctave = -1, m_bottomOctave = -1;
     int m_topTpc = Tpc::TPC_INVALID, m_bottomTpc = Tpc::TPC_INVALID;
 };
 }

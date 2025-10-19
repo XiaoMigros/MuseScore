@@ -46,18 +46,6 @@ void AmbitusSettingsModel::createProperties()
     m_topOctave = buildPropertyItem(mu::engraving::Pid::FBPARENTHESIS3);
     m_bottomOctave = buildPropertyItem(mu::engraving::Pid::FBPARENTHESIS4);
 
-    m_topPitch = buildPropertyItem(mu::engraving::Pid::PITCH, [this](const mu::engraving::Pid pid, const QVariant& newValue) {
-        onPropertyValueChanged(pid, newValue);
-
-        emit requestReloadPropertyItems();
-    });
-
-    m_bottomPitch = buildPropertyItem(mu::engraving::Pid::FBPARENTHESIS2, [this](const mu::engraving::Pid pid, const QVariant& newValue) {
-        onPropertyValueChanged(pid, newValue);
-
-        emit requestReloadPropertyItems();
-    });
-
     m_direction = buildPropertyItem(mu::engraving::Pid::MIRROR_HEAD);
     m_lineThickness = buildPropertyItem(mu::engraving::Pid::LINE_WIDTH);
 }
@@ -76,8 +64,6 @@ void AmbitusSettingsModel::loadProperties()
     loadPropertyItem(m_bottomTpc);
     loadPropertyItem(m_topOctave);
     loadPropertyItem(m_bottomOctave);
-    loadPropertyItem(m_topPitch);
-    loadPropertyItem(m_bottomPitch);
 
     loadPropertyItem(m_direction);
     loadPropertyItem(m_lineThickness, formatDoubleFunc);
@@ -93,16 +79,29 @@ void AmbitusSettingsModel::resetProperties()
 
     m_topTpc->resetToDefault();
     m_bottomTpc->resetToDefault();
-    m_topPitch->resetToDefault();
-    m_bottomPitch->resetToDefault();
+    m_topOctave->resetToDefault();
+    m_bottomOctave->resetToDefault();
 }
 
 void AmbitusSettingsModel::matchRangesToStaff()
 {
-    m_topTpc->resetToDefault();
-    m_bottomTpc->resetToDefault();
-    m_topPitch->resetToDefault();
-    m_bottomPitch->resetToDefault();
+    beginCommand(muse::TranslatableString("undoableAction", "Update ambitus(es) to match notes on the stave", nullptr,
+                                          int(m_elementList.size())));
+
+    for (mu::engraving::EngravingItem* item : m_elementList) {
+        IF_ASSERT_FAILED(item) {
+            continue;
+        }
+
+        item->undoResetProperty(mu::engraving::Pid::FBPARENTHESIS3);
+        item->undoResetProperty(mu::engraving::Pid::FBPARENTHESIS4);
+        item->undoResetProperty(mu::engraving::Pid::TPC1);
+        item->undoResetProperty(mu::engraving::Pid::FBPARENTHESIS1);
+    }
+
+    updateNotation();
+    endCommand();
+    loadProperties();
 }
 
 PropertyItem* AmbitusSettingsModel::noteheadGroup() const
@@ -143,14 +142,4 @@ PropertyItem* AmbitusSettingsModel::direction() const
 PropertyItem* AmbitusSettingsModel::lineThickness() const
 {
     return m_lineThickness;
-}
-
-PropertyItem* AmbitusSettingsModel::topPitch() const
-{
-    return m_topPitch;
-}
-
-PropertyItem* AmbitusSettingsModel::bottomPitch() const
-{
-    return m_bottomPitch;
 }

@@ -1578,6 +1578,8 @@ void TRead::read(Ambitus* a, XmlReader& e, ReadContext& ctx)
             e.unknown();
         }
     }
+    a->setTopOctave(pitch2octave(a->topOctave(), a->topTpc()));
+    a->setBottomOctave(pitch2octave(a->bottomOctave(), a->bottomTpc()));
 }
 
 bool TRead::readProperties(Ambitus* a, XmlReader& e, ReadContext& ctx)
@@ -1594,13 +1596,13 @@ bool TRead::readProperties(Ambitus* a, XmlReader& e, ReadContext& ctx)
     } else if (tag == "lineWidth") {
         TRead::readProperty(a, e, ctx, Pid::LINE_WIDTH);
     } else if (tag == "topPitch") {
-        a->setTopPitch(e.readInt(), false);
+        a->setTopOctave(e.readInt());
     } else if (tag == "bottomPitch") {
-        a->setBottomPitch(e.readInt(), false);
+        a->setBottomOctave(e.readInt());
     } else if (tag == "topTpc") {
-        a->setTopTpc(e.readInt(), false);
+        a->setTopTpc(e.readInt());
     } else if (tag == "bottomTpc") {
-        a->setBottomTpc(e.readInt(), false);
+        a->setBottomTpc(e.readInt());
     } else if (tag == "topAccidental") {
         while (e.readNextStartElement()) {
             if (e.name() == "Accidental") {

@@ -1163,4 +1163,9 @@ Key clampKey(Key key, PreferSharpFlat prefer)
 
     return key;
 }
+
+int pitch2octave(int pitch, int tpc)
+{
+    return ((pitch - int(tpc2alter(tpc))) / PITCH_DELTA_OCTAVE) - 1;
+}
 }
