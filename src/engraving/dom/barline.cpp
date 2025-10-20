@@ -634,7 +634,7 @@ void BarLine::endDragGrip(EditData& ed)
         for (staffIdx2 = staffIdx1 + 1; staffIdx2 < numOfStaves; ++staffIdx2) {
             // compute 1st staff height, absolute top Y of 2nd staff and height of blank between the staves
             Staff* staff1      = score()->staff(staffIdx2 - 1);
-            double staff1Hght    = (staff1->lines(tick()) - 1) * staff1->lineDistance(tick()) * spatium();
+            double staff1Hght    = staff1->staffHeight(tick());
             double staff2TopY    = systTopY + syst->staff(staffIdx2)->y();
             double blnkBtwnStaff = staff2TopY - staff1TopY - staff1Hght;
             // if bar line bottom coord is above than mid-way of blank between staves...
@@ -769,7 +769,7 @@ void BarLine::remove(EngravingItem* e)
 
 PropertyValue BarLine::getProperty(Pid id) const
 {
-    if (EngravingItem* e = const_cast<BarLine*>(this)->propertyDelegate(id)) {
+    if (EngravingObject* e = const_cast<BarLine*>(this)->propertyDelegate(id)) {
         return e->getProperty(id);
     }
 
@@ -796,7 +796,7 @@ PropertyValue BarLine::getProperty(Pid id) const
 
 bool BarLine::setProperty(Pid id, const PropertyValue& v)
 {
-    if (EngravingItem* e = propertyDelegate(id)) {
+    if (EngravingObject* e = propertyDelegate(id)) {
         return e->setProperty(id, v);
     }
 
@@ -830,7 +830,7 @@ bool BarLine::setProperty(Pid id, const PropertyValue& v)
 
 void BarLine::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps)
 {
-    if (EngravingItem* e = propertyDelegate(id)) {
+    if (EngravingObject* e = propertyDelegate(id)) {
         e->undoChangeProperty(id, v, ps);
         return;
     }
@@ -842,7 +842,7 @@ void BarLine::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags p
     }
 }
 
-EngravingItem* BarLine::propertyDelegate(Pid pid)
+EngravingObject* BarLine::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::REPEAT_COUNT) {
         return measure();
@@ -870,7 +870,7 @@ PlayCountText* BarLine::playCountText() const
 
 PropertyValue BarLine::propertyDefault(Pid propertyId) const
 {
-    if (EngravingItem* e = const_cast<BarLine*>(this)->propertyDelegate(propertyId)) {
+    if (EngravingObject* e = const_cast<BarLine*>(this)->propertyDelegate(propertyId)) {
         return e->propertyDefault(propertyId);
     }
 

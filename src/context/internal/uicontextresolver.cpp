@@ -52,57 +52,35 @@ void UiContextResolver::init()
     interactive()->currentUri().ch.onReceive(this, [this](const Uri&) {
         //! NOTE Let the page/dialog open and show itself first
         QTimer::singleShot(CURRENT_URI_CHANGED_TIMEOUT, [this]() {
-            notifyAboutContextChanged();
+            updateCurrentUiContext();
         });
     });
 
-    playbackController()->isPlayingChanged().onNotify(this, [this]() {
-        notifyAboutContextChanged();
-    });
-
     globalContext()->currentNotationChanged().onNotify(this, [this]() {
-        auto notation = globalContext()->currentNotation();
-        if (notation) {
-            notation->interaction()->selectionChanged().onNotify(this, [this]() {
-                notifyAboutContextChanged();
-            });
-
-            notation->interaction()->textEditingStarted().onNotify(this, [this]() {
-                notifyAboutContextChanged();
-            });
-
-            notation->interaction()->textEditingEnded().onReceive(this, [this](engraving::TextBase*) {
-                notifyAboutContextChanged();
-            });
-
-            notation->undoStack()->stackChanged().onNotify(this, [this]() {
-                notifyAboutContextChanged();
-            });
-
-            notation->interaction()->noteInput()->noteInputStarted().onReceive(this, [this](bool) {
-                notifyAboutContextChanged();
-            });
-
-            notation->interaction()->noteInput()->noteInputEnded().onNotify(this, [this]() {
-                notifyAboutContextChanged();
-            });
-        }
-        notifyAboutContextChanged();
+        updateCurrentUiContext();
     });
 
     navigationController()->navigationChanged().onNotify(this, [this]() {
-        notifyAboutContextChanged();
+        updateCurrentUiContext();
     });
 }
 
-void UiContextResolver::notifyAboutContextChanged()
+void UiContextResolver::updateCurrentUiContext()
 {
+    UiContext ctx = resolveCurrentUiContext();
+
+    if (!m_currentUiContext.isNull() && m_currentUiContext == ctx) {
+        return;
+    }
+
+    m_currentUiContext = ctx;
     m_currentUiContextChanged.notify();
 }
 
-UiContext UiContextResolver::currentUiContext() const
+UiContext UiContextResolver::resolveCurrentUiContext() const
 {
     TRACEFUNC;
+
     Uri currentUri = interactive()->currentUri().val;
 
 #ifdef MUSE_MODULE_DIAGNOSTICS
@@ -158,14 +136,22 @@ bool UiContextResolver::match(const muse::ui::UiContext& currentCtx, const muse:
         return true;
     }
 
+    UiContext currCtx = currentCtx;
+
+    //! NOTE We are on the braille panel, but we allow all project focused actions because the braille panel is
+    //! just another representation of the project...
+    if (currCtx == context::UiCtxBrailleFocused) {
+        currCtx = context::UiCtxProjectFocused;
+    }
+
     //! NOTE: Context could be unknown if a plugin is currently open, in which case we should return true under
     //! the following circumstances (see issue #24673)...
-    if ((currentCtx == context::UiCtxProjectFocused || currentCtx == context::UiCtxUnknown)
+    if ((currCtx == context::UiCtxProjectFocused || currCtx == context::UiCtxUnknown)
         && actCtx == context::UiCtxProjectOpened && globalContext()->currentNotation()) {
         return true;
     }
 
-    return currentCtx == actCtx;
+    return currCtx == actCtx;
 }
 
 bool UiContextResolver::matchWithCurrent(const UiContext& ctx) const
@@ -174,8 +160,17 @@ bool UiContextResolver::matchWithCurrent(const UiContext& ctx) const
         return true;
     }
 
-    UiContext currentCtx = currentUiContext();
+    const UiContext& currentCtx = currentUiContext();
     return match(currentCtx, ctx);
+}
+
+const muse::ui::UiContext& UiContextResolver::currentUiContext() const
+{
+    if (m_currentUiContext.isNull()) {
+        const_cast<UiContextResolver*>(this)->updateCurrentUiContext();
+    }
+
+    return m_currentUiContext;
 }
 
 muse::async::Notification UiContextResolver::currentUiContextChanged() const
@@ -198,6 +193,10 @@ bool UiContextResolver::isShortcutContextAllowed(const std::string& scContext) c
     //! UPDATE I'm now adding one more context for list VS range selection, but this is
     //! quite clearly not an optimal solution. In future, we need a general system to
     //! allow/disallow shortcuts based on any property of the currentNotation. [M.S.]
+
+    if (CTX_DISABLED == scContext) {
+        return false;
+    }
 
     if (CTX_NOTATION_OPENED == scContext) {
         return matchWithCurrent(context::UiCtxProjectOpened);

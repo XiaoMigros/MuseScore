@@ -339,6 +339,7 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
                     prevMeasureState.restoreMeasure();
                     MeasureLayout::layoutMeasureElements(m, ctx);
                     BeamLayout::restoreBeams(m, ctx);
+                    SystemLayout::restoreOldSystemLayout(m->system(), ctx);
                     if (m == nm || !m->noBreak()) {
                         break;
                     }
@@ -869,8 +870,10 @@ void SystemLayout::layoutSticking(const std::vector<Sticking*> stickings, System
 void SystemLayout::layoutLyrics(const ElementsToLayout& elements, LayoutContext& ctx)
 {
     System* system = elements.system;
-    Fraction stick = elements.measures.front()->tick();
-    Fraction etick = elements.measures.back()->endTick();
+    // NOTE: in continuous view, this means we layout spanners for the entire score.
+    // TODO: find way to optimize this and only layout where necessary.
+    Fraction stick = system->measures().front()->tick();
+    Fraction etick = system->measures().back()->endTick();
 
     for (Spanner* sp : elements.partialLyricsLines) {
         TLayout::layoutSystem(sp, system, ctx);
@@ -2499,16 +2502,16 @@ void SystemLayout::layout2(System* system, LayoutContext& ctx)
             Spacer* sp = m->vspacerDown(si1);
             if (sp) {
                 if (sp->spacerType() == SpacerType::FIXED) {
-                    dist = staff->staffHeight() + sp->absoluteGap();
+                    dist = staff->staffHeight(m->tick()) + sp->absoluteGap();
                     fixedSpace = true;
                     break;
                 } else {
-                    dist = std::max(dist, staff->staffHeight() + sp->absoluteGap());
+                    dist = std::max(dist, staff->staffHeight(m->tick()) + sp->absoluteGap());
                 }
             }
             sp = m->vspacerUp(si2);
             if (sp) {
-                dist = std::max(dist, sp->absoluteGap() + staff->staffHeight());
+                dist = std::max(dist, staff->staffHeight(m->tick()) + sp->absoluteGap());
             }
         }
         if (!fixedSpace) {

@@ -4,6 +4,7 @@
     <eid>B_B</eid>
     <Division>480</Division>
     <Style>
+      <hideInstrumentNameIfOneInstrument>0</hideInstrumentNameIfOneInstrument>
       <spatium>1.74978</spatium>
       </Style>
     <showInvisible>1</showInvisible>
@@ -110,7 +111,6 @@
             </TimeSig>
           <Chord>
             <eid>I_I</eid>
-            <visible>0</visible>
             <durationType>half</durationType>
             <Lyrics>
               <eid>J_J</eid>
@@ -186,7 +186,6 @@
         <voice>
           <Chord>
             <eid>X_X</eid>
-            <visible>0</visible>
             <durationType>half</durationType>
             <Lyrics>
               <eid>Y_Y</eid>
