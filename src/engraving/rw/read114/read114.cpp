@@ -1453,10 +1453,10 @@ static void readHarmony114(XmlReader& e, ReadContext& ctx, Harmony* h)
                 }
             }
         } else if (tag == "leftParen") {
-            h->setParenthesesMode(ParenthesesMode::LEFT, true, true);
+            h->setParenthesesMode(h->rightParen() ? ParenthesesMode::BOTH : ParenthesesMode::LEFT, true, false);
             e.readNext();
         } else if (tag == "rightParen") {
-            h->setParenthesesMode(ParenthesesMode::RIGHT, true, true);
+            h->setParenthesesMode(h->leftParen() ? ParenthesesMode::BOTH : ParenthesesMode::RIGHT, true, false);
             e.readNext();
         } else if (!readTextProperties(e, ctx, h, h)) {
             e.unknown();
@@ -1856,7 +1856,7 @@ static void readMeasure(Measure* m, int staffIdx, XmlReader& e, ReadContext& ctx
             while (e.readNextStartElement()) {
                 const AsciiStringView t(e.name());
                 if (t == "no") {
-                    l->setNo(e.readInt());
+                    l->setVerse(e.readInt());
                     if (l->isEven()) {
                         l->initTextStyleType(TextStyleType::LYRICS_EVEN);
                     }

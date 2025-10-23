@@ -521,7 +521,7 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::tupletDirection,         false, tupletDirection,         resetTupletDirection },
         { StyleId::tupletNumberType,        false, tupletNumberType,        resetTupletNumberType },
         { StyleId::tupletBracketType,       false, tupletBracketType,       resetTupletBracketType },
-        { StyleId::tupletMaxSlope,          false, tupletMaxSlope,          resetTupletMaxSlope },
+        { StyleId::tupletMaxSlope,          true,  tupletMaxSlope,          resetTupletMaxSlope },
         { StyleId::tupletOutOfStaff,        false, tupletOutOfStaff,        0 },
         { StyleId::tupletUseSymbols,        false, tupletUseSymbols,        resetTupletUseSymbols },
         { StyleId::tupletExtendToEndOfDuration, false, tupletExtendToEndOfDuration, 0 },
@@ -1023,11 +1023,7 @@ EditStyle::EditStyle(QWidget* parent)
         } else if (auto radioButton = qobject_cast<QRadioButton*>(sw.widget)) {
             connect(radioButton, &QRadioButton::toggled, setSignalMapper, mapFunction);
         } else if (auto checkBox = qobject_cast<QCheckBox*>(sw.widget)) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
             connect(checkBox, &QCheckBox::checkStateChanged, setSignalMapper, mapFunction);
-#else
-            connect(checkBox, &QCheckBox::stateChanged, setSignalMapper, mapFunction);
-#endif
         } else if (auto button = qobject_cast<QAbstractButton*>(sw.widget)) {
             connect(button, &QAbstractButton::toggled, setSignalMapper, mapFunction);
         } else if (auto groupBox = qobject_cast<QGroupBox*>(sw.widget)) {

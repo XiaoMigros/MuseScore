@@ -834,11 +834,9 @@ String Note::tpcUserName(int tpc, int pitch, bool explicitAccidental, bool full)
         pitchStr.replace(u"#", u"♯");
     }
 
-    pitchStr = muse::mtrc("global", pitchStr);
-
     const String octaveStr = String::number(((pitch - static_cast<int>(tpc2alter(tpc))) / PITCH_DELTA_OCTAVE) - 1);
 
-    return pitchStr + (explicitAccidental ? u" " : u"") + octaveStr;
+    return pitchStr + octaveStr;
 }
 
 //---------------------------------------------------------
@@ -848,6 +846,8 @@ String Note::tpcUserName(int tpc, int pitch, bool explicitAccidental, bool full)
 String Note::tpcUserName(const bool explicitAccidental, bool full) const
 {
     String pitchName = tpcUserName(tpc(), epitch() + ottaveCapoFret(), explicitAccidental, full);
+
+    pitchName = muse::mtrc("global/pitchName", pitchName);
 
     if (fixed() && headGroup() == NoteHeadGroup::HEAD_SLASH) {
         // see Note::accessibleInfo(), but we return what we have
@@ -872,6 +872,7 @@ String Note::tpcUserName(const bool explicitAccidental, bool full) const
 
     if (!concertPitch() && transposition()) {
         String soundingPitch = tpcUserName(tpc1(), ppitch(), explicitAccidental);
+        soundingPitch = muse::mtrc("global/pitchName", soundingPitch);
         return muse::mtrc("engraving", "%1 (sounding as %2%3)").arg(pitchName, soundingPitch, pitchOffset);
     }
     return pitchName + pitchOffset;
@@ -2713,26 +2714,21 @@ void Note::dragInEditMode(EditData& editData)
 
 void Note::verticalDrag(EditData& ed)
 {
-    Fraction _tick      = chord()->tick();
-    const Staff* stf    = staff();
-    const StaffType* st = stf->staffType(_tick);
-    const Instrument* instr = part()->instrument(_tick);
-
-    if (instr->useDrumset()) {
+    Fraction _tick = chord()->tick();
+    if (part()->instrument(_tick)->useDrumset()) {
         return;
     }
 
     NoteEditData* ned   = static_cast<NoteEditData*>(ed.getData(this).get());
 
-    double _spatium      = spatium();
-    bool tab            = st->isTabStaff();
-    double step          = _spatium * (tab ? st->lineDistance().val() : 0.5);
-    int lineOffset      = lrint(ed.moveDelta.y() / step);
+    const bool tab = staffType()->isTabStaff();
+    double step    = spatium() * staffType()->lineDistance().val() * (tab ? 1.0 : 0.5);
+    int lineOffset = lrint(ed.moveDelta.y() / step);
 
     if (tab) {
-        const StringData* strData = part()->stringData(_tick, stf->idx());
-        const int pitchOffset = stf->pitchOffset(_tick);
-        int nString = ned->string + (st->upsideDown() ? -lineOffset : lineOffset);
+        const StringData* strData = part()->stringData(_tick, staffIdx());
+        const int pitchOffset = staff()->pitchOffset(_tick);
+        int nString = ned->string + (staffType()->upsideDown() ? -lineOffset : lineOffset);
         int nFret   = strData->fret(m_pitch + pitchOffset, nString, staff());
 
         if (nFret >= 0) {                        // no fret?

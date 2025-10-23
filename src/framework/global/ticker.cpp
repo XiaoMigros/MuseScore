@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-Studio-CLA-applies
+ * MuseScore-CLA-applies
  *
- * MuseScore Studio
+ * MuseScore
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,20 +19,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "ticker.h"
 
-#ifndef MU_NOTATION_NOTATIONCREATOR_H
-#define MU_NOTATION_NOTATIONCREATOR_H
+using namespace muse;
 
-#include "../inotationcreator.h"
-
-namespace mu::notation {
-class NotationCreator : public INotationCreator
+Ticker::~Ticker()
 {
-public:
-    NotationCreator() = default;
-
-    IMasterNotationPtr newMasterNotationPtr(const muse::modularity::ContextPtr& iocCtx) const override;
-};
+    stop();
 }
 
-#endif // MU_NOTATION_NOTATIONCREATOR_H
+void Ticker::start(uint32_t interval, const Callback& callback, Mode mode)
+{
+    ITickerProvider::Task task;
+    task.interval = interval;
+    task.repeat = (mode == Mode::Repeat);
+    task.call = callback;
+
+    m_taskId = tickerProvider()->addTask(task);
+}
+
+void Ticker::stop()
+{
+    if (m_taskId != 0) {
+        tickerProvider()->removeTask(m_taskId);
+        m_taskId = 0;
+    }
+}

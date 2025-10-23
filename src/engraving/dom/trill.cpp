@@ -144,7 +144,7 @@ void TrillSegment::scanElements(void* data, void (* func)(void*, EngravingItem*)
 //   propertyDelegate
 //---------------------------------------------------------
 
-EngravingItem* TrillSegment::propertyDelegate(Pid pid)
+EngravingObject* TrillSegment::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::TRILL_TYPE || pid == Pid::ORNAMENT_STYLE || pid == Pid::PLACEMENT) {
         return spanner();
@@ -398,12 +398,10 @@ bool Trill::setProperty(Pid propertyId, const PropertyValue& val)
         break;
     case Pid::COLOR:
         setColor(val.value<Color>());
-        [[fallthrough]];
-    default:
-        if (!SLine::setProperty(propertyId, val)) {
-            return false;
-        }
+        setLineColor(val.value<Color>());
         break;
+    default:
+        return SLine::setProperty(propertyId, val);
     }
     triggerLayout();
     return true;

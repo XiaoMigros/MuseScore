@@ -1237,10 +1237,6 @@ void TWrite::writeProperties(const TextBase* item, XmlWriter& xml, WriteContext&
         writeProperty(item, xml, Pid::CENTER_BETWEEN_STAVES);
     }
 
-    if (item->hasSymbolSize()) {
-        writeProperty(item, xml, Pid::MUSIC_SYMBOL_SIZE);
-    }
-
     writeItemProperties(item, xml, ctx);
     writeProperty(item, xml, Pid::TEXT_STYLE);
 
@@ -1248,6 +1244,9 @@ void TWrite::writeProperties(const TextBase* item, XmlWriter& xml, WriteContext&
         if (!item->isStyled(spp.pid)) {
             writeProperty(item, xml, spp.pid);
         }
+    }
+    if (item->hasSymbolSize()) {
+        writeProperty(item, xml, Pid::MUSIC_SYMBOL_SIZE);
     }
     for (const auto& spp : *textStyle(item->textStyleType())) {
         if (item->isStyled(spp.pid)
@@ -2213,14 +2212,9 @@ void TWrite::write(const KeySig* item, XmlWriter& xml, WriteContext& ctx)
         xml.tag("mode", TConv::toXml(item->mode()));
     }
 
-    if (item->isCourtesy()) {
-        xml.tag("isCourtesy", item->isCourtesy());
-    }
-
-    if (!item->showCourtesy()) {
-        xml.tag("showCourtesySig", item->showCourtesy());
-    }
+    writeProperty(item, xml, Pid::SHOW_COURTESY);
     writeProperty(item, xml, Pid::IS_COURTESY);
+
     if (item->forInstrumentChange()) {
         xml.tag("forInstrumentChange", true);
     }
