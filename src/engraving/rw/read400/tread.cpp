@@ -1207,8 +1207,7 @@ void TRead::read(KeySig* s, XmlReader& e, ReadContext& ctx)
                 }
             }
             sig.customKeyDefs().push_back(cd);
-        } else if (tag == "showCourtesySig") {
-            s->setShowCourtesy(e.readInt());
+        } else if (TRead::readProperty(s, tag, e, ctx, Pid::SHOW_COURTESY)) {
         } else if (tag == "showNaturals") {           // obsolete
             e.readInt();
         } else if (tag == "accidental") {             // we need to guess proper concert key
@@ -1228,30 +1227,7 @@ void TRead::read(KeySig* s, XmlReader& e, ReadContext& ctx)
             e.readInt();
             sig.setCustom(true);
         } else if (tag == "mode") {
-            String m(e.readText());
-            if (m == "none") {
-                sig.setMode(KeyMode::NONE);
-            } else if (m == "major") {
-                sig.setMode(KeyMode::MAJOR);
-            } else if (m == "minor") {
-                sig.setMode(KeyMode::MINOR);
-            } else if (m == "dorian") {
-                sig.setMode(KeyMode::DORIAN);
-            } else if (m == "phrygian") {
-                sig.setMode(KeyMode::PHRYGIAN);
-            } else if (m == "lydian") {
-                sig.setMode(KeyMode::LYDIAN);
-            } else if (m == "mixolydian") {
-                sig.setMode(KeyMode::MIXOLYDIAN);
-            } else if (m == "aeolian") {
-                sig.setMode(KeyMode::AEOLIAN);
-            } else if (m == "ionian") {
-                sig.setMode(KeyMode::IONIAN);
-            } else if (m == "locrian") {
-                sig.setMode(KeyMode::LOCRIAN);
-            } else {
-                sig.setMode(KeyMode::UNKNOWN);
-            }
+            sig.setMode(TConv::fromXml(e.readAsciiText(), KeyMode::UNKNOWN));
         } else if (tag == "subtype") {
             subtype = e.readInt();
         } else if (tag == "forInstrumentChange") {
@@ -2788,10 +2764,10 @@ void TRead::read(Harmony* h, XmlReader& e, ReadContext& ctx)
                 }
             }
         } else if (tag == "leftParen") {
-            h->setParenthesesMode(ParenthesesMode::LEFT, true, true);
+            h->setParenthesesMode(h->rightParen() ? ParenthesesMode::BOTH : ParenthesesMode::LEFT, true, false);
             e.readNext();
         } else if (tag == "rightParen") {
-            h->setParenthesesMode(ParenthesesMode::RIGHT, true, true);
+            h->setParenthesesMode(h->leftParen() ? ParenthesesMode::BOTH : ParenthesesMode::RIGHT, true, false);
             e.readNext();
         } else if (TRead::readProperty(h, tag, e, ctx, Pid::POS_ABOVE)) {
         } else if (TRead::readProperty(h, tag, e, ctx, Pid::HARMONY_TYPE)) {
@@ -2972,7 +2948,7 @@ bool TRead::readProperties(Lyrics* l, XmlReader& e, ReadContext& ctx)
     const AsciiStringView tag(e.name());
 
     if (tag == "no") {
-        l->setNo(e.readInt());
+        l->setVerse(e.readInt());
         if (l->isEven()) {
             l->initTextStyleType(TextStyleType::LYRICS_EVEN);
         }

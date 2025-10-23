@@ -789,7 +789,7 @@ void LineSegment::localSpatiumChanged(double ov, double nv)
 //   propertyDelegate
 //---------------------------------------------------------
 
-EngravingItem* LineSegment::propertyDelegate(Pid pid)
+EngravingObject* LineSegment::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::DIAGONAL
         || pid == Pid::COLOR
@@ -1006,7 +1006,7 @@ bool SLine::setProperty(Pid id, const PropertyValue& v)
         m_diagonal = v.toBool();
         break;
     case Pid::COLOR:
-        m_lineColor = v.value<Color>();
+        setLineColor(v.value<Color>());
         break;
     case Pid::LINE_WIDTH:
         if (v.type() == P_TYPE::MILLIMETRE) {

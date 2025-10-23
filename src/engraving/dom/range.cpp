@@ -36,6 +36,9 @@
 #include "slur.h"
 #include "staff.h"
 #include "tie.h"
+#include "spacer.h"
+#include "marker.h"
+#include "volta.h"
 
 #include "tremolosinglechord.h"
 #include "tremolotwochord.h"
@@ -65,12 +68,96 @@ static void cleanupTuplet(Tuplet* t)
     }
 }
 
+//   clonedNote
+//---------------------------------------------------------
+static Note* clonedNote(const Note* srcNote, TrackList::ClonedChordMap& cChordMap)
+{
+    Note* cNote = nullptr;
+    Chord* srcChord = srcNote->chord();
+    Chord* cChord = cChordMap[srcChord];
+
+    if (srcChord && cChord) {
+        int noteSrcPosition = 0;
+        int noteClonedPosition = 0;
+        bool noteFound = false;
+        // We presume notes where created in the same order in the srcChord and clonedChord
+        // Note position in sourceChord
+        for (Note* n : srcChord->notes()) {
+            ++noteSrcPosition;
+            if (srcNote == n) {
+                noteFound = true;
+                break;
+            }
+        }
+        if (noteFound) {
+            // Note in clonedChord
+            for (Note* n : cChord->notes()) {
+                ++noteClonedPosition;
+                if (noteClonedPosition == noteSrcPosition) {
+                    cNote = n;
+                    break;
+                }
+            }
+        }
+    }
+    return cNote;
+}
+
+//---------------------------------------------------------
+//   cloneAndRebuildSpanners
+//---------------------------------------------------------
+static void cloneAndRebuildSpanners(TrackList::ClonedChordMap& cChordMap)
+{
+    Chord* srcChord = nullptr;
+    Note* cNote = nullptr;
+    auto iter = cChordMap.begin();
+
+    // Clone Spanners from Chords
+    while (iter != cChordMap.end()) {
+        srcChord = iter->first;
+
+        //
+        // Add For and Back Note's spanners to cloned Note
+        //
+        for (Note* srcNote : srcChord->notes()) {
+            cNote = clonedNote(srcNote, cChordMap);
+
+            if (cNote) {
+                for (Spanner* sp : srcNote->spannerFor()) {
+                    if (sp->isGuitarBend() || sp->isGlissando()) {
+                        Spanner* csp = toSpanner(sp->clone());
+
+                        Note* endClonedNote = clonedNote(toNote(sp->endElement()), cChordMap);
+                        if (endClonedNote) {
+                            csp->setNoteSpan(cNote, endClonedNote);
+                        }
+                        cNote->addSpannerFor(csp);
+                    }
+                }
+                for (Spanner* sp : srcNote->spannerBack()) {
+                    if (sp->isGuitarBend() || sp->isGlissando()) {
+                        Spanner* csp = toSpanner(sp->clone());
+                        Note* startClonedNote = clonedNote(toNote(sp->startElement()), cChordMap);
+
+                        if (startClonedNote) {
+                            csp->setNoteSpan(startClonedNote, cNote);
+                        }
+                        cNote->addSpannerBack(csp);
+                    }
+                }
+            }
+        }
+        ++iter;
+    }
+}
+
 //---------------------------------------------------------
 //   TrackList
 //---------------------------------------------------------
 
 TrackList::~TrackList()
 {
+    m_clonedChord.clear();
     for (EngravingItem* e : *this) {
         if (e->isTuplet()) {
             Tuplet* t = toTuplet(e);
@@ -194,6 +281,10 @@ void TrackList::append(EngravingItem* e)
                 }
                 if (e->isChord()) {
                     Chord* chord = toChord(e);
+
+                    // Map between Chords and clonned chords
+                    m_clonedChord.insert(std::make_pair(chord, toChord(element)));
+
                     bool akkumulateChord = true;
                     for (Note* n : chord->notes()) {
                         if (!n->tieBackNonPartial() || !n->tieBack()->generated()) {
@@ -288,6 +379,7 @@ bool TrackList::truncate(const Fraction& f)
 void TrackList::read(const Segment* fs, const Segment* es)
 {
     Fraction tick = fs->tick();
+    m_clonedChord.clear();
 
     const Segment* s;
     for (s = fs; s && (s != es); s = s->next1()) {
@@ -347,6 +439,9 @@ void TrackList::read(const Segment* fs, const Segment* es)
         appendGap(gap, es->score());
     }
 
+    // Clone and rebuild Spanners
+    cloneAndRebuildSpanners(m_clonedChord);
+
     //
     // connect ties
     //
@@ -384,6 +479,7 @@ void TrackList::read(const Segment* fs, const Segment* es)
             }
         }
     }
+    m_clonedChord.clear();
 }
 
 //---------------------------------------------------------
@@ -513,6 +609,7 @@ bool TrackList::write(Score* score, const Fraction& tick) const
     if ((m_track % VOICES) && size() == 1 && at(0)->isRest()) {     // don’t write rests in voice > 0
         return true;
     }
+    ClonedChordMap wClonedChord;
     Measure* measure = score->tick2measure(tick);
     Measure* m       = measure;
     Fraction remains = m->endTick() - tick;
@@ -577,6 +674,9 @@ bool TrackList::write(Score* score, const Fraction& tick) const
                         remains  -= gd;
 
                         if (cr->isChord()) {
+                            // Map between Chords and clonned chords
+                            wClonedChord.insert(std::make_pair(toChord(e), toChord(cr)));
+
                             TremoloTwoChord* tremolo = toChord(cr)->tremoloTwoChord();
                             if (!firstpart && tremolo) {               // remove partial two-note tremolo
                                 if (toChord(e)->tremoloTwoChord()->chord1() == toChord(e)) {
@@ -637,6 +737,12 @@ bool TrackList::write(Score* score, const Fraction& tick) const
             seg->add(ne);
         }
     }
+
+    //
+    // Rebuild Spanner's Start and End Notes
+    //
+    cloneAndRebuildSpanners(wClonedChord);
+
     //
     // connect ties from measure->first() to segment
     //
@@ -674,6 +780,9 @@ bool TrackList::write(Score* score, const Fraction& tick) const
 ScoreRange::~ScoreRange()
 {
     muse::DeleteAll(m_tracks);
+    deleteBarLines();
+    deleteSpacers();
+    deleteJumpsAndMarkers();
 }
 
 //---------------------------------------------------------
@@ -739,6 +848,68 @@ void ScoreRange::read(Segment* first, Segment* last, bool readSpanner)
             score->doUndoRemoveElement(tie);
         }
     }
+
+    backupBarLines(first, last);
+    backupBreaks(first, last);
+    backupRepeats(first, last);
+    backupSpacers(first, last);
+    backupJumpsAndMarkers(first, last);
+}
+
+//---------------------------------------------------------
+//   restoreVolta
+//---------------------------------------------------------
+
+void ScoreRange::restoreVolta(Score* score, const Fraction& tick, Volta* v) const
+{
+    bool voltaStartOK = false;
+    bool voltaEndOK = false;
+    Fraction measureSize;
+
+    if (v->voltaType() == Volta::Type::OPEN) {
+        voltaEndOK = true;
+    }
+
+    // Check if we should keep this volta
+    for (Measure* m = score->tick2measure(tick); m; m = m->nextMeasure()) {
+        if (m->tick() == (v->tick() + tick)) {
+            voltaStartOK = true;
+            measureSize = m->endTick() - m->tick();
+        }
+        if (m->endTick() == (v->tick2() + tick)) {
+            voltaEndOK = true;
+            // No need to continue looking for
+            break;
+        }
+        // Last Measure
+        if (m->sectionBreak() || (m->nextMeasure() && (m->nextMeasure()->first(SegmentType::TimeSig)))) {
+            break;
+        }
+    }
+    bool shouldKeepVolta = voltaStartOK && voltaEndOK;
+
+    if (shouldKeepVolta) {
+        // Volta start
+        v->setTick(v->tick() + tick);
+
+        // Review Volta endings with open Voltas
+        if (v->voltaType() == Volta::Type::OPEN) {
+            Fraction voltaFormerTicks = v->ticks();
+            Fraction voltaNewTicks = voltaFormerTicks;
+
+            if (voltaFormerTicks < measureSize) {
+                voltaNewTicks = measureSize;
+            } else if (voltaFormerTicks > measureSize) {
+                if ((voltaFormerTicks / measureSize).reduced().denominator() != 1) {
+                    voltaNewTicks = (std::floor((voltaFormerTicks / measureSize).toDouble()) + 1) * measureSize;
+                }
+            }
+            if (voltaFormerTicks != voltaNewTicks) {
+                v->setTicks(voltaNewTicks);
+            }
+        }
+        score->undoAddElement(v);
+    }
 }
 
 //---------------------------------------------------------
@@ -770,6 +941,10 @@ bool ScoreRange::write(Score* score, const Fraction& tick) const
         ++track;
     }
     for (Spanner* s : m_spanner) {
+        if (s->isVolta()) {
+            restoreVolta(score, tick, toVolta(s));
+            continue;
+        }
         s->setTick(s->tick() + tick);
         if (s->isSlur()) {
             Slur* slur = toSlur(s);
@@ -824,6 +999,11 @@ bool ScoreRange::write(Score* score, const Fraction& tick) const
         score->doUndoAddElement(tie);
     }
 
+    restoreBarLines(score, tick);
+    restoreBreaks(score, tick);
+    restoreRepeats(score, tick);
+    restoreSpacers(score, tick);
+    restoreJumpsAndMarkers(score, tick);
     return true;
 }
 
@@ -880,6 +1060,419 @@ bool ScoreRange::truncate(const Fraction& f)
 Fraction ScoreRange::ticks() const
 {
     return m_tracks.empty() ? Fraction() : m_tracks.front()->ticks();
+}
+
+//---------------------------------------------------------
+//   backupBarLines
+//---------------------------------------------------------
+void ScoreRange::backupBarLines(Segment* first, Segment* last)
+{
+    for (Segment* s = first; s && (s->isBefore(last) || s == last); s = s->next1()) {
+        if (!s->isType(SegmentType::BarLineType)) {
+            continue;
+        }
+        for (EngravingItem* e : s->elist()) {
+            if (e && !e->generated()) {
+                BarLinesBackup blBackup;
+                blBackup.sPosition = s->tick();
+                blBackup.formerMeasureStartOrEnd = s->rtick().isZero() || s->rtick() == s->measure()->ticks();
+                blBackup.bl = toBarLine(e)->clone();
+                m_barLines.push_back(blBackup);
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   insertBarLine
+//---------------------------------------------------------
+bool ScoreRange::insertBarLine(Measure* m, const BarLinesBackup& barLine) const
+{
+    //---------------------------------------------------------
+    //   addBarLine
+    //---------------------------------------------------------
+    auto addBarLine = [&](Measure* m, BarLine* bl, SegmentType st, Fraction pos)
+    {
+        bool middle = (pos != m->tick()) && (pos != m->endTick());
+        Segment* seg = m->undoGetSegment(st, pos);
+        if (seg) {
+            BarLineType blt = bl->barLineType();
+            // get existing bar line if it does exist
+            BarLine* nbl = toBarLine(seg->element(bl->track()));
+            if (!nbl) {
+                // no suitable bar line: create a new one
+                nbl = Factory::createBarLine(seg);
+                nbl->setParent(seg);
+                nbl->setTrack(bl->track());
+                // A BL in the middle of a Measure does have SpanStaff to false
+                nbl->setSpanStaff(middle ? false : bl->spanStaff());
+                m->score()->addElement(nbl);
+            } else {
+                // We change BarLineType if necessary to keep END_START repeats if in the middle of a meassure
+                if ((nbl->barLineType() == BarLineType::END_REPEAT) && (bl->barLineType() == BarLineType::START_REPEAT) && middle) {
+                    blt = BarLineType::END_START_REPEAT;
+                }
+            }
+            nbl->setGenerated(false);
+            nbl->setBarLineType(blt);
+            nbl->setVisible(bl->visible());
+            nbl->setColor(bl->color());
+
+            // We check if the same BL type is in every Stave
+            bool blAcrossStaves = false;
+            // if there is only one stave or spanStaff
+            if ((m->score()->nstaves() == 1) || bl->spanStaff()) {
+                blAcrossStaves = true;
+            }
+            // If we are in the last stave
+            else if (bl->staffIdx() == (m->score()->nstaves() - 1)) {
+                bool sameBL = true;
+                // We check if and every previous stave has the same type of BL
+                for (size_t i = 0; i < (m->score()->nstaves() - 1); ++i) {
+                    BarLine* sbl = toBarLine(seg->element(staff2track(i)));
+                    if (!sbl || (sbl->barLineType() != blt)) {
+                        sameBL = false;
+                        break;
+                    }
+                }
+                blAcrossStaves = sameBL;
+
+                if (blAcrossStaves && !middle) {
+                    // Set Spanstaff to true if not in the middle and there is the same BL across staves
+                    for (size_t i = 0; i < (m->score()->nstaves() - 1); ++i) {
+                        BarLine* sbl = toBarLine(seg->element(staff2track(i)));
+                        if (sbl) {
+                            sbl->setSpanStaff(middle ? false : true);
+                        }
+                    }
+                }
+            }
+
+            // Adding Set repeats
+            if ((pos == m->tick()) && (bl->barLineType() == BarLineType::START_REPEAT) && blAcrossStaves) {
+                m->setRepeatStart(true);
+            } else if ((pos == m->endTick()) && (bl->barLineType() == BarLineType::END_REPEAT) && blAcrossStaves) {
+                m->setRepeatEnd(true);
+            }
+        }
+    };
+
+    bool processed = false;
+
+    // if END_START_REPEAT AND at the end of a Measure
+    if ((barLine.sPosition == m->endTick()) && (barLine.bl->barLineType() == BarLineType::END_START_REPEAT)) {
+        // Create END_REPEAT and START_REPEAT (and ignore return value)
+        barLine.bl->setBarLineType(BarLineType::END_REPEAT);
+        insertBarLine(m, barLine);
+        // Start Repeat into the next measure
+        if (m->nextMeasure()) {
+            barLine.bl->setBarLineType(BarLineType::START_REPEAT);
+            insertBarLine(m->nextMeasure(), barLine);
+        }
+
+        // Restore initial value just in case
+        barLine.bl->setBarLineType(BarLineType::END_START_REPEAT);
+        processed = true;
+    } else {
+        // First position
+        if (barLine.sPosition == m->tick()) {
+            // Just Start Repeat at the left of the Measure
+            if (barLine.bl->barLineType() == BarLineType::START_REPEAT) {
+                addBarLine(m, barLine.bl, SegmentType::StartRepeatBarLine, barLine.sPosition);
+                processed = true;
+            }
+        }
+        // Last position
+        else if (barLine.sPosition == m->endTick()) {
+            // Avoid Start Repeat at the end of the Measure
+            if (barLine.bl->barLineType() != BarLineType::START_REPEAT) {
+                addBarLine(m, barLine.bl, SegmentType::EndBarLine, barLine.sPosition);
+                processed = true;
+            }
+        }
+        // Middle
+        else {
+            // We don't create BL in the Middle
+            processed = true;
+        }
+    }
+    return processed;
+}
+
+//---------------------------------------------------------
+//   restoreBarLines
+//---------------------------------------------------------
+
+void ScoreRange::restoreBarLines(Score* score, const Fraction& tick) const
+{
+    for (const BarLinesBackup& bbl : m_barLines) {
+        for (Measure* m = score->tick2measure(tick); m; m = m->nextMeasure()) {
+            // if inserted within a suitable measure ... to the next barline
+            if (((bbl.sPosition >= m->tick()) && (bbl.sPosition <= m->endTick())) && (insertBarLine(m, bbl))) {
+                break;
+            }
+            if (m->tick() > bbl.sPosition) {
+                break;
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   backupBreaks
+//---------------------------------------------------------
+void ScoreRange::backupBreaks(Segment* first, Segment* last)
+{
+    Measure* fm = first->measure();
+    Measure* lm = last->measure();
+    for (Measure* m = fm; m && m != lm->nextMeasure(); m = m->nextMeasure()) {
+        if (m->lineBreak()) {
+            BreaksBackup bBackup;
+            bBackup.sPosition = m->endTick();
+            bBackup.lBreakType = LayoutBreakType::LINE;
+            m_breaks.push_back(bBackup);
+        } else if (m->pageBreak()) {
+            BreaksBackup bBackup;
+            bBackup.sPosition = m->endTick();
+            bBackup.lBreakType = LayoutBreakType::PAGE;
+            m_breaks.push_back(bBackup);
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   restoreBreaks
+//---------------------------------------------------------
+
+void ScoreRange::restoreBreaks(Score* score, const Fraction& tick) const
+{
+    // Break list
+    for (const BreaksBackup& bb : m_breaks) {
+        // Look for suitable measure
+        for (Measure* m = score->tick2measure(tick); m; m = m->nextMeasure()) {
+            // We keep them as long as they are in the measure after the start tick
+            if ((bb.sPosition > m->tick()) && (bb.sPosition <= m->endTick())) {
+                m->undoSetBreak(true, bb.lBreakType);
+                break;
+            }
+            if (m->tick() > bb.sPosition) {
+                break;
+            }
+        }
+    }
+}
+
+void ScoreRange::backupRepeats(Segment* first, Segment* last)
+{
+    Measure* fm = first->measure();
+    Measure* lm = last->measure();
+    for (Measure* m = fm; m && m != lm->nextMeasure(); m = m->nextMeasure()) {
+        if (m->repeatStart()) {
+            StartEndRepeatBackup repeatBackup;
+            repeatBackup.sPosition = m->tick();
+            repeatBackup.isStartRepeat = true;
+            m_startEndRepeats.push_back(repeatBackup);
+        }
+        if (m->repeatEnd()) {
+            StartEndRepeatBackup repeatBackup;
+            repeatBackup.sPosition = m->endTick();
+            repeatBackup.isStartRepeat = false;
+            m_startEndRepeats.push_back(repeatBackup);
+        }
+    }
+}
+
+void ScoreRange::restoreRepeats(Score* score, const Fraction& tick) const
+{
+    Fraction refTick = tick.isZero() ? tick : tick - Fraction::eps(); // start checking one measure before
+    for (const StartEndRepeatBackup& startEndRepeat : m_startEndRepeats) {
+        for (Measure* m = score->tick2measure(refTick); m; m = m->nextMeasure()) {
+            Fraction mTick = m->tick();
+            if (startEndRepeat.isStartRepeat && startEndRepeat.sPosition == mTick) {
+                m->undoChangeProperty(Pid::REPEAT_START, true);
+            } else if (!startEndRepeat.isStartRepeat && startEndRepeat.sPosition == m->endTick()) {
+                m->undoChangeProperty(Pid::REPEAT_END, true);
+            }
+            if (mTick > startEndRepeat.sPosition) {
+                break;
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   deleteBarLines
+//---------------------------------------------------------
+
+void ScoreRange::deleteBarLines()
+{
+    for (const BarLinesBackup& bbl : m_barLines) {
+        delete bbl.bl;
+    }
+    m_barLines.clear();
+}
+
+//---------------------------------------------------------
+//   backupSpacers
+//---------------------------------------------------------
+
+void ScoreRange::backupSpacers(Segment* first, Segment* last)
+{
+    Measure* fm = first->measure();
+    Measure* lm = last->measure();
+
+    for (Measure* m = fm; m && m != lm->nextMeasure(); m = m->nextMeasure()) {
+        staff_idx_t nStaves = m->score()->nstaves();
+
+        for (staff_idx_t i = 0; i < nStaves; ++i) {
+            if (m->vspacerUp(i)) {
+                SpacerBackup sb;
+                sb.s = m->vspacerUp(i)->clone();
+                sb.sPosition = m->tick() + ((m->endTick() - m->tick()) / 2);
+                sb.staffIdx = i;
+                m_spacers.push_back(sb);
+            }
+            if (m->vspacerDown(i)) {
+                SpacerBackup sb;
+                sb.s = m->vspacerDown(i)->clone();
+                sb.sPosition = m->tick() + ((m->endTick() - m->tick()) / 2);
+                sb.staffIdx = i;
+                m_spacers.push_back(sb);
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   restoreSpacers
+//---------------------------------------------------------
+void ScoreRange::restoreSpacers(Score* score, const Fraction& tick) const
+{
+    //---------------------------------------------------------
+    //   addSpacer
+    //---------------------------------------------------------
+    auto addSpacer = [&](Measure* m, Spacer* s, staff_idx_t staffIdx)
+    {
+        // We only add an element if there isn't a previous one of the same Type (UP/DOWN)
+        if ((s->spacerType() == SpacerType::UP && !m->vspacerUp(staffIdx))
+            || ((s->spacerType() == SpacerType::DOWN || s->spacerType() == SpacerType::FIXED) && !m->vspacerDown(staffIdx))) {
+            Spacer* ns = Factory::createSpacer(m);
+            ns->setSpacerType(s->spacerType());
+            ns->setGap(s->gap());
+            ns->setTrack(staffIdx * VOICES);
+            m->add(ns);
+        }
+    };
+
+    // Spacers list
+    for (const SpacerBackup& sb : m_spacers) {
+        // Look for suitable measure
+        for (Measure* m = score->tick2measure(tick); m; m = m->nextMeasure()) {
+            if (sb.sPosition >= m->tick() && sb.sPosition <= m->endTick()) {
+                addSpacer(m, sb.s, sb.staffIdx);
+                break;
+            }
+            if (m->tick() > sb.sPosition) {
+                break;
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   deleteSpacers
+//---------------------------------------------------------
+void ScoreRange::deleteSpacers()
+{
+    // Spacers list
+    for (const SpacerBackup& sb : m_spacers) {
+        delete sb.s;
+    }
+    m_spacers.clear();
+}
+
+//---------------------------------------------------------
+//   endOfMeasureElement
+//---------------------------------------------------------
+
+bool ScoreRange::endOfMeasureElement(EngravingItem* e) const
+{
+    bool result = false;
+
+    if (e->isMarker()
+        && ((muse::contains(Marker::RIGHT_MARKERS, toMarker(e)->markerType()) || toMarker(e)->markerType() == MarkerType::FINE))) {
+        result = true;
+    } else if (e->isJump()) {
+        result = true;
+    }
+    return result;
+}
+
+//---------------------------------------------------------
+//   backupJumpsAndMarkers
+//---------------------------------------------------------
+
+void ScoreRange::backupJumpsAndMarkers(Segment* first, Segment* last)
+{
+    Measure* fm = first->measure();
+    Measure* lm = last->measure();
+
+    for (Measure* m = fm; m && m != lm->nextMeasure(); m = m->nextMeasure()) {
+        // Backup Markers and Jumps (Measures's son)
+        for (EngravingItem* e : m->el()) {
+            if (e && (e->isMarker() || e->isJump())) {
+                JumpsMarkersBackup mJMBackup;
+                mJMBackup.sPosition = (endOfMeasureElement(e) ? m->endTick() : m->tick());
+                mJMBackup.e = e->clone();
+                m_jumpsMarkers.push_back(mJMBackup);
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   restoreJumpsAndMarkers
+//---------------------------------------------------------
+void ScoreRange::restoreJumpsAndMarkers(Score* score, const Fraction& tick) const
+{
+    //---------------------------------------------------------
+    //   addJumpMarker
+    //---------------------------------------------------------
+    auto addJumpMarker = [&](Measure* m, EngravingItem* e)
+    {
+        // We add every element as a Measure could have as many elements (even of the same type) as the users decides
+        EngravingItem* ce = e->clone();
+        ce->setParent(m);
+        ce->setTrack(0);
+        m->add(ce);
+    };
+
+    for (const JumpsMarkersBackup& jmb : m_jumpsMarkers) {
+        for (Measure* m = score->tick2measure(tick); m; m = m->nextMeasure()) {
+            // Markers: we keep them as long as they are in the measure before the final tick
+            // Jumps: we keep them as long as they are in the measure after the start tick
+            if ((endOfMeasureElement(jmb.e) && jmb.sPosition > m->tick() && jmb.sPosition <= m->endTick())
+                || (!endOfMeasureElement(jmb.e) && jmb.sPosition >= m->tick() && jmb.sPosition < m->endTick())) {
+                addJumpMarker(m, jmb.e);
+                LOGI() << "tpacebes hago restore";
+            }
+            if (m->tick() > jmb.sPosition) {
+                break;
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------
+//   deleteJumpsAndMarkers
+//---------------------------------------------------------
+
+void ScoreRange::deleteJumpsAndMarkers()
+{
+    for (const JumpsMarkersBackup& jmb : m_jumpsMarkers) {
+        delete jmb.e;
+    }
+    m_jumpsMarkers.clear();
 }
 
 //---------------------------------------------------------

@@ -448,6 +448,7 @@ StyledFlickable {
 
             ColumnLayout {
                 spacing: 8
+                anchors.fill: parent
 
                 ItemWithTitle {
                     spacing: 8
@@ -475,6 +476,42 @@ StyledFlickable {
                     checked: pageModel.genCourtesyKeysig.value === true
                     onClicked: pageModel.genCourtesyKeysig.value = !pageModel.genCourtesyKeysig.value
                 }
+
+                StyledGroupBox {
+                    Layout.fillWidth: true
+                    title: qsTrc("notation/editstyle/accidentals", "When changing to a key signature containing fewer sharps or flats")
+
+                    ColumnLayout {
+                        spacing: 6
+                        anchors.fill: parent
+
+                        RadioButtonGroup {
+                            Layout.fillWidth: true
+                            orientation: ListView.Vertical
+                            spacing: 6
+
+                            model: [
+                                { text: qsTrc("notation/editstyle/accidentals", "Don’t show any naturals"), value: 0 },
+                                { text: qsTrc("notation/editstyle/accidentals", "Show naturals before the new key signature"), value: 1 },
+                                { text: qsTrc("notation/editstyle/accidentals", "Show naturals after the new key signature"), value: 2 }
+                            ]
+
+                            delegate: RoundedRadioButton {
+                                width: ListView.view.width
+                                text: modelData.text
+                                checked: pageModel.keySigNaturals.value === modelData.value
+                                onToggled: pageModel.keySigNaturals.value = modelData.value
+                            }
+                        }
+
+                        CheckBox {
+                            enabled: pageModel.keySigNaturals.value !== 0
+                            text: qsTrc("notation/editstyle/timesignatures", "Show naturals when switching between sharps and flats")
+                            checked: pageModel.keySigShowNaturalsChangingSharpsFlats.value === true
+                            onClicked: pageModel.keySigShowNaturalsChangingSharpsFlats.value = !pageModel.keySigShowNaturalsChangingSharpsFlats.value
+                        }
+                    }
+                }
             }
         }
 
@@ -485,7 +522,7 @@ StyledFlickable {
             component CourtesyShowAndParenToggle: GridLayout {
                 required property StyleItem showStyleItem
                 required property StyleItem parensStyleItem
-                property alias text: toggleText.text
+                property alias text: toggleButton.text
 
                 flow: GridLayout.TopToBottom
 
@@ -495,30 +532,19 @@ StyledFlickable {
                 width: parent.width
                 rowSpacing: 8
 
-                RowLayout {
+                ToggleButton {
+                    id: toggleButton
+
                     Layout.row: 0
                     Layout.column: 0
                     Layout.maximumWidth: 232
                     Layout.preferredWidth: 232
-                    Layout.fillWidth: false
-                    ToggleButton {
-                        id: toggleButton
-                        checked: showStyleItem.value === true
-                        onToggled: {
-                            showStyleItem.value = !showStyleItem.value
-                        }
-                    }
 
-                    StyledTextLabel {
-                        id: toggleText
-                        Layout.alignment: Qt.AlignLeft
-                        horizontalAlignment: Text.AlignLeft
-                        Layout.maximumWidth: 232 - toggleButton.width
-                        Layout.preferredWidth: 232 - toggleButton.width
-                        wrapMode: Text.Wrap
+                    checked: showStyleItem.value === true
+                    onToggled: {
+                        showStyleItem.value = !showStyleItem.value
                     }
                 }
-
 
                 CheckBox {
                     id: parensCheckbox

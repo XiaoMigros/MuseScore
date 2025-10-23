@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-only
- * MuseScore-Studio-CLA-applies
+ * MuseScore-CLA-applies
  *
- * MuseScore Studio
+ * MuseScore
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,13 +19,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "notationcreator.h"
+#pragma once
 
-#include "masternotation.h"
+#include <functional>
 
-using namespace mu::notation;
+#include "modularity/ioc.h"
+#include "itickerprovider.h"
 
-IMasterNotationPtr NotationCreator::newMasterNotationPtr(const muse::modularity::ContextPtr& iocCtx) const
+namespace muse {
+class Ticker
 {
-    return std::shared_ptr<IMasterNotation>(new MasterNotation(iocCtx));
+    GlobalInject<ITickerProvider> tickerProvider;
+
+public:
+
+    using Callback = std::function<void ()>;
+
+    enum class Mode {
+        Single,
+        Repeat
+    };
+
+    Ticker() = default;
+    ~Ticker();
+
+    void start(uint32_t interval, const Callback& callback, Mode mode);
+    void stop();
+
+private:
+    uint32_t m_taskId = 0;
+};
 }

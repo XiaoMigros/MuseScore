@@ -192,7 +192,7 @@ public:
     MusicXmlLyricsExtend() {}
     void init();
     void addLyric(engraving::Lyrics* const lyric);
-    void setExtend(const int no, const engraving::track_idx_t track, const engraving::Fraction& tick,
+    void setExtend(const int verse, const engraving::track_idx_t track, const engraving::Fraction& tick,
                    const engraving::Lyrics* prevAddedLyrics);
 
 private:
@@ -344,7 +344,7 @@ class MusicXmlParserNotations
 public:
     MusicXmlParserNotations(muse::XmlStreamReader& e, engraving::Score* score, MusicXmlLogger* logger, MusicXmlParserPass2& pass2);
     void parse();
-    void addToScore(engraving::ChordRest* const cr, engraving::Note* const note, const int tick, SlurStack& slurs,
+    void addToScore(engraving::ChordRest* const cr, engraving::Note* const note, const engraving::Fraction& tick, SlurStack& slurs,
                     engraving::Glissando* glissandi[MAX_NUMBER_LEVEL][2], MusicXmlSpannerMap& spanners, TrillStack& trills,
                     MusicXmlTieMap& ties, std::vector<engraving::Note*>& unstartedTieNotes, std::vector<engraving::Note*>& unendedTieNotes,
                     ArpeggioMap& arpMap, DelayedArpMap& delayedArps);

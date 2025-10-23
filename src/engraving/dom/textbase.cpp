@@ -379,12 +379,14 @@ const CharFormat TextCursor::selectedFragmentsFormat() const
     const TextFragment* tf = ldata->textBlock(static_cast<int>(startRow)).fragment(static_cast<int>(selectionStartCol));
     CharFormat resultFormat = tf ? tf->format : CharFormat();
 
+    bool allBlocksEmpty = true;
     for (size_t row = startRow; row <= endRow; ++row) {
         const TextBlock& block = ldata->blocks.at(row);
 
         if (block.fragments().empty()) {
             continue;
         }
+        allBlocksEmpty = false;
 
         const size_t startColumn = (row == startRow) ? selectionStartCol : 0;
         const size_t endColumn = (row == endRow && hasSelection()) ? selectionEndCol : block.columns();
@@ -429,7 +431,17 @@ const CharFormat TextCursor::selectedFragmentsFormat() const
         }
     }
 
-    return resultFormat;
+    if (!allBlocksEmpty) {
+        return resultFormat;
+    }
+
+    CharFormat defaultFormat;
+    defaultFormat.setStyle(m_text->propertyDefault(Pid::FONT_STYLE).value<FontStyle>());
+    defaultFormat.setFontFamily(m_text->propertyDefault(Pid::FONT_FACE).value<String>());
+    defaultFormat.setFontSize(m_text->propertyDefault(Pid::FONT_SIZE).toDouble());
+    defaultFormat.setValign(VerticalAlignment(m_text->propertyDefault(Pid::TEXT_SCRIPT_ALIGN).toInt()));
+
+    return defaultFormat;
 }
 
 //---------------------------------------------------------
@@ -461,6 +473,11 @@ void TextCursor::setFormat(FormatId id, FormatValue val)
 
 bool TextCursor::movePosition(TextCursor::MoveOperation op, TextCursor::MoveMode mode, int count)
 {
+    auto isWordBoundaryCharacter = [this](bool lettersOrDigits) -> bool {
+        Char c = currentCharacter();
+        return c.isSpace() || lettersOrDigits != (c.isLetter() || c.isDigit());
+    };
+
     for (int i = 0; i < count; i++) {
         switch (op) {
         case TextCursor::MoveOperation::Left:
@@ -551,26 +568,29 @@ bool TextCursor::movePosition(TextCursor::MoveOperation op, TextCursor::MoveMode
 
             break;
 
-        case TextCursor::MoveOperation::WordLeft:
+        case TextCursor::MoveOperation::WordLeft: {
             if (m_column > 0) {
                 --m_column;
                 while (m_column > 0 && currentCharacter().isSpace()) {
                     --m_column;
                 }
-                while (m_column > 0 && !currentCharacter().isSpace()) {
+                bool isWordOrDigit = currentCharacter().isLetter() || currentCharacter().isDigit();
+                while (m_column > 0 && !isWordBoundaryCharacter(isWordOrDigit)) {
                     --m_column;
                 }
-                if (currentCharacter().isSpace()) {
+                if (isWordBoundaryCharacter(isWordOrDigit)) {
                     ++m_column;
                 }
             }
-            break;
+        }
+        break;
 
         case TextCursor::MoveOperation::NextWord: {
             size_t cols =  columns();
             if (m_column < cols) {
                 ++m_column;
-                while (m_column < cols && !currentCharacter().isSpace()) {
+                bool isWordOrDigit = currentCharacter().isLetter() || currentCharacter().isDigit();
+                while (m_column < cols && !isWordBoundaryCharacter(isWordOrDigit)) {
                     ++m_column;
                 }
                 while (m_column < cols && currentCharacter().isSpace()) {
@@ -610,7 +630,9 @@ void TextCursor::selectWord()
     //handle double-clicking inside a word
     size_t startPosition = m_column;
 
-    while (m_column > 0 && currentCharacter().isSpace() == selectSpaces) {
+    bool parseLetters = (currentCharacter().isLetter() || currentCharacter().isDigit());
+    while (m_column > 0 && currentCharacter().isSpace() == selectSpaces
+           && parseLetters == (currentCharacter().isLetter() || currentCharacter().isDigit())) {
         --m_column;
     }
 
@@ -621,7 +643,8 @@ void TextCursor::selectWord()
     m_selectColumn = m_column;
 
     m_column = startPosition;
-    while (m_column < curLine().columns() && currentCharacter().isSpace() == selectSpaces) {
+    while (m_column < curLine().columns() && currentCharacter().isSpace() == selectSpaces
+           && parseLetters == (currentCharacter().isLetter() || currentCharacter().isDigit())) {
         ++m_column;
     }
 
@@ -3266,9 +3289,29 @@ void TextBase::initTextStyleType(TextStyleType tid, bool preserveDifferent)
 
 void TextBase::initTextStyleType(TextStyleType tid)
 {
+    auto getTextPID = [&](Pid p) -> Pid {
+        static const std::vector<std::pair<Pid, Pid> > TEXT_LINE_PID_MAP = { { Pid::FONT_FACE, Pid::BEGIN_FONT_FACE },
+            { Pid::FONT_SIZE, Pid::BEGIN_FONT_SIZE },
+            { Pid::FONT_STYLE, Pid::BEGIN_FONT_STYLE },
+            { Pid::ALIGN, Pid::BEGIN_TEXT_ALIGN },
+        };
+
+        const bool isTextLine = parent()->isTextLineBaseSegment();
+        for (const auto& pidPair : TEXT_LINE_PID_MAP) {
+            const Pid textPid = pidPair.first;
+            const Pid textLinePid = pidPair.second;
+
+            if (p == textLinePid || p == textPid) {
+                return isTextLine ? textLinePid : textPid;
+            }
+        }
+
+        return p;
+    };
+
     setTextStyleType(tid);
     for (const auto& p : *textStyle(tid)) {
-        setProperty(p.pid, styleValue(p.pid, p.sid));
+        setProperty(getTextPID(p.pid), styleValue(p.pid, p.sid));
     }
 
     resetProperty(Pid::MUSIC_SYMBOL_SIZE);

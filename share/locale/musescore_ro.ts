@@ -1329,7 +1329,7 @@
     <message>
         <location filename="../../src/notation/view/widgets/editstaff.ui" line="906"/>
         <source>Edit string data…</source>
-        <translation>Editează date coardă...</translation>
+        <translation>Editează date coarde...</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstaff.ui" line="913"/>
@@ -1753,7 +1753,7 @@
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="101"/>
         <source>Repeats</source>
-        <translation>Repetiţii</translation>
+        <translation>Repetiții</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstyle.ui" line="106"/>
@@ -7034,7 +7034,7 @@ urmate de cratime</translation>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="401"/>
         <source>&amp;Style…</source>
-        <translation>&amp;Stil...</translation>
+        <translation>&amp;Stiluri...</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="402"/>
@@ -9158,22 +9158,22 @@ urmate de cratime</translation>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="2121"/>
         <source>Input by note name</source>
-        <translation>Introdu după nume notă</translation>
+        <translation>după nume notă</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="2122"/>
         <source>Toggle note input mode: input by note name</source>
-        <translation>Comută mod introducere note: introdu după nume notă</translation>
+        <translation>Comută mod introducere note: după nume notă</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="2128"/>
         <source>Input by duration</source>
-        <translation>Introdu după durată</translation>
+        <translation>după durată</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="2129"/>
         <source>Toggle note input mode: input by duration</source>
-        <translation>Comută mod introducere note: introdu după durată</translation>
+        <translation>Comută mod introducere note: după durată</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationuiactions.cpp" line="2135"/>
@@ -11043,7 +11043,7 @@ unde vei găsi tutoriale pentru a te pune pe picioare
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/LanguagesSection.qml" line="31"/>
         <source>Languages</source>
-        <translation>Limbă afișare</translation>
+        <translation>Limbă de afișare</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/LanguagesSection.qml" line="79"/>
@@ -11131,7 +11131,7 @@ unde vei găsi tutoriale pentru a te pune pe picioare
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/MusicXmlSection.qml" line="90"/>
         <source>Infer text type based on content where possible</source>
-        <translation>Dedu textul în funcție de conținut acolo unde este posibil</translation>
+        <translation>Ghicește tipul de text în funcție de conținut, dacă este posibil</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/FretboardDiagramsSection.qml" line="35"/>
@@ -11207,27 +11207,27 @@ unde vei găsi tutoriale pentru a te pune pe picioare
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/NoteInputSection.qml" line="69"/>
         <source>To next note entered</source>
-        <translation>La următoarea notă introdusă</translation>
+        <translation>următoarei note introduse</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/NoteInputSection.qml" line="70"/>
         <source>To previous note entered</source>
-        <translation>La nota introdusă anterior</translation>
+        <translation>notei introduse anterior</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/NoteInputSection.qml" line="81"/>
         <source>Input by duration mode cursor:</source>
-        <translation>Introdu după cursorul mod durată:</translation>
+        <translation>Poziție cursor mod introducere după durată:</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/NoteInputSection.qml" line="88"/>
         <source>Above staff</source>
-        <translation>Deasupra portativului</translation>
+        <translation>deasupra portativului</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/NoteInputSection.qml" line="89"/>
         <source>On staff</source>
-        <translation>Pe portativ</translation>
+        <translation>pe portativ</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/NoteInput/NotePreviewSection.qml" line="53"/>
@@ -11327,7 +11327,7 @@ unde vei găsi tutoriale pentru a te pune pe picioare
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/OnlineSoundsSection.qml" line="128"/>
         <source>Only if processing is unfinished during playback</source>
-        <translation>Doar dacă procesarea este nefinalizată în timpul redării</translation>
+        <translation>doar dacă procesarea este nefinalizată în timpul redării</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/internal/OnlineSoundsSection.qml" line="131"/>
@@ -11728,7 +11728,7 @@ unde vei găsi tutoriale pentru a te pune pe picioare
     <message>
         <location filename="../../src/appshell/view/preferences/scorepreferencesmodel.cpp" line="98"/>
         <source>Style for part</source>
-        <translation>Stil pentru partidă</translation>
+        <translation>Stil partidă</translation>
     </message>
     <message>
         <location filename="../../src/appshell/view/preferences/scorepreferencesmodel.cpp" line="194"/>
@@ -17434,7 +17434,7 @@ Tasta %1 pe coardele %2</translation>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="60"/>
         <source>subtype</source>
-        <translation type="unfinished"/>
+        <translation>subtip</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="61"/>
@@ -17444,13 +17444,13 @@ Tasta %1 pe coardele %2</translation>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="62"/>
         <source>generated</source>
-        <translation type="unfinished"/>
+        <translation>generate</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="63"/>
         <location filename="../../src/engraving/dom/property.cpp" line="310"/>
         <source>color</source>
-        <translation type="unfinished"/>
+        <translation>culoare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="64"/>
@@ -17459,79 +17459,83 @@ Tasta %1 pe coardele %2</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="65"/>
-        <source>z</source>
-        <translation>z</translation>
+        <source>stacking order</source>
+        <translation>ordine stivuire</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="66"/>
         <source>small</source>
-        <translation type="unfinished"/>
+        <translation>mic</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="67"/>
         <source>hide when empty</source>
-        <translation type="unfinished"/>
+        <translation>ascundere când este gol</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="68"/>
         <source>hide staves when individually empty</source>
-        <translation type="unfinished"/>
+        <translation>ascundere portativele când sunt goale individual</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="69"/>
         <source>show if entire system empty</source>
-        <translation type="unfinished"/>
+        <translation>afișare dacă întregul sistem este gol</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="70"/>
         <source>show courtesy</source>
-        <translation type="unfinished"/>
+        <translation>afișare cheia de curtuazie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="71"/>
         <source>key signature mode</source>
-        <translation type="unfinished"/>
+        <translation>mod armură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="72"/>
         <source>line type</source>
-        <translation type="unfinished"/>
+        <translation>tip linie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="73"/>
         <source>pitch</source>
-        <translation type="unfinished"/>
+        <translation>înălțime</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="75"/>
-        <location filename="../../src/engraving/dom/property.cpp" line="76"/>
         <source>tonal pitch class</source>
-        <translation type="unfinished"/>
+        <translation>clasă înălțime tonală</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/dom/property.cpp" line="76"/>
+        <source>transposed tonal pitch class</source>
+        <translation>clasă înălțime tonală transpusă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="77"/>
         <source>line</source>
-        <translation type="unfinished"/>
+        <translation>linie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="78"/>
         <source>fixed</source>
-        <translation type="unfinished"/>
+        <translation>fixare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="79"/>
         <source>fixed line</source>
-        <translation type="unfinished"/>
+        <translation>linie fixată</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="80"/>
         <source>head type</source>
-        <translation type="unfinished"/>
+        <translation>tip cap</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="81"/>
         <source>head</source>
-        <translation type="unfinished"/>
+        <translation>cap</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="82"/>
@@ -17542,99 +17546,99 @@ Tasta %1 pe coardele %2</translation>
         <location filename="../../src/engraving/dom/property.cpp" line="83"/>
         <location filename="../../src/engraving/dom/property.cpp" line="203"/>
         <source>velocity</source>
-        <translation type="unfinished"/>
+        <translation>intensitate</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="84"/>
         <location filename="../../src/engraving/dom/property.cpp" line="255"/>
         <source>anchor</source>
-        <translation type="unfinished"/>
+        <translation>ancoră</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="86"/>
         <source>direction</source>
-        <translation type="unfinished"/>
+        <translation>direcție</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="87"/>
         <source>horizontal direction</source>
-        <translation type="unfinished"/>
+        <translation>direcție orizontală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="88"/>
         <source>stem direction</source>
-        <translation type="unfinished"/>
+        <translation>direcție codiță</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="89"/>
         <location filename="../../src/engraving/dom/property.cpp" line="308"/>
         <source>stemless</source>
-        <translation>fără cozi</translation>
+        <translation>fără codițe</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="90"/>
         <source>up</source>
-        <translation type="unfinished"/>
+        <translation>sus</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="91"/>
         <source>leading space</source>
-        <translation type="unfinished"/>
+        <translation>spațiu incipient</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="92"/>
         <source>mirror</source>
-        <translation type="unfinished"/>
+        <translation>oglindire</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="93"/>
         <source>parentheses</source>
-        <translation type="unfinished"/>
+        <translation>paranteze</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="94"/>
         <source>dot position</source>
-        <translation type="unfinished"/>
+        <translation>poziție punct</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="95"/>
         <source>combine voice</source>
-        <translation type="unfinished"/>
+        <translation>combinare voci</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="96"/>
         <source>tuning</source>
-        <translation type="unfinished"/>
+        <translation>acordaj</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="97"/>
         <source>pause</source>
-        <translation type="unfinished"/>
+        <translation>pauză</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="99"/>
         <source>barline type</source>
-        <translation type="unfinished"/>
+        <translation>tip bară de măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="100"/>
         <source>span</source>
-        <translation type="unfinished"/>
+        <translation>întindere</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="101"/>
         <source>span from</source>
-        <translation type="unfinished"/>
+        <translation>întindere de la</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="102"/>
         <source>span to</source>
-        <translation type="unfinished"/>
+        <translation>întindere la</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="103"/>
         <source>show tips</source>
-        <translation type="unfinished"/>
+        <translation>arată indicații</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="105"/>
@@ -17644,213 +17648,213 @@ Tasta %1 pe coardele %2</translation>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="106"/>
         <source>fret</source>
-        <translation type="unfinished"/>
+        <translation>tastă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="107"/>
         <source>string</source>
-        <translation type="unfinished"/>
+        <translation>coardă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="108"/>
         <source>ghost</source>
-        <translation type="unfinished"/>
+        <translation>fantomă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="109"/>
         <source>dead</source>
-        <translation type="unfinished"/>
+        <translation>mut</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="110"/>
         <source>played</source>
-        <translation type="unfinished"/>
+        <translation>redat</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="111"/>
         <source>nominal time signature</source>
-        <translation type="unfinished"/>
+        <translation>metrică nominală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="112"/>
         <source>actual time signature</source>
-        <translation type="unfinished"/>
+        <translation>metrică actuală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="113"/>
         <source>number type</source>
-        <translation type="unfinished"/>
+        <translation>tip număr</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="114"/>
         <source>bracket type</source>
-        <translation type="unfinished"/>
+        <translation>tip acoladă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="115"/>
         <source>normal notes</source>
-        <translation type="unfinished"/>
+        <translation>note normale</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="116"/>
         <source>actual notes</source>
-        <translation type="unfinished"/>
+        <translation>note actuale</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="117"/>
-        <source>p1</source>
-        <translation type="unfinished"/>
+        <source>bracket start offset</source>
+        <translation>decalaj început acoladă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="118"/>
-        <source>p2</source>
-        <translation type="unfinished"/>
+        <source>bracket end offset</source>
+        <translation>decalaj final acoladă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="119"/>
         <source>grow left</source>
-        <translation type="unfinished"/>
+        <translation>creștere la stânga</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="120"/>
         <source>grow right</source>
-        <translation type="unfinished"/>
+        <translation>creștere la dreapta</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="122"/>
         <source>height</source>
-        <translation type="unfinished"/>
+        <translation>înălțime</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="123"/>
         <source>width</source>
-        <translation type="unfinished"/>
+        <translation>lățime</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="124"/>
         <source>autosize frame</source>
-        <translation type="unfinished"/>
+        <translation>autodimensionare cadru</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="125"/>
         <source>top gap</source>
-        <translation type="unfinished"/>
+        <translation>spațiu de sus</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="126"/>
         <source>bottom gap</source>
-        <translation type="unfinished"/>
+        <translation>spațiu de jos</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="127"/>
         <source>left padding</source>
-        <translation type="unfinished"/>
+        <translation>umplutura din stânga</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="128"/>
         <source>right padding</source>
-        <translation type="unfinished"/>
+        <translation>umplutura din dreapta</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="129"/>
         <source>top padding</source>
-        <translation type="unfinished"/>
+        <translation>umplutura de sus</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="130"/>
         <source>bottom padding</source>
-        <translation type="unfinished"/>
+        <translation>umplutura de jos</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="131"/>
         <source>padding to notation above</source>
-        <translation type="unfinished"/>
+        <translation>umplutură la notația de deasupra</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="132"/>
         <source>padding to notation below</source>
-        <translation type="unfinished"/>
+        <translation>umplutură la notația de dedesubt</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="134"/>
         <source>layout break type</source>
-        <translation type="unfinished"/>
+        <translation>tip întrerupere aspect</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="135"/>
         <source>autoscale</source>
-        <translation type="unfinished"/>
+        <translation>autoscalare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="136"/>
         <location filename="../../src/engraving/dom/property.cpp" line="327"/>
         <source>size</source>
-        <translation type="unfinished"/>
+        <translation>mărime</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="138"/>
-        <source>imageHeight</source>
-        <translation type="unfinished"/>
+        <source>image height</source>
+        <translation>înălțime imagine</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="139"/>
-        <source>imageWidth</source>
-        <translation type="unfinished"/>
+        <source>image width</source>
+        <translation>lățime imagine</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="140"/>
-        <source>imageFramed</source>
-        <translation type="unfinished"/>
+        <source>image framed</source>
+        <translation>încadrare imagine</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="142"/>
         <source>text scale</source>
-        <translation type="unfinished"/>
+        <translation>scalare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="143"/>
         <source>diagram scale</source>
-        <translation type="unfinished"/>
+        <translation>scalare diagramă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="144"/>
         <source>column gap</source>
-        <translation type="unfinished"/>
+        <translation>spațiu coloană</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="145"/>
         <source>row gap</source>
-        <translation type="unfinished"/>
+        <translation>spațiu rând</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="146"/>
-        <source>chords per row</source>
-        <translation type="unfinished"/>
+        <source>chord symbols per row</source>
+        <translation>simboluri acord per rând</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="147"/>
         <source>horizontal alignment</source>
-        <translation type="unfinished"/>
+        <translation>aliniere orizontală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="148"/>
         <source>diagrams order</source>
-        <translation type="unfinished"/>
+        <translation>ordine diagrame</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="150"/>
         <source>scale</source>
-        <translation type="unfinished"/>
+        <translation>scalare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="151"/>
         <source>aspect ratio locked</source>
-        <translation type="unfinished"/>
+        <translation>blocare raport aspect</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="152"/>
         <source>size is spatium</source>
-        <translation type="unfinished"/>
+        <translation>dimensiunea este spatium</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="153"/>
@@ -17861,102 +17865,102 @@ Tasta %1 pe coardele %2</translation>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="156"/>
         <source>beam position</source>
-        <translation type="unfinished"/>
+        <translation>poziție ligatură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="157"/>
         <source>beam mode</source>
-        <translation type="unfinished"/>
+        <translation>mod ligatură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="158"/>
         <source>without slope</source>
-        <translation type="unfinished"/>
+        <translation>fără pantă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="159"/>
         <source>beam staff move</source>
-        <translation type="unfinished"/>
+        <translation>mutare ligatură portativ</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="160"/>
         <source>length</source>
-        <translation type="unfinished"/>
+        <translation>lungime</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="161"/>
         <source>show stem slash</source>
-        <translation type="unfinished"/>
+        <translation>afișare codiță barată</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="163"/>
         <source>space</source>
-        <translation type="unfinished"/>
+        <translation>spațiu</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="164"/>
         <source>tempo</source>
-        <translation type="unfinished"/>
+        <translation>tempo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="165"/>
         <source>following text</source>
-        <translation type="unfinished"/>
+        <translation>urmărire text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="166"/>
         <source>tempo align right of rehearsal mark</source>
-        <translation type="unfinished"/>
+        <translation>aliniere tempo la dreapta reperului</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="168"/>
         <source>bracket</source>
-        <translation type="unfinished"/>
+        <translation>acoladă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="169"/>
         <source>accidental type</source>
-        <translation type="unfinished"/>
+        <translation>tip alterație</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="170"/>
         <source>stacking order offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj ordine stivuire</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="171"/>
         <source>numerator string</source>
-        <translation type="unfinished"/>
+        <translation>șir numărător</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="172"/>
         <source>denominator string</source>
-        <translation type="unfinished"/>
+        <translation>șir numitor</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="173"/>
         <source>prefix</source>
-        <translation type="unfinished"/>
+        <translation>prefix</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="174"/>
         <source>digit</source>
-        <translation type="unfinished"/>
+        <translation>cifră</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="175"/>
         <source>suffix</source>
-        <translation type="unfinished"/>
+        <translation>sufix</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="176"/>
         <source>continuation line</source>
-        <translation type="unfinished"/>
+        <translation>linie de continuare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="184"/>
         <source>ottava type</source>
-        <translation type="unfinished"/>
+        <translation>tip octavă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="185"/>
@@ -17966,534 +17970,530 @@ Tasta %1 pe coardele %2</translation>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="186"/>
         <source>trill type</source>
-        <translation type="unfinished"/>
+        <translation>tip tril</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="187"/>
         <source>vibrato type</source>
-        <translation type="unfinished"/>
+        <translation>tip vibrato</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="188"/>
         <source>hairpin with circled tip</source>
-        <translation type="unfinished"/>
+        <translation>ac de păr cu cerculeț</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="190"/>
         <source>hairpin type</source>
-        <translation type="unfinished"/>
+        <translation>tip ac de păr</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="191"/>
         <source>hairpin height</source>
-        <translation type="unfinished"/>
+        <translation>înălțime ac de păr</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="192"/>
         <source>hairpin cont height</source>
-        <translation type="unfinished"/>
+        <translation>înălțime continuare ac de păr</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="193"/>
         <source>velocity change</source>
-        <translation type="unfinished"/>
+        <translation>schimbare de intensitate</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="194"/>
         <source>velocity change method</source>
-        <translation type="unfinished"/>
+        <translation>metodă schimbare de intensitate</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="195"/>
         <source>velocity change speed</source>
-        <translation type="unfinished"/>
+        <translation>viteză schimbare de intensitate</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="196"/>
         <source>dynamic type</source>
-        <translation type="unfinished"/>
+        <translation>tip nuanță</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="198"/>
         <source>single note dynamics</source>
-        <translation type="unfinished"/>
+        <translation>nuanță notă singulară</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="199"/>
         <source>change method</source>
-        <translation type="unfinished"/>
+        <translation>metodă de schimbare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="200"/>
         <source>placement</source>
-        <translation type="unfinished"/>
+        <translation>amplasare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="201"/>
         <source>horizontal placement</source>
-        <translation type="unfinished"/>
+        <translation>amplasare orizontală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="202"/>
         <source>multimeasure rest range bracket type</source>
-        <translation type="unfinished"/>
+        <translation>tip paranteză interval pauză multi-măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="204"/>
         <source>jump to</source>
-        <translation type="unfinished"/>
+        <translation>salt la</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="205"/>
         <source>play until</source>
-        <translation type="unfinished"/>
+        <translation>redare până când</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="206"/>
         <source>continue at</source>
-        <translation type="unfinished"/>
+        <translation>continuare la</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="207"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>etichetă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="208"/>
         <source>marker type</source>
-        <translation type="unfinished"/>
+        <translation>tip marcator</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="209"/>
         <source>music symbol size</source>
-        <translation type="unfinished"/>
+        <translation>mărime simbol muzical</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="210"/>
         <source>marker center on symbol</source>
-        <translation type="unfinished"/>
+        <translation>centrare marcator pe simbol</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="211"/>
         <source>length 1</source>
-        <translation type="unfinished"/>
+        <translation>lungime 1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="212"/>
         <source>length 2</source>
-        <translation type="unfinished"/>
+        <translation>lungime 2</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="213"/>
-        <source>repeatEnd</source>
-        <translation type="unfinished"/>
+        <source>repeat end</source>
+        <translation>sfârșit repetare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="214"/>
-        <source>repeatStart</source>
-        <translation type="unfinished"/>
+        <source>repeat start</source>
+        <translation>început repetare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="215"/>
-        <source>repeatJump</source>
-        <translation type="unfinished"/>
+        <source>repeat jump</source>
+        <translation>salt repetare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="216"/>
         <source>measure number mode</source>
-        <translation type="unfinished"/>
+        <translation>mod număr măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="218"/>
         <source>glissando type</source>
-        <translation type="unfinished"/>
+        <translation>tip glissando</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="220"/>
         <source>showing text</source>
-        <translation type="unfinished"/>
+        <translation>afișare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="221"/>
         <source>glissando style</source>
-        <translation type="unfinished"/>
+        <translation>stil glissando</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="222"/>
         <source>glissando shift</source>
-        <translation type="unfinished"/>
+        <translation>deplasare glissando</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="223"/>
         <source>ease in</source>
-        <translation type="unfinished"/>
+        <translation>prelungire început</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="224"/>
         <source>ease out</source>
-        <translation type="unfinished"/>
+        <translation>prelungire sfârșit</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="225"/>
         <source>diagonal</source>
-        <translation type="unfinished"/>
+        <translation>diagonal</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="226"/>
         <source>groups</source>
-        <translation type="unfinished"/>
+        <translation>grupuri</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="227"/>
         <source>line style</source>
-        <translation type="unfinished"/>
+        <translation>stil linie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="228"/>
         <source>line width</source>
-        <translation type="unfinished"/>
+        <translation>lățime linie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="229"/>
         <source>time stretch</source>
-        <translation type="unfinished"/>
+        <translation>întindere în timp</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="230"/>
         <source>ornament style</source>
-        <translation type="unfinished"/>
+        <translation>stil ornament</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="231"/>
         <source>interval above</source>
-        <translation type="unfinished"/>
+        <translation>interval deasupra</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="232"/>
         <source>interval below</source>
-        <translation type="unfinished"/>
+        <translation>interval dedesubt</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="233"/>
         <source>ornament show accidental</source>
-        <translation type="unfinished"/>
+        <translation>afișare alterație ornament</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="234"/>
         <source>ornament show cue note</source>
-        <translation type="unfinished"/>
+        <translation>afișare notă indicativă ornament</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="235"/>
         <source>start on upper note</source>
-        <translation type="unfinished"/>
+        <translation>începere pe nota superioară</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="237"/>
         <source>time signature</source>
-        <translation type="unfinished"/>
+        <translation>metrică</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="238"/>
         <source>time signature stretch</source>
-        <translation type="unfinished"/>
+        <translation>întindere metrică</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="239"/>
         <source>time signature type</source>
-        <translation type="unfinished"/>
+        <translation>tip metrică</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="240"/>
         <location filename="../../src/engraving/dom/property.cpp" line="294"/>
         <source>tick</source>
-        <translation type="unfinished"/>
+        <translation>tact</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="241"/>
         <location filename="../../src/engraving/dom/property.cpp" line="264"/>
         <source>ticks</source>
-        <translation type="unfinished"/>
+        <translation>tacturi</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="242"/>
-        <source>track2</source>
-        <translation type="unfinished"/>
+        <source>end track</source>
+        <translation>pistă finală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="243"/>
-        <source>offset2</source>
-        <translation type="unfinished"/>
+        <location filename="../../src/engraving/dom/property.cpp" line="259"/>
+        <source>end offset</source>
+        <translation>decalaj final</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="244"/>
         <source>breaking multimeasure rest</source>
-        <translation type="unfinished"/>
+        <translation>pauză multimăsură întreruptă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="245"/>
         <source>vertical position of multimeasure rest number</source>
-        <translation type="unfinished"/>
+        <translation>poziție verticală număr pauză multi-măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="246"/>
         <source>vertical offset of multimeasure rest number</source>
-        <translation type="unfinished"/>
+        <translation>decalaj vertical număr pauză multi-măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="247"/>
         <source>visibility of multimeasure rest number</source>
-        <translation type="unfinished"/>
+        <translation>vizibiliate număr pauză multi-măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="249"/>
         <source>vertical position of measure repeat number</source>
-        <translation type="unfinished"/>
+        <translation>poziție verticală număr de repetări măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="250"/>
         <source>repeat count</source>
-        <translation type="unfinished"/>
+        <translation>număr de repetări</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="252"/>
         <source>stretch</source>
-        <translation type="unfinished"/>
+        <translation>întindere</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="253"/>
         <source>numbering offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj numărătoare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="254"/>
         <source>irregular</source>
-        <translation type="unfinished"/>
+        <translation>neregulat</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="256"/>
-        <source>o1</source>
-        <translation type="unfinished"/>
+        <source>start offset</source>
+        <translation>decalaj de început</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="257"/>
-        <source>o2</source>
-        <translation type="unfinished"/>
+        <source>left shoulder offset</source>
+        <translation>decalaj umăr stâng</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="258"/>
-        <source>o3</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../../src/engraving/dom/property.cpp" line="259"/>
-        <source>o4</source>
-        <translation type="unfinished"/>
+        <source>right shoulder offset</source>
+        <translation>decalaj umăr drept</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="260"/>
         <source>staff move</source>
-        <translation type="unfinished"/>
+        <translation>deplasare portativ</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="261"/>
         <source>verse</source>
-        <translation type="unfinished"/>
+        <translation>vers</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="263"/>
         <source>syllabic</source>
-        <translation type="unfinished"/>
+        <translation>silabic</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="265"/>
         <source>endings</source>
-        <translation type="unfinished"/>
+        <translation>sfârșituri</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="266"/>
         <source>visible line</source>
-        <translation type="unfinished"/>
+        <translation>linie vizibilă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="267"/>
-        <source>mag</source>
-        <translation type="unfinished"/>
+        <source>magnification</source>
+        <translation>mărire</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="268"/>
         <source>using drumset</source>
-        <translation type="unfinished"/>
+        <translation>folosirea setului de tobe</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="269"/>
         <source>duration</source>
-        <translation type="unfinished"/>
+        <translation>durată</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="270"/>
         <source>duration type</source>
-        <translation type="unfinished"/>
+        <translation>tip durată</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="271"/>
         <source>role</source>
-        <translation type="unfinished"/>
+        <translation>rol</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="272"/>
         <source>track</source>
-        <translation type="unfinished"/>
+        <translation>pistă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="274"/>
         <source>strings</source>
-        <translation type="unfinished"/>
+        <translation>coarde</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="275"/>
         <source>frets</source>
-        <translation type="unfinished"/>
+        <translation>taste</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="276"/>
         <source>show nut</source>
-        <translation type="unfinished"/>
+        <translation>afișare nucă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="277"/>
         <source>fret offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj tastă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="278"/>
         <source>fret number position</source>
-        <translation type="unfinished"/>
+        <translation>poziție număr tastă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="279"/>
         <source>orientation</source>
-        <translation type="unfinished"/>
+        <translation>orientare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="280"/>
-        <source>fretShowFingering</source>
-        <translation type="unfinished"/>
+        <source>fretboard diagram fingering visible</source>
+        <translation>vizibilitate digitație diagramă acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="281"/>
-        <source>fretFingering</source>
-        <translation type="unfinished"/>
+        <source>fretboard diagram fingering</source>
+        <translation>digitație diagramă acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="283"/>
         <source>chord symbol interpretation</source>
-        <translation type="unfinished"/>
+        <translation>interpretare simbol acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="284"/>
         <source>chord symbol voicing</source>
-        <translation type="unfinished"/>
+        <translation>voci simbol acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="285"/>
         <source>chord symbol duration</source>
-        <translation type="unfinished"/>
+        <translation>durată simbol acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="286"/>
         <source>chord symbol bass scale</source>
-        <translation type="unfinished"/>
+        <translation>scalare bas simbol acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="287"/>
         <source>chord symbol do not stack modifiers</source>
-        <translation type="unfinished"/>
+        <translation>nu stivui modificatorii pentru simbol acord</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="289"/>
         <source>type</source>
-        <translation type="unfinished"/>
+        <translation>tip</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="290"/>
         <source>gap</source>
-        <translation type="unfinished"/>
+        <translation>spațiu</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="291"/>
         <source>autoplace</source>
-        <translation type="unfinished"/>
+        <translation>autoplasare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="292"/>
         <source>dash line length</source>
-        <translation type="unfinished"/>
+        <translation>lungime cratimă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="293"/>
         <source>dash gap length</source>
-        <translation type="unfinished"/>
+        <translation>lungime interspațiu</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="295"/>
         <source>playback voice 1</source>
-        <translation type="unfinished"/>
+        <translation>vocea de redare 1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="296"/>
         <source>playback voice 2</source>
-        <translation type="unfinished"/>
+        <translation>vocea de redare 2</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="297"/>
         <source>playback voice 3</source>
-        <translation type="unfinished"/>
+        <translation>vocea de redare 3</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="299"/>
         <source>playback voice 4</source>
-        <translation type="unfinished"/>
+        <translation>vocea de redare 4</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="300"/>
         <source>symbol</source>
-        <translation type="unfinished"/>
+        <translation>simbol</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="301"/>
         <source>playing repeats</source>
-        <translation type="unfinished"/>
+        <translation>redarea repetițiilor</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="302"/>
         <source>creating system header</source>
-        <translation type="unfinished"/>
+        <translation>creare antet sistem</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="303"/>
         <source>lines</source>
-        <translation type="unfinished"/>
+        <translation>linii</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="304"/>
         <source>line distance</source>
-        <translation type="unfinished"/>
+        <translation>distanță linie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="305"/>
         <source>step offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj pas</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="306"/>
         <source>showing barlines</source>
-        <translation type="unfinished"/>
+        <translation>afișare bare de măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="307"/>
         <source>showing ledgerlines</source>
-        <translation type="unfinished"/>
+        <translation>afișare linii ajutătoare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="309"/>
@@ -18503,652 +18503,652 @@ Tasta %1 pe coardele %2</translation>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="312"/>
         <source>notehead scheme</source>
-        <translation type="unfinished"/>
+        <translation>schemă cap de notă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="313"/>
         <source>generating clefs</source>
-        <translation type="unfinished"/>
+        <translation>generare chei</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="314"/>
         <source>generating time signature</source>
-        <translation type="unfinished"/>
+        <translation>generare metrică</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="315"/>
         <source>generating key signature</source>
-        <translation type="unfinished"/>
+        <translation>generare armură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="316"/>
         <source>y-offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj y</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="317"/>
         <source>distance offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj distanță</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="318"/>
         <source>barline span</source>
-        <translation type="unfinished"/>
+        <translation>întindere bară de măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="319"/>
         <source>barline span from</source>
-        <translation type="unfinished"/>
+        <translation>întindere bară de măsură de la</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="320"/>
         <source>barline span to</source>
-        <translation type="unfinished"/>
+        <translation>întindere bară de măsură la</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="321"/>
         <source>bracket span</source>
-        <translation type="unfinished"/>
+        <translation>întindere paranteză</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="323"/>
         <source>level</source>
-        <translation type="unfinished"/>
+        <translation>nivel</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="324"/>
         <source>layout position</source>
-        <translation type="unfinished"/>
+        <translation>poziție aspect</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="325"/>
         <source>style</source>
-        <translation type="unfinished"/>
+        <translation>stil</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="326"/>
         <source>family</source>
-        <translation type="unfinished"/>
+        <translation>familie font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="328"/>
         <source>font style</source>
-        <translation type="unfinished"/>
+        <translation>stil font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="329"/>
         <source>user line distancing</source>
-        <translation type="unfinished"/>
+        <translation>distanțare linie utilizator</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="331"/>
         <source>frame type</source>
-        <translation type="unfinished"/>
+        <translation>tip chenar</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="332"/>
         <source>frame width</source>
-        <translation type="unfinished"/>
+        <translation>lățime cadru</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="333"/>
         <source>frame padding</source>
-        <translation type="unfinished"/>
+        <translation>umplutură cadru</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="334"/>
         <source>frame round</source>
-        <translation type="unfinished"/>
+        <translation>rontunjire cadru</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="335"/>
         <source>frame foreground color</source>
-        <translation type="unfinished"/>
+        <translation>culoare chenar</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="336"/>
         <source>frame background color</source>
-        <translation type="unfinished"/>
+        <translation>culoare fundal chenar</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="337"/>
         <source>spatium dependent size</source>
-        <translation type="unfinished"/>
+        <translation>mărime dependentă de spatium</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="338"/>
         <source>spatium dependent text size</source>
-        <translation type="unfinished"/>
+        <translation>mărime text dependentă de spatium</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="339"/>
         <source>musical symbols scale</source>
-        <translation type="unfinished"/>
+        <translation>scară simboluri muzicale</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="340"/>
         <source>align</source>
-        <translation type="unfinished"/>
+        <translation>aliniere</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="341"/>
         <source>text script align</source>
-        <translation type="unfinished"/>
+        <translation>aliniere text script</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="342"/>
         <source>system flag</source>
-        <translation type="unfinished"/>
+        <translation>fanion sistem</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="344"/>
         <source>begin text</source>
-        <translation type="unfinished"/>
+        <translation>începere text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="345"/>
         <source>begin text align</source>
-        <translation type="unfinished"/>
+        <translation>începere aliniere text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="346"/>
         <source>begin text place</source>
-        <translation type="unfinished"/>
+        <translation>începere plasare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="347"/>
         <source>begin hook type</source>
-        <translation type="unfinished"/>
+        <translation>tip cârlig inițial</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="348"/>
         <source>begin hook height</source>
-        <translation type="unfinished"/>
+        <translation>înălțime cârlig inițial</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="349"/>
         <source>begin font face</source>
-        <translation type="unfinished"/>
+        <translation>începere font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="350"/>
         <source>begin font size</source>
-        <translation type="unfinished"/>
+        <translation>începere mărime font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="351"/>
         <source>begin font style</source>
-        <translation type="unfinished"/>
+        <translation>începere stil font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="352"/>
         <source>begin text offset</source>
-        <translation type="unfinished"/>
+        <translation>începere decalaj text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="353"/>
         <source>gap between text and line</source>
-        <translation type="unfinished"/>
+        <translation>spațiu dintre text și linie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="355"/>
         <source>continue text</source>
-        <translation type="unfinished"/>
+        <translation>continuare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="356"/>
         <source>continue text align</source>
-        <translation type="unfinished"/>
+        <translation>continuare aliniere text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="357"/>
         <source>continue text place</source>
-        <translation type="unfinished"/>
+        <translation>continuare plasare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="358"/>
         <source>continue font face</source>
-        <translation type="unfinished"/>
+        <translation>continuare font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="359"/>
         <source>continue font size</source>
-        <translation type="unfinished"/>
+        <translation>continuare mărime font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="360"/>
         <source>continue font style</source>
-        <translation type="unfinished"/>
+        <translation>continuare stil font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="361"/>
         <source>continue text offset</source>
-        <translation type="unfinished"/>
+        <translation>continuare decalaj text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="363"/>
         <source>end text</source>
-        <translation type="unfinished"/>
+        <translation>finalizare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="364"/>
         <source>end text align</source>
-        <translation type="unfinished"/>
+        <translation>finalizare aliniere text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="365"/>
         <source>end text place</source>
-        <translation type="unfinished"/>
+        <translation>finalizare plasare text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="366"/>
         <source>end hook type</source>
-        <translation type="unfinished"/>
+        <translation>tip cârlig terminal</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="367"/>
         <source>end hook height</source>
-        <translation type="unfinished"/>
+        <translation>înălțime cârlig terminal</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="368"/>
         <source>end font face</source>
-        <translation type="unfinished"/>
+        <translation>finalizare font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="369"/>
         <source>end font size</source>
-        <translation type="unfinished"/>
+        <translation>finalizare mărime font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="370"/>
         <source>end font style</source>
-        <translation type="unfinished"/>
+        <translation>finalizare stil font</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="371"/>
         <source>end text offset</source>
-        <translation type="unfinished"/>
+        <translation>finalizare decalaj text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="373"/>
         <source>note-anchored line placement</source>
-        <translation type="unfinished"/>
+        <translation>plasare linie ancorată la notă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="375"/>
         <source>avoid barlines</source>
-        <translation type="unfinished"/>
+        <translation>evitare bare de măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="376"/>
         <source>dynamic size</source>
-        <translation type="unfinished"/>
+        <translation>mărime nuanță</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="377"/>
         <source>use text alignment</source>
-        <translation type="unfinished"/>
+        <translation>folosire aliniere text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="378"/>
         <source>anchor to end of previous</source>
-        <translation type="unfinished"/>
+        <translation>ancorare la sfârșitul anteriorului</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="380"/>
         <source>snap expression</source>
-        <translation type="unfinished"/>
+        <translation>fixare expresie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="381"/>
         <source>snap before</source>
-        <translation type="unfinished"/>
+        <translation>fixare înainte</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="382"/>
         <source>snap after</source>
-        <translation type="unfinished"/>
+        <translation>fixare după</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="384"/>
         <source>voice assignment</source>
-        <translation type="unfinished"/>
+        <translation>asignare voce</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="385"/>
         <source>center between staves</source>
-        <translation type="unfinished"/>
+        <translation>centrare între portative</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="387"/>
         <source>position above</source>
-        <translation type="unfinished"/>
+        <translation>poziție deasupra</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="389"/>
         <source>staves distance</source>
-        <translation type="unfinished"/>
+        <translation>distanță portative</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="390"/>
         <source>voices distance</source>
-        <translation type="unfinished"/>
+        <translation>distanță voci</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="391"/>
         <source>measures distance</source>
-        <translation type="unfinished"/>
+        <translation>distanță măsuri</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="392"/>
         <source>position distance</source>
-        <translation type="unfinished"/>
+        <translation>distanță poziție</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="393"/>
         <source>grace note index</source>
-        <translation type="unfinished"/>
+        <translation>index apogiatură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="394"/>
         <source>note index</source>
-        <translation type="unfinished"/>
+        <translation>index notă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="396"/>
         <source>voice</source>
-        <translation type="unfinished"/>
+        <translation>voce</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="397"/>
         <source>position</source>
-        <translation type="unfinished"/>
+        <translation>poziție</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="399"/>
         <source>concert clef type</source>
-        <translation type="unfinished"/>
+        <translation>tip cheie concert</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="400"/>
         <source>transposing clef type</source>
-        <translation type="unfinished"/>
+        <translation>tip cheie transpoziție</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="401"/>
         <source>clef to barline position</source>
-        <translation type="unfinished"/>
+        <translation>poziție cheie - bară de măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="402"/>
         <source>is header</source>
-        <translation type="unfinished"/>
+        <translation>este antet</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="403"/>
         <source>concert key</source>
-        <translation type="unfinished"/>
+        <translation>cheie concert</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="404"/>
         <source>key</source>
-        <translation type="unfinished"/>
+        <translation>cheie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="406"/>
         <source>autoplace minimum distance</source>
-        <translation type="unfinished"/>
+        <translation>distanță minimă plasare automată</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="408"/>
         <source>arpeggio type</source>
-        <translation type="unfinished"/>
+        <translation>tip arpeggio</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="409"/>
         <source>chord line type</source>
-        <translation type="unfinished"/>
+        <translation>tip linie acor</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="410"/>
         <source>straight chord line</source>
-        <translation type="unfinished"/>
+        <translation>linie acord dreaptă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="411"/>
         <source>wavy chord line</source>
-        <translation type="unfinished"/>
+        <translation>linie acord ondulată</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="412"/>
         <source>tremolo type</source>
-        <translation type="unfinished"/>
+        <translation>tip tremolo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="413"/>
         <source>tremolo style</source>
-        <translation type="unfinished"/>
+        <translation>stil tremolo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="414"/>
         <source>harmony type</source>
-        <translation type="unfinished"/>
+        <translation>tip armonie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="416"/>
         <source>arpeggio span</source>
-        <translation type="unfinished"/>
+        <translation>întindere arpeggio</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="418"/>
         <source>bend type</source>
-        <translation type="unfinished"/>
+        <translation>tip bend</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="419"/>
         <source>bend curve</source>
-        <translation type="unfinished"/>
+        <translation>curbă bend</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="420"/>
         <source>bend vertex offset</source>
-        <translation type="unfinished"/>
+        <translation>decalaj vertex bend</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="421"/>
         <source>bend show hold line</source>
-        <translation type="unfinished"/>
+        <translation>afișare linie menținere bend</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="422"/>
         <source>bend start time factor</source>
-        <translation type="unfinished"/>
+        <translation>factor de timp începere bend</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="423"/>
         <source>bend end time factor</source>
-        <translation type="unfinished"/>
+        <translation>factor de timp terminare bend</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="425"/>
         <source>tremolobar type</source>
-        <translation type="unfinished"/>
+        <translation>tip bară tremolo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="426"/>
         <source>tremolobar curve</source>
-        <translation type="unfinished"/>
+        <translation>curbă bară tremolo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="428"/>
         <source>start with long names</source>
-        <translation type="unfinished"/>
+        <translation>începere cu nume lungi</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="429"/>
         <source>start with measure one</source>
-        <translation type="unfinished"/>
+        <translation>începere cu măsura întâi</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="430"/>
         <source>first system indentation</source>
-        <translation type="unfinished"/>
+        <translation>indentarea primului sistem</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="432"/>
         <source>path</source>
-        <translation type="unfinished"/>
+        <translation>cale</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="434"/>
         <source>prefer sharps or flats</source>
-        <translation type="unfinished"/>
+        <translation>preferință diezi sau bemoli</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="436"/>
         <source>playing technique type</source>
-        <translation type="unfinished"/>
+        <translation>tip tehnică de redare</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="438"/>
         <source>gradual tempo change type</source>
-        <translation type="unfinished"/>
+        <translation>tip schimbare graduală tempo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="439"/>
         <source>tempo easing method</source>
-        <translation type="unfinished"/>
+        <translation>metodă aplicare tempo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="440"/>
         <source>tempo change factor</source>
-        <translation type="unfinished"/>
+        <translation>factor schimbare tempo</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="442"/>
         <source>is diagram</source>
-        <translation type="unfinished"/>
+        <translation>este diagramă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="444"/>
         <source>active</source>
-        <translation type="unfinished"/>
+        <translation>activ</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="446"/>
         <source>fret position</source>
-        <translation type="unfinished"/>
+        <translation>poziție tastă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="447"/>
         <source>ignored strings</source>
-        <translation type="unfinished"/>
+        <translation>coarde ignorate</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="448"/>
         <source>automatically generate text</source>
-        <translation type="unfinished"/>
+        <translation>generare automată text</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="450"/>
         <source>tie placement</source>
-        <translation type="unfinished"/>
+        <translation>amplasare legato</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="451"/>
         <source>minimum length</source>
-        <translation type="unfinished"/>
+        <translation>lungime minimă</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="452"/>
         <source>partial spanner direction</source>
-        <translation type="unfinished"/>
+        <translation>direcție parțială cheie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="454"/>
-        <source>position linked to master</source>
-        <translation type="unfinished"/>
+        <source>position linked to main score</source>
+        <translation>poziție legată de partitura principală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="455"/>
-        <source>appearance linked to master</source>
-        <translation type="unfinished"/>
+        <source>appearance linked to main score</source>
+        <translation>aspect legat de partitura principală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="456"/>
-        <source>text linked to master</source>
-        <translation type="unfinished"/>
+        <source>text linked to main score</source>
+        <translation>text legat de partitura principală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="457"/>
         <source>exclude from parts</source>
-        <translation type="unfinished"/>
+        <translation>excludere din partide</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="459"/>
         <source>strings count</source>
-        <translation type="unfinished"/>
+        <translation>număr de coarde</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="460"/>
         <source>strings preset</source>
-        <translation type="unfinished"/>
+        <translation>presetare coarde</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="461"/>
         <source>visible strings</source>
-        <translation type="unfinished"/>
+        <translation>coarde vizibile</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="463"/>
         <source>score font</source>
-        <translation type="unfinished"/>
+        <translation>font partitură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="464"/>
         <source>symbols size</source>
-        <translation type="unfinished"/>
+        <translation>mărime simboluri</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="465"/>
         <source>symbol angle</source>
-        <translation type="unfinished"/>
+        <translation>unghi simbol</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="467"/>
         <source>apply to all staves</source>
-        <translation type="unfinished"/>
+        <translation>aplicare tuturor portativelor</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="468"/>
         <source>is courtesy</source>
-        <translation type="unfinished"/>
+        <translation>este de curtoazie</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="469"/>
         <source>exclude vertical align</source>
-        <translation type="unfinished"/>
+        <translation>excludere aliniere verticală</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="471"/>
         <source>show bar numbers</source>
-        <translation type="unfinished"/>
+        <translation>afișare numere măsură</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="472"/>
         <source>play count text setting</source>
-        <translation type="unfinished"/>
+        <translation>setare text număr redări</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="473"/>
         <source>play count text</source>
-        <translation type="unfinished"/>
+        <translation>text număr redări</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="475"/>
-        <source>align with other rests</source>
-        <translation type="unfinished"/>
+        <source>align with other rests in the same voice</source>
+        <translation>aliniere cu alte pauze din aceeași voce</translation>
     </message>
 </context>
 <context>
@@ -22784,7 +22784,7 @@ anacruzele</translation>
         <location filename="../../src/importexport/musicxml/internal/musicxmlconfiguration.cpp" line="60"/>
         <source>Limit MusicXML export for compatibility with MuseScore 3</source>
         <extracomment>Means that less information will be included in exported MusicXML files, to prevent errors when importing them into MuseScore 3</extracomment>
-        <translation>Limitează exportul MusicXML pentru compatibilitate cu MuseScore 3</translation>
+        <translation>Limitează exportul MusicXML (compatibilitate cu MuseScore 3)</translation>
     </message>
     <message>
         <location filename="../../src/importexport/musicxml/internal/musicxmlconfiguration.cpp" line="65"/>
@@ -22862,7 +22862,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/FretFrameSettings.qml" line="66"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/textstylepopup/TextStylePopup.qml" line="465"/>
         <source>Frame</source>
-        <translation>Cadru</translation>
+        <translation>Chenar</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/common/FrameSettings.qml" line="57"/>
@@ -22985,7 +22985,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/lines/SlurAndTieSettings.qml" line="79"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/ornaments/OrnamentSettings.qml" line="232"/>
         <source>Above</source>
-        <translation>Desupra</translation>
+        <translation>Deasupra</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/common/PlacementSection.qml" line="35"/>
@@ -22997,7 +22997,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/lines/SlurAndTieSettings.qml" line="80"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/ornaments/OrnamentSettings.qml" line="233"/>
         <source>Below</source>
-        <translation>dedesubt</translation>
+        <translation>Dedesubt</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/common/VoicesAndPositionSection.qml" line="46"/>
@@ -23096,7 +23096,7 @@ anacruzele</translation>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/appearance/internal/HorizontalSpacingSection.qml" line="58"/>
         <source>Leading space</source>
-        <translation>Spațiu inițial</translation>
+        <translation>Spațiu incipient</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/appearance/internal/HorizontalSpacingSection.qml" line="74"/>
@@ -23149,13 +23149,13 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/playback/internal/DynamicsExpandableBlank.qml" line="66"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/playback/internal/NoteExpandableBlank.qml" line="64"/>
         <source>Velocity</source>
-        <translation>Nuanță</translation>
+        <translation>Intensitate</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/playback/internal/DynamicsExpandableBlank.qml" line="85"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/playback/internal/HairpinsExpandableBlank.qml" line="57"/>
         <source>Velocity change</source>
-        <translation>Schimbare nuanță</translation>
+        <translation>Schimbare de intensitate</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/general/playback/internal/DynamicsExpandableBlank.qml" line="97"/>
@@ -23415,7 +23415,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/notes/StemSettings.qml" line="145"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="331"/>
         <source>Show less</source>
-        <translation>Arată mai puțin</translation>
+        <translation>Arată mai puține opțiuni</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/ambituses/AmbitusSettings.qml" line="188"/>
@@ -23426,7 +23426,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/notes/StemSettings.qml" line="145"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="331"/>
         <source>Show more</source>
-        <translation>Arată mai mult</translation>
+        <translation>Arată mai multe opțiuni</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/ambituses/AmbitusSettings.qml" line="237"/>
@@ -23819,7 +23819,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="208"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/textstylepopup/TextStylePopup.qml" line="277"/>
         <source>Align left</source>
-        <translation>Aliniere stânga</translation>
+        <translation>Aliniază la stânga</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/internal/FretFrameAlignmentSection.qml" line="59"/>
@@ -23831,7 +23831,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="214"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/textstylepopup/TextStylePopup.qml" line="283"/>
         <source>Align center</source>
-        <translation>Aliniere centru</translation>
+        <translation>Aliniază la centru</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/internal/FretFrameAlignmentSection.qml" line="65"/>
@@ -23843,7 +23843,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="220"/>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/text/textstylepopup/TextStylePopup.qml" line="289"/>
         <source>Align right</source>
-        <translation>Aliniere dreapta</translation>
+        <translation>Aliniază la dreapta</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/internal/FretFrameAlignmentSection.qml" line="71"/>
@@ -23893,12 +23893,12 @@ anacruzele</translation>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/internal/HorizontalGapsSection.qml" line="49"/>
         <source>Left gap</source>
-        <translation>Golul din Stânga</translation>
+        <translation>Spațiu în stânga</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/internal/HorizontalGapsSection.qml" line="64"/>
         <source>Right gap</source>
-        <translation>Golul din Dreapta</translation>
+        <translation>Spațiu în dreapta</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/frames/internal/HorizontalMarginsSection.qml" line="49"/>
@@ -24011,7 +24011,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/models/notation/lines/voltasettingsmodel.cpp" line="43"/>
         <location filename="../../src/inspector/models/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="192"/>
         <source>Normal</source>
-        <translation>Normal</translation>
+        <translation>Normală</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/fretdiagrams/internal/FretGeneralSettingsTab.qml" line="115"/>
@@ -24256,7 +24256,7 @@ anacruzele</translation>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/lines/internal/LineStyleSection.qml" line="84"/>
         <location filename="../../src/inspector/models/notation/lines/slurandtiesettingsmodel.cpp" line="117"/>
         <source>Dotted</source>
-        <translation>Punctat</translation>
+        <translation>Punctată</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/lines/internal/LineStyleSection.qml" line="101"/>
@@ -24276,7 +24276,7 @@ anacruzele</translation>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/lines/internal/LineTextSettingsTab.qml" line="72"/>
         <source>Text when continuing to a new system</source>
-        <translation>Text când se continuă pe un nou sistem</translation>
+        <translation>Text la continuarea pe un nou sistem</translation>
     </message>
     <message>
         <location filename="../../src/inspector/view/qml/MuseScore/Inspector/notation/lines/internal/LineTextSettingsTab.qml" line="92"/>
@@ -26695,7 +26695,7 @@ Mai mult, „Aprofundare MuseScore” are o comunitate primitoare de muzicieni, 
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="185"/>
         <source>Appearance:</source>
-        <translation>Înfățișare:</translation>
+        <translation>Reprezentare:</translation>
     </message>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="189"/>
@@ -26726,7 +26726,7 @@ Mai mult, „Aprofundare MuseScore” are o comunitate primitoare de muzicieni, 
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="219"/>
         <source>Fretboard style:</source>
-        <translation>Stil grif:</translation>
+        <translation>Stil tastieră:</translation>
     </message>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/internal/EditStyle/FretboardsPage.qml" line="223"/>
@@ -27715,22 +27715,22 @@ Mai mult, „Aprofundare MuseScore” are o comunitate primitoare de muzicieni, 
     <message>
         <location filename="../../src/notation/notationtypes.h" line="266"/>
         <source>Percentage</source>
-        <translation>Procent</translation>
+        <translation>procent</translation>
     </message>
     <message>
         <location filename="../../src/notation/notationtypes.h" line="267"/>
         <source>Page width</source>
-        <translation>Lățime pagină</translation>
+        <translation>lățime pagină</translation>
     </message>
     <message>
         <location filename="../../src/notation/notationtypes.h" line="268"/>
         <source>Whole page</source>
-        <translation>Toată pagina</translation>
+        <translation>toată pagina</translation>
     </message>
     <message>
         <location filename="../../src/notation/notationtypes.h" line="269"/>
         <source>Two pages</source>
-        <translation>Două pagini</translation>
+        <translation>două pagini</translation>
     </message>
     <message>
         <location filename="../../src/notation/notationtypes.h" line="307"/>
@@ -28178,7 +28178,7 @@ Mai mult, „Aprofundare MuseScore” are o comunitate primitoare de muzicieni, 
     <message>
         <location filename="../../src/notation/view/widgets/editstringdata.cpp" line="222"/>
         <source>Always open</source>
-        <translation>Mereu libere</translation>
+        <translation>Mereu liberă</translation>
     </message>
     <message>
         <location filename="../../src/notation/view/widgets/editstringdata.cpp" line="223"/>
@@ -28188,7 +28188,7 @@ Mai mult, „Aprofundare MuseScore” are o comunitate primitoare de muzicieni, 
     <message>
         <location filename="../../src/notation/view/widgets/editstringdata.cpp" line="224"/>
         <source>&lt;b&gt;Always open&lt;/b&gt;&lt;br&gt;On tablature staves, fret positions other than ‘0’ cannot be entered on strings marked ‘always open’. Useful for instruments with strings that are not on the fretboard, such as the theorbo.</source>
-        <translation>&lt;b&gt;Mereu deschise&lt;/b&gt;&lt;br&gt;Pe portativele de tip tabulatură, pozițiile tastelor diferite de „0” nu pot fi introduse pe coarde marcate ca „mereu deschise”. Util pentru instrumente cu coarde care nu sunt pe grif, cum ar fi teorba.</translation>
+        <translation>&lt;b&gt;Mereu deschise&lt;/b&gt;&lt;br&gt;Pe portativele de tip tabulatură, pozițiile tastelor diferite de „0” nu pot fi introduse pe coarde marcate ca „mereu deschise”. Util pentru instrumente cu coarde care nu sunt pe tastieră, cum ar fi teorba.</translation>
     </message>
 </context>
 <context>
@@ -29393,7 +29393,7 @@ Mai mult, „Aprofundare MuseScore” are o comunitate primitoare de muzicieni, 
     <message>
         <location filename="../../src/appshell/qml/Preferences/PercussionPreferencesPage.qml" line="56"/>
         <source>Triggering the percussion panel</source>
-        <translation>Se declanșează panoul de percuție</translation>
+        <translation>Afișarea panoului de percuție</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/Preferences/PercussionPreferencesPage.qml" line="68"/>
@@ -33372,7 +33372,7 @@ a eșuat: %2</translation>
     <message>
         <location filename="../../src/project/internal/projectconfiguration.cpp" line="129"/>
         <source>Create backup of file on disk before saving new changes</source>
-        <translation>Creează un backup al fișierului pe disc înainte de a salva noile modificări</translation>
+        <translation>Creează o copie a fișierului înainte de a salva noi modificări</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/projectconfiguration.cpp" line="346"/>
@@ -34864,7 +34864,7 @@ a eșuat: %2</translation>
     <message>
         <location filename="../../src/notation/qml/MuseScore/NotationScene/EditPercussionShortcutDialog.qml" line="71"/>
         <source>Define percussion keyboard shortcut</source>
-        <translation>Definește scurtătură de tastatură pentru percuție</translation>
+        <translation>Definește scurtătură pentru percuție</translation>
     </message>
     <message>
         <location filename="../../src/framework/shortcuts/shortcutstypes.h" line="106"/>

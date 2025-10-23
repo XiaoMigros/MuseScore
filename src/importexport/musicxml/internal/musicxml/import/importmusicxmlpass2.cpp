@@ -208,7 +208,8 @@ static Fraction lastChordTicks(const Segment* s, const Fraction& tick, const tra
 // called when lyric (with or without "extend") or note with "extend type=stop" is found
 // // note that no == -1 means all lyrics in this *track*
 
-void MusicXmlLyricsExtend::setExtend(const int no, const track_idx_t track, const Fraction& tick, const Lyrics* prevAddedLyrics = nullptr)
+void MusicXmlLyricsExtend::setExtend(const int verse, const track_idx_t track, const Fraction& tick,
+                                     const Lyrics* prevAddedLyrics = nullptr)
 {
     std::vector<Lyrics*> list;
     for (Lyrics* l : m_lyrics) {
@@ -217,8 +218,8 @@ void MusicXmlLyricsExtend::setExtend(const int no, const track_idx_t track, cons
             const ChordRest* par = static_cast<const ChordRest*>(el);
             // no = -1: stop all extends on this track
             // otherwise, stop all extends in the stave with the same no and placement
-            if ((no == -1 && par->track() == track)
-                || (l->no() == no && track2staff(par->track()) == track2staff(track) && prevAddedLyrics
+            if ((verse == -1 && par->track() == track)
+                || (l->verse() == verse && track2staff(par->track()) == track2staff(track) && prevAddedLyrics
                     && prevAddedLyrics->placement() == l->placement())) {
                 Fraction lct = lastChordTicks(l->segment(), tick, track);
                 if (lct > Fraction(0, 1)) {
@@ -919,7 +920,7 @@ static void addLyric(MusicXmlLogger* logger, const XmlStreamReader* const xmlrea
                          .arg(MAX_LYRICS), xmlreader);
         delete l;
     } else {
-        l->setNo(lyricNo);
+        l->setVerse(lyricNo);
         l->initTextStyleType(l->isEven() ? TextStyleType::LYRICS_EVEN : TextStyleType::LYRICS_ODD, /*preserveDifferent*/ true);
         cr->add(l);
         extendedLyrics.setExtend(lyricNo, cr->track(), cr->tick(), l);
@@ -2061,7 +2062,6 @@ static void addBarlineToMeasure(Measure* measure, const Fraction tick, std::uniq
         st = SegmentType::BeginBarLine;
     }
     Segment* const segment = measure->getSegment(st, tick);
-    barline->renderer()->layoutItem(barline.get());
     segment->add(barline.release());
 }
 
@@ -2220,21 +2220,29 @@ void MusicXmlParserPass2::part()
     setPartInstruments(m_logger, &m_e, part, id, m_score, m_pass1.getInstrList(id), m_pass1.getIntervals(id), instruments, partName);
     partName = replacePartNameAccidentals(partName);
     part->setPartName(partName);
-    if (mxmlPart.getPrintName() && !isLikelyIncorrectPartName(partName)) {
+    const bool inconsistentVisibility = mxmlPart.getPrintName() != mxmlPart.getPrintAbbr();
+    if (!isLikelyIncorrectPartName(partName)) {
         part->setLongNameAll(partName);
     } else {
-        m_pass1.getPart(id)->setLongNameAll(u"");
+        part->setLongNameAll(u"");
     }
-    if (mxmlPart.getPrintAbbr()) {
+    if (!mxmlPart.getAbbr().empty()) {
         part->setPlainShortNameAll(mxmlPart.getAbbr());
+        if (inconsistentVisibility) {
+            // TODO: improve logic to set visibility of part names
+            part->setLongNameAll(u"");
+        }
     } else {
-        m_pass1.getPart(id)->setPlainShortNameAll(u"");
+        part->setPlainShortNameAll(u"");
     }
     // set the parts first instrument
     // try to prevent an empty track name
     if (part->partName() == "") {
         String instrId = m_pass1.getInstrList(id).instrument(Fraction(0, 1));
         part->setPartName(muse::value(instruments, instrId).name);
+    }
+    if (m_pass1.nparts() == 1 && mxmlPart.getPrintName() && mxmlPart.getPrintAbbr()) {
+        m_score->style().set(Sid::hideInstrumentNameIfOneInstrument, false);
     }
 
 #ifdef DEBUG_VOICE_MAPPER
@@ -6312,6 +6320,14 @@ void MusicXmlParserPass2::time(const String& partId, Measure* measure, const Fra
             }
         }
     }
+
+    if (printObject && m_score->style().styleV(Sid::timeSigPlacement) == TimeSigPlacement::ACROSS_STAVES) {
+        track_idx_t track = m_pass1.trackForPart(partId);
+        Staff* st = m_score->staff(track2staff(track));
+        if (!st->isSystemObjectStaff() && st->idx() != 0) {
+            m_score->addSystemObjectStaff(st);
+        }
+    }
 }
 
 //---------------------------------------------------------
@@ -7253,7 +7269,7 @@ Note* MusicXmlParserPass2::note(const String& partId,
     // handle notations
     if (cr) {
         notations.addToScore(cr, note,
-                             noteStartTime.ticks(), m_slurs, m_glissandi, m_spanners, m_trills, m_ties, m_unstartedTieNotes,
+                             noteStartTime, m_slurs, m_glissandi, m_spanners, m_trills, m_ties, m_unstartedTieNotes,
                              m_unendedTieNotes, arpMap, delayedArps);
 
         // if no tie added yet, convert the "tie" into "tied" and add it.
@@ -8192,7 +8208,7 @@ void MusicXmlParserNotations::slur()
 //   addSlur
 //---------------------------------------------------------
 
-static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, Note* note, const int tick,
+static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, Note* note, const Fraction& tick,
                     MusicXmlLogger* logger, const XmlStreamReader* const xmlreader)
 {
     int slurNo = notation.attribute(u"number").toInt();
@@ -8217,8 +8233,9 @@ static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, N
         } else if (slurs[slurNo].isStop()) {
             // slur start when slur already stopped: wrap up
             Slur* newSlur = slurs[slurNo].slur();
+            slurs[slurNo] = SlurDesc();
+
             if (newSlur->endElement() == cr && note) {
-                slurs[slurNo] = SlurDesc();
                 delete newSlur;
 
                 // Slur starts & ends on same chord - add lv instead
@@ -8227,16 +8244,16 @@ static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, N
                 note->score()->undoAddElement(lvTie);
                 return;
             }
-            newSlur->setTrack(track);
-            newSlur->setTick(Fraction::fromTicks(tick));
-            newSlur->setStartElement(cr);
-            newSlur->setTick2(newSlur->endElement()->tick());
-            if (newSlur->ticks().negative()) {
+            const Fraction tick2 = newSlur->endElement()->tick();
+            if (tick2 < tick) {
                 logger->logError(String(u"slur end is before slur start"), xmlreader);
-                slurs[slurNo] = SlurDesc();
                 delete newSlur;
                 return;
             }
+            newSlur->setTrack(track);
+            newSlur->setTick(tick);
+            newSlur->setStartElement(cr);
+            newSlur->setTick2(tick2);
             score->addElement(newSlur);
         } else {
             // slur start for new slur: init
@@ -8256,7 +8273,7 @@ static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, N
             }
             newSlur->setVisible(notation.visible());
             colorItem(newSlur, Color::fromString(notation.attribute(u"color")));
-            newSlur->setTick(Fraction::fromTicks(tick));
+            newSlur->setTick(tick);
             newSlur->setStartElement(cr);
             if (configuration()->importLayout()) {
                 const String orientation = notation.attribute(u"orientation");
@@ -8279,9 +8296,9 @@ static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, N
         if (slurs[slurNo].isStart()) {
             // slur stop when slur already started: wrap up
             Slur* newSlur = slurs[slurNo].slur();
+            slurs[slurNo] = SlurDesc();
 
             if (newSlur->startElement() == cr && note) {
-                slurs[slurNo] = SlurDesc();
                 delete newSlur;
 
                 // Slur starts & ends on same chord - add lv instead
@@ -8292,11 +8309,10 @@ static void addSlur(const Notation& notation, SlurStack& slurs, ChordRest* cr, N
             }
 
             if (!(cr->isGrace())) {
-                newSlur->setTick2(Fraction::fromTicks(tick));
+                newSlur->setTick2(tick);
                 newSlur->setTrack2(track);
             }
             newSlur->setEndElement(cr);
-            slurs[slurNo] = SlurDesc();
             score->addElement(newSlur);
         } else if (slurs[slurNo].isStop()) {
             // slur stop when slur already stopped: report error
@@ -9340,14 +9356,14 @@ void MusicXmlParserNotations::addNotation(const Notation& notation, ChordRest* c
  as in that case note is a nullptr.
  */
 
-void MusicXmlParserNotations::addToScore(ChordRest* const cr, Note* const note, const int tick, SlurStack& slurs,
+void MusicXmlParserNotations::addToScore(ChordRest* const cr, Note* const note, const Fraction& tick, SlurStack& slurs,
                                          Glissando* glissandi[MAX_NUMBER_LEVEL][2], MusicXmlSpannerMap& spanners,
                                          TrillStack& trills, MusicXmlTieMap& ties, std::vector<Note*>& unstartedTieNotes,
                                          std::vector<Note*>& unendedTieNotes, ArpeggioMap& arpMap,
                                          DelayedArpMap& delayedArps)
 {
     addArpeggio(cr, m_arpeggioType, m_arpeggioNo, m_arpeggioColor, arpMap, delayedArps);
-    addWavyLine(cr, Fraction::fromTicks(tick), m_wavyLineNo, m_wavyLineType, spanners, trills, m_logger, &m_e);
+    addWavyLine(cr, tick, m_wavyLineNo, m_wavyLineType, spanners, trills, m_logger, &m_e);
 
     for (const Notation& notation : m_notations) {
         if (notation.symId() != SymId::noSym) {
@@ -9372,7 +9388,7 @@ void MusicXmlParserNotations::addToScore(ChordRest* const cr, Note* const note, 
         Dynamic* dynamic = Factory::createDynamic(m_score->dummy()->segment());
         dynamic->setDynamicType(d);
         colorItem(dynamic, m_dynamicsColor);
-        m_pass2.addElemOffset(dynamic, cr->track(), m_dynamicsPlacement, cr->measure(), Fraction::fromTicks(tick));
+        m_pass2.addElemOffset(dynamic, cr->track(), m_dynamicsPlacement, cr->measure(), tick);
     }
 }
 
