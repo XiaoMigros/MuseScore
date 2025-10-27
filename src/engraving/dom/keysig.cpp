@@ -152,7 +152,7 @@ bool KeySig::isChange() const
     if (!segment() || segment()->segmentType() != SegmentType::KeySig) {
         return false;
     }
-    Fraction keyTick = tick();
+    const Fraction keyTick = tick();
     return staff()->currentKeyTick(keyTick) == keyTick;
 }
 
@@ -183,7 +183,7 @@ void KeySig::undoSetShowCourtesy(bool v)
 
 void KeySig::undoSetMode(KeyMode v)
 {
-    undoChangeProperty(Pid::KEYSIG_MODE, int(v));
+    undoChangeProperty(Pid::KEYSIG_MODE, v);
 }
 
 PointF KeySig::staffOffset() const
@@ -197,21 +197,50 @@ PointF KeySig::staffOffset() const
     return PointF(0.0, 0.0);
 }
 
+EngravingObject* KeySig::propertyDelegate(Pid propertyId) const
+{
+    if (!_isCourtesy) {
+        return nullptr;
+    }
+    switch (propertyId) {
+    case Pid::KEY:
+    case Pid::KEY_CONCERT:
+    case Pid::SHOW_COURTESY:
+    case Pid::KEYSIG_MODE:
+    case Pid::IS_COURTESY:
+    {
+        Segment* thisSeg = segment();
+        Segment* nextKSSeg = thisSeg ? thisSeg->next1(SegmentType::KeySig) : nullptr;
+        if (nextKSSeg && nextKSSeg->tick() == thisSeg->tick()) {
+            return nextKSSeg->element(track());
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    return nullptr;
+}
+
 //---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 
 PropertyValue KeySig::getProperty(Pid propertyId) const
 {
+    if (EngravingObject* e = propertyDelegate(propertyId)) {
+        return e->getProperty(propertyId);
+    }
     switch (propertyId) {
     case Pid::KEY:
         return int(key());
     case Pid::KEY_CONCERT:
         return int(concertKey());
     case Pid::SHOW_COURTESY:
-        return int(showCourtesy());
+        return showCourtesy();
     case Pid::KEYSIG_MODE:
-        return int(mode());
+        return mode();
     case Pid::IS_COURTESY:
         return _isCourtesy;
     default:
@@ -225,6 +254,9 @@ PropertyValue KeySig::getProperty(Pid propertyId) const
 
 bool KeySig::setProperty(Pid propertyId, const PropertyValue& v)
 {
+    if (EngravingObject* e = propertyDelegate(propertyId)) {
+        return e->setProperty(propertyId, v);
+    }
     switch (propertyId) {
     case Pid::KEY:
         if (generated()) {
@@ -248,7 +280,7 @@ bool KeySig::setProperty(Pid propertyId, const PropertyValue& v)
         if (generated()) {
             return false;
         }
-        setMode(KeyMode(v.toInt()));
+        setMode(v.value<KeyMode>());
         staff()->setKey(tick(), keySigEvent());
         break;
     case Pid::IS_COURTESY:
@@ -279,7 +311,7 @@ PropertyValue KeySig::propertyDefault(Pid id) const
     case Pid::SHOW_COURTESY:
         return true;
     case Pid::KEYSIG_MODE:
-        return int(KeyMode::UNKNOWN);
+        return KeyMode::UNKNOWN;
     case Pid::IS_COURTESY:
         return false;
     default:

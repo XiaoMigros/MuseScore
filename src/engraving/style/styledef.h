@@ -321,6 +321,7 @@ enum class Sid {
     hairpinLineLineStyle,
     hairpinLineDashLineLen,
     hairpinLineDashGapLen,
+    hairpinOffset,
 
     pedalPlacement,
     pedalPosAbove,
@@ -351,6 +352,7 @@ enum class Sid {
     pedalContinueHookText,
     pedalEndText,
     pedalRosetteEndText,
+    pedalOffset,
 
     trillPlacement,
     trillPosAbove,
@@ -444,6 +446,7 @@ enum class Sid {
     nashvilleNumberFrameFgColor,
     nashvilleNumberFrameBgColor,
 
+    displayCapoChords,
     capoPosition,
     fretNumMag,
     fretNumPos,
@@ -717,6 +720,7 @@ enum class Sid {
     linearStretch,
     crossMeasureValues,
     keySigNaturals,
+    keySigShowNaturalsChangingSharpsFlats,
 
     tupletMaxSlope,
     tupletOutOfStaff,
@@ -1896,6 +1900,7 @@ enum class Sid {
     letRingFrameBgColor,
     letRingPosition,
     letRingEndHookType,
+    letRingOffset,
 
     palmMuteFontFace,
     palmMuteFontSize,
@@ -1921,6 +1926,7 @@ enum class Sid {
     palmMuteFrameBgColor,
     palmMutePosition,
     palmMuteEndHookType,
+    palmMuteOffset,
 
     fermataPosAbove,
     fermataPosBelow,

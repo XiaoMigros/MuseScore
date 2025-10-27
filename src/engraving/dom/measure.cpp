@@ -557,7 +557,7 @@ double Measure::tick2pos(Fraction tck) const
 ///    Whether the measure will show measure number(s) when MeasureNumberMode is set to AUTO
 //---------------------------------------------------------
 
-bool Measure::showMeasureNumberInAutoMode()
+bool Measure::showMeasureNumberInAutoMode() const
 {
     // Check whether any measure number should be shown
     if (!style().styleB(Sid::showMeasureNumber)) {
@@ -598,13 +598,13 @@ bool Measure::showMeasureNumberInAutoMode()
     }
 }
 
-bool Measure::showMeasureNumberOnStaff(staff_idx_t staffIdx)
+bool Measure::showMeasureNumberOnStaff(staff_idx_t staffIdx) const
 {
     IF_ASSERT_FAILED(staffIdx < score()->nstaves()) {
         return false;
     }
 
-    return showMeasureNumber() && score()->staff(staffIdx)->shouldShowMeasureNumbers();
+    return showMeasureNumber() && score()->staff(staffIdx)->shouldShowMeasureNumbers() && !score()->allStavesInvisible();
 }
 
 //---------------------------------------------------------
@@ -612,7 +612,7 @@ bool Measure::showMeasureNumberOnStaff(staff_idx_t staffIdx)
 ///     Whether the Measure shows a MeasureNumber
 //---------------------------------------------------------
 
-bool Measure::showMeasureNumber()
+bool Measure::showMeasureNumber() const
 {
     switch (m_measureNumberMode) {
     case MeasureNumberMode::AUTO:
@@ -620,8 +620,9 @@ bool Measure::showMeasureNumber()
     case MeasureNumberMode::SHOW:
         return true;
     case MeasureNumberMode::HIDE:
-        return false;
+        break;
     }
+    return false;
 }
 
 //---------------------------------------------------------

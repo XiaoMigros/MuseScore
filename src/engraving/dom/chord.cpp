@@ -841,6 +841,23 @@ bool Chord::allNotesTiedToNext() const
     return true;
 }
 
+bool Chord::allElementsInvisible() const
+{
+    for (EngravingObject* child : scanChildren()) {
+        if (toEngravingItem(child)->visible()) {
+            return false;
+        }
+    }
+
+    for (Chord* grace : m_graceNotes) {
+        if (!grace->allElementsInvisible()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 //---------------------------------------------------------
 //   processSiblings
 //---------------------------------------------------------
@@ -1531,10 +1548,10 @@ PropertyValue Chord::getProperty(Pid propertyId) const
     switch (propertyId) {
     case Pid::NO_STEM:         return noStem();
     case Pid::SHOW_STEM_SLASH: return showStemSlash();
-    case Pid::SMALL:           return isSmall();
     case Pid::STEM_DIRECTION:  return PropertyValue::fromValue<DirectionV>(stemDirection());
     case Pid::PLAY: return isChordPlayable();
     case Pid::COMBINE_VOICE: return PropertyValue::fromValue<AutoOnOff>(combineVoice());
+    case Pid::VISIBLE: return true; // Chord cannot be set invisible, only its elements can
     default:
         return ChordRest::getProperty(propertyId);
     }
@@ -1549,7 +1566,6 @@ PropertyValue Chord::propertyDefault(Pid propertyId) const
     switch (propertyId) {
     case Pid::NO_STEM:         return false;
     case Pid::SHOW_STEM_SLASH: return noteType() == NoteType::ACCIACCATURA;
-    case Pid::SMALL:           return false;
     case Pid::STEM_DIRECTION:  return PropertyValue::fromValue<DirectionV>(DirectionV::AUTO);
     case Pid::PLAY: return true;
     case Pid::COMBINE_VOICE: return AutoOnOff::AUTO;
@@ -1579,9 +1595,6 @@ bool Chord::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::SHOW_STEM_SLASH:
         requestShowStemSlash(v.toBool());
-        break;
-    case Pid::SMALL:
-        setSmall(v.toBool());
         break;
     case Pid::STEM_DIRECTION:
         setStemDirection(v.value<DirectionV>());
@@ -2704,6 +2717,9 @@ Ornament* Chord::findOrnament(bool forPlayback) const
         }
     }
     if (forPlayback) {
+        // TODO: cleanup.
+        // We shouldn't do this kind of special cases, and the DOM shouldn't know anything about playback.
+        // This should be in a different function that returns the ornament from the Trill ending on this chord. [MS]
         for (Spanner* spanner : m_endingSpanners) {
             if (spanner->isTrill()) {
                 return toTrill(spanner)->ornament();

@@ -23,10 +23,10 @@
 
 #include <QKeyEvent>
 
-#include "translation.h"
-#include "ui/view/iconcodes.h"
 #include "ui/view/widgetstatestore.h"
 #include "ui/view/widgetnavigationfix.h"
+
+#include "engraving/dom/pitchspelling.h"
 
 using namespace mu::notation;
 using namespace muse::ui;
@@ -92,6 +92,31 @@ void EditPitch::setup()
     setFocus();
 
     qApp->installEventFilter(this);
+
+    // Populate table with localized pitch names and center them in cells
+    static constexpr const char* noteName[] =
+    { "C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B", "C" };
+
+    for (int row = 0; row < tableWidget->rowCount(); ++row) {
+        for (int col = 0; col < tableWidget->columnCount(); ++col) {
+            if (row == 0 && col > 7) {
+                // Skip MIDI notes above G9
+                break;
+            }
+            QTableWidgetItem* item = tableWidget->item(row, col);
+            if (item) {
+                int octave;
+                if (col == tableWidget->columnCount() - 1) {
+                    octave = 10 - row;
+                } else {
+                    octave = 9 - row;
+                }
+                std::string pitch = std::string(noteName[col]) + std::to_string(octave);
+                item->setText(muse::mtrc("global/pitchName", pitch.c_str()));
+                item->setTextAlignment(Qt::AlignCenter);
+            }
+        }
+    }
 }
 
 void EditPitch::accept()
@@ -103,5 +128,5 @@ void EditPitch::on_tableWidget_cellDoubleClicked(int row, int col)
 {
     // topmost row contains notes for 10-th MIDI octave (numbered as '9')
     int pitch = (tableWidget->rowCount() - 1 - row) * 12 + col;
-    done(std::min(pitch, MAX_PITCH));
+    done(std::min(pitch, engraving::MAX_PITCH));
 }

@@ -369,6 +369,8 @@ PropertyValue TRead::readPropertyValue(Pid id, XmlReader& e, ReadContext& ctx)
         return PropertyValue::fromValue(TConv::fromXml(e.readAsciiText(), OrnamentStyle::DEFAULT));
     case P_TYPE::ORNAMENT_INTERVAL:
         return PropertyValue(TConv::fromXml(e.readText(), DEFAULT_ORNAMENT_INTERVAL));
+    case P_TYPE::ORNAMENT_SHOW_ACCIDENTAL:
+        return OrnamentShowAccidental(e.readInt());
     case P_TYPE::POINT:
         return PropertyValue::fromValue(e.readPoint());
     case P_TYPE::SCALE:
@@ -415,6 +417,8 @@ PropertyValue TRead::readPropertyValue(Pid id, XmlReader& e, ReadContext& ctx)
 
     case P_TYPE::CLEF_TYPE:
         return PropertyValue(TConv::fromXml(e.readAsciiText(), ClefType::G));
+    case P_TYPE::CLEF_TO_BARLINE_POS:
+        return ClefToBarlinePosition(e.readInt());
 
     case P_TYPE::DYNAMIC_TYPE:
         return PropertyValue(TConv::fromXml(e.readAsciiText(), DynamicType::OTHER));
@@ -429,6 +433,8 @@ PropertyValue TRead::readPropertyValue(Pid id, XmlReader& e, ReadContext& ctx)
 
     case P_TYPE::TEXT_STYLE:
         return PropertyValue(TConv::fromXml(e.readAsciiText(), TextStyleType::DEFAULT));
+    case P_TYPE::SLUR_STYLE_TYPE:
+        return SlurStyleType(e.readInt());
 
     case P_TYPE::CHANGE_METHOD:
         return PropertyValue(TConv::fromXml(e.readAsciiText(), ChangeMethod::NORMAL));
@@ -604,6 +610,10 @@ void TRead::read(TextBase* t, XmlReader& xml, ReadContext& ctx)
 
 void TRead::read(TempoText* t, XmlReader& e, ReadContext& ctx)
 {
+    /// This property was written in the wrong order from 4.6.0-4.6.2
+    /// It was written before the text style and was reset on initialising the text style
+    std::optional<double> symbolSize;
+
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (readProperty(t, tag, e, ctx, Pid::PLAY)) {
@@ -622,6 +632,8 @@ void TRead::read(TempoText* t, XmlReader& e, ReadContext& ctx)
             } else {
                 e.unknown();
             }
+        } else if (tag == "musicSymbolSize") {
+            symbolSize = e.readDouble();
         } else if (!readProperties(static_cast<TextBase*>(t), e, ctx)) {
             e.unknown();
         }
@@ -630,6 +642,13 @@ void TRead::read(TempoText* t, XmlReader& e, ReadContext& ctx)
     if (t->xmlText().isEmpty()) {
         t->setXmlText(String(u"<sym>metNoteQuarterUp</sym> = %1").arg(int(lrint(t->tempo().toBPM().val))));
         t->setVisible(false);
+    }
+
+    if (symbolSize.has_value()) {
+        t->setProperty(Pid::MUSIC_SYMBOL_SIZE, symbolSize.value());
+        if (t->isStyled(Pid::MUSIC_SYMBOL_SIZE)) {
+            t->setPropertyFlags(Pid::MUSIC_SYMBOL_SIZE, PropertyFlags::UNSTYLED);
+        }
     }
 }
 
@@ -651,9 +670,24 @@ void TRead::read(StaffTextBase* t, XmlReader& xml, ReadContext& ctx)
 {
     t->clear();
 
+    /// This property was written in the wrong order from 4.6.0-4.6.2
+    /// It was written before the text style and was reset on initialising the text style
+    std::optional<double> symbolSize;
+
     while (xml.readNextStartElement()) {
-        if (!readProperties(t, xml, ctx)) {
+        const AsciiStringView tag(xml.name());
+
+        if (tag == "musicSymbolSize") {
+            symbolSize = xml.readDouble();
+        } else if (!readProperties(t, xml, ctx)) {
             xml.unknown();
+        }
+    }
+
+    if (symbolSize.has_value()) {
+        t->setProperty(Pid::MUSIC_SYMBOL_SIZE, symbolSize.value());
+        if (t->isStyled(Pid::MUSIC_SYMBOL_SIZE)) {
+            t->setPropertyFlags(Pid::MUSIC_SYMBOL_SIZE, PropertyFlags::UNSTYLED);
         }
     }
 }
@@ -1293,8 +1327,7 @@ void TRead::read(KeySig* s, XmlReader& e, ReadContext& ctx)
                 }
             }
             sig.customKeyDefs().push_back(cd);
-        } else if (tag == "showCourtesySig") {
-            s->setShowCourtesy(e.readInt());
+        } else if (TRead::readProperty(s, tag, e, ctx, Pid::SHOW_COURTESY)) {
         } else if (tag == "concertKey") {
             sig.setConcertKey(Key(e.readInt()));
         } else if (tag == "actualKey") {
@@ -1303,36 +1336,12 @@ void TRead::read(KeySig* s, XmlReader& e, ReadContext& ctx)
             e.readInt();
             sig.setCustom(true);
         } else if (tag == "mode") {
-            String m(e.readText());
-            if (m == "none") {
-                sig.setMode(KeyMode::NONE);
-            } else if (m == "major") {
-                sig.setMode(KeyMode::MAJOR);
-            } else if (m == "minor") {
-                sig.setMode(KeyMode::MINOR);
-            } else if (m == "dorian") {
-                sig.setMode(KeyMode::DORIAN);
-            } else if (m == "phrygian") {
-                sig.setMode(KeyMode::PHRYGIAN);
-            } else if (m == "lydian") {
-                sig.setMode(KeyMode::LYDIAN);
-            } else if (m == "mixolydian") {
-                sig.setMode(KeyMode::MIXOLYDIAN);
-            } else if (m == "aeolian") {
-                sig.setMode(KeyMode::AEOLIAN);
-            } else if (m == "ionian") {
-                sig.setMode(KeyMode::IONIAN);
-            } else if (m == "locrian") {
-                sig.setMode(KeyMode::LOCRIAN);
-            } else {
-                sig.setMode(KeyMode::UNKNOWN);
-            }
+            sig.setMode(TConv::fromXml(e.readAsciiText(), KeyMode::UNKNOWN));
         } else if (tag == "subtype") {
             subtype = e.readInt();
         } else if (tag == "forInstrumentChange") {
             sig.setForInstrumentChange(e.readBool());
-        } else if (tag == "isCourtesy") {
-            s->setIsCourtesy(e.readBool());
+        } else if (TRead::readProperty(s, tag, e, ctx, Pid::IS_COURTESY)) {
         } else if (!readItemProperties(s, e, ctx)) {
             e.unknown();
         }
@@ -1716,6 +1725,10 @@ void TRead::read(Accidental* a, XmlReader& e, ReadContext& ctx)
 
 void TRead::read(Marker* m, XmlReader& e, ReadContext& ctx)
 {
+    /// This property was written in the wrong order from 4.6.0-4.6.2
+    /// It was written before the text style and was reset on initialising the text style
+    std::optional<double> symbolSize;
+
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (tag == "label") {
@@ -1723,8 +1736,17 @@ void TRead::read(Marker* m, XmlReader& e, ReadContext& ctx)
             m->setLabel(String::fromAscii(s.ascii()));
         } else if (readProperty(m, tag, e, ctx, Pid::MARKER_TYPE)) {
         } else if (readProperty(m, tag, e, ctx, Pid::MARKER_CENTER_ON_SYMBOL)) {
+        } else if (tag == "musicSymbolSize") {
+            symbolSize = e.readDouble();
         } else if (!readProperties(static_cast<TextBase*>(m), e, ctx)) {
             e.unknown();
+        }
+    }
+
+    if (symbolSize.has_value()) {
+        m->setProperty(Pid::MUSIC_SYMBOL_SIZE, symbolSize.value());
+        if (m->isStyled(Pid::MUSIC_SYMBOL_SIZE)) {
+            m->setPropertyFlags(Pid::MUSIC_SYMBOL_SIZE, PropertyFlags::UNSTYLED);
         }
     }
 }
@@ -2535,6 +2557,13 @@ bool TRead::readProperties(Chord* ch, XmlReader& e, ReadContext& ctx)
     } else {
         return false;
     }
+
+    if (!ch->visible()) {
+        // By convention, the chord can't be set to invisible (only its elements can).
+        // If it was written and read as invisible that was an error so we fix it here.
+        ch->setVisible(true);
+    }
+
     return true;
 }
 
@@ -3139,7 +3168,7 @@ bool TRead::readProperties(Lyrics* l, XmlReader& e, ReadContext& ctx)
     const AsciiStringView tag(e.name());
 
     if (tag == "no") {
-        l->setNo(e.readInt());
+        l->setVerse(e.readInt());
         if (l->isEven()) {
             l->initTextStyleType(TextStyleType::LYRICS_EVEN);
         }
@@ -3190,7 +3219,7 @@ void TRead::read(MMRest* r, XmlReader& e, ReadContext& ctx)
             r->add(dot);
         } else if (tag == "mmRestNumberPos") {
             // Old property, deprecated in 4.5
-            r->setNumberOffset(e.readDouble() - ctx.style().styleS(Sid::mmRestNumberPos).val());
+            r->setNumberOffset(Spatium(e.readDouble()) - ctx.style().styleS(Sid::mmRestNumberPos));
         } else if (TRead::readProperty(r, tag, e, ctx, Pid::MMREST_NUMBER_OFFSET)) {
         } else if (TRead::readStyledProperty(r, tag, e, ctx)) {
         } else if (readProperties(r, e, ctx)) {

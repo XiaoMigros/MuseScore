@@ -55,6 +55,7 @@ void ExtensionsActionController::registerExtensions()
 
     dispatcher()->reg(this, "extensions-show-apidump", [this]() { openUri(SHOW_APIDUMP_URI); });
 
+    uiActionsRegister()->unreg(m_uiActions);
     uiActionsRegister()->reg(m_uiActions);
 }
 

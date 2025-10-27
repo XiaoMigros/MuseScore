@@ -57,6 +57,7 @@ public:
     virtual Color warningColor() const = 0;
     virtual Color warningSelectedColor() const = 0;
     virtual Color criticalColor() const = 0;
+    virtual Color criticalBackgroundColor() const = 0;
     virtual Color criticalSelectedColor() const = 0;
     virtual Color thumbnailBackgroundColor() const = 0;
     virtual Color noteBackgroundColor() const = 0;
@@ -108,6 +109,7 @@ public:
         bool showLineAttachPoints = false;
         bool markEmptyStaffVisibilityOverrides = false;
         bool markCorruptedMeasures = true;
+        bool showGapRests = false;
 
         bool anyEnabled() const
         {
@@ -121,6 +123,7 @@ public:
                    || showLineAttachPoints
                    || markEmptyStaffVisibilityOverrides
                    || markCorruptedMeasures
+                   || showGapRests
             ;
         }
     };

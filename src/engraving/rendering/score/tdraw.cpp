@@ -2206,10 +2206,10 @@ void TDraw::draw(const Note* item, Painter* painter, const PaintOptions& opt)
         const Staff* st = item->staff();
         const StaffType* tab = st->staffTypeForElement(item);
 
-        if (negativeFret || (item->fretConflict() && !opt.isPrinting && item->score()->showUnprintable())) {                    //on fret conflict, draw on red background
+        if (negativeFret || (item->fretConflict() && !opt.isPrinting && item->score()->showUnprintable())) {                    // fret conflict
             painter->save();
             painter->setPen(config->criticalColor());
-            painter->setBrush(config->criticalColor());
+            painter->setBrush(config->criticalBackgroundColor());
             painter->drawRect(ldata->bbox());
             painter->restore();
         }
@@ -2441,6 +2441,12 @@ void TDraw::draw(const RehearsalMark* item, Painter* painter, const PaintOptions
 void TDraw::draw(const Rest* item, Painter* painter, const PaintOptions& opt)
 {
     TRACE_DRAW_ITEM;
+
+    if (item->isGap()) {
+        drawDebugGapRest(item, painter);
+        return;
+    }
+
     if (item->shouldNotBeDrawn()) {
         return;
     }
@@ -2454,6 +2460,16 @@ void TDraw::draw(const Rest* item, Painter* painter, const PaintOptions& opt)
     } else {
         item->drawSymbol(ldata->sym, painter);
     }
+}
+
+void TDraw::drawDebugGapRest(const Rest* item, muse::draw::Painter* painter)
+{
+    IF_ASSERT_FAILED(item->debugDrawGap()) {
+        return;
+    }
+
+    painter->setPen(Color::RED);
+    item->drawSymbol(item->ldata()->sym, painter);
 }
 
 //! NOTE May be removed later (should be only single mode)

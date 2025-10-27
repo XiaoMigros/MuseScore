@@ -1456,7 +1456,6 @@ bool Score::makeGap1(const Fraction& baseTick, staff_idx_t staffIdx, const Fract
         return false;
     }
 
-    Segment* seg = m->undoGetSegment(SegmentType::ChordRest, baseTick);
     track_idx_t strack = staffIdx * VOICES;
     for (track_idx_t track = strack; track < strack + VOICES; track++) {
         if (voiceOffset[track - strack] == -1) {
@@ -1482,7 +1481,7 @@ bool Score::makeGap1(const Fraction& baseTick, staff_idx_t staffIdx, const Fract
             deleteOrShortenOutSpannersFromRange(tick, endTick, track, track + 1, filter);
         }
 
-        seg = tm->undoGetSegment(SegmentType::ChordRest, tick);
+        Segment* seg = tm->undoGetSegment(SegmentType::ChordRest, tick);
         bool result = makeGapVoice(seg, track, newLen, tick);
         if (track == strack && !result) {   // makeGap failed for first voice
             return false;
@@ -3419,7 +3418,7 @@ void Score::cmdMoveRest(Rest* rest, DirectionV dir)
 
 void Score::cmdMoveLyrics(Lyrics* lyrics, DirectionV dir)
 {
-    int verse = lyrics->no() + (dir == DirectionV::UP ? -1 : 1);
+    int verse = lyrics->verse() + (dir == DirectionV::UP ? -1 : 1);
     if (verse < 0) {
         return;
     }
@@ -4490,6 +4489,15 @@ void Score::cmdPadNoteIncreaseTAB()
     case DurationType::V_128TH:
         padToggle(Pad::NOTE64);
         break;
+    case DurationType::V_256TH:
+        padToggle(Pad::NOTE128);
+        break;
+    case DurationType::V_512TH:
+        padToggle(Pad::NOTE256);
+        break;
+    case DurationType::V_1024TH:
+        padToggle(Pad::NOTE512);
+        break;
     default:
         break;
     }
@@ -4948,8 +4956,8 @@ void Score::cmdToggleAutoplace(bool all)
         std::set<EngravingItem*> spanners;
         for (EngravingItem* e : selection().elements()) {
             if (e->isSpannerSegment()) {
-                if (EngravingItem* ee = e->propertyDelegate(Pid::AUTOPLACE)) {
-                    e = ee;
+                if (EngravingObject* ee = e->propertyDelegate(Pid::AUTOPLACE)) {
+                    e = toEngravingItem(ee);
                 }
                 // spanner segments may each have their own autoplace setting
                 // but if they delegate to spanner, only toggle once

@@ -22,13 +22,13 @@
 
 #include "gradualtempochange.h"
 
-#include "dom/rehearsalmark.h"
-#include "dom/text.h"
 #include "measure.h"
+#include "rehearsalmark.h"
 #include "score.h"
 #include "segment.h"
 #include "system.h"
 #include "tempotext.h"
+#include "text.h"
 
 #include "types/typesconv.h"
 
@@ -162,10 +162,10 @@ bool GradualTempoChange::setProperty(Pid id, const PropertyValue& val)
 {
     switch (id) {
     case Pid::TEMPO_CHANGE_TYPE:
-        m_tempoChangeType = GradualTempoChangeType(val.toInt());
+        m_tempoChangeType = val.value<GradualTempoChangeType>();
         break;
     case Pid::TEMPO_EASING_METHOD:
-        m_tempoEasingMethod = ChangeMethod(val.toInt());
+        m_tempoEasingMethod = val.value<ChangeMethod>();
         break;
     case Pid::TEMPO_CHANGE_FACTOR:
         m_tempoChangeFactor = val.toReal();
@@ -232,6 +232,9 @@ PropertyValue GradualTempoChange::propertyDefault(Pid propertyId) const
 
     case Pid::TEMPO_ALIGN_RIGHT_OF_REHEARSAL_MARK:
         return true;
+
+    case Pid::TEXT_STYLE:
+        return TextStyleType::TEMPO_CHANGE;
 
     default:
         return TextLineBase::propertyDefault(propertyId);
@@ -358,6 +361,8 @@ GradualTempoChangeSegment::GradualTempoChangeSegment(GradualTempoChange* annotat
                           ElementFlag::MOVABLE | ElementFlag::ON_STAFF | ElementFlag::SYSTEM)
 {
     initElementStyle(&tempoSegmentStyle);
+    m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
+    m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
 }
 
 GradualTempoChangeSegment* GradualTempoChangeSegment::clone() const

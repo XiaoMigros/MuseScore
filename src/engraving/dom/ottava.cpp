@@ -69,15 +69,15 @@ static const ElementStyle ottavaStyle {
 OttavaSegment::OttavaSegment(Ottava* sp, System* parent)
     : TextLineBaseSegment(ElementType::OTTAVA_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
-    m_text->setTextStyleType(TextStyleType::OTTAVA);
-    m_endText->setTextStyleType(TextStyleType::OTTAVA);
+    m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
+    m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
 }
 
 //---------------------------------------------------------
 //   propertyDelegate
 //---------------------------------------------------------
 
-EngravingItem* OttavaSegment::propertyDelegate(Pid pid)
+EngravingObject* OttavaSegment::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::OTTAVA_TYPE || pid == Pid::NUMBERS_ONLY) {
         return spanner();
@@ -209,7 +209,9 @@ Sid Ottava::getPropertyStyle(Pid pid) const
         return ss[idx + 2];               // CONTINUE_TEXT
     case Pid::END_HOOK_HEIGHT:
         if (isStyled(Pid::PLACEMENT)) {
-            return style().styleI(ss[idx]) == int(PlacementV::ABOVE) ? Sid::ottavaHookAbove : Sid::ottavaHookBelow;
+            return style().styleV(ss[idx]).value<PlacementV>() == PlacementV::ABOVE
+                   ? Sid::ottavaHookAbove
+                   : Sid::ottavaHookBelow;
         } else {
             return placeAbove() ? Sid::ottavaHookAbove : Sid::ottavaHookBelow;
         }
@@ -365,6 +367,8 @@ PropertyValue Ottava::propertyDefault(Pid pid) const
         return String();
     case Pid::PLACEMENT:
         return styleValue(Pid::PLACEMENT, getPropertyStyle(Pid::PLACEMENT));
+    case Pid::TEXT_STYLE:
+        return TextStyleType::OTTAVA;
 
     default:
         return TextLineBase::propertyDefault(pid);
