@@ -284,7 +284,7 @@ bool EngravingItem::offsetIsSpatiumDependent() const
 
 PlacementV EngravingItem::placement() const
 {
-    return flag(ElementFlag::PLACE_ABOVE) && !isSystemObjectBelowBottomStaff() ? PlacementV::ABOVE : PlacementV::BELOW;
+    return flag(ElementFlag::PLACE_ABOVE) ? PlacementV::ABOVE : PlacementV::BELOW;
 }
 
 //---------------------------------------------------------
@@ -1511,9 +1511,11 @@ PropertyValue EngravingItem::propertyDefault(Pid pid) const
     case Pid::COLOR:
         return PropertyValue::fromValue(configuration()->defaultColor());
     case Pid::PLACEMENT: {
-        PropertyValue v = EngravingObject::propertyDefault(pid);
-        if (v.isValid()) {        // if it's a styled property
-            return v;
+        if (!isSystemObjectBelowBottomStaff()) {
+            PropertyValue v = EngravingObject::propertyDefault(pid);
+            if (v.isValid()) {        // if it's a styled property
+                return v;
+            }
         }
         return PlacementV::BELOW;
     }
