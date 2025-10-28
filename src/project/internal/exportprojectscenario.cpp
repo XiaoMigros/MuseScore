@@ -153,7 +153,7 @@ bool ExportProjectScenario::exportScores(const notation::INotationPtrList& notat
         writerProgress->progressChanged().onReceive(this, [this, &currentFileNum, fileCount](int64_t current, int64_t total,
                                                                                              const std::string& status) {
             m_exportProgress.progress(currentFileNum * total + current, fileCount * total, status);
-        });
+        }, async::Asyncable::Mode::SetReplace);
 
         m_exportProgress.canceled().onNotify(this, [writer]() {
             writer->abort();
@@ -166,8 +166,8 @@ bool ExportProjectScenario::exportScores(const notation::INotationPtrList& notat
 
         if (writerProgress) {
             m_exportProgress.finish(muse::make_ok());
-            writerProgress->progressChanged().resetOnReceive(this);
-            m_exportProgress.finished().resetOnReceive(this);
+            writerProgress->progressChanged().disconnect(this);
+            m_exportProgress.finished().disconnect(this);
         }
     };
 

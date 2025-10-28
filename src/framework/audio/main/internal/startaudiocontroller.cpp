@@ -96,7 +96,7 @@ void StartAudioController::init()
     });
 
 #ifndef Q_OS_WASM
-#ifdef MUSE_MODULE_AUDIO_WORKER_ENABLED
+#if MUSE_MODULE_AUDIO_WORKMODE == MUSE_MODULE_AUDIO_WORKER_MODE
     m_worker = std::make_shared<engine::GeneralAudioWorker>();
     m_worker->run([this]() {
         static bool once = false;
@@ -117,10 +117,46 @@ void StartAudioController::init()
             once = true;
         }
 
+        static const std::thread::id thisThId = std::this_thread::get_id();
+
+        //! NOTE MixerChannels can process in the thread pool
+        //! and send messages about the audio signal,
+        //! to receive them, we need to call async::processMessages here
+        async::processMessages(thisThId);
+
         m_rpcChannel->process();
         m_engineController->process();
     });
 #endif
+
+#if MUSE_MODULE_AUDIO_WORKMODE == MUSE_MODULE_AUDIO_WORKERRPC_MODE
+    m_worker = std::make_shared<engine::GeneralAudioWorker>();
+    m_worker->run([this]() {
+        static bool once = false;
+        if (!once) {
+            th_setupEngine();
+
+            OutputSpec spec = m_engineController->outputSpec();
+            if (spec.isValid()) {
+                m_worker->setInterval(spec.samplesPerChannel, spec.sampleRate);
+            }
+
+            m_engineController->outputSpecChanged().onReceive(nullptr, [this](const OutputSpec& spec) {
+                if (spec.isValid()) {
+                    m_worker->setInterval(spec.samplesPerChannel, spec.sampleRate);
+                }
+            });
+
+            once = true;
+        }
+
+        static const std::thread::id thisThId = std::this_thread::get_id();
+
+        async::processMessages(thisThId);
+        m_rpcChannel->process();
+    });
+#endif
+
 #endif
 }
 
@@ -151,9 +187,15 @@ void StartAudioController::startAudioProcessing(const IApplication::RunMode& mod
         auto samplesPerChannel = byteCount / (2 * sizeof(float));
         float* dest = reinterpret_cast<float*>(stream);
 
-#ifdef MUSE_MODULE_AUDIO_WORKER_ENABLED
+#if MUSE_MODULE_AUDIO_WORKMODE == MUSE_MODULE_AUDIO_WORKER_MODE
         m_engineController->popAudioData(dest, samplesPerChannel);
-#else
+#endif
+
+#if MUSE_MODULE_AUDIO_WORKMODE == MUSE_MODULE_AUDIO_WORKERRPC_MODE
+        m_engineController->process(dest, samplesPerChannel);
+#endif
+
+#if MUSE_MODULE_AUDIO_WORKMODE == MUSE_MODULE_AUDIO_DRIVER_MODE
         static bool once = false;
         if (!once) {
             th_setupEngine();
@@ -174,6 +216,8 @@ void StartAudioController::startAudioProcessing(const IApplication::RunMode& mod
     IAudioDriver::Spec activeSpec;
     if (mode == IApplication::RunMode::GuiApp) {
         audioDriver()->init();
+
+        audioDriver()->selectOutputDevice(configuration()->audioOutputDeviceId());
 
         if (!audioDriver()->open(requiredSpec, &activeSpec)) {
             return;
@@ -208,7 +252,7 @@ void StartAudioController::stopAudioProcessing()
         audioDriver()->close();
     }
 #ifndef Q_OS_WASM
-    if (m_worker->isRunning()) {
+    if (m_worker && m_worker->isRunning()) {
         m_worker->stop();
     }
 #endif

@@ -44,10 +44,11 @@ public:
 
     // Shadow note
     virtual mu::engraving::ShadowNote* shadowNote() const = 0;
-    virtual bool showShadowNote(const muse::PointF& pos) = 0;
+    virtual void showShadowNoteForPosition(const muse::PointF& pos) = 0;
+    virtual void showShadowNoteForMidiPitch(const uint8_t pitch) = 0;
     virtual void hideShadowNote() = 0;
     virtual muse::RectF shadowNoteRect() const = 0;
-    virtual muse::async::Notification shadowNoteChanged() const = 0;
+    virtual muse::async::Channel</*visible*/ bool> shadowNoteChanged() const = 0;
 
     // Visibility
     virtual void toggleVisible() = 0;
@@ -333,6 +334,8 @@ public:
     virtual muse::async::Channel<ShowItemRequest> showItemRequested() const = 0;
 
     virtual void setGetViewRectFunc(const std::function<muse::RectF()>& func) = 0;
+
+    virtual void toggleDebugShowGapRests() = 0;
 };
 
 using INotationInteractionPtr = std::shared_ptr<INotationInteraction>;

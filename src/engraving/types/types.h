@@ -755,6 +755,12 @@ enum ChordStylePreset : unsigned char {
     CUSTOM
 };
 
+enum class DisplayCapoChordType : unsigned char {
+    CONCERT,
+    BOTH,
+    TRANSPOSED
+};
+
 // P_TYPE::PARENTHESES_MODE
 enum class ParenthesesMode : unsigned char {
     NONE = 0x0,
@@ -864,6 +870,7 @@ enum class TextStyleType : unsigned char {
 
     // Line-oriented styles
     TEXTLINE,
+    SYSTEM_TEXTLINE,
     NOTELINE,
     VOLTA,
     OTTAVA,

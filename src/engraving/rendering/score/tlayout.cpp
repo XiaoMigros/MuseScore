@@ -157,6 +157,7 @@
 #include "accidentalslayout.h"
 #include "autoplace.h"
 #include "beamlayout.h"
+#include "boxlayout.h"
 #include "chordlayout.h"
 #include "dynamicslayout.h"
 #include "guitarbendlayout.h"
@@ -1358,311 +1359,29 @@ void TLayout::layoutBend(const Bend* item, Bend::LayoutData* ldata)
     ldata->setPos(PointF());
 }
 
-void TLayout::layoutBox(const Box* item, Box::LayoutData* ldata, const LayoutContext& ctx)
-{
-    LAYOUT_CALL_ITEM(item);
-    switch (item->type()) {
-    case ElementType::HBOX:
-        TLayout::layoutHBox(static_cast<const HBox*>(item), static_cast<HBox::LayoutData*>(ldata), ctx);
-        break;
-    case ElementType::VBOX:
-        TLayout::layoutVBox(static_cast<const VBox*>(item), static_cast<VBox::LayoutData*>(ldata), ctx);
-        break;
-    case ElementType::FBOX:
-        TLayout::layoutFBox(static_cast<const FBox*>(item), static_cast<FBox::LayoutData*>(ldata), ctx);
-        break;
-    case ElementType::TBOX:
-        TLayout::layoutTBox(static_cast<const TBox*>(item), static_cast<TBox::LayoutData*>(ldata), ctx);
-        break;
-    default:
-        UNREACHABLE;
-        break;
-    }
-}
-
-void TLayout::layoutBaseBox(const Box* item, Box::LayoutData* ldata, const LayoutContext& ctx)
-{
-    LAYOUT_CALL_ITEM(item);
-    layoutBaseMeasureBase(item, ldata, ctx);
-}
-
 void TLayout::layoutHBox(const HBox* item, HBox::LayoutData* ldata, const LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    if (item->explicitParent() && item->explicitParent()->isVBox()) {
-        const VBox* parentVBox = toVBox(item->explicitParent());
-
-        LD_CONDITION(parentVBox->ldata()->isSetBbox());
-
-        double x = parentVBox->leftMargin() * DPMM;
-        double y = parentVBox->topMargin() * DPMM;
-        double w = item->absoluteFromSpatium(item->boxWidth());
-        double h = parentVBox->ldata()->bbox().height() - (parentVBox->topMargin() + parentVBox->bottomMargin()) * DPMM;
-        ldata->setPos(x, y);
-        ldata->setBbox(0.0, 0.0, w, h);
-    } else if (item->system()) {
-        const System* parentSystem = item->system();
-
-        LD_CONDITION(parentSystem->ldata()->isSetBbox());
-
-        if (!ldata->isSetPos()) {
-            ldata->setPos(PointF());
-        }
-        ldata->setBbox(item->absoluteFromSpatium(item->topGap()), 0.0, item->absoluteFromSpatium(item->boxWidth()),
-                       parentSystem->ldata()->bbox().height());
-    } else {
-        ldata->setPos(PointF());
-        ldata->setBbox(0.0, 0.0, 50, 50);
-    }
-    layoutBaseBox(item, ldata, ctx);
-}
-
-void TLayout::layoutHBox2(HBox* item, const LayoutContext& ctx)
-{
-    LAYOUT_CALL_ITEM(item);
-    layoutBaseBox(item, item->mutldata(), ctx);
+    BoxLayout::layoutHBox(item, ldata, ctx);
 }
 
 void TLayout::layoutVBox(const VBox* item, VBox::LayoutData* ldata, const LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    ldata->setPos(PointF());
-
-    if (item->system()) {
-        const System* parentSystem = item->system();
-
-        LD_CONDITION(parentSystem->ldata()->isSetBbox());
-
-        ldata->setBbox(0.0, 0.0, parentSystem->ldata()->bbox().width(), item->absoluteFromSpatium(item->boxHeight()));
-    } else {
-        ldata->setBbox(0.0, 0.0, 50, 50);
-    }
-
-    for (EngravingItem* e : item->el()) {
-        layoutItem(e, const_cast<LayoutContext&>(ctx));
-    }
-    bool boxAutoSize = item->getProperty(Pid::BOX_AUTOSIZE).toBool();
-    bool heightChanged = false;
-    if (boxAutoSize) {
-        double contentHeight = item->contentRect().height();
-
-        if (contentHeight < item->minHeight()) {
-            contentHeight = item->minHeight();
-        }
-
-        ldata->setHeight(contentHeight);
-        heightChanged = true;
-    }
-
-    if (boxAutoSize && MScore::noImages) {
-        // adjustLayoutWithoutImages
-        double calculatedVBoxHeight = 0;
-        const int padding = item->sizeIsSpatiumDependent() ? ctx.conf().spatium() : ctx.conf().style().defaultSpatium();
-        ElementList elist = item->el();
-        for (EngravingItem* e : elist) {
-            if (e->isText()) {
-                Text* txt = toText(e);
-                Text::LayoutData* txtLD = txt->mutldata();
-
-                LD_CONDITION(txtLD->isSetBbox());
-
-                RectF bbox = txtLD->bbox();
-                bbox.moveTop(0.0);
-                txtLD->setBbox(bbox);
-                calculatedVBoxHeight += txtLD->bbox().height() + padding;
-            }
-        }
-
-        ldata->setHeight(calculatedVBoxHeight);
-        heightChanged = true;
-    }
-    if (heightChanged) {
-        for (EngravingItem* e : item->el()) {
-            layoutItem(e, const_cast<LayoutContext&>(ctx));
-        }
-    }
+    BoxLayout::layoutVBox(item, ldata, ctx);
 }
 
 void TLayout::layoutFBox(const FBox* item, FBox::LayoutData* ldata, const LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
 
-    if (item->needsRebuild()) {
-        const_cast<FBox*>(item)->init();
-        const_cast<FBox*>(item)->setNeedsRebuild(false);
-    }
-
-    const System* parentSystem = item->system();
-    LD_CONDITION(parentSystem->ldata()->isSetBbox());
-
-    ldata->setPos(PointF());
-
-    std::vector<FretDiagram*> fretDiagrams;
-    for (EngravingItem* element : item->el()) {
-        if (!element || !element->isFretDiagram() || !element->visible()) {
-            continue;
-        }
-
-        FretDiagram* diagram = toFretDiagram(element);
-        if (!diagram->visible()) {
-            //! NOTE: We need to layout the diagrams to get the harmony names to show in the UI
-            layoutItem(diagram, const_cast<LayoutContext&>(ctx));
-
-            //! but we don't need to draw them, so let's add a skip
-            diagram->mutldata()->setIsSkipDraw(true);
-            diagram->harmony()->mutldata()->setIsSkipDraw(true);
-            continue;
-        }
-
-        fretDiagrams.emplace_back(diagram);
-    }
-
-    //! NOTE: layout fret diagrams and calculate sizes
-
-    const size_t totalDiagrams = fretDiagrams.size();
-    double maxFretDiagramWidth = 0.0;
-
-    for (size_t i = 0; i < totalDiagrams; ++i) {
-        FretDiagram* fretDiagram = fretDiagrams[i];
-        fretDiagram->setUserMag(item->diagramScale());
-
-        Harmony* harmony = fretDiagram->harmony();
-        harmony->mutldata()->setMag(item->textScale());
-
-        layoutItem(fretDiagram, const_cast<LayoutContext&>(ctx));
-
-        //! reset the skip wich was added above
-        fretDiagram->mutldata()->setIsSkipDraw(false);
-        harmony->mutldata()->setIsSkipDraw(false);
-
-        double width = fretDiagram->ldata()->bbox().width();
-        maxFretDiagramWidth = std::max(maxFretDiagramWidth, width);
-    }
-
-    //! NOTE: table view layout
-
-    const double spatium = item->spatium();
-    const size_t chordsPerRow = item->chordsPerRow();
-    const double rowGap = item->rowGap().val() * spatium;
-    const double columnGap = item->columnGap().val() * spatium;
-
-    //! The height of each row is determined by the height of the tallest cell in that row
-    std::vector<double> rowHeights;
-    std::vector<double> harmonyHeights;
-    std::vector<double> harmonyBaselines;
-    for (size_t i = 0; i < totalDiagrams; i += chordsPerRow) {
-        size_t itemsInRow = std::min(chordsPerRow, totalDiagrams - i);
-        double maxRowHeight = 0.0;
-        double maxHarmonyHeight = 0.0;
-        double harmonyBaseline = 0.0;
-
-        for (size_t j = 0; j < itemsInRow; ++j) {
-            FretDiagram* fretDiagram = fretDiagrams[i + j];
-
-            RectF fretRect = fretDiagram->ldata()->bbox();
-
-            const Harmony::LayoutData* harmonyLdata = fretDiagram->harmony()->ldata();
-            RectF harmonyRect = harmonyLdata->bbox().translated(harmonyLdata->pos());
-
-            double height = fretRect.united(harmonyRect).height();
-            maxRowHeight = std::max(maxRowHeight, height);
-            maxHarmonyHeight = std::max(maxHarmonyHeight, -harmonyRect.top());
-            harmonyBaseline = std::min(harmonyBaseline, harmonyLdata->pos().y());
-        }
-
-        rowHeights.push_back(maxRowHeight);
-        harmonyHeights.push_back(maxHarmonyHeight);
-        harmonyBaselines.push_back(harmonyBaseline);
-    }
-
-    const double cellWidth = maxFretDiagramWidth;
-    const size_t columns = std::min(totalDiagrams, chordsPerRow);
-
-    const double totalTableWidth = cellWidth * columns + (columns - 1) * columnGap;
-
-    AlignH alignH = item->contentHorizontalAlignment();
-    const double leftMargin = item->getProperty(Pid::LEFT_MARGIN).toDouble() * spatium;
-    const double rightMargin = item->getProperty(Pid::RIGHT_MARGIN).toDouble() * spatium;
-    const double topMargin = item->getProperty(Pid::TOP_MARGIN).toDouble() * spatium;
-    const double bottomMargin = item->getProperty(Pid::BOTTOM_MARGIN).toDouble() * spatium;
-
-    const double width = item->system()->width();
-
-    const double startX = alignH == AlignH::HCENTER
-                          ? (width - totalTableWidth) / 2
-                          : alignH == AlignH::RIGHT ? width - totalTableWidth : 0.0;
-    const double startY = topMargin;
-
-    double bottomY = 0.0;
-
-    for (size_t i = 0; i < totalDiagrams; ++i) {
-        FretDiagram* fretDiagram = fretDiagrams[i];
-        Harmony* harmony = fretDiagram->harmony();
-
-        size_t row = i / chordsPerRow;
-        size_t col = i % chordsPerRow;
-
-        size_t itemsInRow = std::min(chordsPerRow, totalDiagrams - row * chordsPerRow);
-        double rowOffsetX = alignH == AlignH::HCENTER
-                            ? (totalTableWidth - (itemsInRow * cellWidth + (itemsInRow - 1) * columnGap)) / 2
-                            : alignH == AlignH::RIGHT
-                            ? totalTableWidth - (itemsInRow * cellWidth + (itemsInRow - 1) * columnGap) - rightMargin + spatium
-                            : leftMargin + spatium;
-
-        double x = startX + rowOffsetX + col * (cellWidth + columnGap);
-
-        double y = startY;
-        for (size_t r = 0; r < row; ++r) {
-            y += rowHeights[r] + rowGap;
-        }
-
-        double commonBaseline = harmonyBaselines[row];
-        double thisBaseline = harmony->ldata()->pos().y();
-        double baselineOff = commonBaseline - thisBaseline;
-        harmony->mutldata()->moveY(baselineOff);
-
-        double fretDiagramX = x;
-        double fretDiagramY = y + harmonyHeights[row];
-
-        fretDiagram->mutldata()->setPos(PointF(fretDiagramX, fretDiagramY));
-
-        bottomY = std::max(bottomY, fretDiagram->mutldata()->bbox().translated(fretDiagram->mutldata()->pos()).bottom());
-    }
-
-    double height = bottomY + bottomMargin;
-    if (RealIsNull(height)) {
-        height = item->minHeight();
-    }
-
-    ldata->setBbox(0.0, 0.0, width, height);
+    BoxLayout::layoutFBox(item, ldata, ctx);
 }
 
 void TLayout::layoutTBox(const TBox* item, TBox::LayoutData* ldata, const LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    const System* parentSystem = item->system();
-
-    LD_CONDITION(parentSystem->ldata()->isSetBbox());
-
-    ldata->setPos(PointF());
-    ldata->setBbox(0.0, 0.0, parentSystem->ldata()->bbox().width(), 0);
-
-    TLayout::layoutText(item->text(), item->text()->mutldata());
-
-    Text::LayoutData* textLD = item->text()->mutldata();
-
-    double h = 0.0;
-    if (item->text()->empty()) {
-        h = FontMetrics::ascent(item->text()->font());
-    } else {
-        h = textLD->bbox().height();
-    }
-    double y = item->topMargin() * DPMM;
-    textLD->setPos(item->leftMargin() * DPMM, y);
-    h += item->topMargin() * DPMM + item->bottomMargin() * DPMM;
-    ldata->setBbox(0.0, 0.0, item->system()->width(), h);
-
-    layoutBaseMeasureBase(item, ldata, ctx);   // layout LayoutBreak's
+    BoxLayout::layoutTBox(item, ldata, ctx);
 }
 
 void TLayout::layoutBracket(const Bracket* item, Bracket::LayoutData* ldata, const LayoutConfiguration& conf)
@@ -1776,7 +1495,7 @@ void TLayout::layoutBreath(const Breath* item, Breath::LayoutData* ldata, const 
         return;
     }
 
-    int voiceOffset = item->placeBelow() * (item->staff()->lines(item->tick()) - 1) * item->spatium();
+    const double voiceOffset = item->placeBelow() ? item->staff()->staffHeight(item->tick()) : 0.0;
     if (item->isCaesura()) {
         ldata->setPosY(item->spatium() + voiceOffset);
     } else if ((conf.styleSt(Sid::musicalSymbolFont) == "Emmentaler") && (item->symId() == SymId::breathMarkComma)) {
@@ -3653,7 +3372,7 @@ static void keySigAddLayout(const KeySig* item, const LayoutConfiguration& conf,
     KeySym ks;
     ks.sym = sym;
     double x = 0.0;
-    if (ldata->keySymbols.size() > 0) {
+    if (!ldata->keySymbols.empty()) {
         const KeySym& previous = ldata->keySymbols.back();
         double accidentalGap = conf.styleS(Sid::keysigAccidentalDistance).val();
         if (previous.sym != sym) {
@@ -3688,40 +3407,38 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
 //        return;
 //    }
 
-    double spatium = item->spatium();
-    double step = spatium * (item->staff() ? item->staff()->staffTypeForElement(item)->lineDistance().val() * 0.5 : 0.5);
-
     ldata->setBbox(RectF());
-
     ldata->keySymbols.clear();
-    if (item->staff() && !item->staff()->staffType(item->tick())->genKeysig()) {
+
+    const StaffType* st = item->staffType();
+    if (st && !st->genKeysig()) {
         return;
     }
+    const Segment* s = item->segment();
+    track_idx_t track = item->track();
+    double spatium = item->spatium();
+    double step = spatium * (st ? st->lineDistance().val() * 0.5 : 0.5);
 
     // determine current clef for this staff
     ClefType clef = ClefType::G;
     if (item->staff()) {
         // Look for a clef before the key signature at the same tick
         Clef* c = nullptr;
-        if (item->segment()) {
-            for (Segment* seg = item->segment()->prev1(); !c && seg && seg->tick() == item->tick(); seg = seg->prev1()) {
-                const bool isClefSeg
-                    = (seg->isClefType() || seg->isHeaderClefType()
-                       || (seg->isClefRepeatAnnounceType() && item->segment()->isKeySigRepeatAnnounceType()));
+        if (s) {
+            for (Segment* seg = s->prev1(); !c && seg && seg->tick() == item->tick(); seg = seg->prev1()) {
+                const bool isClefSeg = seg->isClefType() || seg->isHeaderClefType()
+                                       || (seg->isClefRepeatAnnounceType() && s->isKeySigRepeatAnnounceType());
                 if (seg->enabled() && isClefSeg) {
-                    c = toClef(seg->element(item->track()));
+                    c = toClef(seg->element(track));
                 }
             }
         }
-        if (c) {
-            clef = c->clefType();
-        } else {
-            // no clef found, so get the clef type from the clefs list, using the previous tick
-            clef = item->staff()->clef(item->tick() - Fraction::eps());
-        }
+        // If no clef found, get the clef type from the clefs list (using the previous tick)
+        clef = c ? c->clefType() : item->staff()->clef(item->tick() - Fraction::eps());
     }
 
     int t1 = int(item->key());
+    const signed char* lines = ClefInfo::lines(clef);
 
     if (item->isCustom() && !item->isAtonal()) {
         double accidentalGap = conf.styleS(Sid::keysigAccidentalDistance).val();
@@ -3740,8 +3457,8 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
                 KeySym ks;
                 int lineIndexOffset = t1 > 0 ? -1 : 6;
                 ks.sym = t1 > 0 ? SymId::accidentalSharp : SymId::accidentalFlat;
-                ks.line = ClefInfo::lines(clef)[lineIndexOffset + i];
-                if (ldata->keySymbols.size() > 0) {
+                ks.line = lines[lineIndexOffset + i];
+                if (!ldata->keySymbols.empty()) {
                     const KeySym& previous = ldata->keySymbols.back();
                     double previousWidth = item->symWidth(previous.sym) / spatium;
                     ks.xPos = previous.xPos + previousWidth + accidentalGap;
@@ -3758,9 +3475,9 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
             bool flat = std::string(SymNames::nameForSymId(sym).ascii()).find("Flat") != std::string::npos;
             int accIdx = (degree * 2 + 1) % 7; // C D E F ... index to F C G D index
             accIdx = flat ? 13 - accIdx : accIdx;
-            int line = ClefInfo::lines(clef)[accIdx] + cd.octAlt * 7;
+            int line = lines[accIdx] + cd.octAlt * 7;
             double xpos = cd.xAlt;
-            if (ldata->keySymbols.size() > 0) {
+            if (!ldata->keySymbols.empty()) {
                 const KeySym& previous = ldata->keySymbols.back();
                 double previousWidth = item->symWidth(previous.sym) / spatium;
                 xpos += previous.xPos + previousWidth + accidentalGap;
@@ -3791,147 +3508,87 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
             }
         }
     } else {
-        int accidentals = 0, naturals = 0;
-        switch (std::abs(t1)) {
-        case 7: accidentals = 0x7f;
-            break;
-        case 6: accidentals = 0x3f;
-            break;
-        case 5: accidentals = 0x1f;
-            break;
-        case 4: accidentals = 0xf;
-            break;
-        case 3: accidentals = 0x7;
-            break;
-        case 2: accidentals = 0x3;
-            break;
-        case 1: accidentals = 0x1;
-            break;
-        case 0: accidentals = 0;
-            break;
-        default:
-            LOGD("illegal t1 key %d", t1);
-            break;
-        }
-
-        // manage display of naturals:
-        // naturals are shown if there is some natural AND prev. measure has no section break
-        // AND style says they are not off
-        // OR key sig is CMaj/Amin (in which case they are always shown)
-
-        bool naturalsOn = false;
-        Measure* prevMeasure = item->measure() ? item->measure()->prevMeasure() : 0;
-
-        // If we're not force hiding naturals (Continuous panel), use score style settings
-        if (!item->hideNaturals()) {
-            const bool newSection = (!item->segment()
-                                     || (item->segment()->rtick().isZero() && (!prevMeasure || prevMeasure->sectionBreak()))
-                                     );
-            naturalsOn = !newSection && (conf.styleI(Sid::keySigNaturals) != int(KeySigNatural::NONE) || (t1 == 0));
-        }
-
-        // Don't repeat naturals if shown in courtesy
-        if (item->measure() && item->measure()->system() && item->measure()->isFirstInSystem()
-            && prevMeasure && prevMeasure->findSegment(SegmentType::KeySigAnnounce, item->tick())
-            && !item->segment()->isKeySigAnnounceType()) {
-            naturalsOn = false;
-        }
-        if (item->track() == muse::nidx) {
-            naturalsOn = false;
-        }
-
-        int coffset = 0;
-        Key t2      = Key::C;
-        if (naturalsOn) {
-            if (item->staff()) {
-                t2 = item->staff()->key(item->tick() - Fraction::eps());
+        auto layoutSharpsFlats = [&]() {
+            if (std::abs(t1) > 7) {
+                LOGD("illegal t1 key %d", t1);
+                return;
             }
-            if (item->segment() && item->segment()->isType(SegmentType::KeySigStartRepeatAnnounce)) {
-                // Handle naturals in continuation courtesy
-                Segment* prevCourtesySeg
-                    = prevMeasure ? prevMeasure->findSegmentR(SegmentType::KeySigRepeatAnnounce, prevMeasure->ticks()) : nullptr;
-                EngravingItem* prevCourtesy = prevCourtesySeg ? prevCourtesySeg->element(item->track()) : nullptr;
-                t2 = prevCourtesy && prevCourtesy->isKeySig() ? toKeySig(prevCourtesy)->key() : t2;
-            }
-            if (t2 == Key::C) {
-                naturalsOn = false;
-            } else {
-                switch (std::abs(int(t2))) {
-                case 7: naturals = 0x7f;
-                    break;
-                case 6: naturals = 0x3f;
-                    break;
-                case 5: naturals = 0x1f;
-                    break;
-                case 4: naturals = 0xf;
-                    break;
-                case 3: naturals = 0x7;
-                    break;
-                case 2: naturals = 0x3;
-                    break;
-                case 1: naturals = 0x1;
-                    break;
-                case 0: naturals = 0;
-                    break;
-                default:
-                    LOGD("illegal t2 key %d", int(t2));
-                    break;
-                }
-                // remove redundant naturals
-                if (!((t1 > 0) ^ (t2 > 0))) {
-                    naturals &= ~accidentals;
-                }
-                if (t2 < 0) {
-                    coffset = 7;
-                }
-            }
-        }
-
-        // naturals should go BEFORE accidentals if style says so
-        // OR going from sharps to flats or vice versa (i.e. t1 & t2 have opposite signs)
-
-        bool prefixNaturals = naturalsOn
-                              && (conf.styleI(Sid::keySigNaturals) == int(KeySigNatural::BEFORE)
-                                  || t1 * int(t2) < 0);
-
-        // naturals should go AFTER accidentals if they should not go before!
-        bool suffixNaturals = naturalsOn && !prefixNaturals;
-
-        const signed char* lines = ClefInfo::lines(clef);
-
-        if (prefixNaturals) {
-            for (int i = 0; i < 7; ++i) {
-                if (naturals & (1 << i)) {
-                    keySigAddLayout(item, conf, SymId::accidentalNatural, lines[i + coffset], ldata);
-                }
-            }
-        }
-        if (std::abs(t1) <= 7) {
             SymId symbol = t1 > 0 ? SymId::accidentalSharp : SymId::accidentalFlat;
             int lineIndexOffset = t1 > 0 ? 0 : 7;
             for (int i = 0; i < std::abs(t1); ++i) {
                 keySigAddLayout(item, conf, symbol, lines[lineIndexOffset + i], ldata);
             }
-        } else {
-            LOGD("illegal t1 key %d", t1);
-        }
+        };
 
-        // add suffixed naturals, if any
-        if (suffixNaturals) {
-            for (int i = 0; i < 7; ++i) {
-                if (naturals & (1 << i)) {
-                    keySigAddLayout(item, conf, SymId::accidentalNatural, lines[i + coffset], ldata);
+        // Naturals are shown if:
+        // Key signature is courtesy, mid-measure or prev. measure has no section break and no courtesy keysig.
+        // AND we're not force hiding naturals (continuous mode)
+        // AND key sig is CMaj/Amin OR style says they are on
+        const Measure* pm = item->measure() ? item->measure()->prevMeasureMM() : nullptr;
+        if (!item->hideNaturals() && track != muse::nidx
+            && (conf.styleI(Sid::keySigNaturals) != int(KeySigNatural::NONE) || (t1 == 0))
+            && ((s && (s->isType(SegmentType::CourtesyKeySigType) || !s->rtick().isZero()))
+                || (pm && !pm->sectionBreak() && !pm->hasCourtesyKeySig()))) {
+            int t2 = item->staff() ? int(item->staff()->key(item->tick() - Fraction::eps())) : 0;
+
+            // Handle naturals in continuation courtesy
+            if (pm && s && s->isType(SegmentType::KeySigStartRepeatAnnounce)) {
+                Segment* prevCourtesySeg = pm->findSegmentR(SegmentType::KeySigRepeatAnnounce, pm->ticks());
+                if (prevCourtesySeg && prevCourtesySeg->element(track)) {
+                    t2 = int(toKeySig(prevCourtesySeg->element(track))->key());
+                }
+            }
+            // Don't show naturals when going from sharps to flats, if style says so
+            const bool sameAccidentals = t1 * t2 >= 0;
+            if (t2 != 0 && (sameAccidentals || conf.styleB(Sid::keySigShowNaturalsChangingSharpsFlats))) {
+                auto key2accidentals = [](int key) -> int {
+                    switch (std::abs(key)) {
+                    case 7: return 0x7f;
+                    case 6: return 0x3f;
+                    case 5: return 0x1f;
+                    case 4: return 0xf;
+                    case 3: return 0x7;
+                    case 2: return 0x3;
+                    case 1: return 0x1;
+                    case 0: return 0;
+                    default:
+                        LOGD("illegal key %d", key);
+                        return 0;
+                    }
+                };
+
+                int naturals = key2accidentals(t2);
+                // remove redundant naturals
+                if (!((t1 > 0) ^ (t2 > 0))) {
+                    naturals &= ~key2accidentals(t1);
+                }
+                auto layoutNaturals = [&]() {
+                    int lineIndexOffset = t2 > 0 ? 0 : 7;
+                    for (int i = 0; i < 7; ++i) {
+                        if (naturals & (1 << i)) {
+                            keySigAddLayout(item, conf, SymId::accidentalNatural, lines[i + lineIndexOffset], ldata);
+                        }
+                    }
+                };
+                // Naturals should go BEFORE accidentals if style says so
+                // or going from sharps to flats or vice versa (i.e. t1 & t2 have opposite signs)
+                if (conf.styleI(Sid::keySigNaturals) == int(KeySigNatural::BEFORE) || !sameAccidentals) {
+                    layoutNaturals();
+                    layoutSharpsFlats();
+                } else {
+                    layoutSharpsFlats();
+                    layoutNaturals();
                 }
             }
         }
 
-        // Follow stepOffset
-        if (item->staffType()) {
-            ldata->setPosY(item->staffType()->stepOffset() * 0.5 * spatium);
+        // No naturals were added, so just create a regular keysig
+        if (ldata->keySymbols.empty()) {
+            layoutSharpsFlats();
         }
     }
 
-    ldata->moveY(item->staffOffsetY());
+    ldata->setPosY((st ? step * st->stepOffset() : 0.0) + item->staffOffsetY());
 
     Shape keySigShape;
     for (const KeySym& ks : ldata->keySymbols) {
@@ -4694,7 +4351,7 @@ void TLayout::layoutPedalSegment(PedalSegment* item, LayoutContext& ctx)
         }
         endText->mutldata()->setPosX(xEndText);
 
-        double lineTextGap = item->getProperty(Pid::GAP_BETWEEN_TEXT_AND_LINE).toDouble() * item->spatium();
+        double lineTextGap = item->getProperty(Pid::GAP_BETWEEN_TEXT_AND_LINE).value<Spatium>().toMM(item->spatium());
         PointF& endOfLine = item->pointsRef()[1];
         endOfLine.setX(xEndText - lineTextGap);
     }

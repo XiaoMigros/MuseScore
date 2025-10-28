@@ -5529,7 +5529,7 @@ void Score::changeSelectedElementsVoice(voice_idx_t voice)
 
             // Move lyrics
             for (Lyrics* lyric : chord->lyrics()) {
-                if (!lyric || dstChord->lyrics(lyric->no(), lyric->placement())) {
+                if (!lyric || dstChord->lyrics(lyric->verse(), lyric->placement())) {
                     continue;
                 }
 
@@ -5830,6 +5830,17 @@ size_t Score::visibleStavesCount() const
         }
     }
     return count;
+}
+
+bool Score::allStavesInvisible() const
+{
+    for (const Staff* staff : m_staves) {
+        if (staff->show()) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 ShadowNote* Score::shadowNote() const

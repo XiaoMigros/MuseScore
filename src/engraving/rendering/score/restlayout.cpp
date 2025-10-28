@@ -36,6 +36,13 @@ namespace mu::engraving::rendering::score {
 void RestLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const LayoutContext& ctx)
 {
     if (item->isGap()) {
+        if (item->debugDrawGap()) {
+            ldata->sym = item->getSymbol(item->durationType().type(), 16, 5);
+            fillShape(item, ldata, ctx.conf());
+            ldata->setPos(PointF(0.0, 10 * item->spatium()));
+        } else {
+            ldata->reset();
+        }
         return;
     }
 
@@ -493,7 +500,7 @@ InterruptionPoints RestLayout::computeInterruptionPoints(const Measure* measure,
     track_idx_t sTrack = staffIdx * VOICES;
     track_idx_t eTrack = sTrack + VOICES;
 
-    // Gap rests interrupt all voices
+    // Compute all-voices interruptions
     for (const Segment* segment = measure->first(SegmentType::ChordRest); segment; segment = segment->next(SegmentType::ChordRest)) {
         for (track_idx_t track = sTrack; track < eTrack; ++track) {
             EngravingItem* item = segment->element(track);
@@ -505,7 +512,8 @@ InterruptionPoints RestLayout::computeInterruptionPoints(const Measure* measure,
             // doing it and way too fragile, because it means that any logic that may move one rest can break the "merging".
             // A more solid way of merging rests would be to *delete* the second voice rests, i.e. turn them into gap rests [M.S.].
             const bool hasMergedRest = item->isRest() && !toRest(item)->ldata()->mergedRests.empty();
-            if (gapRest || hasMergedRest || !item->visible()) {
+            const bool invisible = item->isChord() ? toChord(item)->allElementsInvisible() : !item->visible();
+            if (gapRest || hasMergedRest || invisible) {
                 for (voice_idx_t voice = 0; voice < VOICES; ++voice) {
                     interruptionPointSets[voice].insert(segment->rtick());
                     interruptionPointSets[voice].insert(segment->rtick() + segment->ticks());
@@ -640,7 +648,7 @@ void RestLayout::fillShape(const Rest* item, Rest::LayoutData* ldata)
 {
     Shape shape(Shape::Type::Composite);
 
-    if (!item->isGap() && !item->shouldNotBeDrawn()) {
+    if ((!item->isGap() || item->debugDrawGap()) && !item->shouldNotBeDrawn()) {
         shape.add(ChordLayout::chordRestShape(item));
         shape.add(item->symBbox(ldata->sym), item);
         for (const NoteDot* dot : item->dotList()) {

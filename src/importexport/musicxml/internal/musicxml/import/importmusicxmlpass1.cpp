@@ -1017,9 +1017,9 @@ static void resizeTitleBox(VBox* vbox)
         }
     }
 
-    double heightInSp = calculatedVBoxHeight / vbox->spatium();
-    if (heightInSp > vbox->propertyDefault(Pid::BOX_HEIGHT).toDouble()) {
-        vbox->undoChangeProperty(Pid::BOX_HEIGHT, heightInSp);
+    const auto height = Spatium::fromMM(calculatedVBoxHeight, vbox->spatium());
+    if (height > vbox->propertyDefault(Pid::BOX_HEIGHT).value<Spatium>()) {
+        vbox->undoChangeProperty(Pid::BOX_HEIGHT, height);
     }
 }
 
@@ -2375,6 +2375,9 @@ void MusicXmlParserPass1::partGroup(const int scoreParts,
             if (m_e.readText() == "no") {
                 barlineSpan = false;
             }
+        } else if (m_e.name() == "group-time") {
+            m_score->style().set(Sid::timeSigPlacement, TimeSigPlacement::ACROSS_STAVES);
+            m_e.skipCurrentElement();          // skip but don't log
         } else {
             skipLogCurrElem();
         }
@@ -2425,6 +2428,7 @@ void MusicXmlParserPass1::scorePart(const String& curPartGroupName)
             String name = m_e.readText();
             m_parts[id].setName(name);
         } else if (m_e.name() == "part-name-display") {
+            m_parts[id].setPrintName(m_e.asciiAttribute("print-object") != "no");
             String name;
             while (m_e.readNextStartElement()) {
                 if (m_e.name() == "display-text") {
@@ -2447,6 +2451,7 @@ void MusicXmlParserPass1::scorePart(const String& curPartGroupName)
             String name = m_e.readText();
             m_parts[id].setAbbr(name);
         } else if (m_e.name() == "part-abbreviation-display") {
+            m_parts[id].setPrintAbbr(m_e.asciiAttribute("print-object") != "no");
             String name;
             while (m_e.readNextStartElement()) {
                 if (m_e.name() == "display-text") {
@@ -3122,7 +3127,7 @@ void MusicXmlParserPass1::transpose(const String& partId, const Fraction& tick)
 
     if (m_parts[partId]._intervals.count(tick) == 0) {
         if (!interval.diatonic && interval.chromatic) {
-            interval.diatonic = chromatic2diatonic(interval.chromatic);
+            interval.diatonic = Interval::chromatic2diatonic(interval.chromatic);
         }
         m_parts[partId]._intervals[tick] = interval;
     } else {

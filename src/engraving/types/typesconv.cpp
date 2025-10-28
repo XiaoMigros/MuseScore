@@ -1735,6 +1735,7 @@ static const std::vector<Item<TextStyleType> > TEXTSTYLE_TYPES = {
     { TextStyleType::ARTICULATION, "articulation", muse::TranslatableString("engraving", "Articulation") },
 
     { TextStyleType::TEXTLINE,          "textline",             muse::TranslatableString("engraving", "Text line") },
+    { TextStyleType::SYSTEM_TEXTLINE,   "system_textline",      muse::TranslatableString("engraving", "System text line") },
     { TextStyleType::NOTELINE,          "noteline",             muse::TranslatableString("engraving", "Note-anchored line") },
     { TextStyleType::VOLTA,             "volta",                muse::TranslatableString("engraving", "Volta") },
     { TextStyleType::OTTAVA,            "ottava",               muse::TranslatableString("engraving", "Ottava") },
@@ -2469,6 +2470,26 @@ AsciiStringView TConv::toXml(TremoloType v)
 TremoloType TConv::fromXml(const AsciiStringView& tag, TremoloType def)
 {
     return findTypeByXmlTag<TremoloType>(TREMOLO_TYPES, tag, def);
+}
+
+static const std::vector<Item<TremoloBarType> > TREMOLOBAR_TYPES = { {
+    { TremoloBarType::DIP, "dip" },
+    { TremoloBarType::DIVE, "dive" },
+    { TremoloBarType::RELEASE_UP, "release (up)" },
+    { TremoloBarType::INVERTED_DIP, "inverted dip" },
+    { TremoloBarType::RETURN, "return" },
+    { TremoloBarType::RELEASE_DOWN, "release (down)" },
+    { TremoloBarType::CUSTOM, "custom" }
+} };
+
+AsciiStringView TConv::toXml(TremoloBarType v)
+{
+    return findXmlTagByType<TremoloBarType>(TREMOLOBAR_TYPES, v);
+}
+
+TremoloBarType TConv::fromXml(const AsciiStringView& tag, TremoloBarType def)
+{
+    return findTypeByXmlTag<TremoloBarType>(TREMOLOBAR_TYPES, tag, def);
 }
 
 static const std::vector<Item<BracketType> > BRACKET_TYPES = {

@@ -23,6 +23,7 @@
 
 #include "score.h"
 #include "system.h"
+#include "text.h"
 #include "../editing/editproperty.h"
 
 using namespace mu;
@@ -51,7 +52,6 @@ static const ElementStyle systemTextLineSegmentStyle {
 //---------------------------------------------------------
 
 static const ElementStyle textLineStyle {
-//       { Sid::textLineSystemFlag,                 Pid::SYSTEM_FLAG             },
     { Sid::textLineFontFace,                   Pid::BEGIN_FONT_FACE },
     { Sid::textLineFontFace,                   Pid::CONTINUE_FONT_FACE },
     { Sid::textLineFontFace,                   Pid::END_FONT_FACE },
@@ -80,7 +80,6 @@ static const ElementStyle textLineStyle {
 //---------------------------------------------------------
 
 static const ElementStyle systemTextLineStyle {
-//       { Sid::systemTextLineSystemFlag,           Pid::SYSTEM_FLAG             },
     { Sid::systemTextLineFontFace,             Pid::BEGIN_FONT_FACE },
     { Sid::systemTextLineFontFace,             Pid::CONTINUE_FONT_FACE },
     { Sid::systemTextLineFontFace,             Pid::END_FONT_FACE },
@@ -112,13 +111,16 @@ TextLineSegment::TextLineSegment(Spanner* sp, System* parent, bool system)
 {
     setSystemFlag(system);
     initStyle();
+
+    m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
+    m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
 }
 
 //---------------------------------------------------------
 //   propertyDelegate
 //---------------------------------------------------------
 
-EngravingItem* TextLineSegment::propertyDelegate(Pid pid)
+EngravingObject* TextLineSegment::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::SYSTEM_FLAG) {
         return static_cast<TextLine*>(spanner());
@@ -270,6 +272,8 @@ PropertyValue TextLine::propertyDefault(Pid propertyId) const
     case Pid::CONTINUE_TEXT_PLACE:
     case Pid::END_TEXT_PLACE:
         return TextPlace::LEFT;
+    case Pid::TEXT_STYLE:
+        return systemFlag() ? TextStyleType::SYSTEM_TEXTLINE : TextStyleType::TEXTLINE;
     default:
         return TextLineBase::propertyDefault(propertyId);
     }

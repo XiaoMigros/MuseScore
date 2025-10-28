@@ -309,6 +309,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(hairpinLineLineStyle,                       PropertyValue(LineType::DASHED)),
     styleDef(hairpinLineDashLineLen,                     6.0),
     styleDef(hairpinLineDashGapLen,                      9.0),
+    styleDef(hairpinOffset,                              PointF()),
 
     styleDef(pedalPlacement,                             PlacementV::BELOW),
     styleDef(pedalPosAbove,                              PointF(.0, -1)),
@@ -340,6 +341,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(pedalContinueHookText,                      String()),
     styleDef(pedalEndText,                               String()),
     styleDef(pedalRosetteEndText,                        String(u"<sym>keyboardPedalUp</sym>")),
+    styleDef(pedalOffset,                                PointF()),
 
     styleDef(trillPlacement,                             PlacementV::ABOVE),
     styleDef(trillPosAbove,                              PointF(.0, -0.5)),
@@ -431,6 +433,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(nashvilleNumberFrameFgColor,                PropertyValue::fromValue(Color::BLACK)),
     styleDef(nashvilleNumberFrameBgColor,                PropertyValue::fromValue(Color::transparent)),
 
+    styleDef(displayCapoChords,                          int(DisplayCapoChordType::CONCERT)),
     styleDef(capoPosition,                               PropertyValue(0)),
     styleDef(fretNumMag,                                 PropertyValue(2.0)), // DEPRECATED
     styleDef(fretNumPos,                                 PropertyValue(0)),
@@ -699,6 +702,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(linearStretch,                              PropertyValue(double(1.5))),
     styleDef(crossMeasureValues,                         false),
     styleDef(keySigNaturals,                             PropertyValue(int(KeySigNatural::NONE))),
+    styleDef(keySigShowNaturalsChangingSharpsFlats,      true),
 
     styleDef(tupletMaxSlope,                             PropertyValue(double(0.5))),
     styleDef(tupletOutOfStaff,                           true),
@@ -1446,6 +1450,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
 
     styleDef(systemTextLineFontFace,                     "Edwin"),
     styleDef(systemTextLineFontSize,                     10.0),
+    styleDef(systemTextLineLineSpacing,                  1.0),
     styleDef(systemTextLineFontSpatiumDependent,         true),
     styleDef(systemTextLineFontStyle,                    int(FontStyle::Normal)),
     styleDef(systemTextLineColor,                        PropertyValue::fromValue(Color::BLACK)),
@@ -1879,6 +1884,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(letRingFrameBgColor,                        PropertyValue::fromValue(Color::transparent)),
     styleDef(letRingPosition,                            AlignH::LEFT),
     styleDef(letRingEndHookType,                         HookType::HOOK_90T),
+    styleDef(letRingOffset,                              PointF()),
 
     styleDef(palmMuteFontFace,                           "Edwin"),
     styleDef(palmMuteFontSize,                           10.0),
@@ -1904,6 +1910,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(palmMuteFrameBgColor,                       PropertyValue::fromValue(Color::transparent)),
     styleDef(palmMutePosition,                           AlignH::LEFT),
     styleDef(palmMuteEndHookType,                        HookType::HOOK_90T),
+    styleDef(palmMuteOffset,                             PointF()),
 
     styleDef(fermataPosAbove,                            PointF(.0, -0.5)),
     styleDef(fermataPosBelow,                            PointF(.0, 0.5)),

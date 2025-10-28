@@ -711,8 +711,10 @@ Slur* Score::addSlur(ChordRest* firstChordRest, ChordRest* secondChordRest, cons
                                                 && toChord(firstChordRest)->upNote()->tieFor()->endNote()->parent() == secondChordRest;
 
             // Follow chain of tied notes and slur until the last
-            while (toChord(secondChordRest)->allNotesTiedToNext()) {
-                secondChordRest = toChord(secondChordRest)->upNote()->tieFor()->endNote()->chord();
+            if (firstChordRestIsTiedToSecond || !firstChordRest->isGrace()) {
+                while (toChord(secondChordRest)->allNotesTiedToNext()) {
+                    secondChordRest = toChord(secondChordRest)->upNote()->tieFor()->endNote()->chord();
+                }
             }
 
             // If the first chord rest is also tied to this chain, slur to the next non-tied note
@@ -935,14 +937,14 @@ TextBase* Score::addText(TextStyleType type, EngravingItem* destinationElement)
             }
             const PartialLyricsLine* line = toPartialLyricsLine(spanner.value);
 
-            no = std::max(no, line->no() + 1);
+            no = std::max(no, line->verse() + 1);
         }
 
         // Also check how many partial lines there are
         Lyrics* lyrics = Factory::createLyrics(chordRest);
         lyrics->setTrack(chordRest->track());
         lyrics->setParent(chordRest);
-        lyrics->setNo(no);
+        lyrics->setProperty(Pid::VERSE, no);
 
         textBox = lyrics;
         undoAddElement(textBox);
@@ -2583,21 +2585,21 @@ void Score::cmdFlip()
             e->undoChangeProperty(Pid::AUTOPLACE, true);
             // TODO: undoChangeProperty() should probably do this directly
             // see https://musescore.org/en/node/281432
-            EngravingItem* ee = e->propertyDelegate(Pid::PLACEMENT);
+            EngravingItem* ee = toEngravingItem(e->propertyDelegate(Pid::PLACEMENT));
             if (!ee) {
                 ee = e;
             }
 
             flipOnce(ee, [ee]() {
                 // getProperty() delegates call from spannerSegment to Spanner
-                PlacementV p = PlacementV(ee->getProperty(Pid::PLACEMENT).toInt());
+                PlacementV p = ee->getProperty(Pid::PLACEMENT).value<PlacementV>();
                 p = (p == PlacementV::ABOVE) ? PlacementV::BELOW : PlacementV::ABOVE;
                 PropertyFlags pf = ee->propertyFlags(Pid::PLACEMENT);
                 if (pf == PropertyFlags::STYLED) {
                     pf = PropertyFlags::UNSTYLED;
                 }
                 double oldDefaultY = ee->propertyDefault(Pid::OFFSET).value<PointF>().y();
-                ee->undoChangeProperty(Pid::PLACEMENT, int(p), pf);
+                ee->undoChangeProperty(Pid::PLACEMENT, p, pf);
                 // flip and rebase user offset to new default now that placement has changed
                 double newDefaultY = ee->propertyDefault(Pid::OFFSET).value<PointF>().y();
                 if (ee->isSpanner()) {
@@ -6430,23 +6432,6 @@ static bool chordHasVisibleNote(const Chord* chord)
     return false;
 }
 
-static bool chordHasVisibleChild(const Chord* chord)
-{
-    for (EngravingObject* child : chord->scanChildren()) {
-        if (toEngravingItem(child)->visible()) {
-            return true;
-        }
-    }
-
-    for (const Chord* graceNote : chord->graceNotes()) {
-        if (chordHasVisibleChild(graceNote)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 static void undoChangeOrnamentVisibility(Ornament* ornament, bool visible);
 
 static void undoChangeNoteVisibility(Note* note, bool visible)
@@ -6498,9 +6483,9 @@ static void undoChangeNoteVisibility(Note* note, bool visible)
         ElementType::LEDGER_LINE, // temporary objects, impossible to change visibility
     };
 
-    for (Chord* chord : chords) {
-        for (EngravingObject* obj : chord->linkList()) {
-            Chord* linkedChord = toChord(obj);
+    for (const Chord* chord : chords) {
+        for (const EngravingObject* obj : chord->linkList()) {
+            const Chord* linkedChord = toChord(obj);
             chordHasVisibleNote_ = chordHasVisibleNote(linkedChord);
             for (EngravingObject* child : linkedChord->scanChildren()) {
                 const ElementType type = child->type();
@@ -6520,10 +6505,6 @@ static void undoChangeNoteVisibility(Note* note, bool visible)
                 } else {
                     child->undoChangeProperty(Pid::VISIBLE, chordHasVisibleNote_);
                 }
-            }
-            bool visibleChild = chordHasVisibleChild(linkedChord);
-            if (!visibleChild) {
-                linkedChord->undoChangeProperty(Pid::VISIBLE, visibleChild);
             }
         }
     }
@@ -7531,7 +7512,7 @@ void Score::undoChangeTuning(Note* n, double v)
 
 void Score::undoChangeUserMirror(Note* n, DirectionH d)
 {
-    n->undoChangeProperty(Pid::MIRROR_HEAD, int(d));
+    n->undoChangeProperty(Pid::MIRROR_HEAD, d);
 }
 
 //---------------------------------------------------------

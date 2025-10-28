@@ -452,8 +452,10 @@ void PlaybackController::onAudioResourceChanged(const TrackId trackId, const Ins
     if (audio::isOnlineAudioResource(newMeta)) {
         addToOnlineSounds(trackId, newMeta);
         tours()->onEvent(u"online_sounds_added");
+        notationPlayback->setSendEventsOnScoreChange(instrumentTrackId, true);
     } else if (audio::isOnlineAudioResource(oldMeta)) {
         removeFromOnlineSounds(trackId);
+        notationPlayback->setSendEventsOnScoreChange(instrumentTrackId, false);
     }
 }
 
@@ -627,6 +629,8 @@ void PlaybackController::togglePlay()
     if (isPlaying()) {
         pause();
     } else if (isPaused()) {
+        notationPlayback()->sendEventsForChangedTracks();
+
         if (currentPlayer()) {
             secs_t pos = currentPlayer()->playbackPosition();
             secs_t endSecs = playbackEndSecs();
@@ -638,6 +642,8 @@ void PlaybackController::togglePlay()
             resume();
         }
     } else {
+        notationPlayback()->sendEventsForChangedTracks();
+
         play();
     }
 }
@@ -710,6 +716,20 @@ void PlaybackController::resume()
     }
 
     currentPlayer()->resume(delay);
+}
+
+void PlaybackController::onPlaybackStatusChanged()
+{
+    if (!notationPlayback()) {
+        return;
+    }
+
+    bool playing = isPlaying();
+
+    for (const auto& pair : m_instrumentTrackIdMap) {
+        bool shouldSendOnScoreChange = playing || muse::contains(m_onlineSounds, pair.second);
+        notationPlayback()->setSendEventsOnScoreChange(pair.first, shouldSendOnScoreChange);
+    }
 }
 
 secs_t PlaybackController::playbackStartSecs() const
@@ -958,16 +978,16 @@ mu::project::IProjectAudioSettingsPtr PlaybackController::audioSettings() const
 void PlaybackController::resetCurrentSequence()
 {
     if (currentPlayer()) {
-        currentPlayer()->playbackPositionChanged().resetOnReceive(this);
-        currentPlayer()->playbackStatusChanged().resetOnReceive(this);
+        currentPlayer()->playbackPositionChanged().disconnect(this);
+        currentPlayer()->playbackStatusChanged().disconnect(this);
     }
 
     playback()->clearSources();
-    playback()->inputParamsChanged().resetOnReceive(this);
+    playback()->inputParamsChanged().disconnect(this);
 
     playback()->clearAllFx();
-    playback()->outputParamsChanged().resetOnReceive(this);
-    playback()->masterOutputParamsChanged().resetOnReceive(this);
+    playback()->outputParamsChanged().disconnect(this);
+    playback()->masterOutputParamsChanged().disconnect(this);
     playback()->clearMasterOutputParams();
 
     m_currentTick = 0;
@@ -1102,6 +1122,10 @@ void PlaybackController::doAddTrack(const InstrumentTrackId& instrumentTrackId, 
 
         if (muse::audio::isOnlineAudioResource(appliedParams.in.resourceMeta)) {
             addToOnlineSounds(trackId, appliedParams.in.resourceMeta);
+
+            if (notationPlayback()) {
+                notationPlayback()->setSendEventsOnScoreChange(instrumentTrackId, true);
+            }
         }
     })
     .onReject(this, [instrumentTrackId, onFinished](int code, const std::string& msg) {
@@ -1531,7 +1555,7 @@ void PlaybackController::setupSequenceTracks()
         }
 
         updateSoloMuteStates();
-    });
+    }, async::Asyncable::Mode::SetReplace);
 
     audioSettings()->auxSoloMuteStateChanged().onReceive(
         this, [this](aux_channel_idx_t, const notation::INotationSoloMuteState::SoloMuteState&) {
@@ -1557,6 +1581,7 @@ void PlaybackController::setupSequencePlayer()
 
     currentPlayer()->playbackStatusChanged().onReceive(this, [this](PlaybackStatus) {
         m_isPlayingChanged.notify();
+        onPlaybackStatusChanged();
     });
 
     currentPlayer()->setDuration(secsToMilisecs(notationPlayback()->totalPlayTime()));

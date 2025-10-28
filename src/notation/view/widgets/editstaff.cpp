@@ -22,6 +22,7 @@
 
 #include "editstaff.h"
 
+#include "containers.h"
 #include "translation.h"
 #include "global/utils.h"
 
@@ -34,6 +35,7 @@
 
 #include "engraving/dom/factory.h"
 #include "engraving/dom/instrumentname.h"
+#include "engraving/dom/interval.h"
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/part.h"
 #include "engraving/dom/staff.h"
@@ -228,29 +230,29 @@ void EditStaff::updateInstrument()
 
 void EditStaff::updateInterval(const mu::engraving::Interval& iv)
 {
-    int diatonic  = iv.diatonic;
-    int chromatic = iv.chromatic;
+    bool upFlag = !(iv.chromatic < 0 || iv.diatonic < 0);
 
+    int chromatic = std::abs(iv.chromatic);
+    int diatonic = std::abs(iv.diatonic);
     int oct = chromatic / 12;
-    if (oct < 0) {
-        oct = -oct;
-    }
 
-    bool upFlag = true;
-    if (chromatic < 0 || diatonic < 0) {
-        upFlag    = false;
-        chromatic = -chromatic;
-        diatonic  = -diatonic;
-    }
     chromatic %= 12;
-    diatonic  %= 7;
+    diatonic %= 7;
 
-    int interval = mu::engraving::searchInterval(diatonic, chromatic);
-    if (interval == -1) {
-        LOGD("EditStaff: unknown interval %d %d", diatonic, chromatic);
-        interval = 0;
+    if (diatonic == 0 && chromatic == 11) {
+        diatonic = 7;
+    } else if (chromatic == 0 && diatonic == 6) {
+        chromatic = 12;
+        --oct;
     }
-    iList->setCurrentIndex(interval);
+
+    size_t intervalIndex = muse::indexOf(Interval::allIntervals, Interval { diatonic, chromatic });
+    IF_ASSERT_FAILED(intervalIndex != muse::nidx) {
+        LOGD("EditStaff: unknown interval %d %d", diatonic, chromatic);
+        intervalIndex = 0;
+    }
+
+    iList->setCurrentIndex(static_cast<int>(intervalIndex));
     up->setChecked(upFlag);
     down->setChecked(!upFlag);
     octave->setValue(oct);
@@ -523,7 +525,7 @@ void EditStaff::applyPartProperties()
     int intervalIdx = iList->currentIndex();
     bool upFlag     = up->isChecked();
 
-    mu::engraving::Interval interval  = mu::engraving::intervalList[intervalIdx];
+    mu::engraving::Interval interval = Interval::allIntervals[intervalIdx];
     interval.diatonic  += static_cast<int8_t>(octave->value() * 7);
     interval.chromatic += static_cast<int8_t>(octave->value() * 12);
 

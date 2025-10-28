@@ -38,6 +38,7 @@
 //#include "audio/driver/platform/win/winmmdriver.h"
 //#include "audio/driver/platform/win/wincoreaudiodriver.h"
 #include "audio/driver/platform/win/wasapiaudiodriver.h"
+#include "audio/driver/platform/win/wasapiaudiodriver2.h"
 #endif
 
 #ifdef Q_OS_MACOS
@@ -64,6 +65,7 @@ static std::shared_ptr<IAudioDriver> makeLinuxAudioDriver(const std::string& dri
         }
     }
 #endif // MUSE_PIPEWIRE_AUDIO_DRIVER
+    UNUSED(driverName);
     LOGI() << "Using audio driver: ALSA";
     return std::make_shared<AlsaAudioDriver>();
 }
@@ -84,7 +86,8 @@ void AudioDriverController::init()
 #ifdef Q_OS_WIN
     //m_audioDriver = std::shared_ptr<IAudioDriver>(new WinmmDriver());
     //m_audioDriver = std::shared_ptr<IAudioDriver>(new CoreAudioDriver());
-    m_audioDriver = std::shared_ptr<IAudioDriver>(new WasapiAudioDriver());
+    //m_audioDriver = std::shared_ptr<IAudioDriver>(new WasapiAudioDriver());
+    m_audioDriver = std::shared_ptr<IAudioDriver>(new WasapiAudioDriver2());
 #endif
 
 #ifdef Q_OS_MACOS
