@@ -16,7 +16,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 include(GetBuildType)
 include(GetPlatformInfo)
@@ -239,7 +239,7 @@ if(BUILD_CONFIGURATION STREQUAL "VTEST")
     set(MUE_BUILD_IMPEXP_MIDI_MODULE OFF)
     set(MUE_BUILD_IMPEXP_MUSEDATA_MODULE OFF)
     set(MUE_BUILD_IMPEXP_MUSICXML_MODULE OFF)
-    set(MUE_BUILD_IMPEXP_FINALE_MODULE OFF)
+    set(MUE_BUILD_IMPEXP_FINALE_MODULE ON) # dbg
     set(MUE_BUILD_IMPEXP_OVE_MODULE OFF)
     set(MUE_BUILD_IMPEXP_AUDIOEXPORT_MODULE OFF)
     set(MUE_BUILD_IMPEXP_IMAGESEXPORT_MODULE ON)
