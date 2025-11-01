@@ -3291,6 +3291,10 @@ void Score::cmdMirrorNoteHead()
                 break;
             }
             h->undoChangeProperty(Pid::HAIRPIN_TYPE, int(st));
+        } else if (e->isSlurTieSegment()) {
+            SlurTieSegment* slurTieSegment = toSlurTieSegment(e);
+            DirectionV dir = slurTieSegment->up() ? DirectionV::DOWN : DirectionV::UP;
+            slurTieSegment->undoChangeProperty(Pid::SLUR_DIRECTION, dir);
         }
     }
 }
