@@ -160,6 +160,9 @@
 #ifdef MUE_BUILD_IMPEXP_MUSICXML_MODULE
 #include "importexport/musicxml/musicxmlmodule.h"
 #endif
+#ifdef MUE_BUILD_IMPEXP_FINALE_MODULE
+#include "importexport/finale/finalemodule.h"
+#endif
 #ifdef MUE_BUILD_IMPEXP_OVE_MODULE
 #include "importexport/ove/ovemodule.h"
 #endif
@@ -330,6 +333,9 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const CmdOptions& opti
 #ifdef MUE_BUILD_IMPEXP_MUSICXML_MODULE
     app->addModule(new mu::iex::musicxml::MusicXmlModule());
 #endif
+#ifdef MUE_BUILD_IMPEXP_FINALE_MODULE
+    app->addModule(new mu::iex::finale::FinaleModule());
+#endif
 #ifdef MUE_BUILD_IMPEXP_OVE_MODULE
     app->addModule(new mu::iex::ove::OveModule());
 #endif
@@ -470,6 +476,9 @@ std::shared_ptr<muse::IApplication> AppFactory::newConsoleApp(const CmdOptions& 
 #endif
 #ifdef MUE_BUILD_IMPEXP_MUSICXML_MODULE
     app->addModule(new mu::iex::musicxml::MusicXmlModule());
+#endif
+#ifdef MUE_BUILD_IMPEXP_FINALE_MODULE
+    app->addModule(new mu::iex::finale::FinaleModule());
 #endif
 #ifdef MUE_BUILD_IMPEXP_OVE_MODULE
     app->addModule(new mu::iex::ove::OveModule());
