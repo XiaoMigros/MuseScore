@@ -26,6 +26,8 @@
 #include "dom/note.h"
 #include "dom/staff.h"
 #include "dom/swing.h"
+#include "dom/tremolosinglechord.h"
+#include "dom/tremolotwochord.h"
 
 #include "glissandosrenderer.h"
 
@@ -63,8 +65,10 @@ bool NoteRenderer::shouldRender(const Note* note, const RenderingContext& ctx, c
         const Chord* startChord = startNote->chord();
         const Chord* endChord = endNote->chord();
 
-        if (startChord->tremoloType() != TremoloType::INVALID_TREMOLO
-            || endChord->tremoloType() != TremoloType::INVALID_TREMOLO) {
+        if ((startChord->tremoloSingleChord() && startChord->tremoloSingleChord()->playTremolo())
+            || (startChord->tremoloTwoChord() && startChord->tremoloTwoChord()->playTremolo())
+            || (endChord->tremoloSingleChord() && endChord->tremoloSingleChord()->playTremolo())
+            || (endChord->tremoloSingleChord() && endChord->tremoloSingleChord()->playTremolo())) {
             return true;
         }
 
