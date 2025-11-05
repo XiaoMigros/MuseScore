@@ -65,6 +65,7 @@ public:
     Color readColor();
     Fraction readFraction();
     String readXml();
+    BracketPath readBracketPath();
 
     void setDocName(const String& s) { m_docName = s; }
     String docName() const { return m_docName; }

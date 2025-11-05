@@ -228,6 +228,8 @@ bool MStyle::readProperties(XmlReader& e)
                 break;
             case P_TYPE::TEXT_STYLE:
                 set(idx, TConv::fromXml(e.readAsciiText(), TextStyleType::DEFAULT));
+            case P_TYPE::BRACKET_PATH:
+                set(idx, e.readBracketPath());
                 break;
             case P_TYPE::PLAY_COUNT_PRESET:
                 set(idx, TConv::fromXml(e.readAsciiText(), RepeatPlayCountPreset::X_N));
@@ -749,6 +751,8 @@ void MStyle::save(XmlWriter& xml, bool optimize)
             xml.tag(st.name(), TConv::toXml(value(idx).value<RepeatPlayCountPreset>()));
         } else if (P_TYPE::MEASURE_NUMBER_PLACEMENT == type) {
             xml.tag(st.name(), TConv::toXml(value(idx).value<MeasureNumberPlacement>()));
+        } else if (P_TYPE::BRACKET_PATH == type) {
+            xml.tagProperty(st.name(), value(idx).value<BracketPath>());
         } else {
             PropertyValue val = value(idx);
             //! NOTE for compatibility

@@ -158,6 +158,8 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(bracketDistance,                            0.45_sp),
     styleDef(akkoladeWidth,                              1.5_sp),
     styleDef(akkoladeBarDistance,                        0.35_sp),
+    styleDef(useCustomPathForBraces,                     false),
+    styleDef(customPathForBraces,                        nullptr),
 
     styleDef(dividerLeft,                                false),
     styleDef(dividerLeftSym,                             String(u"systemDivider")),
@@ -994,7 +996,6 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(stringNumberFrameBgColor,                   PropertyValue::fromValue(Color::transparent)),
     styleDef(stringNumberOffset,                         PointF(0.0, 0.0)),
     styleDef(stringNumberPosition,                       AlignH::HCENTER),
-    styleDef(preferSameStringForTranspose,               false),
 
     styleDef(stringTuningsFontSize,                      9.0),
 

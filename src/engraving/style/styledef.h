@@ -53,7 +53,7 @@ namespace mu::engraving {
 //---------------------------------------------------------
 
 BEGIN_QT_REGISTERED_ENUM(Sid)
-enum class Sid {
+enum class Sid : short {
     ///.\{
     NOSTYLE = -1,
 
@@ -175,6 +175,8 @@ enum class Sid {
     bracketDistance,
     akkoladeWidth,
     akkoladeBarDistance,
+    useCustomPathForBraces,
+    customPathForBraces,
     dividerLeft,
     dividerLeftSym,
     dividerLeftX,
@@ -1013,7 +1015,6 @@ enum class Sid {
     stringNumberFrameBgColor,
     stringNumberOffset,
     stringNumberPosition,
-    preferSameStringForTranspose,
 
     stringTuningsFontSize,
 
