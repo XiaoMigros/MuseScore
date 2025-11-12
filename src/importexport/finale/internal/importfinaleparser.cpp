@@ -104,6 +104,7 @@ void FinaleParser::parse()
     logger()->logInfo(String(u"Laying out score before importing text..."));
     m_score->doLayout();
     importTextExpressions();
+    positionSlurs();
     rebasePageTextOffsets();
 
     // Collect styles for spanners (requires they have been laid out)

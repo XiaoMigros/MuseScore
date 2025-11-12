@@ -33,8 +33,11 @@
 #include "types/translatablestring.h"
 
 #include "draw/fontmetrics.h"
+#include "draw/types/transform.h"
 
 #include "engraving/dom/anchors.h"
+#include "engraving/dom/articulation.h"
+#include "engraving/dom/chord.h"
 #include "engraving/dom/chordrest.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/glissando.h"
@@ -545,9 +548,13 @@ void FinaleParser::importSmartShapes()
             } else if (type == ElementType::SLUR) {
                 Slur* slur = toSlur(newSpanner);
                 setAndStyleProperty(slur, Pid::SLUR_STYLE_TYPE, slurStyleTypeFromShapeType(smartShape->shapeType));
-                setAndStyleProperty(slur, Pid::SLUR_DIRECTION, directionVFromShapeType(smartShape->shapeType));
-                if (slur->slurDirection() == DirectionV::AUTO) {
-                    setAndStyleProperty(slur, Pid::SLUR_DIRECTION, calculateSlurDirection(slur));
+                if (musxOptions().smartShapeOptions->direction == options::SmartShapeOptions::DefaultDirection::Automatic) {
+                    setAndStyleProperty(slur, Pid::SLUR_DIRECTION, directionVFromShapeType(smartShape->shapeType));
+                    if (slur->slurDirection() == DirectionV::AUTO) {
+                        setAndStyleProperty(slur, Pid::SLUR_DIRECTION, calculateSlurDirection(slur));
+                    }
+                } else {
+                    setAndStyleProperty(slur, Pid::SLUR_DIRECTION, musxOptions().smartShapeOptions->direction == options::SmartShapeOptions::DefaultDirection::Under ? DirectionV::DOWN : DirectionV::UP);
                 }
                 if (slur->track() != slur->track2() || slur->startCR()->vStaffIdx() != slur->endCR()->vStaffIdx()) {
                     slur->setAutoplace(false);
@@ -603,6 +610,11 @@ void FinaleParser::importSmartShapes()
         } else {
             m_score->addElement(newSpanner);
             logger()->logInfo(String(u"Added spanner of %1 type at tick %2, end: %3").arg(TConv::userName(type).translated(), startTick.toString(), endTick.toString()));
+        }
+
+        if (newSpanner->isSlur()) {
+            m_slurs.emplace(smartShape, toSlur(newSpanner));
+            continue;
         }
 
         // Layout is currently only supported for segment-based lines
@@ -700,7 +712,7 @@ void FinaleParser::importSmartShapes()
                 ss->rxoffset() += startSeg->x() + startSeg->measure()->x() - ((SLine*)newSpanner)->linePos(Grip::START, &s).x();
             } else {
                 Segment* firstCRseg = ss->system()->firstMeasure()->first(SegmentType::ChordRest);
-                for (Segment* s = firstCRseg->prevActive(); s; s = s->prev(SegmentType::HeaderClef | SegmentType::KeySig | SegmentType::TimeSigType)) {
+                for (Segment* s = firstCRseg->prevActive(); s && s->measure() == firstCRseg->measure(); s = s->prev(SegmentType::HeaderClef | SegmentType::KeySig | SegmentType::TimeSigType)) {
                     if (!s->isActive() || s->allElementsInvisible() || s->hasTimeSigAboveStaves()) {
                         continue;
                     }
@@ -1083,6 +1095,384 @@ void FinaleParser::importSmartShapes()
     }
 
     logger()->logInfo(String(u"Import smart shapes: Finished importing smart shapes"));
+}
+
+static PointF systemPosFromAnchor(std::shared_ptr<options::SmartShapeOptions::ConnectionStyle> connection, ChordRest* cr)
+{
+    /// @todo inherit articulation
+    PointF baseOffset = cr->measure()->pos() + cr->segment()->pos() + cr->pos() + evpuToPointF(connection->xOffset, -connection->yOffset) * cr->defaultSpatium();
+    if (cr->isRest()) {
+        // Finale may not even support this
+        switch (connection->connectIndex) {
+            case options::SmartShapeOptions::ConnectionIndex::StemRightTop:
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightTop:
+            case options::SmartShapeOptions::ConnectionIndex::HeadRightTop:
+                return baseOffset + PointF(cr->width(), 0.0);
+            case options::SmartShapeOptions::ConnectionIndex::StemLeftTop:
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftTop:
+            case options::SmartShapeOptions::ConnectionIndex::HeadLeftTop:
+                return baseOffset;
+            case options::SmartShapeOptions::ConnectionIndex::StemRightBottom:
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightBottom:
+            case options::SmartShapeOptions::ConnectionIndex::HeadRightBottom:
+                return baseOffset + PointF(cr->width(), cr->height());
+            case options::SmartShapeOptions::ConnectionIndex::StemLeftBottom:
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftBottom:
+            case options::SmartShapeOptions::ConnectionIndex::HeadLeftBottom:
+                return baseOffset + PointF(0.0, cr->height());
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightCenter:
+                return baseOffset + PointF(cr->width(), cr->height() / 2.0);
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftCenter:
+                return baseOffset + PointF(0.0, cr->height() / 2.0);
+        }
+    } else {
+        Chord* c = toChord(cr);
+        c->score()->renderer()->layoutItem(c); // Needed for articulations
+        auto getPosFromElement = [c](const EngravingItem* e, bool right, bool bottom, bool includeArticulations = true) {
+            PointF ePos = e->pos() + PointF(right ? e->width() : 0.0, bottom ? e->height() : 0.0);
+            if (e->isNote()) {
+                ePos -= e->offset();
+            }
+            if (!includeArticulations) {
+                return ePos;
+            }
+            for (const Articulation* a : c->articulations()) {
+                if (!a->layoutCloseToNote() || a->ldata()->up != c->ldata()->up) {
+                    // Technically, Finale has its own setting for this, but we ignore it on import
+                    /// @todo collect articulations that go outside the slur and offset them (value is specified in smartShapeOptions)
+                    continue;
+                }
+                PointF aPos = a->pos() + PointF(right ? a->width() : 0.0, bottom ? a->height() : 0.0);
+                if (bottom) {
+                    ePos.ry() = std::max(ePos.y(), aPos.y());
+                } else {
+                    ePos.ry() = std::min(ePos.y(), aPos.y());
+                }
+            }
+            return ePos;
+        };
+        switch (connection->connectIndex) {
+            case options::SmartShapeOptions::ConnectionIndex::StemRightTop:
+                if (c->stem()) {
+                    return baseOffset + getPosFromElement(c->stem(), true, false);
+                }
+                [[fallthrough]];
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightTop: // perhaps only used for note-anchored shapes
+            case options::SmartShapeOptions::ConnectionIndex::HeadRightTop: {
+                const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, true, false);
+            }
+
+            case options::SmartShapeOptions::ConnectionIndex::StemLeftTop:
+                if (c->stem()) {
+                    return baseOffset + getPosFromElement(c->stem(), false, false);
+                }
+                [[fallthrough]];
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftTop:
+            case options::SmartShapeOptions::ConnectionIndex::HeadLeftTop: {
+                const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, false, false);
+            }
+
+            case options::SmartShapeOptions::ConnectionIndex::StemRightBottom:
+                if (c->stem()) {
+                    return baseOffset + getPosFromElement(c->stem(), true, true);
+                }
+                [[fallthrough]];
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightBottom:
+            case options::SmartShapeOptions::ConnectionIndex::HeadRightBottom: {
+                const engraving::Note* n = c->downNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, true, true);
+            }
+
+            case options::SmartShapeOptions::ConnectionIndex::StemLeftBottom:
+                if (c->stem()) {
+                    return baseOffset + getPosFromElement(c->stem(), false, true);
+                }
+                [[fallthrough]];
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftBottom:
+            case options::SmartShapeOptions::ConnectionIndex::HeadLeftBottom: {
+                const engraving::Note* n = c->downNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, false, true);
+            }
+
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightCenter: {
+                const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
+                return baseOffset + n->ldata()->pos() + PointF(n->width(), n->height() / 2.0);
+            }
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftCenter: {
+                const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
+                return baseOffset + n->ldata()->pos() + PointF(0.0, n->height() / 2.0);
+            }
+        }
+    }
+    return baseOffset;
+}
+
+void FinaleParser::positionSlurs()
+{
+    const MusxInstance<options::SmartShapeOptions>& config = musxOptions().smartShapeOptions;
+    const double avoidDistance = doubleFromEvpu(config->slurAvoidStaffLinesAmt);
+    const double systemLeftMargin = doubleFromEvpu(config->slurLeftBreakHorzAdj) * m_score->style().defaultSpatium();
+    const double systemRightMargin = doubleFromEvpu(config->slurRightBreakHorzAdj) * m_score->style().defaultSpatium();
+    const double systemAvoidStaffLines = doubleFromEvpu(config->slurBreakVertAdj);
+    std::map<Efix, PointF> contourMap;
+    for (auto [controlStyleType, controlStyle] : config->slurControlStyles) {
+        contourMap.emplace(controlStyle->span, PointF(doubleFromPercent(controlStyle->inset / 2048), doubleFromEvpu(controlStyle->height)));
+    }
+    auto bezierPointFromSlurLength = [contourMap](Efix length) {
+        auto i = contourMap.lower_bound(length);
+        if (i == contourMap.begin()) {
+            i = contourMap.upper_bound(length);
+        }
+        auto j = contourMap.upper_bound(length - 1);
+        if (j == contourMap.begin()) {
+            j = contourMap.upper_bound(length);
+        }
+        // observed: linear interpolation
+        if (i->first == j->first) {
+            return PointF(i->second.x() * doubleFromEfix(length), i->second.y());
+        }
+        PointF mid(i->second + double(length - i->first) * (j->second - i->second) / double(j->first - i->first));
+        return PointF(mid.x() * doubleFromEfix(length), mid.y());
+    };
+
+    for (auto [smartShape, slur] : m_slurs) {
+        // Adjust start and end points
+        auto connectStyleTypeForSlur = [slur](bool start) -> options::SmartShapeOptions::SlurConnectStyleType {
+            using ConnectStyleType = options::SmartShapeOptions::SlurConnectStyleType;
+            const ChordRest* chordRest = start ? slur->startCR() : slur->endCR();
+            const bool chordUp = chordRest->ldata()->up;
+            const bool slurUp = slur->up();
+
+            if (slurUp == chordUp && chordRest->beam()) {
+                if (slurUp) {
+                    return start ? ConnectStyleType::OverBeamStart : ConnectStyleType::OverBeamEnd;
+                } else {
+                    return start ? ConnectStyleType::UnderBeamStart : ConnectStyleType::UnderBeamEnd;
+                }
+            }
+
+            if (start && chordRest->isGrace()) {
+                if (slurUp != chordUp) {
+                    return slurUp ? ConnectStyleType::OverNoteGrace : ConnectStyleType::UnderNoteGrace;
+                }
+                return slurUp ? ConnectStyleType::OverStemGrace : ConnectStyleType::UnderStemGrace;
+            }
+
+            // if (end && slur->startCR()->isGrace() && slur->startCR()->stemDirection() == DirectionV::UP // && slur->slurDirection() == DirectionV::DOWN
+                // && (!slur->endCR()->isChord()|| (!muse::contains(m_fixedChords, toChord(slur->startCR())) && toChord(slur->startCR())->notes().size() == 1))) {
+
+            // }
+            /// @todo OverStemPrincipal, UnderStemPrincipal, UnderStemNotePrincipal, OverStemNotePrincipal
+
+
+            if (slurUp != chordUp) {
+                if (chordRest->staff()->isTabStaff(chordRest->segment()->tick())) {
+                    if (slurUp) {
+                        return start ? ConnectStyleType::OverTabNumStart : ConnectStyleType::OverTabNumEnd;
+                    } else {
+                        return start ? ConnectStyleType::UnderTabNumStart : ConnectStyleType::UnderTabNumEnd;
+                    }
+                }
+                if (slurUp) {
+                    return start ? ConnectStyleType::OverNoteStart : ConnectStyleType::OverNoteEnd;
+                } else {
+                    return start ? ConnectStyleType::UnderNoteStart : ConnectStyleType::UnderNoteEnd;
+                }
+            }
+
+            if (!slurUp) {
+                if (start && chordRest->isChord() && toChord(chordRest)->hook()) {
+                    return ConnectStyleType::UnderFlagStart;
+                }
+                return start ? ConnectStyleType::UnderStemStart : ConnectStyleType::UnderStemEnd;
+            }
+            bool mix = false;
+            if (slur->track() == slur->track2() && slur->startCR()->vStaffIdx() == slur->endCR()->vStaffIdx()) {
+                bool up = slur->startCR()->ldata()->up;
+                for (ChordRest* cr = slur->startCR(); cr; cr = nextChordRest(cr)) {
+                    if (cr->ldata()->up != up) {
+                        mix = true;
+                        break;
+                    }
+                }
+            }
+            if (mix) {
+                if (start && chordRest->isChord() && toChord(chordRest)->hook()) {
+                    return ConnectStyleType::OverMixFlagStart;
+                }
+                return start ? ConnectStyleType::OverMixStemStart : ConnectStyleType::OverMixStemEnd;
+            }
+            if (start && chordRest->isChord() && toChord(chordRest)->hook()) {
+                return ConnectStyleType::OverFlagStart;
+            }
+            return start ? ConnectStyleType::OverStemStart : ConnectStyleType::OverStemEnd;
+        };
+        const bool up = slur->slurDirection() == DirectionV::UP;
+
+        // Start position
+        PointF startPos = systemPosFromAnchor(muse::value(config->slurConnectStyles, connectStyleTypeForSlur(true)), slur->startCR());
+        if (config->slurAvoidStaffLines) {
+            const Staff* startStaff = m_score->staff(slur->startCR()->vStaffIdx());
+            const double startLineDistance = startStaff->lineDistance(slur->tick());
+            const double startStaffY = slur->frontSegment()->system()->staff(slur->startCR()->vStaffIdx())->y() + slur->startCR()->staffOffsetY();
+            const double relativePosInSp = (startPos.y() - startStaffY) / (startStaff->spatium(slur->tick()) * startLineDistance);
+            const int relativePosStep = (int)(relativePosInSp);
+
+            if ((int)(relativePosInSp - avoidDistance) != relativePosStep) {
+                // slightly below a staff line
+                const double newOffsetInSp = relativePosStep * startLineDistance + (up ? -1.0 : 1.0) * avoidDistance;
+                startPos.ry() = startStaffY + newOffsetInSp * startStaff->spatium(slur->tick());
+            } else if ((int)(relativePosInSp + avoidDistance) != relativePosStep) {
+                // slightly above a staff line
+                const double newOffsetInSp = relativePosStep * startLineDistance + (up ? -1.0 : 1.0) * avoidDistance + 1.0;
+                startPos.ry() = startStaffY + newOffsetInSp * startStaff->spatium(slur->tick());
+            }
+        }
+        setAndStyleProperty(slur->frontSegment(), Pid::SLUR_UOFF1, startPos - slur->frontSegment()->ups(Grip::START).p);
+
+        // End position
+        PointF endPos = systemPosFromAnchor(muse::value(config->slurConnectStyles, connectStyleTypeForSlur(false)), slur->endCR());
+        if (config->slurAvoidStaffLines) {
+            const Staff* endStaff = m_score->staff(slur->endCR()->vStaffIdx());
+            const double endLineDistance = endStaff->lineDistance(slur->tick());
+            const double endStaffY = slur->frontSegment()->system()->staff(slur->endCR()->vStaffIdx())->y() + slur->endCR()->staffOffsetY();
+            const double relativePosInSp = (endPos.y() - endStaffY) / (endStaff->spatium(slur->tick2()) * endLineDistance);
+            const int relativePosStep = (int)(relativePosInSp);
+
+            if ((int)(relativePosInSp - avoidDistance) != relativePosStep) {
+                // slightly below a staff line
+                const double newOffsetInSp = relativePosStep * endLineDistance + (up ? -1.0 : 1.0) * avoidDistance;
+                endPos.ry() = endStaffY + newOffsetInSp * endStaff->spatium(slur->tick2());
+            } else if ((int)(relativePosInSp + avoidDistance) != relativePosStep) {
+                // slightly above a staff line
+                const double newOffsetInSp = relativePosStep * endLineDistance + (up ? -1.0 : 1.0) * avoidDistance + 1.0;
+                endPos.ry() = endStaffY + newOffsetInSp * endStaff->spatium(slur->tick2());
+            }
+        }
+        setAndStyleProperty(slur->backSegment(), Pid::SLUR_UOFF4, endPos - slur->backSegment()->ups(Grip::END).p);
+
+        for (SpannerSegment* spannerSeg : slur->spannerSegments()) {
+            SlurSegment* ss = toSlurSegment(spannerSeg);
+            ss->setAutoplace(slur->autoplace());
+
+            const Staff* referenceFrontStaff = ss->isEndType() ? m_score->staff(slur->endCR()->vStaffIdx()) : m_score->staff(slur->startCR()->vStaffIdx());
+            const Staff* referenceBackStaff = ss->isSingleEndType() ? m_score->staff(slur->endCR()->vStaffIdx()) : m_score->staff(slur->startCR()->vStaffIdx());
+
+            // Leading position from previous systems
+            if (!ss->isSingleBeginType()) {
+                Segment* firstCRseg = ss->system()->firstMeasure()->first(SegmentType::ChordRest);
+                for (Segment* s = firstCRseg->prevActive(); s && s->measure() == firstCRseg->measure(); s = s->prev(SegmentType::HeaderClef | SegmentType::KeySig | SegmentType::TimeSigType)) {
+                    if (!s->isActive() || s->allElementsInvisible() || s->hasTimeSigAboveStaves()) {
+                        continue;
+                    }
+
+                    PointF systemStartOffset(s->x() + s->width() + s->measure()->x() + systemRightMargin, ss->ups(Grip::END).p.y());
+                    if (!ss->autoplace()) {
+                        systemStartOffset.ry() = ss->system()->staff(referenceBackStaff->idx())->y();
+                        systemStartOffset.ry() += referenceBackStaff->staffType(ss->system()->last()->tick())->yoffset().val()
+                                                  * referenceBackStaff->spatium(ss->system()->last()->tick());
+                        if (up) {
+                            systemStartOffset.ry() -= systemAvoidStaffLines * ss->spatium();
+                        } else {
+                            systemStartOffset.ry() += referenceBackStaff->staffHeight(ss->system()->last()->tick()) // not endTick
+                                                      + systemAvoidStaffLines * ss->spatium();
+                        }
+                    }
+                    setAndStyleProperty(ss, Pid::SLUR_UOFF1, systemStartOffset - ss->ups(Grip::END).p);
+                    break;
+                }
+            }
+
+            // Trailing position to new systems
+            if (!ss->isSingleEndType()) {
+                PointF systemEndOffset(ss->system()->endingXForOpenEndedLines() + ss->style().styleMM(Sid::lineEndToBarlineDistance) + systemLeftMargin, ss->ups(Grip::END).p.y());
+                if (!ss->autoplace()) {
+                    systemEndOffset.ry() = ss->system()->staff(referenceFrontStaff->idx())->y();
+                    systemEndOffset.ry() += referenceFrontStaff->staffType(ss->system()->first()->tick())->yoffset().val()
+                                            * referenceFrontStaff->spatium(ss->system()->first()->tick());
+                    if (!up) {
+                        systemEndOffset.ry() += referenceFrontStaff->staffHeight(ss->system()->first()->tick());
+                    }
+                }
+                setAndStyleProperty(ss, Pid::SLUR_UOFF4, systemEndOffset - ss->ups(Grip::END).p);
+            }
+
+            // Manual start/end point offsets
+            auto positionSegmentFromEndPoints = [&](std::shared_ptr<smartshape::EndPointAdjustment> leftPoint, std::shared_ptr<smartshape::EndPointAdjustment> rightPoint) {
+                 // Always include horizontal offset for start/end points of segments
+                // Only include vertical offset for non-engraver slurs
+                if (leftPoint->active) {
+                    PointF leftAdjustment(leftPoint->horzOffset, ss->autoplace() ? 0.0 : -leftPoint->vertOffset);
+                    setAndStyleProperty(ss, Pid::SLUR_UOFF1, ss->getProperty(Pid::SLUR_UOFF1).value<PointF>() + leftAdjustment * ss->defaultSpatium());
+                }
+                if (rightPoint->active) {
+                    PointF rightAdjustment(rightPoint->horzOffset, ss->autoplace() ? 0.0 : -rightPoint->vertOffset);
+                    setAndStyleProperty(ss, Pid::SLUR_UOFF4, ss->getProperty(Pid::SLUR_UOFF4).value<PointF>() + rightAdjustment * ss->defaultSpatium());
+                }
+            };
+
+            // Manual bezier (curve) offsets
+            /// @todo call layout between end point adjustments and this
+            auto adjustBezier = [&](const std::shared_ptr<smartshape::ControlPointAdjustment>& shoulderAdjust) {
+                // Don't adjust curve of engraver slurs
+                if (ss->autoplace()) {
+                    return;
+                }
+                PointF normalisedEnd = ss->ups(Grip::END).pos() - ss->ups(Grip::START).pos();
+                const double angle = atan(normalisedEnd.y() / normalisedEnd.x());
+                muse::draw::Transform t;
+                t.rotateRadians(-angle);
+                normalisedEnd = t.map(normalisedEnd);
+                PointF bezier = bezierPointFromSlurLength(Efix(normalisedEnd.x() / (EFIX_PER_SPACE * ss->defaultSpatium())));
+                PointF shoulder1 = PointF(bezier.x(), bezier.y() * (up ? 1.0 : -1.0)) * ss->defaultSpatium();
+                PointF shoulder2 = PointF(-bezier.x(), bezier.y() * (up ? 1.0 : -1.0)) * ss->defaultSpatium();
+                shoulder2.rx() += normalisedEnd.x();
+                t.rotateRadians(angle);
+                /// @todo this probably doesn't account for slur changes made before the previous layout
+                shoulder1 = t.map(shoulder1) + ss->ups(Grip::END).pos();
+                shoulder2 = t.map(shoulder2) + ss->ups(Grip::END).pos();
+                if (shoulderAdjust->active) {
+                    /// @todo do we need the contextDir
+                    shoulder1 += evpuToPointF(shoulderAdjust->startCtlPtX, -shoulderAdjust->startCtlPtY) * ss->defaultSpatium();
+                    shoulder1 += evpuToPointF(shoulderAdjust->endCtlPtX, -shoulderAdjust->endCtlPtY) * ss->defaultSpatium();
+                }
+                setAndStyleProperty(ss, Pid::SLUR_UOFF2, shoulder1 - ss->ups(Grip::BEZIER1).pos());
+                setAndStyleProperty(ss, Pid::SLUR_UOFF3, shoulder2 - ss->ups(Grip::BEZIER2).pos());
+            };
+
+            if (ss->isSingleType()) {
+                if (ss->autoplace()) {
+                    positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->endTermSeg->endPointAdj);
+                    adjustBezier(smartShape->fullCtlPtAdj);
+                }
+            } else if (ss->isBeginType()) {
+                positionSegmentFromEndPoints(smartShape->startTermSeg->endPointAdj, smartShape->startTermSeg->breakAdj);
+                adjustBezier(smartShape->startTermSeg->ctlPtAdj);
+            } else if (ss->isEndType()) {
+                positionSegmentFromEndPoints(smartShape->endTermSeg->breakAdj, smartShape->endTermSeg->endPointAdj);
+                adjustBezier(smartShape->endTermSeg->ctlPtAdj);
+            } else if (ss->isMiddleType()) {
+                MeasCmper measId = muse::value(m_tick2Meas, ss->system()->firstMeasure()->tick(), MeasCmper());
+                if (auto measure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, measId)) {
+                    if (!measure->hasSmartShape) {
+                        continue;
+                    }
+                    auto assigns = m_doc->getOthers()->getArray<others::SmartShapeMeasureAssign>(m_currentMusxPartId, measId);
+                    for (const auto& assign : assigns) {
+                        if (assign->shapeNum != smartShape->getCmper()) {
+                            continue;
+                        }
+                        const auto& centerShape = m_doc->getDetails()->get<details::CenterShape>(m_currentMusxPartId, assign->shapeNum, assign->centerShapeNum);
+                        positionSegmentFromEndPoints(centerShape->startBreakAdj, centerShape->endBreakAdj);
+                        adjustBezier(centerShape->ctlPtAdj);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 }
