@@ -340,6 +340,7 @@ private:
     // smart shapes
     void importSmartShapes();
     engraving::DirectionV calculateSlurDirection(engraving::Slur* slur);
+    void positionSlurs();
 
     // texts
     void importTextExpressions();
@@ -367,6 +368,7 @@ private:
     std::unordered_map<musx::dom::LayerIndex, engraving::voice_idx_t> m_layer2Voice;
     std::map<std::pair<musx::dom::EntryNumber, musx::dom::NoteNumber>, engraving::Note*> m_entryNoteNumber2Note; // use std::map to avoid need for std::pair hash function
     std::unordered_map<musx::dom::EntryNumber, engraving::ChordRest*> m_entryNumber2CR;
+    std::map<musx::dom::MusxInstance<musx::dom::others::SmartShape>, engraving::Slur*> m_slurs;
     std::map<int, std::vector<musx::dom::LayerIndex>> m_track2Layer;
     std::set<engraving::Chord*> m_fixedChords;
     ReadableCustomLineMap m_customLines;

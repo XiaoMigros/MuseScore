@@ -99,6 +99,7 @@ void FinaleParser::parse()
     logger()->logInfo(String(u"Laying out score before importing text..."));
     m_score->doLayout();
     importTextExpressions();
+    positionSlurs();
     rebasePageTextOffsets();
 
     // Apply collected element styles
