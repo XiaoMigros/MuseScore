@@ -1227,7 +1227,7 @@ void FinaleParser::positionSlurs()
         }
         auto j = contourMap.upper_bound(length - 1);
         if (j == contourMap.begin()) {
-            j = contourMap.upper_bound(length);
+            j = contourMap.lower_bound(length);
         }
         // observed: linear interpolation
         if (i->first == j->first) {
@@ -1337,7 +1337,7 @@ void FinaleParser::positionSlurs()
         if (config->slurAvoidStaffLines) {
             const Staff* endStaff = m_score->staff(slur->endCR()->vStaffIdx());
             const double endLineDistance = endStaff->lineDistance(slur->tick());
-            const double endStaffY = slur->frontSegment()->system()->staff(slur->endCR()->vStaffIdx())->y() + slur->endCR()->staffOffsetY();
+            const double endStaffY = slur->backSegment()->system()->staff(slur->endCR()->vStaffIdx())->y() + slur->endCR()->staffOffsetY();
             const double relativePosInSp = (endPos.y() - endStaffY) / (endStaff->spatium(slur->tick2()) * endLineDistance);
             const int relativePosStep = (int)(relativePosInSp);
 
@@ -1368,7 +1368,7 @@ void FinaleParser::positionSlurs()
                         continue;
                     }
 
-                    PointF systemStartOffset(s->x() + s->width() + s->measure()->x() + systemRightMargin, ss->ups(Grip::END).p.y());
+                    PointF systemStartOffset(s->x() + s->width() + s->measure()->x() + systemRightMargin, ss->ups(Grip::START).p.y());
                     if (!ss->autoplace()) {
                         systemStartOffset.ry() = ss->system()->staff(referenceBackStaff->idx())->y();
                         systemStartOffset.ry() += referenceBackStaff->staffType(ss->system()->last()->tick())->yoffset().val()
@@ -1380,7 +1380,7 @@ void FinaleParser::positionSlurs()
                                                       + systemAvoidStaffLines * ss->spatium();
                         }
                     }
-                    setAndStyleProperty(ss, Pid::SLUR_UOFF1, systemStartOffset - ss->ups(Grip::END).p);
+                    setAndStyleProperty(ss, Pid::SLUR_UOFF1, systemStartOffset - ss->ups(Grip::START).p);
                     break;
                 }
             }
@@ -1414,12 +1414,13 @@ void FinaleParser::positionSlurs()
             };
 
             // Manual bezier (curve) offsets
-            /// @todo call layout between end point adjustments and this
             auto adjustBezier = [&](const std::shared_ptr<smartshape::ControlPointAdjustment>& shoulderAdjust) {
                 // Don't adjust curve of engraver slurs
                 if (ss->autoplace()) {
                     return;
                 }
+                // Layout because end point adjustments may have changed
+                ss->score()->renderer()->computeBezier(ss);
                 PointF normalisedEnd = ss->ups(Grip::END).pos() - ss->ups(Grip::START).pos();
                 const double angle = atan(normalisedEnd.y() / normalisedEnd.x());
                 muse::draw::Transform t;
@@ -1431,12 +1432,12 @@ void FinaleParser::positionSlurs()
                 shoulder2.rx() += normalisedEnd.x();
                 t.rotateRadians(angle);
                 /// @todo this probably doesn't account for slur changes made before the previous layout
-                shoulder1 = t.map(shoulder1) + ss->ups(Grip::END).pos();
-                shoulder2 = t.map(shoulder2) + ss->ups(Grip::END).pos();
+                shoulder1 = t.map(shoulder1) + ss->ups(Grip::START).pos();
+                shoulder2 = t.map(shoulder2) + ss->ups(Grip::START).pos();
                 if (shoulderAdjust->active) {
                     /// @todo do we need the contextDir
                     shoulder1 += evpuToPointF(shoulderAdjust->startCtlPtX, -shoulderAdjust->startCtlPtY) * ss->defaultSpatium();
-                    shoulder1 += evpuToPointF(shoulderAdjust->endCtlPtX, -shoulderAdjust->endCtlPtY) * ss->defaultSpatium();
+                    shoulder2 += evpuToPointF(shoulderAdjust->endCtlPtX, -shoulderAdjust->endCtlPtY) * ss->defaultSpatium();
                 }
                 setAndStyleProperty(ss, Pid::SLUR_UOFF2, shoulder1 - ss->ups(Grip::BEZIER1).pos());
                 setAndStyleProperty(ss, Pid::SLUR_UOFF3, shoulder2 - ss->ups(Grip::BEZIER2).pos());
