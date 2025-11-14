@@ -1506,9 +1506,9 @@ void FinaleParser::importEntryAdjustments()
                     }
                 }
             } else if (musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::OnStandardNote) {
-                double innermost2 = up ? -DBL_MAX : DBL_MAX;
                 outermost -= stemLengthAdjust * beam->spatium();
                 bool downwardsContour = preferredEnd > preferredStart;
+                double outlier = downwardsContour ? DBL_MAX : -DBL_MAX;
                 bool notesFollowContour = true; // Assume we can slope
                 double prevPos = systemPosByLine(startCr, up);
 
@@ -1529,18 +1529,18 @@ void FinaleParser::importEntryAdjustments()
                         }
                     }
                     if (cr != endCr) {
-                        innermost2 = up ? std::max(innermost2, contourPos) : std::min(innermost2, contourPos);
+                        outlier = downwardsContour ? std::min(outlier, contourPos) : std::max(outlier, contourPos);
                         prevPos = contourPos;
                     }
                 }
 
-                // If the notes don't follow the contour, we flatten if the innermost not-start-end note
+                // If the notes don't follow the contour, we flatten if the outlier
                 // is closer to the middle staff line than the outermost.
                 // If their distances are equal, we only flatten if the outermost note is lower (pitchwise) for up, or higher (pitchwise) for down.
                 if (!notesFollowContour) {
                     double dist = std::abs(outermost - middleLinePos);
-                    double dist2 = std::abs(innermost2 - middleLinePos);
-                    if (up ? innermost2 > outermost : innermost2 < outermost) {
+                    double dist2 = std::abs(outlier - middleLinePos);
+                    if (up ? outlier > outermost : outlier < outermost) {
                         forceFlatten = dist2 < dist;
                     } else {
                         forceFlatten = muse::RealIsEqualOrLess(dist2, dist);
