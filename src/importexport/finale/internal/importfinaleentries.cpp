@@ -1532,7 +1532,7 @@ void FinaleParser::importEntryAdjustments()
                     }
                 }
 
-                // If the notes don't follow the contour, we flatten if the outermost not-start-end note
+                // If the notes don't follow the contour, we flatten if the innermost not-start-end note
                 // is closer to the middle staff line than the outermost.
                 // If their distances are equal, we only flatten if the outermost note is lower (pitchwise) for up, or higher (pitchwise) for down.
                 if (!notesFollowContour) {
