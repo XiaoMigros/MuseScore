@@ -162,6 +162,7 @@ void Finale_Tests::enigmaXmlImportTestRef(const char* file)
         finaleImportTestRef(#name); \
     }
 
+MUSX_IMPORT_TEST(crash)
 MUSX_IMPORT_TEST(texts)
 MUSX_IMPORT_TEST(tremtest)
 MUSX_IMPORT_TEST_EDIT(texts)
