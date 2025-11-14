@@ -1436,6 +1436,8 @@ void FinaleParser::importEntryAdjustments()
         const double middleLinePos = beamStaffY + (beam->staffType()->lines() - 1) * beam->spatium() * beam->staffType()->lineDistance().val() * 0.5;
 
         // Set beam direction
+        /// @todo this can probably be moved to the end of importEntries
+        /// - we just need to set the lines for the notes, system distances are already known
         if (beam->direction() == DirectionV::AUTO) {
             beam->doSetDirection(getDirectionVForLayer(chordRest));
         }
@@ -1491,7 +1493,7 @@ void FinaleParser::importEntryAdjustments()
         // Flatten beams as needed
         bool forceFlatten = musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::AlwaysFlat;
         setAndStyleProperty(beam, Pid::BEAM_NO_SLOPE, forceFlatten, true);
-        if (!forceFlatten && !muse::RealIsEqual(preferredStart, preferredEnd) && beam->elements().size() > 2) {
+        if (!forceFlatten && !muse::RealIsEqual(preferredStart, preferredEnd) && beam->elements().size() > 2) { /// @todo contains at least one chord that's not start or end
             if (musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::OnExtremeNote) {
                 for (ChordRest* cr : beam->elements()) {
                     if (cr == startCr || cr == endCr || cr->isRest()) {
@@ -1504,7 +1506,7 @@ void FinaleParser::importEntryAdjustments()
                     }
                 }
             } else if (musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::OnStandardNote) {
-                double outermost2 = up ? DBL_MAX : -DBL_MAX;
+                double innermost2 = up ? -DBL_MAX : DBL_MAX;
                 outermost -= stemLengthAdjust * beam->spatium();
                 bool downwardsContour = preferredEnd > preferredStart;
                 bool notesFollowContour = true; // Assume we can slope
@@ -1527,7 +1529,7 @@ void FinaleParser::importEntryAdjustments()
                         }
                     }
                     if (cr != endCr) {
-                        outermost2 = up ? std::min(outermost2, contourPos) : std::max(outermost2, contourPos);
+                        innermost2 = up ? std::max(innermost2, contourPos) : std::min(innermost2, contourPos);
                         prevPos = contourPos;
                     }
                 }
@@ -1537,8 +1539,8 @@ void FinaleParser::importEntryAdjustments()
                 // If their distances are equal, we only flatten if the outermost note is lower (pitchwise) for up, or higher (pitchwise) for down.
                 if (!notesFollowContour) {
                     double dist = std::abs(outermost - middleLinePos);
-                    double dist2 = std::abs(outermost2 - middleLinePos);
-                    if (up ? outermost2 > outermost : outermost2 < outermost) {
+                    double dist2 = std::abs(innermost2 - middleLinePos);
+                    if (up ? innermost2 > outermost : innermost2 < outermost) {
                         forceFlatten = dist2 < dist;
                     } else {
                         forceFlatten = muse::RealIsEqualOrLess(dist2, dist);
