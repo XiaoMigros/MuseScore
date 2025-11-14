@@ -1691,7 +1691,7 @@ void FinaleParser::importEntryAdjustments()
             if (chordRest->isChord()) {
                 double rightmostNoteX = -DBL_MAX;
                 for (engraving::Note* n : toChord(chordRest)->notes()) {
-                    rightmostNoteX = std::max(rightmostNoteX, n->ldata()->bbox().right() - n->offset().x());
+                    rightmostNoteX = std::max(rightmostNoteX, n->ldata()->pos().x() + n->width());
                 }
                 rightmostNoteX += dotDistance;
                 for (engraving::Note* n : toChord(chordRest)->notes()) {
@@ -1699,7 +1699,7 @@ void FinaleParser::importEntryAdjustments()
                     if (n->dots().empty()) {
                         continue;
                     }
-                    double difference = n->dots().front()->pos().x() - rightmostNoteX;
+                    double difference = n->dots().front()->ldata()->pos().x() - rightmostNoteX;
                     for (NoteDot* nd : n->dots()) {
                         nd->rxoffset() -= difference;
                     }
