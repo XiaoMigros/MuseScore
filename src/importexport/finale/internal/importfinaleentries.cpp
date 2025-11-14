@@ -1477,10 +1477,10 @@ void FinaleParser::importEntryAdjustments()
         // Calculate non-adjusted position, in system coordinates
         ChordRest* startCr = beam->elements().front();
         ChordRest* endCr = beam->elements().back();
-        double stemLengthAdjust =  (up ? -1.0 : 1.0) * doubleFromEvpu(musxOptions().stemOptions->stemLength)
-                                   * (startCr->isGrace() ? m_score->style().styleD(Sid::graceNoteMag) : 1.0);
-        double preferredStart = systemPosByLine(startCr, up) + stemLengthAdjust * startCr->spatium();
-        double preferredEnd = systemPosByLine(endCr, up) + stemLengthAdjust * endCr->spatium();
+        const double stemLengthAdjust = (up ? -1.0 : 1.0) * doubleFromEvpu(musxOptions().stemOptions->stemLength)
+                                        * (startCr->isGrace() ? m_score->style().styleD(Sid::graceNoteMag) : 1.0);
+        double preferredStart = systemPosByLine(startCr, up);
+        double preferredEnd = systemPosByLine(endCr, up);
         auto getInnermost = [&]() {
             return up ? std::max(preferredStart, preferredEnd) : std::min(preferredStart, preferredEnd); // farthest start/end note
         };
@@ -1499,54 +1499,46 @@ void FinaleParser::importEntryAdjustments()
                     if (cr == startCr || cr == endCr || cr->isRest()) {
                         continue;
                     }
-                    double beamPos = systemPosByLine(cr, up) + stemLengthAdjust * cr->spatium();
+                    double beamPos = systemPosByLine(cr, up);
                     if (up ? muse::RealIsEqualOrLess(beamPos, outermost) : muse::RealIsEqualOrMore(beamPos, outermost)) {
                         forceFlatten = true;
                         break;
                     }
                 }
             } else if (musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::OnStandardNote) {
-                outermost -= stemLengthAdjust * beam->spatium();
-                bool downwardsContour = preferredEnd > preferredStart;
-                double outlier = downwardsContour ? DBL_MAX : -DBL_MAX;
-                bool notesFollowContour = true; // Assume we can slope
-                double prevPos = systemPosByLine(startCr, up);
+                double standardDist = DBL_MAX;
+                double standardPos = 0.0;
 
                 for (ChordRest* cr : beam->elements()) {
-                    if (cr == startCr || cr->isRest()) {
+                    if (cr == startCr || cr == endCr || cr->isRest()) {
                         continue;
                     }
 
                     double contourPos = systemPosByLine(cr, up);
-
-                    // If the note doesn't follow the contour, don't slope.
-                    // Notes having the same line is not good enough and disallows sloping.
-                    if (notesFollowContour) {
-                        if (downwardsContour) {
-                            notesFollowContour = contourPos > prevPos;
+                    double contourDist = std::abs(contourPos - middleLinePos);
+                    if (contourDist < standardDist) {
+                        standardDist = contourDist;
+                        standardPos = contourPos;
+                    }
+                }
+                double startDist = std::abs(preferredStart - middleLinePos);
+                double endDist = std::abs(preferredEnd - middleLinePos);
+                if (muse::RealIsEqualOrLess(standardPos, std::min(preferredStart, preferredEnd))
+                    || muse::RealIsEqualOrMore(standardPos, std::max(preferredStart, preferredEnd))) {
+                    double edgeDist = std::min(startDist, endDist);
+                    if (muse::RealIsEqual(standardDist, edgeDist)) {
+                        if (up) {
+                            forceFlatten = !(muse::RealIsEqual(standardDist, startDist) && preferredStart < standardPos)
+                                           && !(muse::RealIsEqual(standardDist, endDist) && preferredEnd < standardPos);
                         } else {
-                            notesFollowContour = contourPos < prevPos;
+                            forceFlatten = !(muse::RealIsEqual(standardDist, startDist) && preferredStart > standardPos)
+                                           && !(muse::RealIsEqual(standardDist, endDist) && preferredEnd > standardPos);
                         }
-                    }
-                    if (cr != endCr) {
-                        outlier = downwardsContour ? std::min(outlier, contourPos) : std::max(outlier, contourPos);
-                        prevPos = contourPos;
-                    }
-                }
-
-                // If the notes don't follow the contour, we flatten if the outlier
-                // is closer to the middle staff line than the outermost.
-                // If their distances are equal, we only flatten if the outermost note is lower (pitchwise) for up, or higher (pitchwise) for down.
-                if (!notesFollowContour) {
-                    double dist = std::abs(outermost - middleLinePos);
-                    double dist2 = std::abs(outlier - middleLinePos);
-                    if (up ? outlier > outermost : outlier < outermost) {
-                        forceFlatten = dist2 < dist;
+                        forceFlatten = up ? outermost > standardPos : outermost < standardPos;
                     } else {
-                        forceFlatten = muse::RealIsEqualOrLess(dist2, dist);
+                        forceFlatten = standardDist < edgeDist;
                     }
                 }
-                outermost = getOutermost();
             }
         }
         if (forceFlatten) {
@@ -1570,6 +1562,10 @@ void FinaleParser::importEntryAdjustments()
                 preferredStart = preferredEnd + slope * -totalX;
             }
         }
+
+        // Add stem lengths
+        preferredStart += stemLengthAdjust * startCr->spatium();
+        preferredEnd += stemLengthAdjust * endCr->spatium();
 
         // Ensure middle staff line distance is respected
         outermost = getOutermost();
