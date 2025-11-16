@@ -1128,8 +1128,32 @@ static PointF systemPosFromAnchor(std::shared_ptr<options::SmartShapeOptions::Co
     } else {
         Chord* c = toChord(cr);
         c->score()->renderer()->layoutItem(c); // Needed for articulations
-        auto getPosFromElement = [c](const EngravingItem* e, bool right, bool bottom, bool includeArticulations = true) {
-            PointF ePos = e->pos() + PointF(right ? e->width() : 0.0, bottom ? e->height() : 0.0);
+        auto getPosFromElement = [c](const EngravingItem* e, AlignH horz, AlignV vert, bool includeArticulations = true) {
+            PointF ePos = e->pos();
+            switch (horz) {
+            case AlignH::LEFT:
+                break;
+            case AlignH::HCENTER:
+                ePos.rx() += e->width() / 2;
+                break;
+            case AlignH::RIGHT:
+                ePos.rx() += e->width();
+                break;
+            default:
+                break;
+            }
+            switch (vert) {
+            case AlignV::TOP:
+                break;
+            case AlignV::VCENTER:
+                ePos.ry() += e->height() / 2;
+                break;
+            case AlignV::BOTTOM:
+                ePos.ry() += e->height();
+                break;
+            default:
+                break;
+            }
             if (e->isNote()) {
                 ePos -= e->offset();
             }
@@ -1142,67 +1166,87 @@ static PointF systemPosFromAnchor(std::shared_ptr<options::SmartShapeOptions::Co
                     /// @todo collect articulations that go outside the slur and offset them (value is specified in smartShapeOptions)
                     continue;
                 }
-                PointF aPos = a->pos() + PointF(right ? a->width() : 0.0, bottom ? a->height() : 0.0);
-                if (bottom) {
-                    ePos.ry() = std::max(ePos.y(), aPos.y());
-                } else {
-                    ePos.ry() = std::min(ePos.y(), aPos.y());
+                double artYPos = a->pos().y();
+                switch (vert) {
+                case AlignV::TOP:
+                    break;
+                case AlignV::VCENTER:
+                    artYPos += a->height() / 2;
+                    break;
+                case AlignV::BOTTOM:
+                    artYPos += a->height();
+                    break;
+                default:
+                    break;
                 }
+                ePos.ry() = bottom ? std::max(ePos.y(), artYPos) : std::min(ePos.y(), artYPos);
             }
             return ePos;
         };
         switch (connection->connectIndex) {
             case options::SmartShapeOptions::ConnectionIndex::StemRightTop:
                 if (c->stem()) {
-                    return baseOffset + getPosFromElement(c->stem(), true, false);
+                    return baseOffset + getPosFromElement(c->stem(), AlignH::RIGHT, AlignV::TOP);
                 }
                 [[fallthrough]];
-            case options::SmartShapeOptions::ConnectionIndex::NoteRightTop: // perhaps only used for note-anchored shapes
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightTop: {// perhaps only used for note-anchored shapes
+                const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, AlignH::RIGHT, AlignV::TOP);
+            }
             case options::SmartShapeOptions::ConnectionIndex::HeadRightTop: {
                 const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
-                return baseOffset + getPosFromElement(n, true, false);
+                return baseOffset + getPosFromElement(n, AlignH::HCENTER, AlignV::TOP);
             }
 
             case options::SmartShapeOptions::ConnectionIndex::StemLeftTop:
                 if (c->stem()) {
-                    return baseOffset + getPosFromElement(c->stem(), false, false);
+                    return baseOffset + getPosFromElement(c->stem(), AlignH::LEFT, AlignV::TOP);
                 }
                 [[fallthrough]];
-            case options::SmartShapeOptions::ConnectionIndex::NoteLeftTop:
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftTop: {
+                const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, AlignH::LEFT, AlignV::TOP);
+            }
             case options::SmartShapeOptions::ConnectionIndex::HeadLeftTop: {
                 const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
-                return baseOffset + getPosFromElement(n, false, false);
+                return baseOffset + getPosFromElement(n, AlignH::HCENTER, AlignV::TOP);
             }
 
             case options::SmartShapeOptions::ConnectionIndex::StemRightBottom:
                 if (c->stem()) {
-                    return baseOffset + getPosFromElement(c->stem(), true, true);
+                    return baseOffset + getPosFromElement(c->stem(), AlignH::RIGHT, AlignV::BOTTOM);
                 }
                 [[fallthrough]];
-            case options::SmartShapeOptions::ConnectionIndex::NoteRightBottom:
+            case options::SmartShapeOptions::ConnectionIndex::NoteRightBottom: {
+                const engraving::Note* n = c->downNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, AlignH::RIGHT, AlignV::BOTTOM);
+            }
             case options::SmartShapeOptions::ConnectionIndex::HeadRightBottom: {
                 const engraving::Note* n = c->downNote(); // specific note for note-anchored shapes?
-                return baseOffset + getPosFromElement(n, true, true);
+                return baseOffset + getPosFromElement(n, AlignH::HCENTER, AlignV::BOTTOM);
             }
 
             case options::SmartShapeOptions::ConnectionIndex::StemLeftBottom:
                 if (c->stem()) {
-                    return baseOffset + getPosFromElement(c->stem(), false, true);
+                    return baseOffset + getPosFromElement(c->stem(), AlignH::LEFT, AlignV::BOTTOM);
                 }
                 [[fallthrough]];
-            case options::SmartShapeOptions::ConnectionIndex::NoteLeftBottom:
+            case options::SmartShapeOptions::ConnectionIndex::NoteLeftBottom: {
+                const engraving::Note* n = c->downNote(); // specific note for note-anchored shapes?
+                return baseOffset + getPosFromElement(n, AlignH::HCENTER, AlignV::BOTTOM);
+            }
             case options::SmartShapeOptions::ConnectionIndex::HeadLeftBottom: {
                 const engraving::Note* n = c->downNote(); // specific note for note-anchored shapes?
-                return baseOffset + getPosFromElement(n, false, true);
+                return baseOffset + getPosFromElement(n, AlignH::LEFT, AlignV::BOTTOM);
             }
 
             case options::SmartShapeOptions::ConnectionIndex::NoteRightCenter: {
                 const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
-                return baseOffset + n->ldata()->pos() + PointF(n->width(), n->height() / 2.0);
+                return baseOffset + getPosFromElement(n, AlignH::RIGHT, AlignV::VCENTER);
             }
             case options::SmartShapeOptions::ConnectionIndex::NoteLeftCenter: {
                 const engraving::Note* n = c->upNote(); // specific note for note-anchored shapes?
-                return baseOffset + n->ldata()->pos() + PointF(0.0, n->height() / 2.0);
+                return baseOffset + getPosFromElement(n, AlignH::LEFT, AlignV::VCENTER);
             }
         }
     }
@@ -1313,7 +1357,7 @@ void FinaleParser::positionSlurs()
 
         // Start position
         PointF startPos = systemPosFromAnchor(muse::value(config->slurConnectStyles, connectStyleTypeForSlur(true)), slur->startCR());
-        if (config->slurAvoidStaffLines) {
+        i/* f (config->slurAvoidStaffLines) {
             const Staff* startStaff = m_score->staff(slur->startCR()->vStaffIdx());
             const double startLineDistance = startStaff->lineDistance(slur->tick());
             const double startStaffY = slur->frontSegment()->system()->staff(slur->startCR()->vStaffIdx())->y() + slur->startCR()->staffOffsetY();
@@ -1329,12 +1373,12 @@ void FinaleParser::positionSlurs()
                 const double newOffsetInSp = relativePosStep * startLineDistance + (up ? -1.0 : 1.0) * avoidDistance + 1.0;
                 startPos.ry() = startStaffY + newOffsetInSp * startStaff->spatium(slur->tick());
             }
-        }
+        } */
         setAndStyleProperty(slur->frontSegment(), Pid::SLUR_UOFF1, startPos - slur->frontSegment()->ups(Grip::START).p);
 
         // End position
         PointF endPos = systemPosFromAnchor(muse::value(config->slurConnectStyles, connectStyleTypeForSlur(false)), slur->endCR());
-        if (config->slurAvoidStaffLines) {
+        /* if (config->slurAvoidStaffLines) {
             const Staff* endStaff = m_score->staff(slur->endCR()->vStaffIdx());
             const double endLineDistance = endStaff->lineDistance(slur->tick());
             const double endStaffY = slur->backSegment()->system()->staff(slur->endCR()->vStaffIdx())->y() + slur->endCR()->staffOffsetY();
@@ -1350,7 +1394,7 @@ void FinaleParser::positionSlurs()
                 const double newOffsetInSp = relativePosStep * endLineDistance + (up ? -1.0 : 1.0) * avoidDistance + 1.0;
                 endPos.ry() = endStaffY + newOffsetInSp * endStaff->spatium(slur->tick2());
             }
-        }
+        } */
         setAndStyleProperty(slur->backSegment(), Pid::SLUR_UOFF4, endPos - slur->backSegment()->ups(Grip::END).p);
 
         for (SpannerSegment* spannerSeg : slur->spannerSegments()) {
