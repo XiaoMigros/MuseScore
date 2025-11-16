@@ -1404,43 +1404,44 @@ void FinaleParser::positionSlurs()
             const Staff* referenceFrontStaff = ss->isEndType() ? m_score->staff(slur->endCR()->vStaffIdx()) : m_score->staff(slur->startCR()->vStaffIdx());
             const Staff* referenceBackStaff = ss->isSingleEndType() ? m_score->staff(slur->endCR()->vStaffIdx()) : m_score->staff(slur->startCR()->vStaffIdx());
 
-            // Leading position from previous systems
+
+            // Trailing position to new systems
             if (!ss->isSingleBeginType()) {
+                PointF systemEndOffset(ss->system()->endingXForOpenEndedLines() + ss->style().styleMM(Sid::lineEndToBarlineDistance) + systemRightMargin, ss->ups(Grip::END).p.y());
+                if (!ss->autoplace()) {
+                    systemStartOffset.ry() = ss->system()->staff(referenceBackStaff->idx())->y();
+                    systemStartOffset.ry() += referenceBackStaff->staffType(ss->system()->last()->tick())->yoffset().val()
+                                              * referenceBackStaff->spatium(ss->system()->last()->tick());
+                    if (up) {
+                        systemStartOffset.ry() -= systemAvoidStaffLines * ss->spatium();
+                    } else {
+                        systemStartOffset.ry() += referenceBackStaff->staffHeight(ss->system()->last()->tick()) // not endTick
+                                                  + systemAvoidStaffLines * ss->spatium();
+                    }
+                }
+                setAndStyleProperty(ss, Pid::SLUR_UOFF4, systemEndOffset - ss->ups(Grip::END).p);
+            }
+
+            // Leading position from previous systems
+            if (!ss->isSingleEndType()) {
                 Segment* firstCRseg = ss->system()->firstMeasure()->first(SegmentType::ChordRest);
                 for (Segment* s = firstCRseg->prevActive(); s && s->measure() == firstCRseg->measure(); s = s->prev(SegmentType::HeaderClef | SegmentType::KeySig | SegmentType::TimeSigType)) {
                     if (!s->isActive() || s->allElementsInvisible() || s->hasTimeSigAboveStaves()) {
                         continue;
                     }
 
-                    PointF systemStartOffset(s->x() + s->width() + s->measure()->x() + systemRightMargin, ss->ups(Grip::START).p.y());
+                    PointF systemStartOffset(s->x() + s->width() + s->measure()->x() + systemLeftMargin, ss->ups(Grip::START).p.y());
                     if (!ss->autoplace()) {
-                        systemStartOffset.ry() = ss->system()->staff(referenceBackStaff->idx())->y();
-                        systemStartOffset.ry() += referenceBackStaff->staffType(ss->system()->last()->tick())->yoffset().val()
-                                                  * referenceBackStaff->spatium(ss->system()->last()->tick());
-                        if (up) {
-                            systemStartOffset.ry() -= systemAvoidStaffLines * ss->spatium();
-                        } else {
-                            systemStartOffset.ry() += referenceBackStaff->staffHeight(ss->system()->last()->tick()) // not endTick
-                                                      + systemAvoidStaffLines * ss->spatium();
+                        systemEndOffset.ry() = ss->system()->staff(referenceFrontStaff->idx())->y();
+                        systemEndOffset.ry() += referenceFrontStaff->staffType(ss->system()->first()->tick())->yoffset().val()
+                                                * referenceFrontStaff->spatium(ss->system()->first()->tick());
+                        if (!up) {
+                            systemEndOffset.ry() += referenceFrontStaff->staffHeight(ss->system()->first()->tick());
                         }
                     }
                     setAndStyleProperty(ss, Pid::SLUR_UOFF1, systemStartOffset - ss->ups(Grip::START).p);
                     break;
                 }
-            }
-
-            // Trailing position to new systems
-            if (!ss->isSingleEndType()) {
-                PointF systemEndOffset(ss->system()->endingXForOpenEndedLines() + ss->style().styleMM(Sid::lineEndToBarlineDistance) + systemLeftMargin, ss->ups(Grip::END).p.y());
-                if (!ss->autoplace()) {
-                    systemEndOffset.ry() = ss->system()->staff(referenceFrontStaff->idx())->y();
-                    systemEndOffset.ry() += referenceFrontStaff->staffType(ss->system()->first()->tick())->yoffset().val()
-                                            * referenceFrontStaff->spatium(ss->system()->first()->tick());
-                    if (!up) {
-                        systemEndOffset.ry() += referenceFrontStaff->staffHeight(ss->system()->first()->tick());
-                    }
-                }
-                setAndStyleProperty(ss, Pid::SLUR_UOFF4, systemEndOffset - ss->ups(Grip::END).p);
             }
 
             // Manual start/end point offsets
