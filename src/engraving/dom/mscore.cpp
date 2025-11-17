@@ -44,9 +44,9 @@ bool MScore::noGui = false;
 int MScore::_vRaster;
 int MScore::_hRaster;
 bool MScore::_verticalOrientation = false;
-double MScore::verticalPageGap = 5.0;
-double MScore::horizontalPageGapEven = 1.0;
-double MScore::horizontalPageGapOdd = 50.0;
+double MScore::verticalPageGap = 0.35 * DPMM;
+double MScore::horizontalPageGapEven = 0.07 * DPMM;
+double MScore::horizontalPageGapOdd = 3.5 * DPMM;
 
 bool MScore::warnPitchRange;
 bool MScore::warnGuitarBends;
@@ -59,8 +59,6 @@ double MScore::nudgeStep50;
 bool MScore::noImages = false;
 bool MScore::pdfPrinting = false;
 bool MScore::svgPrinting = false;
-
-double MScore::pixelRatio  = 0.8;         // DPI / logicalDPI
 
 extern void initDrumset();
 
@@ -106,9 +104,11 @@ std::string MScore::errorToString(MsError err)
     case MsError::CANNOT_REMOVE_TIME_TUPLET: return "CANNOT_REMOVE_TIME_TUPLET";
     case MsError::CANNOT_REMOVE_TIME_MEASURE_REPEAT: return "CANNOT_REMOVE_TIME_MEASURE_REPEAT";
     case MsError::NO_DEST: return "NO_DEST";
+    case MsError::SOURCE_PARTIAL_TUPLET: return "SOURCE_PARTIAL_TUPLET";
     case MsError::DEST_TUPLET: return "DEST_TUPLET";
     case MsError::TUPLET_CROSSES_BAR: return "TUPLET_CROSSES_BAR";
     case MsError::DEST_LOCAL_TIME_SIGNATURE: return "DEST_LOCAL_TIME_SIGNATURE";
+    case MsError::SOURCE_PARTIAL_TREMOLO: return "SOURCE_PARTIAL_TREMOLO";
     case MsError::DEST_TREMOLO: return "DEST_TREMOLO";
     case MsError::NO_MIME: return "NO_MIME";
     case MsError::DEST_NO_CR: return "DEST_NO_CR";

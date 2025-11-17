@@ -372,16 +372,22 @@ bool BarLine::isBottom() const
 
 bool BarLine::acceptDrop(EditData& data) const
 {
-    ElementType type = data.dropElement->type();
-    if (type == ElementType::BAR_LINE) {
+    EngravingItem* e = data.dropElement;
+
+    if (e->isBarLine()) {
         return true;
-    } else {
-        return (type == ElementType::FERMATA || type == ElementType::SYMBOL || type == ElementType::IMAGE)
-               && segment()
-               && segment()->isEndBarLineType();
+    } else if (e->isFermata() || e->isSymbol() || e->isImage()) {
+        return segment() && segment()->isEndBarLineType();
+    } else if (e->isMeasureNumber() || e->isJump() || e->isMarker() || e->isLayoutBreak()) {
+        if (Measure* m = measure()) {
+            bool left = (e->isMarker() && !toMarker(e)->isRightMarker()) || e->isMeasureNumber();
+            if (left && segment()->isEndBarLineType() && m->nextMeasureMM()) {
+                m = m->nextMeasureMM();
+            }
+            return m->acceptDrop(data);
+        }
     }
-    // Prevent unreachable code warning
-    // return false;
+    return false;
 }
 
 //---------------------------------------------------------
@@ -469,8 +475,16 @@ EngravingItem* BarLine::drop(EditData& data)
         e->setParent(segment());
         score()->undoAddElement(e);
         return e;
+    } else if (e->isMeasureNumber() || e->isJump() || e->isMarker() || e->isLayoutBreak()) {
+        if (Measure* m = measure()) {
+            bool left = (e->isMarker() && !toMarker(e)->isRightMarker()) || e->isMeasureNumber();
+            if (left && segment()->isEndBarLineType() && m->nextMeasureMM()) {
+                m = m->nextMeasureMM();
+            }
+            return m->drop(data);
+        }
     }
-    return 0;
+    return nullptr;
 }
 
 //---------------------------------------------------------
@@ -702,16 +716,11 @@ void BarLine::endDragGrip(EditData& ed)
 //   scanElements
 //---------------------------------------------------------
 
-void BarLine::scanElements(void* data, void (* func)(void*, EngravingItem*), bool all)
+void BarLine::scanElements(std::function<void(EngravingItem*)> func)
 {
-    // if no width (staff has bar lines turned off) and not all requested, do nothing
-    if (RealIsNull(width()) && !all) {
-        return;
-    }
-
-    func(data, this);
+    func(this);
     for (EngravingItem* e : m_el) {
-        e->scanElements(data, func, all);
+        e->scanElements(func);
     }
 }
 

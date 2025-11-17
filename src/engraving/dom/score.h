@@ -161,6 +161,7 @@ enum class HDuration : signed char;
 enum class AccidentalType : unsigned char;
 enum class LayoutBreakType : unsigned char;
 enum class CommandType : signed char;
+enum class SystemDividerType : unsigned char;
 
 enum class LoopBoundaryType : signed char {
     Unknown = -1,
@@ -346,10 +347,7 @@ public:
 
     static void onElementDestruction(EngravingItem* se);
 
-    // Score Tree functions
-    EngravingObject* scanParent() const override;
-    EngravingObjectList scanChildren() const override;
-    void scanElements(void* data, void (* func)(void*, EngravingItem*), bool all=true) override;
+    void scanElements(std::function<void(EngravingItem*)> func) override;
 
     void dumpScoreTree();  // for debugging purposes
 
@@ -417,7 +415,6 @@ public:
     void cmdDecDurationDotted() { cmdIncDecDuration(1, true); }
     void cmdIncDecDuration(int nSteps, bool stepDotted = false);
     void cmdToggleLayoutBreak(LayoutBreakType);
-    void cmdAddStaffTypeChange(Measure* measure, staff_idx_t staffIdx, StaffTypeChange* stc);
     void cmdAddMeasureRepeat(Measure*, int numMeasures, staff_idx_t staffIdx);
     bool makeMeasureRepeatGroup(Measure*, int numMeasures, staff_idx_t staffIdx);
     void cmdFlip();
@@ -669,8 +666,8 @@ public:
     void select(const std::vector<EngravingItem*>& items, SelectType = SelectType::SINGLE, staff_idx_t staff = 0);
     void selectSimilar(EngravingItem* e, bool sameStaff);
     void selectSimilarInRange(EngravingItem* e);
-    static void collectMatch(void* data, EngravingItem* e);
-    static void collectNoteMatch(void* data, EngravingItem* e);
+    static void collectMatch(ElementPattern* p, EngravingItem* e);
+    static void collectNoteMatch(NotePattern* p, EngravingItem* e);
     void deselect(EngravingItem* obj);
     void deselectAll() { m_selection.deselectAll(); }
     void updateSelection() { m_selection.update(); }
@@ -765,10 +762,10 @@ public:
     void spatiumChanged(double oldValue, double newValue);
     void styleChanged() override;
 
-    std::vector<EngravingItem*> cmdPaste(const IMimeData* ms, MuseScoreView* view, Fraction scale = Fraction(1, 1));
+    void cmdPaste(const IMimeData* ms, MuseScoreView* view, Fraction scale = Fraction(1, 1));
 
     // TODO: Not ideal that these are public but it's very convenient for testing purposes (a copy/paste refactor is coming soon)...
-    std::vector<EngravingItem*> cmdPasteSymbol(muse::ByteArray& data, MuseScoreView* view, Fraction scale = Fraction(1, 1));
+    void cmdPasteSymbol(muse::ByteArray& data, MuseScoreView* view, Fraction scale = Fraction(1, 1));
     void cmdPasteStaffList(muse::ByteArray& data, Fraction scale = Fraction(1, 1));
     void cmdPasteSymbolList(muse::ByteArray& data);
 
@@ -871,7 +868,7 @@ public:
     void connectTies(bool silent = false);
     void undoRemoveStaleTieJumpPoints(bool undo = true);
 
-    void scanElementsInRange(void* data, void (* func)(void*, EngravingItem*), bool all = true);
+    void scanElementsInRange(std::function<void(EngravingItem*)> func);
     int fileDivision() const { return m_fileDivision; }   ///< division of current loading *.msc file
     void splitStaff(staff_idx_t staffIdx, int splitPoint);
     FiguredBass* addFiguredBass();
@@ -1076,6 +1073,10 @@ public:
 
     void rebuildFretBox();
 
+    const std::map<size_t, std::array<SystemDivider*, 2> > systemDividers() const { return m_systemDividers; }
+    SystemDivider* systemDivider(size_t systemIdx, SystemDividerType type) const;
+    void addSystemDivider(size_t systemIdx, SystemDivider* divider);
+
     friend class Chord;
 
 protected:
@@ -1200,6 +1201,8 @@ private:
     //
     std::vector<Page*> m_pages;            // pages are build from systems
     std::vector<System*> m_systems;        // measures are accumulated to systems
+
+    std::map<size_t, std::array<SystemDivider*, 2> > m_systemDividers; // list of system dividers (left and right) indexed by system
 
     InputState m_is;
     MStyle m_style;

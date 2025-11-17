@@ -21,6 +21,7 @@
 include(GetPlatformInfo)
 
 if (OS_IS_WIN)
+
     set(AUDIO_DRIVER_SRC
         #${CMAKE_CURRENT_LIST_DIR}/platform/win/winmmdriver.cpp
         #${CMAKE_CURRENT_LIST_DIR}/platform/win/winmmdriver.h
@@ -36,6 +37,22 @@ if (OS_IS_WIN)
         ${CMAKE_CURRENT_LIST_DIR}/platform/win/wasapiaudiodriver2.cpp
         ${CMAKE_CURRENT_LIST_DIR}/platform/win/wasapiaudiodriver2.h
     )
+
+    if (MUSE_MODULE_AUDIO_ASIO)
+
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/platform/win/asio/asiosdk)
+
+        set(AUDIO_DRIVER_SRC ${AUDIO_DRIVER_SRC}
+            ${CMAKE_CURRENT_LIST_DIR}/platform/win/asio/asioaudiodriver.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/platform/win/asio/asioaudiodriver.h
+        )
+
+        set(AUDIO_DRIVER_LINK
+            asiosdk
+        )
+
+    endif()
+
 elseif(OS_IS_LIN OR OS_IS_FBSD)
     set(AUDIO_DRIVER_SRC
         ${CMAKE_CURRENT_LIST_DIR}/platform/lin/alsaaudiodriver.cpp

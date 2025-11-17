@@ -550,7 +550,7 @@ void NotationActionController::init()
         if (notation) {
             notation->interaction()->noteInput()->stateChanged().onNotify(this, [this]() {
                 m_currentNotationNoteInputChanged.notify();
-            });
+            }, Asyncable::Mode::SetReplace);
         }
         m_currentNotationNoteInputChanged.notify();
     });
@@ -2040,7 +2040,7 @@ void NotationActionController::navigateToTextElement(MoveDirection direction, bo
         const Harmony* chordSymbol = editedChordSymbol();
 
         // otherwise, chord symbol will be deleted when navigating away from it
-        const bool canPlay = chordSymbol && !chordSymbol->plainText().empty();
+        const bool canPlay = chordSymbol && !chordSymbol->harmonyName().empty();
 
         currentNotationInteraction()->navigateToNearHarmony(direction, nearNoteOrRest);
 
@@ -2065,7 +2065,7 @@ void NotationActionController::navigateToTextElementByFraction(const Fraction& f
         const Harmony* chordSymbol = editedChordSymbol();
 
         // otherwise, chord symbol will be deleted when navigating away from it
-        const bool canPlay = chordSymbol && !chordSymbol->plainText().empty();
+        const bool canPlay = chordSymbol && !chordSymbol->harmonyName().empty();
 
         currentNotationInteraction()->navigateToHarmony(fraction);
 
@@ -2088,7 +2088,7 @@ void NotationActionController::navigateToTextElementInNearMeasure(MoveDirection 
         const Harmony* chordSymbol = editedChordSymbol();
 
         // otherwise, chord symbol will be deleted when navigating away from it
-        const bool canPlay = chordSymbol && !chordSymbol->plainText().empty();
+        const bool canPlay = chordSymbol && !chordSymbol->harmonyName().empty();
 
         currentNotationInteraction()->navigateToHarmonyInNearMeasure(direction);
 

@@ -686,6 +686,7 @@ void Segment::add(EngravingItem* el)
 
     track_idx_t track = el->track();
     assert(track != muse::nidx);
+    assert(track < score()->ntracks());
     assert(el->score() == score());
     assert(score()->nstaves() * VOICES == m_elist.size());
     // make sure offset is correct for staff
@@ -1459,14 +1460,14 @@ EngravingItem* Segment::elementAt(track_idx_t track) const
 //   scanElements
 //---------------------------------------------------------
 
-void Segment::scanElements(void* data, void (* func)(void*, EngravingItem*), bool all)
+void Segment::scanElements(std::function<void(EngravingItem*)> func)
 {
     bool scanAllTimeSigs = (isType(SegmentType::TimeSigType)
                             && style().styleV(Sid::timeSigPlacement).value<TimeSigPlacement>() != TimeSigPlacement::NORMAL);
     for (size_t track = 0; track < score()->nstaves() * VOICES; ++track) {
         size_t staffIdx = track / VOICES;
         bool thisMeasureVisible = measure()->visible(staffIdx) && score()->staff(staffIdx)->show();
-        if (!all && !scanAllTimeSigs && !thisMeasureVisible) {
+        if (!scanAllTimeSigs && !thisMeasureVisible) {
             Measure* nextMeasure = measure()->nextMeasure();
             bool nextMeasureVisible = nextMeasure
                                       && nextMeasure->system() == measure()->system()
@@ -1482,42 +1483,11 @@ void Segment::scanElements(void* data, void (* func)(void*, EngravingItem*), boo
         if (e == 0) {
             continue;
         }
-        e->scanElements(data, func, all);
+        e->scanElements(func);
     }
     for (EngravingItem* e : annotations()) {
-        if (all || e->systemFlag() || measure()->visible(e->staffIdx())) {
-            e->scanElements(data,  func, all);
-        }
+        e->scanElements(func);
     }
-}
-
-RectF Segment::contentRect() const
-{
-    RectF result;
-    for (const EngravingItem* element: elist()) {
-        if (!element) {
-            continue;
-        }
-
-        if (element->isChord()) {
-            const Chord* chord = dynamic_cast<const Chord*>(element);
-            for (const Note* note: chord->notes()) {
-                result = result.united(note->ldata()->bbox());
-            }
-
-            Hook* hook = chord->hook();
-            if (hook) {
-                RectF rect = RectF(hook->pos().x(), hook->pos().y(), hook->width(), hook->height());
-                result = result.united(rect);
-            }
-
-            continue;
-        }
-
-        result = result.united(element->ldata()->bbox());
-    }
-
-    return result;
 }
 
 //---------------------------------------------------------
@@ -2634,7 +2604,18 @@ void Segment::createShape(staff_idx_t staffIdx)
             setVisible(true);
             if (e->isRest() && toRest(e)->isFullMeasureRest() && measure()->hasVoices(e->staffIdx())) {
                 // A full measure rest in a measure with multiple voices must be ignored
-                continue;
+                // Unless the measure is made of *only* full rests
+                bool isAllFullRests = true;
+                for (track_idx_t track = strack; track < etrack; ++track) {
+                    EngravingItem* element = m_elist[track];
+                    if (element && !(element->isRest() && toRest(element)->isFullMeasureRest())) {
+                        isAllFullRests = false;
+                        break;
+                    }
+                }
+                if (!isAllFullRests) {
+                    continue;
+                }
             }
             if (e->isMMRest() || (e->isMeasureRepeat() && toMeasureRepeat(e)->numMeasures() > 1)) {
                 continue;

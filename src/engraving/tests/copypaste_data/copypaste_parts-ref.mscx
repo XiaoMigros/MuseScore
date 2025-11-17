@@ -4,7 +4,7 @@
     <eid>B_B</eid>
     <Division>480</Division>
     <Style>
-      <spatium>1.74978</spatium>
+      <spatium>1.75</spatium>
       </Style>
     <showInvisible>1</showInvisible>
     <showUnprintable>1</showUnprintable>
@@ -115,7 +115,7 @@
             <tempo>1.333333</tempo>
             <followText>1</followText>
             <eid>H_H</eid>
-            <text><sym>metNoteQuarterUp</sym><font face="Edwin"></font> = 80</text>
+            <text><sym>metNoteQuarterUp</sym><font face="Edwin"/> = 80</text>
             </Tempo>
           <Spanner type="Pedal">
             <Pedal>
@@ -862,7 +862,7 @@
       <name>Flute</name>
       <Division>480</Division>
       <Style>
-        <spatium>1.74978</spatium>
+        <spatium>1.75</spatium>
         </Style>
       <showInvisible>1</showInvisible>
       <showUnprintable>1</showUnprintable>
@@ -922,7 +922,7 @@
               <followText>1</followText>
               <eid>EC_EC</eid>
               <linkedTo>H_H</linkedTo>
-              <text><sym>metNoteQuarterUp</sym><font face="Edwin"></font> = 80</text>
+              <text><sym>metNoteQuarterUp</sym><font face="Edwin"/> = 80</text>
               </Tempo>
             <Spanner type="Pedal">
               <Pedal>

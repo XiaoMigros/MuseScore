@@ -20,8 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_MSCORE_H
-#define MU_ENGRAVING_MSCORE_H
+#pragma once
 
 #include "global/containers.h"
 
@@ -63,16 +62,19 @@ inline constexpr bool isDownVoice(voice_idx_t voiceIdx)
 static constexpr int MAX_HEADERS = 3;
 static constexpr int MAX_FOOTERS = 3;
 
-static constexpr double INCH      = 25.4;
-static constexpr double PPI       = 72.0; // printer points per inch
-static constexpr double DPI_F     = 5;
-static constexpr double DPI       = 72.0 * DPI_F;
-static constexpr double SPATIUM20 = 5.0 * (DPI / 72.0);
-static constexpr double DPMM      = DPI / INCH;
+// UNIVERSAL UNITS
+static constexpr double INCH      = 25.4; // millimitres per inch
+static constexpr double PPI       = 72.0; // typographical points per inch
+
+// INTERNAL DRAWING UNITS
+static constexpr double DPI = 1200;
+static constexpr double DPMM = DPI / INCH;
 
 // NOTE: the SMuFL default is actually 20pt. We use 10 for historical reasons
 // and back-compatibility, but this will be multiplied x2 during layout.
 static constexpr double MUSICAL_SYMBOLS_DEFAULT_FONT_SIZE = 10.0;
+
+static constexpr double UI_ICONS_DEFAULT_FONT_SIZE = 12.0;
 
 static constexpr int MAX_STAVES = 4;
 
@@ -149,9 +151,11 @@ enum class MsError : unsigned char {
     CANNOT_REMOVE_TIME_TUPLET,
     CANNOT_REMOVE_TIME_MEASURE_REPEAT,
     NO_DEST,
+    SOURCE_PARTIAL_TUPLET,
     DEST_TUPLET,
     TUPLET_CROSSES_BAR,
     DEST_LOCAL_TIME_SIGNATURE,
+    SOURCE_PARTIAL_TREMOLO,
     DEST_TREMOLO,
     NO_MIME,
     DEST_NO_CR,
@@ -220,7 +224,6 @@ public:
 
     static bool pdfPrinting;
     static bool svgPrinting;
-    static double pixelRatio;
 
     static double verticalPageGap;
     static double horizontalPageGapEven;
@@ -231,5 +234,3 @@ public:
     static std::string errorToString(MsError err);
 };
 } // namespace mu::engraving
-
-#endif

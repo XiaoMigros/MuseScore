@@ -53,7 +53,7 @@ namespace mu::engraving {
 //---------------------------------------------------------
 
 BEGIN_QT_REGISTERED_ENUM(Sid)
-enum class Sid {
+enum class Sid : short {
     ///.\{
     NOSTYLE = -1,
 
@@ -183,6 +183,10 @@ enum class Sid {
     dividerRightSym,
     dividerRightX,
     dividerRightY,
+    dividerLeftAlignToSystemBarline,
+    dividerRightAlignToSystemBarline,
+    dividerLeftSize,
+    dividerRightSize,
 
     clefLeftMargin,
     keysigLeftMargin,
@@ -1013,7 +1017,6 @@ enum class Sid {
     stringNumberFrameBgColor,
     stringNumberOffset,
     stringNumberPosition,
-    preferSameStringForTranspose,
 
     stringTuningsFontSize,
 
@@ -2045,22 +2048,16 @@ typedef std::vector<StyledProperty> ElementStyle;
 //---------------------------------------------------------
 struct StyleDef
 {
-private:
+public:
+    struct StyleValue
+    {
+        Sid sid { Sid::NOSTYLE };
+        muse::AsciiStringView xmlName;
+        PropertyValue defaultValue;
 
-    friend class MStyle;
-    friend class EngravingStyleModel;
+        inline size_t idx() const { return size_t(sid); }
 
-    struct StyleValue {
-        Sid _idx;
-        muse::AsciiStringView _name;         // xml name for read()/write()
-        PropertyValue _defaultValue;
-
-    public:
-        Sid  styleIdx() const { return _idx; }
-        int idx() const { return int(_idx); }
-        const muse::AsciiStringView& name() const { return _name; }
-        P_TYPE valueType() const { return _defaultValue.type(); }
-        const PropertyValue& defaultValue() const { return _defaultValue; }
+        inline P_TYPE valueType() const { return defaultValue.type(); }
     };
 
     static const std::array<StyleValue, size_t(Sid::STYLES)> styleValues;

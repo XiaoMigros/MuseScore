@@ -21,6 +21,11 @@
 declare_module(muse_audio)
 set(MODULE_ALIAS muse::audio)
 
+set(MODULE_QRC main/audio.qrc)
+
+set(MODULE_ROOT ${CMAKE_CURRENT_LIST_DIR})
+set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
+
 include(GetPlatformInfo)
 
 set(MODULE_LINK )
@@ -77,6 +82,7 @@ else ()
         set(MODULE_INCLUDE_PRIVATE ${MODULE_INCLUDE_PRIVATE} ${ALSA_INCLUDE_DIRS} )
         set(MODULE_LINK ${MODULE_LINK} ${ALSA_LIBRARIES} pthread )
         if (MUSE_PIPEWIRE_AUDIO_DRIVER)
+            find_package(PkgConfig)
             pkg_check_modules(PipeWire libpipewire-0.3)
             if (PipeWire_FOUND)
                 message(STATUS "Found Pipewire: ${PipeWire_LIBRARIES}")
@@ -100,10 +106,13 @@ set(MODULE_SRC
     ${DRIVER_SRC}
 )
 
-set(MODULE_QRC main/audio.qrc)
+set(MODULE_INCLUDE ${MODULE_INCLUDE}
+    ${AUDIO_DRIVER_INC}
+)
 
-set(MODULE_ROOT ${CMAKE_CURRENT_LIST_DIR})
-set(MODULE_QML_IMPORT ${CMAKE_CURRENT_LIST_DIR}/qml)
+set(MODULE_LINK ${MODULE_LINK}
+    ${AUDIO_DRIVER_LINK}
+)
 
 setup_module()
 

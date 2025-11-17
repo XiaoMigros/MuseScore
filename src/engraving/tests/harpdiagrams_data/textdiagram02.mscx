@@ -5,6 +5,8 @@
     <Division>480</Division>
     <Style>
       <maskBarlinesForText>0</maskBarlinesForText>
+      <dividerLeftAlignToSystemBarline>0</dividerLeftAlignToSystemBarline>
+      <dividerRightAlignToSystemBarline>0</dividerRightAlignToSystemBarline>
       <scaleRythmicSpacingForSmallNotes>0</scaleRythmicSpacingForSmallNotes>
       <verticallyAlignChordSymbols>0</verticallyAlignChordSymbols>
       <changesBeforeBarlineRepeats>0</changesBeforeBarlineRepeats>
@@ -136,8 +138,7 @@
               </pedalState>
             <eid>G_G</eid>
             <style>harp_pedal_text_diagram</style>
-            <text>E<sym>csymAccidentalFlat</sym> F<sym>csymAccidentalNatural</sym> G<sym>csymAccidentalNatural</sym> A<sym>csymAccidentalNatural</sym> 
-D<sym>csymAccidentalNatural</sym> C<sym>csymAccidentalNatural</sym> B<sym>csymAccidentalFlat</sym> </text>
+            <text>E<sym>csymAccidentalFlat</sym> F<sym>csymAccidentalNatural</sym> G<sym>csymAccidentalNatural</sym> A<sym>csymAccidentalNatural</sym> <br/>D<sym>csymAccidentalNatural</sym> C<sym>csymAccidentalNatural</sym> B<sym>csymAccidentalFlat</sym> </text>
             </HarpPedalDiagram>
           <Rest>
             <eid>H_H</eid>
@@ -172,8 +173,7 @@ D<sym>csymAccidentalNatural</sym> C<sym>csymAccidentalNatural</sym> B<sym>csymAc
               </pedalState>
             <eid>L_L</eid>
             <style>harp_pedal_text_diagram</style>
-            <text>A<sym>csymAccidentalFlat</sym> 
-D<sym>csymAccidentalFlat</sym> </text>
+            <text>A<sym>csymAccidentalFlat</sym> <br/>D<sym>csymAccidentalFlat</sym> </text>
             </HarpPedalDiagram>
           <Rest>
             <eid>M_M</eid>

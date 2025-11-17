@@ -250,12 +250,8 @@ public:
     ~TBox() override;
 
     Text* text() const { return m_text; }
-    void resetText(Text* text);
 
-    // Score Tree functions
-    EngravingObject* scanParent() const override;
-    EngravingObjectList scanChildren() const override;
-    void scanElements(void* data, void (* func)(void*, EngravingItem*), bool all = true) override;
+    void scanElements(std::function<void(EngravingItem*)> func) override;
 
     TBox* clone() const override { return new TBox(*this); }
 

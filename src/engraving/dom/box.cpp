@@ -500,8 +500,7 @@ void Box::manageExclusionFromParts(bool exclude)
 
             if (isTBox()) {
                 Text* thisText = toTBox(this)->text();
-                Text* newText = toText(thisText->linkedClone());
-                toTBox(newFrame)->resetText(newText);
+                toTBox(newFrame)->add(thisText->linkedClone());
             }
 
             if (!score->isMaster() && titleFrame) {
@@ -977,7 +976,9 @@ TBox::TBox(System* parent)
 TBox::TBox(const TBox& tbox)
     : VBox(tbox)
 {
-    m_text = Factory::copyText(*(tbox.m_text));
+    if (tbox.m_text) {
+        add(Factory::copyText(*(tbox.m_text)));
+    }
 }
 
 TBox::~TBox()
@@ -985,13 +986,10 @@ TBox::~TBox()
     delete m_text;
 }
 
-void TBox::resetText(Text* text)
+void TBox::scanElements(std::function<void(EngravingItem*)> func)
 {
-    if (m_text) {
-        delete m_text;
-    }
-    m_text = text;
-    text->setParent(this);
+    m_text->scanElements(func);
+    Box::scanElements(func);
 }
 
 //---------------------------------------------------------
@@ -1019,8 +1017,11 @@ EngravingItem* TBox::drop(EditData& data)
 void TBox::add(EngravingItem* e)
 {
     if (e->isText()) {
-        // does not normally happen, since drop() handles this directly
-        m_text->undoChangeProperty(Pid::TEXT, toText(e)->xmlText());
+        if (m_text) {
+            delete m_text;
+        }
+        m_text = toText(e);
+        m_text->setLayoutToParentWidth(true);
         e->setParent(this);
         e->added();
     } else {

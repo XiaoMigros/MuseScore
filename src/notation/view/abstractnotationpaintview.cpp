@@ -314,7 +314,7 @@ void AbstractNotationPaintView::onLoadNotation(INotationPtr)
     updateLoopMarkers();
     notationPlayback()->loopBoundariesChanged().onNotify(this, [this]() {
         updateLoopMarkers();
-    });
+    }, Mode::SetReplace /*because this channel is from MasterNotation*/);
 
     m_notation->viewModeChanged().onNotify(this, [this]() {
         ensureViewportInsideScrollableArea();
@@ -679,7 +679,7 @@ void AbstractNotationPaintView::paint(QPainter* qp)
         nvCtx.fromLogical = [this](const PointF& pos) -> PointF { return fromLogical(pos); };
 
         engraving::rendering::PaintOptions opt;
-        opt.invertColors = engravingConfiguration()->scoreInversionEnabled();
+        opt.invertColors = configuration()->shouldInvertScore();
         m_continuousPanel->paint(*painter, nvCtx, opt);
     }
 }

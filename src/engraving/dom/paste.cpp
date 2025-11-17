@@ -75,13 +75,12 @@ void Score::transposeChord(Chord* c, const Fraction& tick)
     // check if staffMove moves a note to a
     // nonexistent staff
     //
-    track_idx_t track = c->track();
-    size_t nn = (track / VOICES) + c->staffMove();
-    if (nn >= c->score()->nstaves()) {
+
+    if (c->vStaffIdx() >= c->score()->nstaves()) {
         c->setStaffMove(0);
     }
-    Staff* staff = c->staff();
-    Interval dstTranspose = staff->transpose(tick);
+
+    Interval dstTranspose = c->staff()->transpose(tick);
 
     if (dstTranspose.isZero()) {
         for (Note* n : c->notes()) {
@@ -90,10 +89,7 @@ void Score::transposeChord(Chord* c, const Fraction& tick)
     } else {
         dstTranspose.flip();
         for (Note* n : c->notes()) {
-            int npitch;
-            int ntpc;
-            transposeInterval(n->pitch(), n->tpc1(), &npitch, &ntpc, dstTranspose, true);
-            n->setTpc2(ntpc);
+            n->setTpc2(transposeTpc(n->tpc1(), dstTranspose, true));
         }
     }
 }
@@ -425,34 +421,35 @@ static EngravingItem* pasteSystemObject(EditData& srcData, EngravingItem* target
 //   cmdPaste
 //---------------------------------------------------------
 
-std::vector<EngravingItem*> Score::cmdPaste(const IMimeData* ms, MuseScoreView* view, Fraction scale)
+void Score::cmdPaste(const IMimeData* ms, MuseScoreView* view, Fraction scale)
 {
     if (!ms) {
         LOGE() << "No MIME data given";
-        return {};
+        return;
     }
 
     if (m_selection.isNone()) {
         LOGE() << "No target selection";
         MScore::setError(MsError::NO_DEST);
-        return {};
+        return;
     }
 
     if (ms->hasFormat(mimeSymbolFormat)) {
         muse::ByteArray data = ms->data(mimeSymbolFormat);
-        return cmdPasteSymbol(data, view, scale);
+        cmdPasteSymbol(data, view, scale);
+        return;
     }
 
     if (ms->hasFormat(mimeStaffListFormat)) {
         muse::ByteArray data = ms->data(mimeStaffListFormat);
         cmdPasteStaffList(data, scale);
-        return {};
+        return;
     }
 
     if (ms->hasFormat(mimeSymbolListFormat)) {
         muse::ByteArray data = ms->data(mimeSymbolListFormat);
         cmdPasteSymbolList(data);
-        return {};
+        return;
     }
 
     if (ms->hasImage()) {
@@ -487,15 +484,16 @@ std::vector<EngravingItem*> Score::cmdPaste(const IMimeData* ms, MuseScoreView* 
                 }
             }
         }
-        return droppedElements;
+
+        select(droppedElements);
+        return;
     }
 
     LOGE() << "Unsupported MIME data (formats: " << ms->formats() << ")";
-    return {};
 }
 }
 
-std::vector<EngravingItem*> Score::cmdPasteSymbol(muse::ByteArray& data, MuseScoreView* view, Fraction scale)
+void Score::cmdPasteSymbol(muse::ByteArray& data, MuseScoreView* view, Fraction scale)
 {
     std::vector<EngravingItem*> droppedElements;
 
@@ -504,69 +502,63 @@ std::vector<EngravingItem*> Score::cmdPasteSymbol(muse::ByteArray& data, MuseSco
 
     std::unique_ptr<EngravingItem> el(EngravingItem::readMimeData(this, data, &dragOffset, &duration));
     if (!el) {
-        return {};
+        return;
     }
 
     duration *= scale;
     if (!TDuration(duration).isValid()) {
-        return {};
+        return;
     }
 
     std::vector<EngravingItem*> targetElements;
-    switch (m_selection.state()) {
-    case SelState::NONE:
+    if (m_selection.isNone()) {
         UNREACHABLE;
-        return {};
-    case SelState::LIST:
-        targetElements = m_selection.elements();
-        break;
-    case SelState::RANGE:
-        // TODO: make this as smart as `NotationInteraction::applyPaletteElement`,
-        // without duplicating logic. (Currently, for range selections, we only
-        // paste onto the "top-left corner".
-        mu::engraving::Segment* firstSegment = m_selection.startSegment();
-        staff_idx_t firstStaffIndex = m_selection.staffStart();
+        return;
+    }
 
+    // TODO: make this as smart as `NotationInteraction::applyPaletteElement`,
+    // without duplicating logic. (Currently, for range selections, we only
+    // paste onto the "top-left corner" for non-measure based elements.)
+    bool unique;
+    targetElements = filterTargetElements(m_selection, el.get(), unique);
+    if (!unique && m_selection.isRange()) {
         // The usage of `firstElementForNavigation` is inspired by `NotationInteraction::applyPaletteElement`.
-        targetElements = { firstSegment->firstElementForNavigation(firstStaffIndex) };
-        break;
+        Segment* firstSegment = m_selection.startSegment();
+        targetElements = { firstSegment->firstElementForNavigation(m_selection.staffStart()) };
     }
 
     if (targetElements.empty()) {
         LOGE() << "No valid target elements in selection";
         MScore::setError(MsError::NO_DEST);
-        return {};
+        return;
     }
+
+    const bool systemObj = el->systemFlag();
 
     for (EngravingItem* target : targetElements) {
         addRefresh(target->pageBoundingRect()); // layout() ?!
         el->setTrack(target->track());
 
         EditData ddata(view);
+        ddata.pos = target->pagePos();
         ddata.dropElement = el.get();
-        ddata.pos = target->pageBoundingRect().topLeft();
+        ddata.track = target->track();
 
-        if (target->acceptDrop(ddata)) {
-            if (!el->isNote() || (target = prepareTarget(target, toNote(el.get()), duration))) {
-                ddata.dropElement = el->clone();
+        if (!target->acceptDrop(ddata)) {
+            continue;
+        }
 
-                if (ddata.dropElement->systemFlag()) {
-                    EngravingItem* newEl = pasteSystemObject(ddata, target);
-                    if (newEl) {
-                        droppedElements.emplace_back(newEl);
-                    }
+        if (!el->isNote() || (target = prepareTarget(target, toNote(el.get()), duration))) {
+            ddata.dropElement = el->clone();
 
-                    continue;
-                }
-
-                EngravingItem* dropped = target->drop(ddata);
-                if (dropped) {
-                    droppedElements.emplace_back(dropped);
-                }
+            EngravingItem* dropped = systemObj ? pasteSystemObject(ddata, target) : target->drop(ddata);
+            if (dropped) {
+                droppedElements.emplace_back(dropped);
             }
         }
     }
-    return droppedElements;
+
+    select(droppedElements);
 }
 
 void Score::cmdPasteStaffList(muse::ByteArray& data, Fraction scale)

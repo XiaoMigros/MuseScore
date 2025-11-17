@@ -348,17 +348,6 @@ void SpannerSegment::triggerLayout() const
     }
 }
 
-//---------------------------------------------------------
-//   scanElements
-//---------------------------------------------------------
-
-void SpannerSegment::scanElements(void* data, void (* func)(void*, EngravingItem*), bool all)
-{
-    if (all || spanner()->eitherEndVisible() || systemFlag()) {
-        func(data, this);
-    }
-}
-
 std::list<EngravingObject*> SpannerSegment::linkListForPropertyPropagation() const
 {
     std::list<EngravingObject*> result;
@@ -564,26 +553,6 @@ void Spanner::insertTimeUnmanaged(const Fraction& fromTick, const Fraction& len)
         if (newTick1 != tick()) {
             setProperty(Pid::SPANNER_TICK, newTick1);
         }
-    }
-}
-
-//---------------------------------------------------------
-//   scanElements
-//---------------------------------------------------------
-
-void Spanner::scanElements(void* data, void (* func)(void*, EngravingItem*), bool all)
-{
-    if (score()->isPaletteScore()) {
-        EngravingObject::scanElements(data, func, all);
-        return;
-    }
-
-    for (EngravingObject* child : scanChildren()) {
-        if (child->isSpannerSegment()) {
-            // spanner segments are scanned by the system
-            continue;
-        }
-        child->scanElements(data, func, all);
     }
 }
 
@@ -1104,6 +1073,9 @@ Segment* Spanner::startSegment() const
         Measure* measure = mmRest ? score()->tick2measureMM(startTick) : score()->tick2measure(startTick);
         if (measure) {
             TimeTickAnchor* anchor = EditTimeTickAnchors::createTimeTickAnchor(measure, startTick - measure->tick(), track2staff(trackIdx));
+            IF_ASSERT_FAILED(anchor) {
+                return nullptr;
+            }
             EditTimeTickAnchors::updateLayout(measure);
             return anchor->segment();
         }
@@ -1669,5 +1641,10 @@ void Spanner::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags p
         return;
     }
     EngravingItem::undoChangeProperty(id, v, ps);
+}
+
+bool SpannerSegment::collectForDrawing() const
+{
+    return EngravingItem::collectForDrawing() && (spanner()->eitherEndVisible() || systemFlag());
 }
 }

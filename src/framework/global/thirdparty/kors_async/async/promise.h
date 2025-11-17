@@ -23,9 +23,10 @@ SOFTWARE.
 */
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <string>
-#include <cassert>
+#include <type_traits>
 
 #include "async.h"
 #include "internal/channelimpl.h"
@@ -172,13 +173,11 @@ public:
 
     Promise<T...>& onResolve(const Asyncable* receiver, const std::function<void(const T&...)>& callback)
     {
-        m_data->resolveCh.onReceive(receiver, [callback](std::shared_ptr<Data> d, const T&... args) {
+        m_data->resolveCh.onReceive(receiver, [data { m_data }, callback](const std::shared_ptr<Data>& d, const T&... args) {
+            (void)data;
+            (void)d;
+            assert(data == d);
             callback(args ...);
-            // we are in the Data context,
-            // we need to exit it, and then Data will be deleted.
-            Async::call(nullptr, [](std::shared_ptr<Data>) {
-                // noop
-            }, d);
         }, Asyncable::Mode::SetOnce);
         return *this;
     }
@@ -188,17 +187,21 @@ public:
         bool has_reject = m_data->rejectCh != nullptr;
         assert(has_reject && "This promise has no rejection");
         if (has_reject) {
-            m_data->rejectCh->onReceive(receiver, [callback](std::shared_ptr<Data> d, int code, const std::string& msg) {
+            m_data->rejectCh->onReceive(receiver, [data { m_data }, callback](const std::shared_ptr<Data>& d, int code, const std::string& msg) {
+                (void)data;
+                (void)d;
+                assert(data == d);
                 callback(code, msg);
-                // we are in the Data context,
-                // we need to exit it, and then Data will be deleted.
-                Async::call(nullptr, [](std::shared_ptr<Data>) {
-                    // noop
-                }, d);
             }, Asyncable::Mode::SetOnce);
         }
         return *this;
     }
+
+    template <typename... U, typename OnResolve>
+    Promise<U...> then(const Asyncable *receiver, OnResolve &&onResolveF);
+
+    template <typename ... U, typename OnResolve, typename OnReject>
+    Promise<U...> then(const Asyncable *receiver, OnResolve &&onResolveF, OnReject &&onRejectF);
 
 private:
     Promise() = default;
@@ -249,5 +252,50 @@ template<typename ... T>
 inline Promise<T...> make_promise(typename Promise<T...>::BodyResolve f, PromiseType type = PromiseType::AsyncByPromise)
 {
     return Promise<T...>(f, type);
+}
+
+template <typename ... T>
+template <typename ... U, typename OnResolve>
+Promise<U...> Promise<T...>::then(const Asyncable *receiver, OnResolve &&onResolveF) {
+    static_assert(std::is_same_v<std::invoke_result_t<OnResolve, T..., typename Promise<U...>::Resolve>, 
+                                 typename Promise<U...>::Result>,
+                  "onResolveF must return Promise<U...>::Result when called with (T... , Promise<U...>::Resolve)");
+    if (m_data->rejectCh != nullptr) {
+        return make_promise<U...>([this, receiver, onResolveF](auto resolve, auto reject) {
+            this->onResolve(receiver, [onResolveF, resolve](const T&... args) {
+                onResolveF(args ..., resolve);
+            });
+            this->onReject(receiver, [reject](int code, const std::string& msg) {
+                (void)reject(code, msg);
+            });
+            return Promise<U...>::Result::unchecked();
+        }, PromiseType::AsyncByBody);
+    } else {
+        return make_promise<U...>([this, receiver, onResolveF](auto resolve) {
+            this->onResolve(receiver, [onResolveF, resolve](const T&... args) {
+                onResolveF(args ..., resolve);
+            });
+            return Promise<U...>::Result::unchecked();
+        }, PromiseType::AsyncByBody);
+    }
+}
+
+template <typename ... T>
+template <typename ... U, typename OnResolve, typename OnReject>
+Promise<U...> Promise<T...>::then(const Asyncable *receiver, OnResolve &&onResolveF, OnReject &&onRejectF) {
+    static_assert(std::is_same_v<std::invoke_result_t<OnResolve, T..., typename Promise<U...>::Resolve, typename Promise<U...>::Reject>, 
+                                 typename Promise<U...>::Result>,
+                  "onResolveF must return Promise<U...>::Result when called with (T... , Promise<U...>::Resolve, Promise<U...>::Reject)");
+    return make_promise<U...>([this, receiver, onResolveF, onRejectF](auto resolve, auto reject) {
+        this->onResolve(receiver, [onResolveF, resolve, reject](const T&... args) {
+            onResolveF(args ..., resolve, reject);
+        });
+        if (this->m_data->rejectCh != nullptr) {
+            this->onReject(receiver, [onRejectF, resolve, reject](int code, const std::string& msg) {
+                onRejectF(code, msg, resolve, reject);
+            });
+        }
+        return Promise<U...>::Result::unchecked();
+    }, PromiseType::AsyncByBody);
 }
 }

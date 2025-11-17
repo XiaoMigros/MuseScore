@@ -4,7 +4,7 @@
     <eid>B_B</eid>
     <Division>480</Division>
     <Style>
-      <spatium>1.74978</spatium>
+      <spatium>1.75</spatium>
       </Style>
     <showInvisible>1</showInvisible>
     <showUnprintable>1</showUnprintable>
@@ -138,21 +138,10 @@
           <Rest>
             <eid>R_R</eid>
             <dots>1</dots>
-            <durationType>64th</durationType>
+            <durationType>32nd</durationType>
             </Rest>
-          <location>
-            <fractions>-1/128</fractions>
-            </location>
-          <Rest>
-            <eid>S_S</eid>
-            <dots>1</dots>
-            <durationType>64th</durationType>
-            </Rest>
-          <location>
-            <fractions>1/128</fractions>
-            </location>
           <BarLine>
-            <eid>T_T</eid>
+            <eid>S_S</eid>
             </BarLine>
           </voice>
         </Measure>
@@ -161,18 +150,18 @@
       <Measure>
         <voice>
           <KeySig>
-            <eid>U_U</eid>
+            <eid>T_T</eid>
             <linkedTo>H_H</linkedTo>
             <concertKey>0</concertKey>
             </KeySig>
           <Rest>
-            <eid>V_V</eid>
+            <eid>U_U</eid>
             <linkedTo>K_K</linkedTo>
             <dots>1</dots>
             <durationType>half</durationType>
             </Rest>
           <BarLine>
-            <eid>W_W</eid>
+            <eid>V_V</eid>
             <linkedTo>L_L</linkedTo>
             </BarLine>
           </voice>
@@ -180,50 +169,38 @@
       <Measure>
         <voice>
           <Rest>
-            <eid>X_X</eid>
+            <eid>W_W</eid>
             <linkedTo>N_N</linkedTo>
             <dots>1</dots>
             <durationType>quarter</durationType>
             </Rest>
           <Rest>
-            <eid>Y_Y</eid>
+            <eid>X_X</eid>
             <linkedTo>O_O</linkedTo>
             <dots>1</dots>
             <durationType>eighth</durationType>
             </Rest>
           <Rest>
-            <eid>Z_Z</eid>
+            <eid>Y_Y</eid>
             <linkedTo>P_P</linkedTo>
             <dots>1</dots>
             <durationType>16th</durationType>
             </Rest>
           <Rest>
-            <eid>a_a</eid>
+            <eid>Z_Z</eid>
             <linkedTo>Q_Q</linkedTo>
             <dots>1</dots>
             <durationType>32nd</durationType>
             </Rest>
           <Rest>
-            <eid>b_b</eid>
+            <eid>a_a</eid>
             <linkedTo>R_R</linkedTo>
             <dots>1</dots>
-            <durationType>64th</durationType>
+            <durationType>32nd</durationType>
             </Rest>
-          <location>
-            <fractions>-1/128</fractions>
-            </location>
-          <Rest>
-            <eid>c_c</eid>
-            <linkedTo>S_S</linkedTo>
-            <dots>1</dots>
-            <durationType>64th</durationType>
-            </Rest>
-          <location>
-            <fractions>1/128</fractions>
-            </location>
           <BarLine>
-            <eid>d_d</eid>
-            <linkedTo>T_T</linkedTo>
+            <eid>b_b</eid>
+            <linkedTo>S_S</linkedTo>
             </BarLine>
           </voice>
         </Measure>

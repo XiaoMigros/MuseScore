@@ -120,7 +120,7 @@ Words &amp; Music by also Henry Ives (and ampersands)
       </Part>
     <Staff id="1">
       <VBox>
-        <height>10.3739</height>
+        <height>10.3705</height>
         <eid>D_D</eid>
         <Text>
           <eid>E_E</eid>
@@ -164,8 +164,7 @@ Words &amp; Music by also Henry Ives (and ampersands)
             </TimeSig>
           <StaffText>
             <eid>M_M</eid>
-            <text>Lyrics to be sung by candlelight
-(and this not to be inferred)</text>
+            <text>Lyrics to be sung by candlelight<br/>(and this not to be inferred)</text>
             </StaffText>
           <Beam>
             <eid>N_N</eid>

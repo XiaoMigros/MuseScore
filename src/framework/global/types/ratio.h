@@ -26,14 +26,14 @@
 #include "number.h"
 
 namespace muse {
-inline float db_to_linear(float v)
+[[nodiscard]] inline float db_to_linear(const float v)
 {
-    return std::pow(10.0, v / 20.0);
+    return std::pow(10.0f, v / 20.0f);
 }
 
-inline float linear_to_db(float v)
+[[nodiscard]] inline float linear_to_db(const float v)
 {
-    return 20.0 * std::log10(std::abs(v));
+    return 20.0f * std::log10(std::abs(v));
 }
 
 //! NOTE Just linear ratio

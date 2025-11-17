@@ -74,7 +74,6 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/remove_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/repeat_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rhythmicgrouping_tests.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/scantree_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/selectionfilter_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/selectionrange_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/spanners_tests.cpp
@@ -82,6 +81,7 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/splitstaff_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/staffmove_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/system_locks_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/system_dividers_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/tempomap_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/textbase_tests.cpp
     #${CMAKE_CURRENT_LIST_DIR}/textedit_tests.cpp doesn't compile and needs actualization
@@ -95,6 +95,7 @@ set(MODULE_TEST_SRC
     ${CMAKE_CURRENT_LIST_DIR}/voiceswitching_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fretbox_tests.cpp
     ${CMAKE_CURRENT_LIST_DIR}/fretdiagram_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/engraving_xml_tests.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/mocks/engravingconfigurationmock.h
 )

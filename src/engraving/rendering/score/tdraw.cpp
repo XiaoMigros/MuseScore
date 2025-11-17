@@ -21,6 +21,8 @@
  */
 #include "tdraw.h"
 
+#include "defer.h"
+
 #include "draw/fontmetrics.h"
 #include "draw/svgrenderer.h"
 
@@ -677,13 +679,17 @@ void TDraw::draw(const BarLine* item, Painter* painter, const PaintOptions& opt)
 {
     TRACE_DRAW_ITEM;
 
-    painter->save();
-    setMask(item, painter);
-
     const BarLine::LayoutData* data = item->ldata();
     IF_ASSERT_FAILED(data) {
         return;
     }
+
+    painter->save();
+    DEFER {
+        painter->restore();
+    };
+
+    setMask(item, painter);
 
     switch (item->barLineType()) {
     case BarLineType::NORMAL: {
@@ -834,27 +840,41 @@ void TDraw::draw(const BarLine* item, Painter* painter, const PaintOptions& opt)
     }
     break;
     }
-    Segment* s = item->segment();
-    if (s && s->isEndBarLineType() && !opt.isPrinting) {
-        Measure* m = s->measure();
-        if (m->isIrregular() && item->score()->markIrregularMeasures() && !m->isMMRest()) {
-            painter->setPen(item->configuration()->invisibleColor());
 
-            Font f(u"Edwin", Font::Type::Text);
-            f.setPointSizeF(12 * item->spatium() / SPATIUM20);
-            f.setBold(true);
-            Char ch = m->ticks() > m->timesig() ? u'+' : u'-';
-            RectF r = FontMetrics(f).boundingRect(ch);
+    // draw irregular measure mark
 
-            Font scaledFont(f);
-            scaledFont.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-            painter->setFont(scaledFont);
-
-            painter->drawText(-r.width(), 0.0, ch);
-        }
+    if (opt.isPrinting || !item->score()->markIrregularMeasures()) {
+        return;
     }
 
-    painter->restore();
+    const Segment* s = item->segment();
+    if (s && (s->isEndBarLineType() || s->isStartRepeatBarLineType())) {
+        const Measure* measure = s->measure();
+        if (s->isStartRepeatBarLineType()) {
+            const Measure* prevMeasure = measure ? measure->prevMeasure() : nullptr;
+            if (!prevMeasure) {
+                return;
+            }
+            if (const BarLine* prevEndBl = prevMeasure->endBarLine(item->staffIdx())) {
+                if (prevEndBl->segment() && prevEndBl->segment()->enabled()) {
+                    return;
+                }
+            }
+            measure = prevMeasure;
+        }
+
+        if (measure && measure->isIrregular() && !measure->isMMRest()) {
+            painter->setPen(item->configuration()->invisibleColor());
+            Font f(u"Edwin", Font::Type::Text);
+            f.setPointSizeF(12 * item->spatium() / item->defaultSpatium());
+            f.setBold(true);
+            Char ch = measure->ticks() > measure->timesig() ? u'+' : u'-';
+            RectF r = FontMetrics(f).boundingRect(ch);
+
+            painter->setFont(f);
+            painter->drawText(-r.width(), -item->spatium(), ch);
+        }
+    }
 }
 
 void TDraw::draw(const Beam* item, Painter* painter, const PaintOptions& opt)
@@ -904,7 +924,7 @@ void TDraw::draw(const Bend* item, Painter* painter, const PaintOptions& opt)
     painter->setPen(pen);
     painter->setBrush(Brush(item->curColor(opt)));
 
-    Font f = item->font(spatium * MScore::pixelRatio);
+    Font f = item->font(spatium);
     painter->setFont(f);
 
     double x  = data->noteWidth + spatium * .2;
@@ -999,7 +1019,7 @@ void TDraw::draw(const Box* item, Painter* painter, const PaintOptions& opt)
     const bool showFrame = showHighlightedFrame || (item->score() ? item->score()->showFrames() : false);
 
     if (showFrame) {
-        double lineWidth = SPATIUM20 * .10;
+        double lineWidth = item->defaultSpatium() * .10;
         Pen pen;
         pen.setWidthF(lineWidth);
         pen.setJoinStyle(PenJoinStyle::RoundJoin);
@@ -1052,11 +1072,12 @@ void TDraw::draw(const Bracket* item, Painter* painter, const PaintOptions& opt)
             painter->drawPath(ldata->path);
         } else {
             double h = ldata->bracketHeight;
-            double mag = h / (100 * item->magS());
+            double glyphHeight = item->symHeight(ldata->braceSymbol);
+            double mag = h / glyphHeight;
             painter->setPen(item->curColor(opt));
             painter->save();
             painter->scale(item->magx(), mag);
-            item->drawSymbol(ldata->braceSymbol, painter, PointF(0, 100 * item->magS()));
+            item->drawSymbol(ldata->braceSymbol, painter, PointF(0.0, glyphHeight));
             painter->restore();
         }
     }
@@ -1216,8 +1237,8 @@ void TDraw::draw(const FiguredBassItem* item, Painter* painter, const PaintOptio
     Font f(FiguredBass::FBFonts().at(font).family, Font::Type::Tablature);
 
     // (use the same font selection as used in layout() above)
-    double m = item->style().styleD(Sid::figuredBassFontSize) * item->spatium() / SPATIUM20;
-    f.setPointSizeF(m * MScore::pixelRatio);
+    double m = item->style().styleD(Sid::figuredBassFontSize) * item->spatium() / item->defaultSpatium();
+    f.setPointSizeF(m);
 
     painter->setFont(f);
     painter->setBrush(BrushStyle::NoBrush);
@@ -1421,7 +1442,7 @@ void TDraw::draw(const FretDiagram* item, Painter* painter, const PaintOptions& 
     // Draw fret offset number
     if (item->fretOffset() > 0) {
         Font scaledFont(item->fretNumFont());
-        scaledFont.setPointSizeF(scaledFont.pointSizeF() * (item->spatium() / SPATIUM20) * MScore::pixelRatio);
+        scaledFont.setPointSizeF(scaledFont.pointSizeF() * (item->spatium() / item->defaultSpatium()));
         painter->setFont(scaledFont);
         String text = ldata->fretText;
 
@@ -1454,7 +1475,7 @@ void TDraw::draw(const FretDiagram* item, Painter* painter, const PaintOptions& 
         painter->save();
 
         Font scaledFont(item->fingeringFont());
-        scaledFont.setPointSizeF(scaledFont.pointSizeF() * (item->spatium() / SPATIUM20) * MScore::pixelRatio);
+        scaledFont.setPointSizeF(scaledFont.pointSizeF() * (item->spatium() / item->defaultSpatium()));
         painter->setFont(scaledFont);
         if (item->orientation() == Orientation::HORIZONTAL) {
             painter->translate(-translation);
@@ -1547,7 +1568,7 @@ void TDraw::draw(const GlissandoSegment* item, Painter* painter, const PaintOpti
 
     if (glissando->showText()) {
         Font f(glissando->fontFace(), Font::Type::Unknown);
-        f.setPointSizeF(glissando->fontSize() * _spatium / SPATIUM20);
+        f.setPointSizeF(glissando->fontSize() * _spatium / item->defaultSpatium());
         f.setBold(glissando->fontStyle() & FontStyle::Bold);
         f.setItalic(glissando->fontStyle() & FontStyle::Italic);
         f.setUnderline(glissando->fontStyle() & FontStyle::Underline);
@@ -1557,15 +1578,12 @@ void TDraw::draw(const GlissandoSegment* item, Painter* painter, const PaintOpti
 
         // if text longer than available space, skip it
         if (r.width() < l) {
-            double yOffset = r.height() + r.y();             // find text descender height
+            double x = (l - r.width()) * 0.5;
+            double yOffset = r.height() + r.y(); // find text descender height
             // raise text slightly above line and slightly more with WAVY than with STRAIGHT
             yOffset += _spatium * (glissando->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
 
-            Font scaledFont(f);
-            scaledFont.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-            painter->setFont(scaledFont);
-
-            double x = (l - r.width()) * 0.5;
+            painter->setFont(f);
             painter->drawText(PointF(x, -yOffset), glissando->text());
         }
     }
@@ -1645,8 +1663,23 @@ void TDraw::drawTextBase(const TextBase* item, Painter* painter, const PaintOpti
     painter->setBrush(BrushStyle::NoBrush);
     painter->setPen(item->textColor(opt));
     for (const TextBlock& t : ldata->blocks) {
-        t.draw(painter, item);
+        draw(t, item, painter);
     }
+}
+
+void TDraw::draw(const TextBlock& textBlock, const TextBase* item, Painter* painter)
+{
+    painter->translate(0.0, textBlock.y());
+    for (const TextFragment& f : textBlock.fragments()) {
+        draw(f, item, painter);
+    }
+    painter->translate(0.0, -textBlock.y());
+}
+
+void TDraw::draw(const TextFragment& textFragment, const TextBase* item, muse::draw::Painter* painter)
+{
+    painter->setFont(textFragment.font(item));
+    painter->drawText(textFragment.pos, textFragment.text);
 }
 
 void TDraw::drawTextLineBaseSegment(const TextLineBaseSegment* item, Painter* painter, const PaintOptions& opt)
@@ -1841,14 +1874,8 @@ void TDraw::draw(const Harmony* item, Painter* painter, const PaintOptions& opt)
     painter->setPen(color);
     for (const HarmonyRenderItem* renderItem : ldata->renderItemList()) {
         if (const TextSegment* ts = dynamic_cast<const TextSegment*>(renderItem)) {
-            Font f(ts->font());
-            f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-#ifndef Q_OS_MACOS
-            TextBase::drawTextWorkaround(painter, f, ts->pos(), ts->text());
-#else
-            painter->setFont(f);
+            painter->setFont(ts->font());
             painter->drawText(ts->pos(), ts->text());
-#endif
         } else if (const ChordSymbolParen* parenItem = dynamic_cast<const ChordSymbolParen*>(renderItem)) {
             Parenthesis* p = parenItem->parenItem;
             painter->translate(parenItem->pos());
@@ -2020,11 +2047,7 @@ void TDraw::draw(const LayoutBreak* item, Painter* painter, const PaintOptions& 
 
     Pen pen(item->selected() ? item->configuration()->selectionColor() : item->configuration()->formattingColor());
     painter->setPen(pen);
-
-    Font f(item->font());
-    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-    painter->setFont(f);
-
+    painter->setFont(item->font());
     painter->drawSymbol(PointF(), item->iconCode());
 }
 
@@ -2124,7 +2147,7 @@ void TDraw::draw(const MMRest* item, Painter* painter, const PaintOptions& opt)
     painter->setPen(item->curColor(opt));
     RectF numberBox = item->symBbox(ldata->numberSym);
     PointF numberPos = item->numberPos();
-    if (item->shouldShowNumber()) {
+    if (item->showNumber()) {
         item->drawSymbols(ldata->numberSym, painter, numberPos);
     }
 
@@ -2150,7 +2173,7 @@ void TDraw::draw(const MMRest* item, Painter* painter, const PaintOptions& opt)
             pen.setWidthF(hBarThickness);
             painter->setPen(pen);
             double halfHBarThickness = hBarThickness * .5;
-            if (item->shouldShowNumber() // avoid painting line through number
+            if (item->showNumber() // avoid painting line through number
                 && item->style().styleB(Sid::mmRestNumberMaskHBar)
                 && numberBox.bottom() >= -halfHBarThickness
                 && numberBox.top() <= halfHBarThickness) {
@@ -2190,23 +2213,24 @@ void TDraw::draw(const Note* item, Painter* painter, const PaintOptions& opt)
 
     const Note::LayoutData* ldata = item->ldata();
 
-    auto config = item->configuration();
+    const auto config = item->configuration();
+    const StaffType* staffType = item->staff() ? item->staff()->staffTypeForElement(item) : nullptr;
 
-    bool negativeFret = item->negativeFretUsed() && item->staff()->isTabStaff(item->tick());
+    const bool isTabStaff = staffType && staffType->isTabStaff();
+    const bool negativeFret = isTabStaff && item->negativeFretUsed();
+    const bool useCriticalColor = negativeFret && !item->deadNote() && opt.isPrinting;
 
-    Color c(negativeFret ? config->criticalColor() : item->curColor(opt));
-    painter->setPen(c);
-    bool tablature = item->staff() && item->staff()->isTabStaff(item->chord()->tick());
+    painter->setPen(useCriticalColor ? config->criticalColor() : item->curColor(opt));
 
     // tablature
-    if (tablature) {
+    if (isTabStaff) {
         if (item->displayFret() == Note::DisplayFretOption::Hide || item->shouldHideFret()) {
             return;
         }
         const Staff* st = item->staff();
         const StaffType* tab = st->staffTypeForElement(item);
 
-        if (negativeFret || (item->fretConflict() && !opt.isPrinting && item->score()->showUnprintable())) {                    // fret conflict
+        if (negativeFret || (item->fretConflict() && !opt.isPrinting && item->score()->showUnprintable())) { // fret conflict
             painter->save();
             painter->setPen(config->criticalColor());
             painter->setBrush(config->criticalBackgroundColor());
@@ -2215,12 +2239,11 @@ void TDraw::draw(const Note* item, Painter* painter, const PaintOptions& opt)
         }
 
         Font f(tab->fretFont());
-        f.setPointSizeF(f.pointSizeF() * item->magS() * MScore::pixelRatio);
+        f.setPointSizeF(f.pointSizeF() * item->magS());
         painter->setFont(f);
-        painter->setPen(c);
-        double startPosX = ldata->bbox().x();
 
-        double yOffset = tab->fretFontYOffset();
+        const double startPosX = ldata->bbox().x();
+        const double yOffset = tab->fretFontYOffset();
         painter->drawText(PointF(startPosX, yOffset * item->magS()), item->fretString());
     }
     // NOT tablature
@@ -2236,8 +2259,7 @@ void TDraw::draw(const Note* item, Painter* painter, const PaintOptions& opt)
             const Instrument* in = item->part()->instrument(item->chord()->tick());
             int i = item->ppitch();
             if (i < in->minPitchP() || i > in->maxPitchP()) {
-                painter->setPen(
-                    item->selected() ? config->criticalSelectedColor() : config->criticalColor());
+                painter->setPen(item->selected() ? config->criticalSelectedColor() : config->criticalColor());
             } else if (i < in->minPitchA() || i > in->maxPitchA()) {
                 painter->setPen(item->selected() ? config->warningSelectedColor() : config->warningColor());
             }
@@ -2866,9 +2888,7 @@ void TDraw::draw(const FSymbol* item, Painter* painter, const PaintOptions& opt)
 {
     TRACE_DRAW_ITEM;
 
-    Font f(item->font());
-    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-    painter->setFont(f);
+    painter->setFont(item->font());
     painter->setPen(item->curColor(opt));
     painter->drawText(PointF(0, 0), item->toString());
 }
@@ -2893,11 +2913,7 @@ void TDraw::draw(const IndicatorIcon* item, muse::draw::Painter* painter, const 
 
     Pen pen(item->selected() ? item->configuration()->selectionColor() : item->configuration()->formattingColor());
     painter->setPen(pen);
-
-    Font f(item->font());
-    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-    painter->setFont(f);
-
+    painter->setFont(item->font());
     painter->drawSymbol(PointF(), item->iconCode());
 
     if (item->isSystemLockIndicator() && item->selected()) {
@@ -2924,12 +2940,9 @@ void TDraw::draw(const SoundFlag* item, Painter* painter, const PaintOptions& op
 
     painter->setNoPen();
     painter->setBrush(item->iconBackgroundColor());
-    painter->drawEllipse(item->ldata()->bbox());
+    painter->drawEllipse(item->ldata()->bbox().adjusted(-4.0, -4.0, 4.0, 4.0));
 
-    Font f(item->iconFont());
-    f.setPointSizeF(item->spatium() * 2.0);
-    painter->setFont(f);
-
+    painter->setFont(item->iconFont());
     painter->setPen(!item->selected() ? item->curColor(true, opt) : Color::WHITE);
     painter->drawText(item->ldata()->bbox(), muse::draw::AlignCenter, Char(item->iconCode()));
 }
@@ -2960,9 +2973,7 @@ void TDraw::draw(const TabDurationSymbol* item, Painter* painter, const PaintOpt
     painter->scale(mag, mag);
     if (ldata->beamGrid == TabBeamGrid::NONE) {
         // if no beam grid, draw symbol
-        Font f(item->tab()->durationFont());
-        f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-        painter->setFont(f);
+        painter->setFont(item->tab()->durationFont());
         painter->drawText(PointF(0.0, 0.0), item->text());
     } else {
         // if beam grid, draw stem line

@@ -1715,14 +1715,35 @@ NoteVal Score::noteVal(int pitch, staff_idx_t staffIdx, bool allowTransposition)
         return nval;
     }
 
+    bool concertPitch = style().styleB(Sid::concertPitch);
+    Interval v = st->part()->instrument(inputState().tick())->transpose();
+
+    // If an accidental is set in the input state, use it as a hint for the pitch spelling
+    if (AccidentalType at = m_is.accidentalType(); at == AccidentalType::FLAT || at == AccidentalType::SHARP) {
+        Prefer prefer = at == AccidentalType::SHARP ? Prefer::SHARPS : Prefer::FLATS;
+        if (concertPitch || v.isZero()) {
+            // Note: using Key::C always and ignoring actual key signature. Otherwise, flat mode would still use sharps
+            // sometimes if they're in the key, and vice versa, which seems contrary to the intent of the hint.
+            nval.tpc1 = pitch2tpc(nval.pitch, Key::C, prefer);
+            Interval vFlipped = v;
+            vFlipped.flip();
+            nval.tpc2 = transposeTpc(nval.tpc1, vFlipped, true);
+        } else {
+            // Spell the transposed pitch first, then convert to concert pitch
+            int writtenPitch = nval.pitch;
+            if (!allowTransposition) {
+                writtenPitch -= v.chromatic;
+            }
+            nval.tpc2 = pitch2tpc(writtenPitch, Key::C, prefer);
+            nval.tpc1 = transposeTpc(nval.tpc2, v, true);
+        }
+    }
+
     // if transposing, interpret MIDI pitch as representing desired written pitch
     // set pitch based on corresponding sounding pitch
-    if (!style().styleB(Sid::concertPitch) && allowTransposition) {
-        nval.pitch += st->part()->instrument(inputState().tick())->transpose().chromatic;
+    if (!concertPitch && allowTransposition) {
+        nval.pitch += v.chromatic;
     }
-    // let addPitch calculate tpc values from pitch
-    //Key key   = st->key(inputState().tick());
-    //nval.tpc1 = pitch2tpc(nval.pitch, key, Prefer::NEAREST);
 
     return nval;
 }
@@ -3022,7 +3043,7 @@ void Score::deleteItem(EngravingItem* el)
             // propagate to original measure
             m = m->mmRestLast();
             for (EngravingItem* e : m->el()) {
-                if (e->isLayoutBreak()) {
+                if (e->isLayoutBreak() && toLayoutBreak(e)->layoutBreakType() == toLayoutBreak(el)->layoutBreakType()) {
                     undoRemoveElement(e);
                     break;
                 }
@@ -5615,7 +5636,7 @@ void Score::undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStav
             return;
         }
     } else if (bl->barLineType() == BarLineType::START_REPEAT) {
-        if (m->isFirstInSystem()) {
+        if (m->system() && m->isFirstInSystem()) {
             if (barType != BarLineType::END_REPEAT) {
                 for (Score* lscore : m->score()->scoreList()) {
                     Measure* lmeasure = lscore->tick2measure(m->tick());
@@ -5655,7 +5676,7 @@ void Score::undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStav
     case BarLineType::REVERSE_END:
     case BarLineType::HEAVY:
     case BarLineType::DOUBLE_HEAVY: {
-        if (m->nextMeasureMM() && m->nextMeasureMM()->isFirstInSystem()) {
+        if (m->nextMeasureMM() && m->nextMeasureMM()->system() && m->nextMeasureMM()->isFirstInSystem()) {
             keepStartRepeat = true;
         }
 
@@ -6174,7 +6195,7 @@ static Chord* findLinkedChord(Chord* c, Staff* nstaff)
     Segment* s = c->segment();
     Measure* nm = nstaff->score()->tick2measure(s->tick());
     Segment* ns = nm->findSegment(s->segmentType(), s->tick());
-    EngravingItem* ne = ns->element(dtrack);
+    EngravingItem* ne = ns ? ns->element(dtrack) : nullptr;
     if (!ne || !ne->isChord()) {
         return nullptr;
     }
@@ -6489,7 +6510,7 @@ static void undoChangeNoteVisibility(Note* note, bool visible)
         for (const EngravingObject* obj : chord->linkList()) {
             const Chord* linkedChord = toChord(obj);
             chordHasVisibleNote_ = chordHasVisibleNote(linkedChord);
-            for (EngravingObject* child : linkedChord->scanChildren()) {
+            for (EngravingObject* child : linkedChord->getChildren()) {
                 const ElementType type = child->type();
 
                 if (muse::contains(IGNORED_TYPES, type)) {

@@ -571,11 +571,6 @@ QPixmap PaletteWidget::pixmapForCellAt(int paletteIdx) const
     qreal cellMag = cell->mag * mag;
     ElementPtr element = cell->element;
 
-    if (element->isActionIcon()) {
-        toActionIcon(element.get())->setFontSize(ActionIcon::DEFAULT_FONT_SIZE * cell->mag);
-        cellMag = 1.0;
-    }
-
     engravingRender()->layoutItem(element.get());
 
     RectF r = element->ldata()->bbox();
@@ -937,7 +932,7 @@ void PaletteWidget::paintEvent(QPaintEvent* /*event*/)
     qreal _spatium = gpaletteScore->style().spatium();
     qreal magS     = configuration()->paletteSpatium() * mag() * paletteScaling();
     qreal mag      = magS / _spatium;
-    gpaletteScore->style().setSpatium(SPATIUM20);
+    gpaletteScore->style().setSpatium(gpaletteScore->style().defaultSpatium());
 
     muse::draw::Painter painter(this, "palette");
     painter.setAntialiasing(true);
@@ -1040,10 +1035,6 @@ void PaletteWidget::paintEvent(QPaintEvent* /*event*/)
         int column = idx % columns();
 
         qreal cellMag = currentCell->mag * mag;
-        if (el->isActionIcon()) {
-            toActionIcon(el.get())->setFontSize(ActionIcon::DEFAULT_FONT_SIZE * currentCell->mag);
-            cellMag = 1.0;
-        }
 
         engravingRender()->layoutItem(el.get());
 

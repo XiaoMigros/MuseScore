@@ -524,7 +524,7 @@ void SingleDraw::draw(const Note* item, Painter* painter, const PaintOptions& op
             }
         }
         Font f(tab->fretFont());
-        f.setPointSizeF(f.pointSizeF() * item->magS() * MScore::pixelRatio);
+        f.setPointSizeF(f.pointSizeF() * item->magS());
         painter->setFont(f);
         painter->setPen(c);
         double startPosX = ldata->bbox().x();
@@ -870,7 +870,7 @@ void SingleDraw::draw(const Bend* item, Painter* painter, const PaintOptions& op
     painter->setPen(pen);
     painter->setBrush(Brush(item->curColor(opt)));
 
-    Font f = item->font(_spatium * MScore::pixelRatio);
+    Font f = item->font(_spatium);
     painter->setFont(f);
 
     double x  = ldata->noteWidth + _spatium * .2;
@@ -961,11 +961,12 @@ void SingleDraw::draw(const Bracket* item, Painter* painter, const PaintOptions&
     switch (item->bracketType()) {
     case BracketType::BRACE: {
         double h = ldata->bracketHeight;
-        double mag = h / (100 * item->magS());
+        double glyphHeight = item->symHeight(ldata->braceSymbol);
+        double mag = h / glyphHeight;
         painter->setPen(item->curColor(opt));
         painter->save();
         painter->scale(item->magx(), mag);
-        item->drawSymbol(ldata->braceSymbol, painter, PointF(0, 100 * item->magS()));
+        item->drawSymbol(ldata->braceSymbol, painter, PointF(0, glyphHeight));
         painter->restore();
     }
     break;
@@ -1112,8 +1113,8 @@ void SingleDraw::draw(const FiguredBassItem* item, Painter* painter, const Paint
     Font f(FiguredBass::FBFonts().at(font).family, Font::Type::Tablature);
 
     // (use the same font selection as used in layout() above)
-    double m = item->style().styleD(Sid::figuredBassFontSize) * item->spatium() / SPATIUM20;
-    f.setPointSizeF(m * MScore::pixelRatio);
+    double m = item->style().styleD(Sid::figuredBassFontSize) * item->spatium() / item->defaultSpatium();
+    f.setPointSizeF(m);
 
     painter->setFont(f);
     painter->setBrush(BrushStyle::NoBrush);
@@ -1304,7 +1305,7 @@ void SingleDraw::draw(const FretDiagram* item, Painter* painter, const PaintOpti
     // Draw fret offset number
     if (item->fretOffset() > 0) {
         Font scaledFont(item->fretNumFont());
-        scaledFont.setPointSizeF(scaledFont.pointSizeF() * (item->spatium() / SPATIUM20) * MScore::pixelRatio);
+        scaledFont.setPointSizeF(scaledFont.pointSizeF() * (item->spatium() / item->defaultSpatium()));
         painter->setFont(scaledFont);
         String text = String::number(item->fretOffset() + 1);
 
@@ -1382,7 +1383,7 @@ void SingleDraw::draw(const GlissandoSegment* item, Painter* painter, const Pain
 
     if (glissando->showText()) {
         Font f(glissando->fontFace(), Font::Type::Unknown);
-        f.setPointSizeF(glissando->fontSize() * _spatium / SPATIUM20);
+        f.setPointSizeF(glissando->fontSize() * _spatium / item->defaultSpatium());
         f.setBold(glissando->fontStyle() & FontStyle::Bold);
         f.setItalic(glissando->fontStyle() & FontStyle::Italic);
         f.setUnderline(glissando->fontStyle() & FontStyle::Underline);
@@ -1396,9 +1397,7 @@ void SingleDraw::draw(const GlissandoSegment* item, Painter* painter, const Pain
             // raise text slightly above line and slightly more with WAVY than with STRAIGHT
             yOffset += _spatium * (glissando->glissandoType() == GlissandoType::WAVY ? 0.4 : 0.1);
 
-            Font scaledFont(f);
-            scaledFont.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-            painter->setFont(scaledFont);
+            painter->setFont(f);
 
             double x = (l - r.width()) * 0.5;
             painter->drawText(PointF(x, -yOffset), glissando->text());
@@ -1535,8 +1534,23 @@ void SingleDraw::drawTextBase(const TextBase* item, Painter* painter, const Pain
     painter->setBrush(BrushStyle::NoBrush);
     painter->setPen(item->textColor(opt));
     for (const TextBlock& t : ldata->blocks) {
-        t.draw(painter, item);
+        draw(t, item, painter);
     }
+}
+
+void SingleDraw::draw(const TextBlock& textBlock, const TextBase* item, muse::draw::Painter* painter)
+{
+    painter->translate(0.0, textBlock.y());
+    for (const TextFragment& f : textBlock.fragments()) {
+        draw(f, item, painter);
+    }
+    painter->translate(0.0, -textBlock.y());
+}
+
+void SingleDraw::draw(const TextFragment& textFragment, const TextBase* item, muse::draw::Painter* painter)
+{
+    painter->setFont(textFragment.font(item));
+    painter->drawText(textFragment.pos, textFragment.text);
 }
 
 void SingleDraw::drawTextLineBaseSegment(const TextLineBaseSegment* item, Painter* painter, const PaintOptions& opt)
@@ -1751,14 +1765,8 @@ void SingleDraw::draw(const Harmony* item, Painter* painter, const PaintOptions&
     painter->setPen(color);
     for (const HarmonyRenderItem* renderItem : ldata->renderItemList()) {
         if (const TextSegment* ts = dynamic_cast<const TextSegment*>(renderItem)) {
-            Font f(ts->font());
-            f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-#ifndef Q_OS_MACOS
-            TextBase::drawTextWorkaround(painter, f, ts->pos(), ts->text());
-#else
-            painter->setFont(f);
+            painter->setFont(ts->font());
             painter->drawText(ts->pos(), ts->text());
-#endif
         }
     }
 }
@@ -1883,9 +1891,7 @@ void SingleDraw::draw(const LayoutBreak* item, Painter* painter, const PaintOpti
     Pen pen(item->configuration()->fontPrimaryColor());
     painter->setPen(pen);
 
-    Font f(item->font());
-    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-    painter->setFont(f);
+    painter->setFont(item->font());
 
     painter->drawSymbol(PointF(0.0, 0.0), item->iconCode());
 }
@@ -2176,7 +2182,6 @@ void SingleDraw::draw(const StaffText* item, Painter* painter, const PaintOption
     drawTextBase(item, painter, opt);
 
     if (item->hasSoundFlag()) {
-        item->soundFlag()->setIconFontSize(item->font().pointSizeF() * MScore::pixelRatio);
         draw(item->soundFlag(), painter, opt);
     }
 }
@@ -2236,9 +2241,7 @@ void SingleDraw::draw(const FSymbol* item, Painter* painter, const PaintOptions&
 {
     TRACE_DRAW_ITEM;
 
-    Font f(item->font());
-    f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
-    painter->setFont(f);
+    painter->setFont(item->font());
     painter->setPen(item->curColor(opt));
     painter->drawText(PointF(0, 0), item->toString());
 }
@@ -2258,8 +2261,7 @@ void SingleDraw::draw(const SoundFlag* item, Painter* painter, const PaintOption
 {
     TRACE_DRAW_ITEM;
 
-    Font f(item->iconFont());
-    painter->setFont(f);
+    painter->setFont(item->iconFont());
     painter->drawText(item->ldata()->bbox(), muse::draw::AlignCenter, Char(item->iconCode()));
 }
 

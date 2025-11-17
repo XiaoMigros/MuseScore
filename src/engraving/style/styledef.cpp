@@ -161,12 +161,16 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
 
     styleDef(dividerLeft,                                false),
     styleDef(dividerLeftSym,                             String(u"systemDivider")),
-    styleDef(dividerLeftX,                               0.0),
-    styleDef(dividerLeftY,                               0.0),
+    styleDef(dividerLeftX,                               0.0_sp),
+    styleDef(dividerLeftY,                               0.0_sp),
     styleDef(dividerRight,                               false),
     styleDef(dividerRightSym,                            String(u"systemDivider")),
-    styleDef(dividerRightX,                              0.0),
-    styleDef(dividerRightY,                              0.0),
+    styleDef(dividerRightX,                              0.0_sp),
+    styleDef(dividerRightY,                              0.0_sp),
+    styleDef(dividerLeftAlignToSystemBarline,            true),
+    styleDef(dividerRightAlignToSystemBarline,           true),
+    styleDef(dividerLeftSize,                            1.0),
+    styleDef(dividerRightSize,                           1.0),
 
     styleDef(clefLeftMargin,                             0.75_sp),
     styleDef(keysigLeftMargin,                           0.5_sp),
@@ -742,7 +746,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(minVerticalDistance,                        0.5_sp),
     styleDef(skylineMinHorizontalClearance,              0.25_sp),
     styleDef(ornamentStyle,                              int(OrnamentStyle::DEFAULT)),
-    styleDef(spatium,                                    24.8),
+    styleDef(spatium,                                    1.75 /*mm*/ * DPMM),
 
     styleDef(autoplaceHairpinDynamicsDistance,           0.5_sp),
 
@@ -994,7 +998,6 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(stringNumberFrameBgColor,                   PropertyValue::fromValue(Color::transparent)),
     styleDef(stringNumberOffset,                         PointF(0.0, 0.0)),
     styleDef(stringNumberPosition,                       AlignH::HCENTER),
-    styleDef(preferSameStringForTranspose,               false),
 
     styleDef(stringTuningsFontSize,                      9.0),
 
