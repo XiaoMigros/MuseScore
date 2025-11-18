@@ -63,11 +63,14 @@
 #include "engraving/dom/stafftextbase.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/tempotext.h"
+#include "engraving/dom/textbase.h"
 #include "engraving/dom/utils.h"
 
 #include "engraving/rendering/score/stemlayout.h"
 
 #include "engraving/types/symnames.h"
+
+#include "draw/fontmetrics.h"
 
 #include "log.h"
 
@@ -563,6 +566,36 @@ ReadableRepeatText::ReadableRepeatText(const FinaleParser& context, const MusxIn
     }
 }
 
+static void adjustBboxToBaseLine(TextBase* item)
+{
+    // MuseScore vertically aligns text items based on their bounding rectangles,
+    // irrespective of font metrics. Account for that here by adjusting offsets.
+    if (!item->ldata()->isSetShape()) {
+        item->score()->renderer()->layoutItem(item);
+    }
+    muse::draw::FontMetrics fm = item->fontMetrics();
+
+    double topAdjust = 0.0;
+    if (item->align() == AlignV::VCENTER || item->align() == AlignV::TOP) {
+        const TextBlock& t = item->ldata()->blocks.front();
+        topAdjust = DBL_MAX;
+        for (const TextFragment& f : t.fragments()) {
+            RectF textBRect = fm.tightBoundingRect(f.text).translated(f.pos);
+            topAdjust = std::min(topAdjust, textBRect.top() + fm.ascent());
+        }
+    }
+    double bottomAdjust = 0.0;
+    if (item->align() == AlignV::VCENTER || item->align() == AlignV::BOTTOM) {
+        const TextBlock& t = item->ldata()->blocks.back();
+        bottomAdjust = DBL_MAX;
+        for (const TextFragment& f : t.fragments()) {
+            RectF textBRect = fm.tightBoundingRect(f.text).translated(f.pos);
+            bottomAdjust = std::min(topAdjust, fm.descent() - textBRect.bottom());
+        }
+    }
+    setAndStyleProperty(item, Pid::OFFSET, PointF(item->offset().x(), item->offset().y() + topAdjust - bottomAdjust));
+}
+
 void FinaleParser::importTextExpressions()
 {
     // Iterate through assigned expressions
@@ -946,6 +979,7 @@ void FinaleParser::importTextExpressions()
             }
             p += evpuToPointF(exprAssign->horzEvpuOff * expr->defaultSpatium(), -exprAssign->vertEvpuOff * expr->spatium()); // assignment offset
             setAndStyleProperty(expr, Pid::OFFSET, p);
+            adjustBboxToBaseLine(expr);
         };
         positionExpression(item, expressionAssignment);
         collectElementStyle(item);
@@ -1028,6 +1062,7 @@ void FinaleParser::importTextExpressions()
                 setAndStyleProperty(text, Pid::ALIGN, Align(AlignH::LEFT, AlignV::TOP));
                 FrameSettings frameSettings(measureTextAssign->getTextBlock().get());
                 frameSettings.setFrameProperties(text);
+                adjustBboxToBaseLine(text);
                 s->add(text);
                 collectElementStyle(text);
             }
@@ -1109,6 +1144,7 @@ void FinaleParser::importTextExpressions()
             p.ry() -= item->staff()->staffHeight(measure->tick());
         }
         setAndStyleProperty(item, Pid::OFFSET, p);
+        adjustBboxToBaseLine(item);
         measure->add(item);
         collectElementStyle(item);
         m_systemObjectStaves.insert(curStaffIdx);
@@ -1546,6 +1582,7 @@ void FinaleParser::importPageTexts()
             setAndStyleProperty(text, Pid::POSITION, hAlignment, true);
             setAndStyleProperty(text, Pid::OFFSET, (p - mb->pagePos()), true); // is this accurate enough?
             frameSettings.setFrameProperties(text);
+            adjustBboxToBaseLine(text);
             s->add(text);
             collectElementStyle(text);
         } else if (mb->isBox()) {
@@ -1566,6 +1603,7 @@ void FinaleParser::importPageTexts()
             setAndStyleProperty(text, Pid::POSITION, hAlignment, true);
             setAndStyleProperty(text, Pid::OFFSET, p);
             frameSettings.setFrameProperties(text);
+            adjustBboxToBaseLine(text);
             toBox(mb)->add(text);
             collectElementStyle(text);
         }
