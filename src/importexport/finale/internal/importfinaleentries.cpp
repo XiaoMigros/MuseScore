@@ -1649,26 +1649,24 @@ void FinaleParser::importEntryAdjustments()
         }
         setAndStyleProperty(beam, Pid::GROW_LEFT, feathering.x());
         setAndStyleProperty(beam, Pid::GROW_RIGHT, feathering.y());
-        setAndStyleProperty(beam, Pid::USER_MODIFIED, true);
-        setAndStyleProperty(beam, Pid::GENERATED, false);
 
         // Smoothing
-        if (!musxOptions().beamOptions->spanSpace && !muse::RealIsEqual(preferredStart, preferredEnd)) {
+        if (!musxOptions().beamOptions->spanSpace && !muse::RealIsEqual(preferredStart, preferredEnd) && posAdjust.isNull()) {
             innermost = getInnermost();
             if (up ? muse::RealIsEqualOrMore(innermost, beamStaffY) : innermost < beamStaffY + beam->staff()->staffHeight(beam->tick())) {
                 /// @todo figure out these calculations - they seem more complex than the rest of the code
-                /// For now, set to default position and add offset
+                /// For now, set to default position
                 logger()->logInfo(String(u"Beam at tick %1, track %2 should inherit default placement.").arg(beam->tick().toString(), String::number(beam->track())));
                 if (beam->cross()) {
                     int crossStaffMove = (up ? beam->minCRMove() : beam->maxCRMove() + 1) - beam->defaultCrossStaffIdx();
                     setAndStyleProperty(beam, Pid::BEAM_CROSS_STAFF_MOVE, crossStaffMove);
                 }
-                /// @todo requires layout call first - else unexpected results
-                setAndStyleProperty(beam, Pid::BEAM_POS, PairF(beam->beamPos().first - (posAdjust.x() / beam->spatium()),
-                                                               beam->beamPos().second - (posAdjust.y() / beam->spatium())));
                 continue;
             }
         }
+
+        setAndStyleProperty(beam, Pid::USER_MODIFIED, true);
+        setAndStyleProperty(beam, Pid::GENERATED, false);
 
         preferredStart -= posAdjust.x();
         preferredEnd -= posAdjust.y();
