@@ -286,6 +286,7 @@ void FinaleParser::importMeasures()
 
     MusxInstanceList<others::Measure> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     MusxInstanceList<others::StaffSystem> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
+    int lastDisplayNum = 0;
     for (const MusxInstance<others::Measure>& musxMeasure : musxMeasures) {
         Measure* measure = Factory::createMeasure(m_score->dummy()->system());
         Fraction tick(m_score->last() ? m_score->last()->endTick() : Fraction(0, 1));
@@ -308,7 +309,21 @@ void FinaleParser::importMeasures()
         }
 
         measure->setBreakMultiMeasureRest(musxMeasure->breakMmRest);
-        measure->setIrregular(musxMeasure->noMeasNum);
+        if (const MusxInstance<others::MeasureNumberRegion> measNumRegion = musxMeasure->findMeasureNumberRegion()) {
+            if (musxMeasure->getCmper() == measNumRegion->startMeas) {
+                measure->setNoOffset(measNumRegion->numberOffset - lastDisplayNum);
+            }
+            if (musxMeasure->getCmper() == measNumRegion->endMeas - 1) {
+                if (std::optional<int> currLast = measNumRegion->calcLastDisplayNumber()) {
+                    lastDisplayNum = currLast.value();
+                }
+            }
+            if (musxMeasure->noMeasNum) {
+                measure->setIrregular(true);
+            }
+        } else {
+            measure->setIrregular(true);
+        }
     }
 }
 
