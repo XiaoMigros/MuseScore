@@ -1650,7 +1650,7 @@ Fraction eduToFraction(Edu edu)
     return musxFractionToFraction(musx::util::Fraction::fromEdu(edu));
 }
 
-Fraction simpleMusxTimeSigToFraction(const std::pair<musx::util::Fraction, musx::dom::NoteType>& simpleMusxTimeSig, FinaleLoggerPtr& logger)
+Fraction simpleMusxTimeSigToFraction(const std::pair<musx::util::Fraction, musx::dom::NoteType>& simpleMusxTimeSig, musx::util::Fraction pickupSpacer, FinaleLoggerPtr& logger)
 {
     auto [count, noteType] = simpleMusxTimeSig;
     if (count.remainder()) {
@@ -1662,7 +1662,16 @@ Fraction simpleMusxTimeSigToFraction(const std::pair<musx::util::Fraction, musx:
             return Fraction(4, 4);
         }
     }
-    return Fraction(count.quotient(),  musx::util::Fraction::fromEdu(Edu(noteType)).denominator());
+    Fraction result = Fraction(count.quotient(),  musx::util::Fraction::fromEdu(Edu(noteType)).denominator());
+    Fraction spacer = musxFractionToFraction(pickupSpacer);
+    if (spacer == Fraction(0, 1)) {
+        return result;
+    }
+    if (spacer >= result) {
+        logger->logWarning(String("Skipping pickup spacer that is larger than the time signature."));
+        return result;
+    }
+    return result - spacer;
 }
 
 Key keyFromAlteration(int musxAlteration)

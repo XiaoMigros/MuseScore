@@ -294,7 +294,7 @@ void FinaleParser::importMeasures()
         m_meas2Tick.emplace(musxMeasure->getCmper(), tick);
         m_tick2Meas.emplace(tick, musxMeasure->getCmper());
         MusxInstance<TimeSignature> musxTimeSig = musxMeasure->createTimeSignature();
-        Fraction scoreTimeSig = simpleMusxTimeSigToFraction(musxTimeSig->calcSimplified(), logger());
+        Fraction scoreTimeSig = simpleMusxTimeSigToFraction(musxTimeSig->calcSimplified(), musxMeasure->calcMinLegacyPickupSpacer(), logger());
         if (scoreTimeSig != currTimeSig) {
             m_score->sigmap()->add(tick.ticks(), scoreTimeSig);
             currTimeSig = scoreTimeSig;
@@ -329,7 +329,7 @@ void FinaleParser::importMeasures()
 
 void FinaleParser::importParts()
 {
-    MusxInstanceList<others::StaffUsed> scrollView = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    MusxInstanceList<others::StaffUsed> scrollView = m_doc->getScrollViewStaves(m_currentMusxPartId);
 
     const bool hideEmptyStaves = m_score->style().styleB(Sid::hideEmptyStaves);
     const AutoOnOff doNotHideVal = hideEmptyStaves ? AutoOnOff::OFF : AutoOnOff::AUTO;
@@ -358,7 +358,7 @@ void FinaleParser::importParts()
 
         const auto& [topStaffId, instInfo] = *instIt;
         if (instInfo.staffGroupId != 0) {
-            if (MusxInstance<details::StaffGroup> group = m_doc->getDetails()->get<details::StaffGroup>(m_currentMusxPartId, BASE_SYSTEM_ID, instInfo.staffGroupId)) {
+            if (MusxInstance<details::StaffGroup> group = m_doc->getDetails()->get<details::StaffGroup>(m_currentMusxPartId, m_doc->calcScrollViewCmper(m_currentMusxPartId), instInfo.staffGroupId)) {
                 if (group->hideStaves == details::StaffGroup::HideStaves::None) {
                     part->setHideWhenEmpty(doNotHideVal);
                 } else if (group->hideStaves != details::StaffGroup::HideStaves::AsGroup) {
@@ -454,7 +454,7 @@ void FinaleParser::importBrackets()
         throw std::logic_error("Unable to read PartDefinition for score");
         return;
     }
-    const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getScrollViewStaves(m_currentMusxPartId);
 
     auto staffGroups = details::StaffGroupInfo::getGroupsAtMeasure(1, m_currentMusxPartId, scrollView);
     auto groupsByLayer = computeStaffGroupLayers(staffGroups);
@@ -798,7 +798,7 @@ void FinaleParser::importStaffItems()
         return;
     }
     MusxInstanceList<others::Measure> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
-    MusxInstanceList<others::StaffUsed> musxScrollView = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, BASE_SYSTEM_ID);
+    MusxInstanceList<others::StaffUsed> musxScrollView = m_doc->getScrollViewStaves(m_currentMusxPartId);
     MusxInstanceList<others::StaffSystem> musxSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
     for (const MusxInstance<others::StaffUsed>& musxScrollViewItem : musxScrollView) {
         // Retrieve staff
@@ -896,6 +896,7 @@ void FinaleParser::importStaffItems()
 
         // Clefs, key signatures, and time signatures
         MusxInstance<TimeSignature> currMusxTimeSig;
+        std::optional<musx::util::Fraction> currLegacyPickupSpacer;
         MusxInstance<TimeSignature> currVisualTimeSig;
         MusxInstance<KeySignature> currMusxKeySig;
         std::optional<KeySigEvent> currKeySigEvent;
@@ -918,16 +919,17 @@ void FinaleParser::importStaffItems()
 
             // Time signatures
             const MusxInstance<TimeSignature> localTimeSig = musxMeasure->createTimeSignature(musxStaffId);
+            const musx::util::Fraction legacyPickupSpacer = musxMeasure->calcMinLegacyPickupSpacer(musxStaffId);
             const MusxInstance<TimeSignature> visualTimeSig = musxMeasure->createDisplayTimeSignature(musxStaffId);
             const bool visualTimeSigChanged = !currVisualTimeSig || !currVisualTimeSig->isSame(*visualTimeSig);
-            const bool actualTimeSigChanged = !currMusxTimeSig || !currMusxTimeSig->isSame(*localTimeSig);
+            const bool actualTimeSigChanged = !currMusxTimeSig || !currMusxTimeSig->isSame(*localTimeSig) || currLegacyPickupSpacer != legacyPickupSpacer;
             const bool forceDisplayTimeSig = musxMeasure->showTime == others::Measure::ShowTimeSigMode::Always;
             const bool forceHideTimeSig = musxMeasure->showTime == others::Measure::ShowTimeSigMode::Never;
             if (actualTimeSigChanged || visualTimeSigChanged || forceDisplayTimeSig) {
                 const MusxInstance<TimeSignature> globalTimeSig = musxMeasure->createTimeSignature();
                 Segment* seg = measure->getSegmentR(SegmentType::TimeSig, Fraction(0, 1));
                 TimeSig* ts = Factory::createTimeSig(seg);
-                Fraction timeSig = simpleMusxTimeSigToFraction(localTimeSig->calcSimplified(), logger());
+                Fraction timeSig = simpleMusxTimeSigToFraction(localTimeSig->calcSimplified(), legacyPickupSpacer, logger());
 
                 // Display text: Attempt to inherit it, where possible
                 if (visualTimeSig->getAbbreviatedSymbol().has_value()) {
@@ -952,6 +954,7 @@ void FinaleParser::importStaffItems()
                 seg->add(ts);
             }
             currMusxTimeSig = localTimeSig;
+            currLegacyPickupSpacer = legacyPickupSpacer;
             currVisualTimeSig = visualTimeSig;
 
             // clefs
