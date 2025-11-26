@@ -3943,7 +3943,7 @@ void NotationInteraction::swapChordRest(MoveDirection direction)
         } else {
             cr2 = nextChordRest(cr1);
         }
-        if (cr1 && cr2 && cr1->measure() == cr2->measure() && !cr1->tuplet() && !cr2->tuplet()
+        if (cr1 && cr2 && cr1->measure() == cr2->measure()
             && cr1->durationType() == cr2->durationType() && cr1->ticks() == cr2->ticks()
             // if two chords belong to different two-note tremolos, abort
             && !(cr1->isChord() && toChord(cr1)->tremoloTwoChord()
