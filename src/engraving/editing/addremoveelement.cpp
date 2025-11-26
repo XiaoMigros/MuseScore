@@ -539,3 +539,43 @@ Unlink::Unlink(EngravingObject* _e)
     le = e->links();
     assert(le);
 }
+
+//---------------------------------------------------------
+//   ChangeChordRestTuplet
+//---------------------------------------------------------
+
+ChangeChordRestTuplet::ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
+    : chordRest(cr), tuplet(t)
+{
+}
+
+void ChangeChordRestTuplet::flip(EditData*)
+{
+    Tuplet* t = chordRest->tuplet();
+    if (t && t->elements().size() <= 1) {
+        for (EngravingObject* e : t->linkList()) {
+            e->score()->doUndoRemoveElement(toEngravingItem(e));
+        }
+    }
+    undoRemoveTuplet(chordRest);
+    chordRest->setTuplet(tuplet);
+    undoAddTuplet(chordRest);
+    for (EngravingObject* e : chordRest->linkList()) {
+        ChordRest* cr = toChordRest(e);
+        if (cr == chordRest) {
+            continue;
+        }
+        undoRemoveTuplet(cr);
+        Tuplet* linkedTuplet = tuplet ? toTuplet(tuplet->findLinkedInStaff(cr->staff())) : nullptr;
+        if (tuplet && !linkedTuplet) {
+            linkedTuplet = toTuplet(tuplet->linkedClone());
+            linkedTuplet->setScore(cr->score());
+            linkedTuplet->setTrack(cr->track());
+            linkedTuplet->setParent(cr->measure());
+        }
+        cr->setTuplet(linkedTuplet);
+        undoAddTuplet(cr);
+    }
+    chordRest->triggerLayout();
+    tuplet = t;
+}
