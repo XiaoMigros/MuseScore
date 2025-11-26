@@ -559,7 +559,7 @@ void ChangeChordRestTuplet::flip(EditData*)
         DurationElement* elementBelow = toDurationElement(chordRest);
         Tuplet* tupletAbove = elementBelow->tuplet();
         while (tupletAbove) {
-            DurationElement* linkedElementBelow = (DurationElement*)elementBelow->findLinkedInStaff(staff);
+            DurationElement* linkedElementBelow = (DurationElement*)elementBelow->findLinkedInStaff(cr->staff());
             if (!linkedElementBelow) {     // shouldn't happen
                 break;
             }
