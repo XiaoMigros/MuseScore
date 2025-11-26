@@ -549,11 +549,11 @@ ChangeChordRestTuplet::ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
 {
     chordRest = cr;
     tuplet = t;
-    if (chordRest->tuplet() && chordRest->tuplet()->elements().size() <= 1) {
-        for (EngravingObject* e : chordRest->tuplet()->linkList()) {
-            e->score()->doUndoRemoveElement(toEngravingItem(e));
-        }
-    }
+    // if (chordRest->tuplet() && chordRest->tuplet()->elements().size() <= 1) {
+        // for (EngravingObject* e : chordRest->tuplet()->linkList()) {
+            // e->score()->doUndoRemoveElement(toEngravingItem(e));
+        // }
+    // }
 }
 
 void ChangeChordRestTuplet::flip(EditData*)
@@ -561,27 +561,18 @@ void ChangeChordRestTuplet::flip(EditData*)
     Tuplet* t = chordRest->tuplet();
     for (EngravingObject* e : chordRest->linkList()) {
         ChordRest* cr = toChordRest(e);
+        undoRemoveTuplet(cr);
         // Climb up the (possibly nested) tuplets from this chordRest
         // Make sure all tuplets are cloned and correctly nested
-        DurationElement* elementBelow = toDurationElement(chordRest);
-        Tuplet* tupletAbove = tuplet;
-        while (tupletAbove) {
-            DurationElement* linkedElementBelow = (DurationElement*)elementBelow->findLinkedInStaff(cr->staff());
-            if (!linkedElementBelow) {     // shouldn't happen
-                break;
-            }
-            Tuplet* linkedTuplet = toTuplet(tupletAbove->findLinkedInStaff(cr->staff()));
-            if (!linkedTuplet) {
-                linkedTuplet = toTuplet(tupletAbove->linkedClone());
-                linkedTuplet->setScore(cr->score());
-                linkedTuplet->setTrack(cr->track());
-                linkedTuplet->setParent(cr->measure());
-            }
-            linkedElementBelow->setTuplet(linkedTuplet);
-
-            elementBelow = tupletAbove;
-            tupletAbove = tupletAbove->tuplet();
+        Tuplet* linkedTuplet = toTuplet(tuplet->findLinkedInStaff(cr->staff()));
+        if (!linkedTuplet) {
+            linkedTuplet = toTuplet(tuplet->linkedClone());
+            linkedTuplet->setScore(cr->score());
+            linkedTuplet->setTrack(cr->track());
+            linkedTuplet->setParent(cr->measure());
         }
+        cr->setTuplet(linkedTuplet);
+        undoAddTuplet(cr);
     }
     chordRest->triggerLayout();
     tuplet = t;
