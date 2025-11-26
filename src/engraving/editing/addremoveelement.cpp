@@ -544,11 +544,6 @@ Unlink::Unlink(EngravingObject* _e)
 //   ChangeChordRestTuplet
 //---------------------------------------------------------
 
-ChangeChordRestTuplet::ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
-    : chordRest(cr), tuplet(t)
-{
-}
-
 void ChangeChordRestTuplet::flip(EditData*)
 {
     Tuplet* t = chordRest->tuplet();
@@ -568,7 +563,7 @@ void ChangeChordRestTuplet::flip(EditData*)
             if (!linkedElementBelow) {     // shouldn't happen
                 break;
             }
-            Tuplet* linkedTuplet = toTuplet(tupletAbove->findLinkedInStaff(staff));
+            Tuplet* linkedTuplet = toTuplet(tupletAbove->findLinkedInStaff(cr->staff()));
             if (!linkedTuplet) {
                 linkedTuplet = toTuplet(tupletAbove->linkedClone());
                 linkedTuplet->setScore(cr->score());

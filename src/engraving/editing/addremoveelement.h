@@ -159,7 +159,8 @@ class ChangeChordRestTuplet : public UndoCommand
     void flip(EditData*) override;
 
 public:
-    ChangeChordRestTuplet(ChordRest* cr, Tuplet* t);
+    ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
+        : chordRest(cr), tuplet(t) {}
 
     UNDO_TYPE(CommandType::ChangeChordRestTuplet)
     UNDO_NAME("ChangeChordRestTuplet")
