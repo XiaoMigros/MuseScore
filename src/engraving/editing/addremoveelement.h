@@ -24,6 +24,9 @@
 
 #include "undo.h"
 
+#include "../dom/chordrest.h"
+#include "../dom/tuplet.h"
+
 namespace mu::engraving {
 class AddElement : public UndoCommand
 {
@@ -159,8 +162,7 @@ class ChangeChordRestTuplet : public UndoCommand
     void flip(EditData*) override;
 
 public:
-    ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
-        : chordRest(cr), tuplet(t) {}
+    ChangeChordRestTuplet(ChordRest* cr, Tuplet* t);
 
     UNDO_TYPE(CommandType::ChangeChordRestTuplet)
     UNDO_NAME("ChangeChordRestTuplet")

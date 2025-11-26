@@ -26,6 +26,7 @@
 
 #include "../dom/arpeggio.h"
 #include "../dom/chord.h"
+#include "../dom/chordrest.h"
 #include "../dom/engravingitem.h"
 #include "../dom/keysig.h"
 #include "../dom/linkedobjects.h"
@@ -544,20 +545,26 @@ Unlink::Unlink(EngravingObject* _e)
 //   ChangeChordRestTuplet
 //---------------------------------------------------------
 
-void ChangeChordRestTuplet::flip(EditData*)
+ChangeChordRestTuplet::ChangeChordRestTuplet(ChordRest* cr, Tuplet* t)
 {
-    Tuplet* t = chordRest->tuplet();
-    if (t && t->elements().size() <= 1) {
-        for (EngravingObject* e : t->linkList()) {
+    chordRest = cr;
+    tuplet = t;
+    if (chordRest->tuplet() && chordRest->tuplet()->elements().size() <= 1) {
+        for (EngravingObject* e : chordRest->tuplet()->linkList()) {
             e->score()->doUndoRemoveElement(toEngravingItem(e));
         }
     }
+}
+
+void ChangeChordRestTuplet::flip(EditData*)
+{
+    Tuplet* t = chordRest->tuplet();
     for (EngravingObject* e : chordRest->linkList()) {
         ChordRest* cr = toChordRest(e);
         // Climb up the (possibly nested) tuplets from this chordRest
         // Make sure all tuplets are cloned and correctly nested
         DurationElement* elementBelow = toDurationElement(chordRest);
-        Tuplet* tupletAbove = elementBelow->tuplet();
+        Tuplet* tupletAbove = tuplet;
         while (tupletAbove) {
             DurationElement* linkedElementBelow = (DurationElement*)elementBelow->findLinkedInStaff(cr->staff());
             if (!linkedElementBelow) {     // shouldn't happen
