@@ -557,14 +557,8 @@ void ChangeChordRestTuplet::flip(EditData*)
             e->score()->doUndoRemoveElement(toEngravingItem(e));
         }
     }
-    undoRemoveTuplet(chordRest);
-    chordRest->setTuplet(tuplet);
-    undoAddTuplet(chordRest);
     for (EngravingObject* e : chordRest->linkList()) {
         ChordRest* cr = toChordRest(e);
-        if (cr == chordRest) {
-            continue;
-        }
         undoRemoveTuplet(cr);
         Tuplet* linkedTuplet = tuplet ? toTuplet(tuplet->findLinkedInStaff(cr->staff())) : nullptr;
         if (tuplet && !linkedTuplet) {
