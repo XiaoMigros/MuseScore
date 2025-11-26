@@ -24,7 +24,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls
 
 import MuseScore.NotationScene 1.0
-import Muse.UiComponents 1.0
+import Muse.UiComponents
 import Muse.Ui 1.0
 
 StyledFlickable {
@@ -98,7 +98,7 @@ StyledFlickable {
                 }
 
                 CheckBox {
-                    text: qsTrc("notation/editstyle/timesignatures", "Hide tab clefs after the first system where they appear")
+                    text: qsTrc("notation/editstyle/timesignatures", "Hide TAB clefs after the first system where they appear")
                     enabled: pageModel.genClef.value === true
                     checked: pageModel.hideTabClefAfterFirst.value === true
                     onClicked: pageModel.hideTabClefAfterFirst.value = !pageModel.hideTabClefAfterFirst.value

@@ -32,8 +32,71 @@ function scan(files, rootPath, filter)
     }
 }
 
-async function extractDoc(file)
+function nameFromSig(line)
 {
+    let name = "";
+    // Result Class::method(...)
+    let colonIdx = line.lastIndexOf("::")
+    if (colonIdx !== -1) {
+        colonIdx += 2 // skip `::`
+        let braceIdx = line.indexOf("(", colonIdx)
+        name = line.substr(colonIdx, (braceIdx - colonIdx))
+    }
+
+    if (name === "") {
+        // Result method(...)
+        line = line.trim()
+        let spaceIdx = line.indexOf(" ")
+        if (spaceIdx !== -1) {
+            spaceIdx += 1 // skip ` `
+            let braceIdx = line.indexOf("(", spaceIdx)
+            if (braceIdx !== -1) {
+                name = line.substr(spaceIdx, (braceIdx - spaceIdx))
+            }
+        }
+    }
+
+    return name;
+}
+
+function enumName(line)
+{
+    let name = "";
+    line = line.trim()
+    let enumIdx = line.indexOf("enum");
+    if (enumIdx === -1) {
+        return name;
+    }
+
+    enumIdx += 4
+    let braceIdx = line.indexOf("{", enumIdx) 
+    if (braceIdx !== -1) {
+        name = line.substr(enumIdx, (braceIdx - enumIdx))
+        name = name.trim();
+    }
+
+    return name;
+}
+
+function enumKey(line) 
+{
+    let key = "";
+    line = line.trim()
+    let idx = line.indexOf('=')
+    if (idx === -1) {
+        idx = line.indexOf(',')
+    } 
+
+    if (idx !== -1) {
+        let key = line.substr(0, idx)
+        return key.trim();
+    }
+
+    return ""
+}
+
+async function extractDoc(file)
+{   
     const fileStream = fs.createReadStream(file)
     const rl = readline.createInterface({
                                             input: fileStream,
@@ -41,103 +104,153 @@ async function extractDoc(file)
                                         })
 
     const APIDOC_BEGIN = "/** APIDOC"
-    const APIDOC_END = "*/"
-    const APIDOC_NSPACE = "namespace:"
-    const APIDOC_METHOD = "method"
+    const APIDOC_END = "*/" 
+    
+    let state = {
+        hasApidoc: false,
+        apidocStarted: false,
 
-    var state = {
-        namespaceStared: false,
-        namespaceName: "",
+        currentDoc: "",
 
-        methodDocContent: false,
-        methodParams: [],
+        parentDoc: "", // namespace or class
+        parentName: "",
+
         methodLookName: false,
-    };
+        methods: [],
 
-    var doc = ""
+        propLookName: false,
+        props: [],
 
-    for await (var line of rl) {
+        enumLookName: false,
+        enumStarted: false,
+        enums: [],
+    }                                   
+
+    for await (let line of rl) {
         line = line.trim()
 
         if (line.startsWith(APIDOC_BEGIN)) {
-
-            // remove /** APIDOC
-            line = line.substring(APIDOC_BEGIN.length);
-            line = line.trim()
-
-            // check namespace
-            // `namespace: interactive`
-            if (line.startsWith(APIDOC_NSPACE)) {
-                state.namespaceName = line.substring(APIDOC_NSPACE.length).trim()
-                state.namespaceStared = true;
-                doc += "/**\n"
-            }
-            // check method
-            // `method`
-            else if (line.startsWith(APIDOC_METHOD)) {
-                doc += "\t/**\n"
-                state.methodDocContent = true
-            }
-
-            continue;
+            // remove APIDOC
+            line = line.replace("APIDOC", "");
+            state.hasApidoc = true;
+            state.apidocStarted = true;
+            state.currentDoc = "";
         }
 
-        if (line.startsWith(APIDOC_END)) {
-            // write ns
-            if (state.namespaceName !== "") {
-                doc += "*/\n"
-                doc += "const " + state.namespaceName + " = {\n\n"
-                state.namespaceName = ""
-            }
-            // end method
-            else if (state.methodDocContent) {
-                state.methodDocContent = false
-                state.methodLookName = true
+        if (state.apidocStarted && line.endsWith(APIDOC_END)) {
+            state.currentDoc += line + "\n";
+            state.apidocStarted = false;
+
+            // check of kind 
+
+            // get parent - namespace or class
+            const namespaceMatch = state.currentDoc.match(/@namespace\s+(\S+)/);
+            if (namespaceMatch) {
+                state.parentName = namespaceMatch[1];
+                state.parentDoc = state.currentDoc;
+                continue;
             }
 
-            continue;
+            const classMatch = state.currentDoc.match(/@class\s+(\S+)/);
+            if (classMatch) {
+                state.parentName = classMatch[1];
+                state.parentDoc = state.currentDoc;
+                continue;
+            }
+
+            // try add memberof to method
+            if (state.parentName !== "") {
+                if (state.currentDoc.includes('@method')) {
+                    state.currentDoc = state.currentDoc.replace('@method', `@memberof ${state.parentName}\n* @method`);
+                    state.methodLookName = true;
+                    continue;
+                }
+            }
+
+            // try get property 
+            if (state.currentDoc.includes('@property')) {
+                state.currentDoc = state.currentDoc.replace('/** ', `*`);
+                state.currentDoc = state.currentDoc.replace('/**', `*`);
+                state.currentDoc = state.currentDoc.replace('*/', ``);
+                state.propLookName = true;
+                continue;
+            }
+
+            // try get enum 
+            if (state.currentDoc.includes('@enum')) {
+                state.enumLookName = true;
+                continue;
+            }
         }
 
-        if (state.namespaceName !== "") {
-            doc += line + "\n"
-            continue;
+        if (state.apidocStarted) {
+            state.currentDoc += line + "\n";
         }
 
-        if (state.methodDocContent) {
-            doc += "\t" + line + "\n"
-
-            if (line.includes("@param")) {
-                var words = line.split(' ');
-                state.methodParams.push(words[3])
+         if (state.methodLookName) {
+            let name = nameFromSig(line);
+            if (name !== "") {
+                state.methodLookName = false;
+                state.currentDoc = state.currentDoc.replace('@method', `@method ${name}`);
+                state.methods.push(state.currentDoc);
             }
-
-            continue;
         }
 
-        if (state.methodLookName) {
-            // Result Class::method(...)
-            var colonIdx = line.lastIndexOf("::")
-            if (colonIdx !== -1) {
-                colonIdx += 2 // skip ::
-                var braceIdx = line.indexOf("(", colonIdx)
-                var name = line.substr(colonIdx, (braceIdx - colonIdx))
-
-                // write method
-                doc += "\t*/\n"
-                doc += "\t" + name + "(" + state.methodParams.join(', ') + ") {},\n\n"
-
-                // cleanup state
-                state.methodLookName = ""
-                state.methodParams = []
+        if (state.propLookName) {
+            let name = nameFromSig(line);
+            if (name !== "") {
+                state.propLookName = false;
+                // add name 
+                const regex = /@property\s+\{([^}]+)\}\s+/;
+                state.currentDoc = state.currentDoc.replace(regex, `@property {$1} ${name} `);
+                state.props.push(state.currentDoc);
             }
+        }
+
+        if (state.enumLookName) {
+            let name = enumName(line);
+            if (name !== "") {
+                state.enumLookName = false;
+                state.enumStarted = true;
+                state.currentDoc += 'const ' + name + ' = {\n';
+            }
+        }
+
+        if (state.enumStarted) {
+            let key = enumKey(line);
+            if (key !== "") {
+                state.currentDoc += '\t' + key + ': "' + key + '",\n'
+            }
+        }
+
+        if (state.enumStarted && line.startsWith('}')) {
+            state.enumStarted = false;
+            state.currentDoc += '};';
+            state.enums.push(state.currentDoc);
         }
     }
 
-    if (state.namespaceStared) {
-        doc += "};";
+    let doc = "";
+    if (!state.hasApidoc) {
+        return doc;
     }
 
-    return doc
+    let propsDoc = "";
+    for (const p of state.props) {
+        propsDoc += p; 
+    }
+
+    doc = state.parentDoc.replace('*/', `${propsDoc}*/`);
+
+    for (const en of state.enums) {
+        doc += en
+    }
+
+    for (const m of state.methods) {
+        doc += m;
+    }
+
+    return doc;
 }
 
 function saveDoc(doc, dir, name)
@@ -242,7 +355,7 @@ async function main()
     // extrac
     for (var i in files) {
         const file = files[i]
-        const name = path.parse(file).name
+        const name = path.parse(file).base
 
         const doc = await extractDoc(file);
         if (doc !== "") {

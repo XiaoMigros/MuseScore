@@ -24,7 +24,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import Muse.Ui 1.0
-import Muse.UiComponents 1.0
+import Muse.UiComponents
 import MuseScore.NotationScene 1.0
 
 Rectangle {
@@ -111,7 +111,7 @@ Rectangle {
                 }
 
                 onCloseRequested: {
-                    notationSwitchModel.closeNotation(index)
+                    Qt.callLater(notationSwitchModel.closeNotation, index)
                 }
 
                 onContextMenuItemsRequested: {

@@ -52,8 +52,7 @@ bool Engraving_TupletTests::createTuplet(int n, ChordRest* cr)
     }
 
     Fraction f(cr->ticks());
-    Fraction tick = cr->tick();
-    Tuplet* ot    = cr->tuplet();
+    Tuplet* ot = cr->tuplet();
 
     f.reduce();         //measure duration might not be reduced
     Fraction ratio(n, f.numerator());
@@ -78,11 +77,7 @@ bool Engraving_TupletTests::createTuplet(int n, ChordRest* cr)
     tuplet->setTicks(f);
     TDuration baseLen(fr);
     tuplet->setBaseLen(baseLen);
-
-    tuplet->setTrack(cr->track());
-    tuplet->setTick(tick);
-    Measure* measure = cr->measure();
-    tuplet->setParent(measure);
+    tuplet->setParent(cr->measure());
 
     if (ot) {
         tuplet->setTuplet(ot);
@@ -195,5 +190,29 @@ TEST_F(Engraving_TupletTests, saveLoad)
     EXPECT_TRUE(score);
     //simply load and save
     EXPECT_TRUE(ScoreComp::saveCompareScore(score, u"save-load.mscx", TUPLET_DATA_DIR + u"save-load.mscx"));
+    delete score;
+}
+
+//-----------------------------------------
+//    linked
+//     checks that linked tuplets are treated correctly
+//-----------------------------------------
+TEST_F(Engraving_TupletTests, linked)
+{
+    MasterScore* score = ScoreRW::readScore(TUPLET_DATA_DIR + "linked.mscx");
+    Measure* m1 = score->firstMeasure();
+    EXPECT_TRUE(m1 != 0);
+
+    Segment* s = m1->first(SegmentType::ChordRest);
+    EXPECT_TRUE(s != 0);
+    Chord* c = toChord(s->element(0));
+    EXPECT_TRUE(c != 0);
+
+    EXPECT_TRUE(createTuplet(3, c));
+
+    EXPECT_TRUE(ScoreComp::saveCompareScore(score, u"linked.mscx", TUPLET_DATA_DIR + u"linked-ref.mscx"));
+    score->undoRedo(true, nullptr);
+    score->undoRedo(false, nullptr);
+    EXPECT_TRUE(ScoreComp::saveCompareScore(score, u"linked.mscx", TUPLET_DATA_DIR + u"linked-ref.mscx"));
     delete score;
 }

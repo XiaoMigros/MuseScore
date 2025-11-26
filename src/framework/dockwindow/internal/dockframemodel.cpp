@@ -27,12 +27,10 @@
 
 #include "private/TitleBar_p.h"
 #include "thirdparty/KDDockWidgets/src/private/Frame_p.h"
-#include "uicomponents/view/abstractmenumodel.h"
+#include "uicomponents/qml/Muse/UiComponents/abstractmenumodel.h"
 
 #include "../docktypes.h"
 #include "../view/dockpanelview.h"
-
-#include "log.h"
 
 using namespace muse::dock;
 using namespace muse::actions;

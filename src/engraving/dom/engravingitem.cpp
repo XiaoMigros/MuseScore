@@ -686,6 +686,9 @@ Color EngravingItem::curColor(bool isVisible, Color normalColor, const rendering
     }
 
     if (opt.invertColors) {
+        if (normalColor == configuration()->defaultColor()) {
+            return configuration()->scoreInversionColor();
+        }
         return normalColor.inverted();
     }
 
@@ -947,6 +950,7 @@ muse::ByteArray EngravingItem::mimeData(const PointF& dragOffset) const
     rw::RWRegister::writer(iocContext())->writeItem(this, xml);
 
     xml.endElement();
+    xml.flush();
     buffer.close();
     return buffer.data();
 }

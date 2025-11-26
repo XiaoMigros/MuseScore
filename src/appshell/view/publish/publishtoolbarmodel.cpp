@@ -22,7 +22,7 @@
 
 #include "publishtoolbarmodel.h"
 
-#include "uicomponents/view/toolbaritem.h"
+#include "uicomponents/qml/Muse/UiComponents/toolbaritem.h"
 
 using namespace mu::appshell;
 using namespace muse::uicomponents;
@@ -44,12 +44,10 @@ void PublishToolBarModel::load()
         items << item;
     };
 
-    addItem("file-save-to-cloud", muse::TranslatableString("project/save", "Save this score to your MuseScore.com account"));
     addItem("print");
-    addItem("file-export");
-    items << makeSeparator();
     addItem("file-publish", muse::TranslatableString("project/save", "Share this score and its audio on MuseScore.com"));
     addItem("file-share-audio", muse::TranslatableString("project/save", "Share the audio from this score on Audio.com"));
+    addItem("file-export");
 
     setItems(items);
 }

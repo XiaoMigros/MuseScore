@@ -82,6 +82,7 @@ enum class CommandType : signed char {
     Link,
     ChangeElement,
     ChangeParent,
+    ChangeChordRestTuplet,
 
     // Notes
     ChangePitch,

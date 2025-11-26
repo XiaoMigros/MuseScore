@@ -25,9 +25,7 @@
 #include <QGuiApplication>
 #include <QWindow>
 
-#include "uicomponents/view/popupview.h"
-
-#include "log.h"
+#include "uicomponents/qml/Muse/UiComponents/popupview.h"
 
 using namespace mu::inspector;
 using namespace muse::uicomponents;

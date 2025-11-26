@@ -388,6 +388,12 @@ MenuItem* AppMenuModel::makeToolsMenu()
         makeMenuItem("join-measures")
     };
 
+    MenuItemList enharmonicSpellingItems {
+        makeMenuItem("enh-both"),
+        makeMenuItem("enh-current"),
+        makeMenuItem("pitch-spell"),
+    };
+
     MenuItemList toolsItems {
         makeMenuItem("transpose"),
         makeSeparator(),
@@ -401,9 +407,10 @@ MenuItem* AppMenuModel::makeToolsMenu()
         makeMenuItem("slash-fill"),
         makeMenuItem("slash-rhythm"),
         makeSeparator(),
-        makeMenuItem("enh-both"),
-        makeMenuItem("enh-current"),
-        makeMenuItem("pitch-spell"),
+        makeMenuItem("pitch-spell-sharps"),
+        makeMenuItem("pitch-spell-flats"),
+        makeMenu(TranslatableString("appshell/menu/tools", "Enharmonic spelling"), enharmonicSpellingItems, "menu-enharmonic-spelling"),
+        makeSeparator(),
         makeMenuItem("reset-groupings"),
         makeMenuItem("resequence-rehearsal-marks"),
         /*
@@ -461,6 +468,7 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
     helpItems << makeMenuItem("about-musescore", MenuItemRole::AboutRole);
     helpItems << makeMenuItem("about-qt", MenuItemRole::AboutQtRole);
     helpItems << makeMenuItem("about-musicxml");
+    helpItems << makeMenuItem("accessibility-statement");
     helpItems << makeSeparator();
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)

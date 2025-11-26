@@ -77,6 +77,7 @@
 #include "engraving/dom/navigate.h"
 #include "engraving/dom/page.h"
 #include "engraving/dom/part.h"
+#include "engraving/dom/pitchspelling.h"
 #include "engraving/dom/rest.h"
 #include "engraving/dom/shadownote.h"
 #include "engraving/dom/slur.h"
@@ -1132,10 +1133,8 @@ void NotationInteraction::clearSelection()
 {
     TRACEFUNC;
 
-    if (isElementEditStarted()) {
+    if (isEditingElement()) {
         endEditElement();
-    } else if (m_editData.element) {
-        m_editData.element = nullptr;
     }
 
     if (isDragStarted()) {
@@ -1297,7 +1296,7 @@ void NotationInteraction::drag(const PointF& fromPos, const PointF& toPos, DragM
     m_dragData.ed.pos = toPos;
     m_dragData.ed.modifiers = keyboardModifier(QGuiApplication::keyboardModifiers());
 
-    m_dragData.ed.isEditMode = isElementEditStarted();
+    m_dragData.ed.isEditMode = isEditingElement();
 
     if (isTextEditingStarted()) {
         m_editData.pos = toPos;
@@ -1595,7 +1594,7 @@ bool NotationInteraction::startDropImage(const QUrl& url)
     }
 
     auto image = static_cast<mu::engraving::Image*>(Factory::createItem(mu::engraving::ElementType::IMAGE, score()->dummy()));
-    if (!image->load(url.toLocalFile())) {
+    if (!image->loadFromFile(url.toLocalFile())) {
         return false;
     }
 
@@ -2963,7 +2962,7 @@ void NotationInteraction::doAddSlur(EngravingItem* firstItem, EngravingItem* sec
             partialSlur->undoSetOutgoing(true);
             firstChordRest = toChordRest(cr);
             const Measure* endMeas = otherElement->findMeasure();
-            ChordRest* endCr = endMeas->lastChordRest(0);
+            ChordRest* endCr = endMeas->lastChordRest(otherElement->track());
             secondChordRest = endCr;
         } else {
             partialSlur->undoSetIncoming(true);
@@ -2974,7 +2973,7 @@ void NotationInteraction::doAddSlur(EngravingItem* firstItem, EngravingItem* sec
                     startMeas = startMeas->nextMeasure();
                 }
             }
-            ChordRest* startCr = startMeas->firstChordRest(0);
+            ChordRest* startCr = startMeas->firstChordRest(otherElement->track());
             firstChordRest = startCr;
         }
         slurTemplate = partialSlur;
@@ -3768,7 +3767,7 @@ void NotationInteraction::addToSelection(MoveDirection d, MoveSelectionType type
 bool NotationInteraction::moveSelectionAvailable(MoveSelectionType type) const
 {
     if (type != MoveSelectionType::EngravingItem) {
-        return !isElementEditStarted();
+        return !isEditingElement();
     }
 
     EngravingItem* el = score()->selection().element();
@@ -3786,7 +3785,7 @@ bool NotationInteraction::moveSelectionAvailable(MoveSelectionType type) const
         return true;
     }
 
-    return m_editData.element && m_editData.element->isTextBase() ? !isTextEditingStarted() : !isElementEditStarted();
+    return m_editData.element && m_editData.element->isTextBase() ? !isTextEditingStarted() : !isEditingElement();
 }
 
 void NotationInteraction::moveSelection(MoveDirection d, MoveSelectionType type)
@@ -3944,7 +3943,7 @@ void NotationInteraction::swapChordRest(MoveDirection direction)
         } else {
             cr2 = nextChordRest(cr1);
         }
-        if (cr1 && cr2 && cr1->measure() == cr2->measure() && !cr1->tuplet() && !cr2->tuplet()
+        if (cr1 && cr2 && cr1->measure() == cr2->measure()
             && cr1->durationType() == cr2->durationType() && cr1->ticks() == cr2->ticks()
             // if two chords belong to different two-note tremolos, abort
             && !(cr1->isChord() && toChord(cr1)->tremoloTwoChord()
@@ -4100,7 +4099,7 @@ void NotationInteraction::moveElementSelection(MoveDirection d)
         return;
     }
 
-    if (isElementEditStarted()) {
+    if (isEditingElement()) {
         endEditElement();
     }
 
@@ -4309,6 +4308,7 @@ void NotationInteraction::startEditText(EngravingItem* element, const PointF& cu
 
     m_editData.element->startEdit(m_editData);
 
+    m_isEditingElementChanged.notify();
     notifyAboutTextEditingStarted();
     notifyAboutTextEditingChanged();
 }
@@ -4449,6 +4449,8 @@ void NotationInteraction::endEditText()
 
     TextBase* editedElement = toTextBase(m_editData.element);
     doEndEditElement();
+
+    m_isEditingElementChanged.notify();
     notifyAboutTextEditingEnded(editedElement);
 
     notifyAboutTextEditingChanged();
@@ -4623,7 +4625,7 @@ void NotationInteraction::updateDragAnchorLines()
     setAnchorLines(anchorLines);
 }
 
-bool NotationInteraction::isElementEditStarted() const
+bool NotationInteraction::isEditingElement() const
 {
     return m_editData.element != nullptr;
 }
@@ -4634,7 +4636,7 @@ void NotationInteraction::startEditElement(EngravingItem* element)
         return;
     }
 
-    if (isElementEditStarted()) {
+    if (isEditingElement()) {
         return;
     }
 
@@ -4646,6 +4648,8 @@ void NotationInteraction::startEditElement(EngravingItem* element)
         element->startEdit(m_editData);
         m_editData.element = element;
     }
+
+    m_isEditingElementChanged.notify();
 }
 
 void NotationInteraction::changeEditElement(EngravingItem* newElement)
@@ -4795,7 +4799,13 @@ void NotationInteraction::endEditElement()
     doEndEditElement();
     resetAnchorLines();
 
+    m_isEditingElementChanged.notify();
     notifyAboutNotationChanged();
+}
+
+muse::async::Notification NotationInteraction::isEditingElementChanged() const
+{
+    return m_isEditingElementChanged;
 }
 
 void NotationInteraction::updateTimeTickAnchors(QKeyEvent* event)
@@ -5099,53 +5109,54 @@ void NotationInteraction::copySelection()
     }
 }
 
-Ret NotationInteraction::repeatSelection()
+void NotationInteraction::repeatSelection()
 {
     const Selection& selection = score()->selection();
     if (score()->noteEntryMode() && selection.isSingle()) {
+        // Single selections require special handling in note entry mode...
         EngravingItem* el = selection.element();
+        if (!el || score()->inputState().endOfScore()) {
+            return;
+        }
+        Chord* c = nullptr;
+        if (el->type() == ElementType::NOTE) {
+            c = toNote(el)->chord();
+        } else if (el->type() == ElementType::REST) {
+            Segment* prevSegment = toRest(el)->segment()->prev1WithElemsOnTrack(el->track());
 
-        if (el && !score()->inputState().endOfScore()) {
-            Chord* c = nullptr;
-            if (el->type() == ElementType::NOTE) {
-                c = toNote(el)->chord();
-            } else if (el->type() == ElementType::REST) {
-                Segment* prevSegment = toRest(el)->segment()->prev1WithElemsOnTrack(el->track());
-
-                // Looking for the previous Chord
-                while (prevSegment)
-                {
-                    if (prevSegment->elementAt(el->track())->isChord()) {
-                        c = toChord(prevSegment->elementAt(el->track()));
-                        break;
-                    } else {
-                        prevSegment = prevSegment->prev1WithElemsOnTrack(el->track());
-                    }
+            // Looking for the previous Chord
+            while (prevSegment)
+            {
+                if (prevSegment->elementAt(el->track())->isChord()) {
+                    c = toChord(prevSegment->elementAt(el->track()));
+                    break;
                 }
-            }
-            if (c) {
-                startEdit(TranslatableString("undoableAction", "Repeat selection"));
-                for (Note* note : c->notes()) {
-                    NoteVal nval = note->noteVal();
-                    score()->addPitch(nval, note != c->notes()[0]);
-                }
-                apply();
+                prevSegment = prevSegment->prev1WithElemsOnTrack(el->track());
             }
         }
-        return muse::make_ok();
-    }
-
-    if (!selection.isRange()) {
-        ChordRest* cr = score()->getSelectedChordRest();
-        if (!cr) {
-            return make_ret(Err::NoteOrRestIsNotSelected);
+        if (c) {
+            startEdit(TranslatableString("undoableAction", "Repeat selection"));
+            for (Note* note : c->notes()) {
+                NoteVal nval = note->noteVal();
+                score()->addPitch(nval, note != c->notes()[0]);
+            }
+            apply();
         }
-        score()->select(cr, SelectType::RANGE);
+        return;
     }
 
-    Ret ret = m_selection->canCopy();
-    if (!ret) {
-        return ret;
+    if (selection.isList()) {
+        //! NOTE: Ideally we would use our copy-paste logic for this case, but this isn't
+        //! fully compatible with list selections right now...
+        repeatListSelection(selection);
+        return;
+    }
+
+    // Use copy-paste logic for range selections...
+    if (!selection.isRange() || !m_selection->canCopy()) {
+        MScore::setError(MsError::CANNOT_REPEAT_SELECTION);
+        MScoreErrorsController(iocContext()).checkAndShowMScoreError();
+        return;
     }
 
     XmlReader xml(selection.mimeData());
@@ -5169,8 +5180,59 @@ Ret NotationInteraction::repeatSelection()
             }
         }
     }
+}
 
-    return ret;
+void NotationInteraction::repeatListSelection(const Selection& selection)
+{
+    const Fraction& firstTick = selection.tickStart();
+    const Fraction& lastTick = selection.tickEnd();
+    // Only "single-tick" list selections are currently supported...
+    if (firstTick != lastTick) {
+        MScore::setError(MsError::CANNOT_REPEAT_SELECTION);
+        MScoreErrorsController(iocContext()).checkAndShowMScoreError();
+        return;
+    }
+
+    startEdit(TranslatableString("undoableAction", "Repeat selection"));
+
+    InputState& is = score()->inputState();
+
+    std::vector<Note*> notes = selection.noteList();
+    std::sort(notes.begin(), notes.end(), [](const Note* a, const Note* b) { return a->track() < b->track(); });
+
+    std::vector<EngravingItem*> toSelect;
+    std::unordered_set<const Chord*> foundChords;
+    for (Note* n : notes) {
+        if (n->isGrace() || n->incomingPartialTie() || n->outgoingPartialTie()) {
+            continue;
+        }
+
+        const Chord* sourceChord = n->chord();
+        is.setTrack(sourceChord->track());
+
+        const bool addFlag = muse::contains(foundChords, sourceChord);
+        if (!addFlag) {
+            // If the note doesn't belong to a chord we've seen before...
+            foundChords.emplace(sourceChord);
+            is.setSegment(sourceChord->segment());
+            if (score()->inputState().endOfScore()) {
+                continue;
+            }
+            is.moveToNextInputPos();
+            is.setDuration(sourceChord->durationType());
+        }
+
+        NoteVal nval = n->noteVal();
+        Note* newNote = score()->addPitch(nval, addFlag);
+        IF_ASSERT_FAILED(newNote) {
+            continue;
+        }
+        newNote->chord()->updateArticulations(sourceChord->articulationSymbolIds());
+        toSelect.push_back(newNote);
+    }
+    score()->select(toSelect, SelectType::ADD);
+
+    apply();
 }
 
 void NotationInteraction::copyLyrics()
@@ -6080,7 +6142,7 @@ void NotationInteraction::addImageToItem(const muse::io::path_t& imagePath, Engr
     Image* image = Factory::createImage(item);
     image->setImageType(type);
 
-    if (!image->load(imagePath)) {
+    if (!image->loadFromFile(imagePath)) {
         delete image;
         return;
     }
@@ -6281,6 +6343,20 @@ void NotationInteraction::spellPitches()
     apply();
 }
 
+void NotationInteraction::spellPitchesWithSharps()
+{
+    startEdit(TranslatableString("undoableAction", "Respell pitches with sharps"));
+    score()->spellWithSharpsOrFlats(Prefer::SHARPS);
+    apply();
+}
+
+void NotationInteraction::spellPitchesWithFlats()
+{
+    startEdit(TranslatableString("undoableAction", "Respell pitches with flats"));
+    score()->spellWithSharpsOrFlats(Prefer::FLATS);
+    apply();
+}
+
 void NotationInteraction::regroupNotesAndRests()
 {
     startEdit(TranslatableString("undoableAction", "Regroup rhythms"));
@@ -6416,7 +6492,7 @@ bool NotationInteraction::needEndTextEditing(const std::vector<EngravingItem*>& 
 
 bool NotationInteraction::needEndElementEditing(const std::vector<EngravingItem*>& newSelectedElements) const
 {
-    if (!isElementEditStarted()) {
+    if (!isEditingElement()) {
         return false;
     }
 

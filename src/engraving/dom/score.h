@@ -156,6 +156,7 @@ enum class Key : signed char;
 enum class HairpinType : signed char;
 enum class SegmentType;
 enum class OttavaType : unsigned char;
+enum class Prefer : char;
 enum class Voicing : signed char;
 enum class HDuration : signed char;
 enum class AccidentalType : unsigned char;
@@ -712,8 +713,7 @@ public:
     void setIsOpen(bool open);
 
     void spell();
-    void spell(staff_idx_t startStaff, staff_idx_t endStaff, Segment* startSegment, Segment* endSegment);
-    void spell(Note*);
+    void spellWithSharpsOrFlats(Prefer prefer);
     void changeEnharmonicSpelling(bool both);
 
     Fraction nextSeg(const Fraction& tick, int track);
@@ -953,6 +953,7 @@ public:
     const std::multimap<int, Spanner*>& spanner() const { return m_spanner.map(); }
     SpannerMap& spannerMap() { return m_spanner; }
     const SpannerMap& spannerMap() const { return m_spanner; }
+    std::vector<Spanner*> spannerList() const; // Return all spanners as a vector for Plugin API
     bool isSpannerStartEnd(const Fraction& tick, track_idx_t track) const;
     void removeSpanner(Spanner*);
     void addSpanner(Spanner*, bool computeStartEnd = true);
@@ -990,11 +991,15 @@ public:
     EngravingItem* lastElement(bool frame = true);
 
     size_t nmeasures() const;
-    bool hasLyrics();
-    bool hasHarmonies();
-    int  lyricCount();
-    int  harmonyCount();
-    String extractLyrics();
+
+    bool hasHarmonies() const;
+    int harmonyCount() const;
+
+    bool hasLyrics() const;
+    int  lyricCount() const;
+    std::vector<Lyrics*> lyrics() const;
+    String extractLyrics() const;
+
     int keysig();
     int duration();
     int durationWithoutRepeats();

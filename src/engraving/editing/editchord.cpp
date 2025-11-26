@@ -82,6 +82,16 @@ void SwapCR::flip(EditData*)
         t->setParent(toChord(c2));
         t->setChords(toChord(c2), toChord(c1));
     }
+    Tuplet* t1 = cr1->tuplet();
+    Tuplet* t2 = cr2->tuplet();
+    if (t1) {
+        t1->remove(cr1);
+        t1->add(cr2);
+    }
+    if (t2) {
+        t2->remove(cr2);
+        t2->add(cr1);
+    }
 
     EngravingItem* cr = s1->element(track);
     s1->setElement(track, s2->element(track));

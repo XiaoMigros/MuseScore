@@ -481,6 +481,18 @@ const UiActionList NotationUiActions::s_actions = {
              TranslatableString("action", "&Optimize enharmonic spelling"),
              TranslatableString("action", "Optimize enharmonic spelling")
              ),
+    UiAction("pitch-spell-sharps",
+             mu::context::UiCtxProjectOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Respell pitches with &sharps"),
+             TranslatableString("action", "Respell pitches with sharps")
+             ),
+    UiAction("pitch-spell-flats",
+             mu::context::UiCtxProjectOpened,
+             mu::context::CTX_NOTATION_OPENED,
+             TranslatableString("action", "Respell pitches with &flats"),
+             TranslatableString("action", "Respell pitches with flats")
+             ),
     UiAction("reset-groupings",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
@@ -2742,11 +2754,7 @@ void NotationUiActions::init()
                 updateActionsEnabled(s_actions);
             }, Asyncable::Mode::SetReplace);
 
-            interaction->textEditingStarted().onNotify(this, [this]() {
-                updateActionsEnabled(s_actions);
-            }, Asyncable::Mode::SetReplace);
-
-            interaction->textEditingEnded().onReceive(this, [this](TextBase*) {
+            interaction->isEditingElementChanged().onNotify(this, [this]() {
                 updateActionsEnabled(s_actions);
             }, Asyncable::Mode::SetReplace);
 

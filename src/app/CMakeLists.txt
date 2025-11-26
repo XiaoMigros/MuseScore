@@ -115,6 +115,7 @@ set(LINK_LIB
     muse::mpe
     muse::midi
     muse::learn
+    muse::learn_qml
     muse::tours
     muse::multiinstances
     muse::cloud
@@ -124,6 +125,7 @@ set(LINK_LIB
     braille
     muse::diagnostics
     engraving
+    engraving_qml
     context
     notation
     project
@@ -131,9 +133,6 @@ set(LINK_LIB
     palette
     inspector
     playback
-    preferences
-    preferences_qml
-    preferences_qmlplugin
     instrumentsscene
     musesounds
     )
@@ -149,10 +148,14 @@ add_to_link_if_enabled(${MUSE_MODULE_AUDIOPLUGINS} muse::audioplugins)
 add_to_link_if_enabled(${MUSE_MODULE_MUSESAMPLER} muse::musesampler)
 add_to_link_if_enabled(${MUSE_MODULE_UI} muse::ui)
 add_to_link_if_enabled(${MUSE_MODULE_UI} muse::uicomponents)
+add_to_link_if_enabled(${MUSE_MODULE_UI} muse::uicomponents_qml)
+add_to_link_if_enabled(${MUSE_MODULE_UI} muse::graphicaleffects_qml)
 add_to_link_if_enabled(${MUSE_MODULE_DOCKWINDOW} muse::dockwindow)
 
 add_to_link_if_enabled(${MUE_BUILD_APPSHELL_MODULE} appshell)
 add_to_link_if_enabled(${MUE_BUILD_CONVERTER_MODULE} converter)
+add_to_link_if_enabled(${MUE_BUILD_PREFERENCES_MODULE} preferences)
+add_to_link_if_enabled(${MUE_BUILD_PREFERENCES_MODULE} preferences_qml)
 add_to_link_if_enabled(${MUE_BUILD_PRINT_MODULE} print)
 
 if (MUE_BUILD_IMPEXP_BB_MODULE)

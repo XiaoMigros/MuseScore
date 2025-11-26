@@ -942,8 +942,7 @@ static void addLyrics(MusicXmlLogger* logger, const XmlStreamReader* const xmlre
                       const std::set<Lyrics*>& extLyrics,
                       MusicXmlLyricsExtend& extendedLyrics)
 {
-    for (const int lyricNo : muse::keys(numbrdLyrics)) {
-        Lyrics* const lyric = numbrdLyrics.at(lyricNo);
+    for (const auto& [lyricNo, lyric] : numbrdLyrics) {
         addLyric(logger, xmlreader, cr, lyric, lyricNo, extendedLyrics);
         if (muse::contains(extLyrics, lyric)) {
             extendedLyrics.addLyric(lyric);
@@ -954,8 +953,7 @@ static void addLyrics(MusicXmlLogger* logger, const XmlStreamReader* const xmlre
 static void addGraceNoteLyrics(const std::map<int, Lyrics*>& numberedLyrics, std::set<Lyrics*> extendedLyrics,
                                std::vector<GraceNoteLyrics>& gnLyrics)
 {
-    for (const int lyricNo : muse::keys(numberedLyrics)) {
-        Lyrics* const lyric = numberedLyrics.at(lyricNo);
+    for (const auto& [lyricNo, lyric] : numberedLyrics) {
         if (lyric) {
             bool extend = muse::contains(extendedLyrics, lyric);
             const GraceNoteLyrics gnl = GraceNoteLyrics(lyric, extend, lyricNo);
@@ -2098,7 +2096,7 @@ void MusicXmlParserPass2::scorePartwise()
     }
     addError(checkAtEndElement(m_e, u"score-partwise"));
 
-    for (EngravingItem* sysEl : muse::values(m_sysElements)) {
+    for (const auto& [_, sysEl] : m_sysElements) {
         m_score->undoAddElement(sysEl);
 
         // Remove potential duplicated text for text and text lines
@@ -2629,6 +2627,14 @@ static void addGraceChordsAfter(Chord* c, GraceChordList& gcl, size_t& gac)
     while (gac > 0) {
         if (gcl.size() > 0) {
             Chord* graceChord = muse::takeFirst(gcl);
+            std::vector<EngravingItem*> el = graceChord->el(); // copy, because modified during loop
+            for (EngravingItem* e : el) {
+                if (e->isFermata()) {
+                    e->setParent(c->segment());
+                    c->segment()->add(e);
+                    graceChord->removeFermata(toFermata(e));
+                }
+            }
             graceChord->toGraceAfter();
             c->add(graceChord);              // TODO check if same voice ?
             coerceGraceCue(c, graceChord);
@@ -2654,6 +2660,7 @@ static void addGraceChordsBefore(Chord* c, GraceChordList& gcl)
         std::vector<EngravingItem*> el = gc->el(); // copy, because modified during loop
         for (EngravingItem* e : el) {
             if (e->isFermata()) {
+                e->setParent(c->segment());
                 c->segment()->add(e);
                 gc->removeFermata(toFermata(e));
             }
@@ -2911,7 +2918,7 @@ void MusicXmlParserPass2::measure(const String& partId, const Fraction time)
     fillGapsInFirstVoices(measure, part);
 
     // Prevent any beams from extending into the next measure
-    for (Beam* beam : muse::values(beams)) {
+    for (auto& [_, beam] : beams) {
         if (beam) {
             removeBeam(beam);
         }
@@ -5179,7 +5186,7 @@ void MusicXmlParserDirection::dashes(const String& type, const int number,
 {
     const MusicXmlExtendedSpannerDesc& spdesc = m_pass2.getSpanner({ ElementType::HAIRPIN, number });
     if (type == u"start") {
-        TextLineBase* b = spdesc.isStopped ? toTextLine(spdesc.sp) : Factory::createTextLine(m_score->dummy());
+        TextLineBase* b = spdesc.isStopped ? toTextLineBase(spdesc.sp) : Factory::createTextLine(m_score->dummy());
         // if (placement.empty()) placement = "above";  // TODO ? set default
 
         // hack: combine with a previous words element
@@ -5203,7 +5210,7 @@ void MusicXmlParserDirection::dashes(const String& type, const int number,
         // use MusicXML specific type instead
         starts.push_back(MusicXmlSpannerDesc(b, ElementType::TEXTLINE, number));
     } else if (type == u"stop") {
-        TextLine* b = spdesc.isStarted ? toTextLine(spdesc.sp) : Factory::createTextLine(m_score->dummy());
+        TextLineBase* b = spdesc.isStarted ? toTextLineBase(spdesc.sp) : Factory::createTextLine(m_score->dummy());
         stops.push_back(MusicXmlSpannerDesc(b, ElementType::TEXTLINE, number));
     }
     m_e.skipCurrentElement();
