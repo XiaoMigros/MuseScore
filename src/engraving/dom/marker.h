@@ -68,8 +68,6 @@ public:
 
     String label() const { return m_label; }
     void setLabel(const String& s) { m_label = s; }
-    void undoSetLabel(const String& s);
-    void undoSetMarkerType(MarkerType t);
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
