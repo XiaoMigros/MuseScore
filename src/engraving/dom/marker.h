@@ -71,8 +71,6 @@ public:
     void undoSetLabel(const String& s);
     void undoSetMarkerType(MarkerType t);
 
-    void styleChanged() override;
-
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid) const override;
