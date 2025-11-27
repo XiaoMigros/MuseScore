@@ -148,34 +148,6 @@ String Marker::markerTypeUserName() const
 }
 
 //---------------------------------------------------------
-//   styleChanged
-//---------------------------------------------------------
-
-void Marker::styleChanged()
-{
-    setMarkerType(m_markerType);
-    TextBase::styleChanged();
-}
-
-//---------------------------------------------------------
-//   undoSetLabel
-//---------------------------------------------------------
-
-void Marker::undoSetLabel(const String& s)
-{
-    undoChangeProperty(Pid::LABEL, s);
-}
-
-//---------------------------------------------------------
-//   undoSetMarkerType
-//---------------------------------------------------------
-
-void Marker::undoSetMarkerType(const MarkerType t)
-{
-    undoChangeProperty(Pid::MARKER_TYPE, t);
-}
-
-//---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 

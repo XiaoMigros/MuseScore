@@ -36,7 +36,7 @@
 #include "engraving/dom/lyrics.h"
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/note.h"
-#include "engraving/dom/note.h"
+#include "engraving/dom/notedot.h"
 #include "engraving/dom/pedal.h"
 #include "engraving/dom/playcounttext.h"
 #include "engraving/dom/segment.h"
@@ -236,6 +236,8 @@ QList<mu::engraving::EngravingItem*> ElementRepositoryService::findNotes() const
                     result << note;
                 }
             }
+        } else if (elementBase->isNoteDot() && toNoteDot(elementBase)->note()) {
+            result << toNoteDot(elementBase)->note();
         }
     }
 
