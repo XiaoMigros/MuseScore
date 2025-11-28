@@ -111,13 +111,13 @@ void FinaleParser::mapLayers()
     }
 }
 
-std::unordered_map<int, voice_idx_t> FinaleParser::mapFinaleVoices(const std::map<LayerIndex, bool>& finaleVoiceMap,
+std::unordered_map<int, voice_idx_t> FinaleParser::mapFinaleVoices(const std::map<LayerIndex, int>& finaleVoiceMap,
                                                                         musx::dom::StaffCmper curStaff, musx::dom::MeasCmper curMeas) const
 {
     using FinaleVoiceID = int;
     std::unordered_map<FinaleVoiceID, voice_idx_t> result;
     std::unordered_map<voice_idx_t, FinaleVoiceID> reverseMap;
-    for (const auto& [layerIndex, usesV2] : finaleVoiceMap) {
+    for (const auto& [layerIndex, voice2Count] : finaleVoiceMap) {
         const auto& it = m_layer2Voice.find(layerIndex);
         if (it != m_layer2Voice.end()) {
             auto [revIt, emplaced] = reverseMap.emplace(it->second, createFinaleVoiceId(layerIndex, false));
@@ -128,8 +128,8 @@ std::unordered_map<int, voice_idx_t> FinaleParser::mapFinaleVoices(const std::ma
         }
         logger()->logWarning(String(u"Layer %1 was not mapped to a voice").arg(int(layerIndex) + 1), m_doc, curStaff, curMeas);
     }
-    for (const auto& [layerIndex, usesV2] : finaleVoiceMap) {
-        if (usesV2) {
+    for (const auto& [layerIndex, voice2Count] : finaleVoiceMap) {
+        if (voice2Count != 0) {
             bool foundVoice = false;
             for (voice_idx_t v : {0, 1, 2, 3}) {
                 auto [revIt, emplaced] = reverseMap.emplace(v, createFinaleVoiceId(layerIndex, true));
@@ -288,19 +288,14 @@ static Tuplet* bottomTupletFromTick(std::vector<ReadableTuplet> tupletMap, Fract
 
 static Fraction findParentTickForGraceNote(EntryInfoPtr entryInfo, bool& insertAfter, FinaleLoggerPtr& logger)
 {
-    for (EntryInfoPtr entryInfoPtr = entryInfo; entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextSameV()) {
-        if (!entryInfoPtr->getEntry()->graceNote) {
-            if (!entryInfoPtr.calcDisplaysAsRest()) {
-                return musxFractionToFraction(entryInfoPtr.calcGlobalElapsedDuration()).reduced();
-            }
-        }
+    if (const EntryInfoPtr mainNote = entryInfo.findMainEntryForGraceNote(/*ignoreRests*/true)) {
+        insertAfter = false;
+        return musxFractionToFraction(mainNote.calcGlobalElapsedDuration()).reduced();
     }
-    for (EntryInfoPtr entryInfoPtr = entryInfo; entryInfoPtr; entryInfoPtr = entryInfoPtr.getPreviousSameV()) {
-        if (!entryInfoPtr->getEntry()->graceNote) {
-            if (!entryInfoPtr.calcDisplaysAsRest()) {
-                insertAfter = true;
-                return musxFractionToFraction(entryInfoPtr.calcGlobalElapsedDuration()).reduced();
-            }
+    if (const EntryInfoPtr prevNonGrace = entryInfo.getPreviousSameVNoGrace()) {
+        if (!prevNonGrace.calcDisplaysAsRest()) {
+            insertAfter = true;
+            return musxFractionToFraction(prevNonGrace.calcGlobalElapsedDuration()).reduced();
         }
     }
     // MuseScore requires grace notes be attached to a chord. The above code
@@ -373,7 +368,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 {
     // Retrieve entry from entryInfo
     MusxInstance<Entry> currentEntry = entryInfo->getEntry();
-    if (!currentEntry) {
+    IF_ASSERT_FAILED (currentEntry) {
         logger()->logWarning(String(u"Failed to get entry"));
         return false;
     }
@@ -400,6 +395,34 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     if (entryStartTick.negative()) {
         // Return true for non-anchorable grace notes, else false
         return isGrace;
+    }
+    Measure* originalMeasure = measure;
+    Fraction originalTick = entryStartTick;
+    while (entryStartTick >= measure->ticks()) {
+        // If entries spill past the end of the measure, put them in the next measure.
+        // A common situation for this is beams over barlines created by the Beam Over Barline plugin.
+        // There are other situations (tuplets over barlines come to mind) where users have made adhoc
+        // use of extra entries in a measure. Since MuseScore hates these, we put them in the next measure,
+        // then possibly overwrite them when we import the entries for the next measure.
+        /// @todo We may need to adjust `curTrackIdx` to match the layers/voices in the next measure, but let's
+        /// hope that is such a rare edge case that we don't.
+        entryStartTick -= measure->ticks();
+        measure = measure->nextMeasure();
+        if(!measure) {
+            logger()->logWarning(String(u"Encountered entry number %1 beyond the end of the document.").arg(currentEntry->getEntryNumber()));
+            measure = originalMeasure;
+            entryStartTick = originalTick;
+            break;
+        }
+    }
+    if (Segment* existingSeg = measure->findSegmentR(SegmentType::ChordRest, entryStartTick)) {
+        if (toChordRest(existingSeg->element(curTrackIdx))) {
+            if (entryInfo.calcCanBeBeamed() && currentEntry->isHidden) {
+                // This entry is probably a placeholder for a beam over barline that was created
+                // in the pass for the previous measure, so skip it.
+                return true;
+            }
+        }
     }
     Segment* segment = measure->getSegmentR(SegmentType::ChordRest, entryStartTick);
 
@@ -727,7 +750,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         gc->setNoteType((!graceAfterType /* && gc->beams() > 0 */ && unbeamed && (currentEntry->slashGrace || musxOptions().graceOptions->slashFlaggedGraceNotes))
                          ? engraving::NoteType::ACCIACCATURA : durationTypeToNoteType(d.type(), graceAfterType));
         engraving::Chord* graceParentChord = toChord(segment->element(curTrackIdx));
-        gc->setGraceIndex(static_cast<int>(graceAfterType ? graceParentChord->graceNotesAfter().size() : graceParentChord->graceNotesBefore().size()));
+        gc->setGraceIndex(static_cast<int>(graceAfterType ? 0 : graceParentChord->graceNotesBefore().size()));
         graceParentChord->add(gc);
     } else {
         segment->add(cr);
@@ -774,29 +797,53 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx)
 {
     if (!entryInfoPtr.calcIsBeamStart()) {
-        return true;
+        const bool isBeamContinuation = !entryInfoPtr.getPreviousSameV() && entryInfoPtr.getPreviousInBeamGroupAcrossBars();
+        if (!isBeamContinuation) {
+            return true;
+        }
     }
     /// @todo detect special cases for beams over barlines created by the Beam Over Barline plugin
     const MusxInstance<Entry>& firstEntry = entryInfoPtr->getEntry();
     ChordRest* firstCr = chordRestFromEntryInfoPtr(entryInfoPtr);
-    IF_ASSERT_FAILED(firstCr) {
+    IF_ASSERT_FAILED(firstCr || entryInfoPtr.calcCreatesSingletonBeamLeft()) {
         logger()->logWarning(String(u"Entry %1 was not mapped").arg(firstEntry->getEntryNumber()), m_doc, entryInfoPtr.getStaff(), entryInfoPtr.getMeasure());
         return false;
     }
 
+    auto calcBeamMode = [](unsigned count) -> BeamMode {
+        if (count <= 1) {
+            return BeamMode::MID;
+        } else if (count == 2) {
+            return BeamMode::BEGIN16;
+        } else {
+            return BeamMode::BEGIN32;
+        }
+    };
+
     Beam* beam = Factory::createBeam(m_score->dummy()->system());
     beam->setTrack(curTrackIdx);
-    beam->add(firstCr);
-    firstCr->setBeamMode(BeamMode::BEGIN);
-
-    if (firstEntry->isNote && firstCr->isChord()) {
-        DirectionV stemDir = toChord(firstCr)->stemDirection();
-        if (stemDir != DirectionV::AUTO) {
-            beam->doSetDirection(stemDir);
+    if (firstCr) {
+        beam->add(firstCr);
+        if (!entryInfoPtr.calcBeamContinuesLeftOverBarline()) {
+            firstCr->setBeamMode(BeamMode::BEGIN);
+        } else {
+            const unsigned beamBreaks = entryInfoPtr.calcLowestBeamStart(/*considerBeamOverBarlines*/true);
+            firstCr->setBeamMode(calcBeamMode(beamBreaks));
+        }
+        if (firstEntry->isNote && firstCr->isChord()) {
+            DirectionV stemDir = toChord(firstCr)->stemDirection();
+            if (stemDir != DirectionV::AUTO) {
+                beam->doSetDirection(stemDir);
+            }
         }
     }
 
-    for (EntryInfoPtr nextInBeam = entryInfoPtr.getNextInBeamGroup(); nextInBeam; nextInBeam = nextInBeam.getNextInBeamGroup()) {
+    const MeasCmper startMeasureId = entryInfoPtr.getMeasure();
+
+    for (EntryInfoPtr nextInBeam = entryInfoPtr.getNextInBeamGroupAcrossBars(); nextInBeam; nextInBeam = nextInBeam.getNextInBeamGroupAcrossBars()) {
+        if (nextInBeam.getMeasure() != startMeasureId) {
+            break;
+        }
         const MusxInstance<Entry>& currentEntry = nextInBeam->getEntry();
         EntryNumber currentEntryNumber = currentEntry->getEntryNumber();
         if (entryInfoPtr->getEntry()->graceNote && !currentEntry->isNote) {
@@ -804,26 +851,16 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
             continue;
         }
         ChordRest* currentCr = chordRestFromEntryInfoPtr(nextInBeam);
-        IF_ASSERT_FAILED(currentCr) {
+        if (!currentCr) {
+            // this can happen if the entry was the first (invisible) entry of a singleton beam left. Such entries should be skipped.
             logger()->logWarning(String(u"Entry %1 was not mapped").arg(currentEntryNumber), m_doc, nextInBeam.getStaff(), nextInBeam.getMeasure());
             continue;
         }
         beam->add(currentCr);
 
         // Secondary beam breaks
-        unsigned secBeamStart = 0;
-        if (currentEntry->secBeam) {
-            if (const auto& secBeamBreak = m_doc->getDetails()->get<details::SecondaryBeamBreak>(nextInBeam.getFrame()->getRequestedPartId(), currentEntryNumber)) {
-                secBeamStart = secBeamBreak->calcLowestBreak();
-            }
-        }
-        if (secBeamStart <= 1) {
-            currentCr->setBeamMode(BeamMode::MID);
-        } else if (secBeamStart == 2) {
-            currentCr->setBeamMode(BeamMode::BEGIN16);
-        } else {
-            currentCr->setBeamMode(BeamMode::BEGIN32);
-        }
+        const unsigned secBeamStart = nextInBeam.calcLowestBeamStart(/*considerBeamOverBarlines*/true);
+        currentCr->setBeamMode(calcBeamMode(secBeamStart));
 
         // Stem direction
         if (currentEntry->isNote && currentCr->isChord()) {
@@ -837,11 +874,11 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
     return true;
 }
 
-static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t curTrackIdx, Measure* measure)
+static void processTremolos(const std::vector<ReadableTuplet>& tremoloMap, track_idx_t curTrackIdx, Measure* measure)
 {
     /// @todo account for invalid durations
     Fraction timeStretch = measure->score()->staff(track2staff(curTrackIdx))->timeStretch(measure->tick());
-    for (ReadableTuplet tuplet : tremoloMap) {
+    for (const ReadableTuplet& tuplet : tremoloMap) {
         engraving::Chord* c1 = measure->findChord(measure->tick() + tuplet.startTick, curTrackIdx); // timestretch?
         engraving::Chord* c2 = measure->findChord(measure->tick() + ((tuplet.startTick + tuplet.endTick) / 2), curTrackIdx);
         IF_ASSERT_FAILED(c1 && c2 && c1->ticks() == c2->ticks()) {
@@ -877,7 +914,7 @@ static void processTremolos(std::vector<ReadableTuplet>& tremoloMap, track_idx_t
     }
 }
 
-static void createTupletMap(std::vector<EntryFrame::TupletInfo> tupletInfo,
+static void createTupletMap(const std::vector<EntryFrame::TupletInfo>& tupletInfo,
                             std::vector<ReadableTuplet>& tupletMap, std::vector<ReadableTuplet>& tremoloMap, int voice)
 {
     const bool forVoice2 = bool(voice);
@@ -990,7 +1027,7 @@ void FinaleParser::importEntries()
                 logger()->logWarning(String(u"Unable to retrieve measure by tick"), m_doc, musxStaffId, measureId);
                 break;
             }
-            details::GFrameHoldContext gfHold(musxMeasure->getDocument(), m_currentMusxPartId, musxStaffId, measureId);
+            details::GFrameHoldContext gfHold(musxMeasure->getDocument(), m_currentMusxPartId, musxStaffId, measureId, legacyPickupSpacer);
             bool processContext = bool(gfHold);
             if (processContext && gfHold.calcIsCuesOnly()) {
                 logger()->logWarning(String(u"Cue notes not yet supported"), m_doc, musxStaffId, measureId);
@@ -1000,12 +1037,12 @@ void FinaleParser::importEntries()
             // The code after the if statement must still be executed.
             if (processContext) {
                 // gfHold.calcVoices() guarantees that every layer/voice returned contains entries
-                std::map<LayerIndex, bool> finaleLayers = gfHold.calcVoices();
+                std::map<LayerIndex, int> finaleLayers = gfHold.calcVoices();
                 std::unordered_map<int, track_idx_t> finaleVoiceMap = mapFinaleVoices(finaleLayers, musxStaffId, measureId);
                 for (const auto& finaleLayer : finaleLayers) {
                     const LayerIndex layer = finaleLayer.first;
                     /// @todo reparse with forWrittenPitch true, to obtain correct transposed keysigs/clefs/enharmonics
-                    MusxInstance<EntryFrame> entryFrame = gfHold.createEntryFrame(layer, legacyPickupSpacer);
+                    MusxInstance<EntryFrame> entryFrame = gfHold.createEntryFrame(layer);
                     if (!entryFrame) {
                         logger()->logWarning(String(u"Layer %1 not found.").arg(int(layer)), m_doc, musxStaffId, measureId);
                         continue;
@@ -1037,8 +1074,16 @@ void FinaleParser::importEntries()
                         createTupletsFromMap(measure, curTrackIdx, tupletMap);
 
                         // add chords and rests
+                        bool skipNext = false;
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
+                            if (skipNext || entryInfoPtr.calcCreatesSingletonBeamLeft()) {
+                                skipNext = false;
+                                continue;
+                            }
                             processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ false, notesWithUnmanagedTies, tupletMap);
+                            if (entryInfoPtr.calcCreatesSingletonBeamRight()) {
+                                skipNext = true;
+                            }
                         }
                         for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
                             processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ true, notesWithUnmanagedTies, tupletMap);
@@ -1164,7 +1209,7 @@ static double systemPosByLine(ChordRest* cr, bool up)
            + (line * cr->spatium() * cr->staffType()->lineDistance().val() * 0.5);
 }
 
-DirectionV FinaleParser::calculateTieDirection(Tie* tie)
+DirectionV FinaleParser::calculateTieDirection(Tie* tie, EntryNumber entryNumber)
 {
     // MuseScore requires all tie segments to have the same direction.
     // As such, if the direction has already been set, don't recalculate.
@@ -1178,7 +1223,15 @@ DirectionV FinaleParser::calculateTieDirection(Tie* tie)
 
     Chord* c = note->chord();
     DirectionV stemDir = c->beam() ? c->beam()->direction() : c->stemDirection();
-    assert(stemDir != DirectionV::AUTO);
+    if (stemDir == DirectionV::AUTO) {
+        logger()->logWarning(String(u"The stem direction for ChordRest corresponding to EntryNumber %1 could not be determined. Getting it from EntryInfoPtr instead.").arg(entryNumber));
+        EntryInfoPtr entryInfoPtr = EntryInfoPtr::fromEntryNumber(m_doc, m_currentMusxPartId, entryNumber);
+        IF_ASSERT_FAILED (entryInfoPtr) {
+            logger()->logWarning(String(u"The stem direction for ChordRest corresponding to EntryNumber %1 could not be deterimed at all. Returning AUTO.").arg(entryNumber));
+            return DirectionV::AUTO;
+        }
+        stemDir = entryInfoPtr.calcUpStem() ? DirectionV::UP : DirectionV::DOWN;
+    }
 
     // Inherit the stem direction only when the chord has a fixed direction, and the layer says to do so.
     const auto& layerInfo = layerAttributes(c->tick(), c->track());
@@ -1626,9 +1679,13 @@ void FinaleParser::importEntryAdjustments()
                 }
             } else if (chordRest->isRest()) {
                 Rest* r = toRest(chordRest);
-                double difference = r->dotList().front()->pos().x() - (r->ldata()->bbox().right() + dotDistance); // offset to cr means no subtracting rest offset
-                for (NoteDot* nd : r->dotList()) {
-                    nd->rxoffset() -= difference;
+                if (!r->dotList().empty()) {
+                    double difference = r->dotList().front()->pos().x() - (r->ldata()->bbox().right() + dotDistance); // offset to cr means no subtracting rest offset
+                    for (NoteDot* nd : r->dotList()) {
+                        nd->rxoffset() -= difference;
+                    }
+                } else {
+                    logger()->logWarning(String(u"ChordRest for EntryNumber %1 has dots but Rest::dotList is empty").arg(entryNumber));
                 }
             }
         }
@@ -1669,7 +1726,7 @@ void FinaleParser::importEntryAdjustments()
         NoteNumber noteNumber = numbers.second;
 
         /// @todo offsets and contour
-        auto positionTie = [this](Tie* tie, const MusxInstance<details::TieAlterBase>& tieAlt) {
+        auto positionTie = [this, entryNumber](Tie* tie, const MusxInstance<details::TieAlterBase>& tieAlt) {
             // Collect alterations
             logger()->logDebugTrace(String(u"Importing tie at tick %1...").arg(tie->tick().toString()));
             bool outside = musxOptions().tieOptions->useOuterPlacement;
@@ -1689,7 +1746,7 @@ void FinaleParser::importEntryAdjustments()
 
             // Tie direction (over/under)
             if (direction == DirectionV::AUTO) {
-                direction = calculateTieDirection(tie);
+                direction = calculateTieDirection(tie, entryNumber);
             }
             setAndStyleProperty(tie, Pid::SLUR_DIRECTION, direction);
 
