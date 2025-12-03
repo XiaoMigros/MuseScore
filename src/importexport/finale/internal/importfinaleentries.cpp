@@ -362,10 +362,14 @@ static std::pair<bool, bool> getAccidentalProperties(std::string symbolName, Sym
     return std::make_pair(hasParentheses, isSmall);
 }
 
-bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrackIdx, Measure* measure, bool graceNotes,
-                                         std::vector<engraving::Note*>& notesWithUnmanagedTies,
-                                         std::vector<ReadableTuplet>& tupletMap)
+bool FinaleParser::processEntryInfo(EntryInfoPtr::InterpretedIterator result, track_idx_t curTrackIdx, Measure* measure, bool graceNotes,
+                                    std::vector<engraving::Note*>& notesWithUnmanagedTies,
+                                    std::vector<ReadableTuplet>& tupletMap, bool hasVoice1Voice2)
 {
+    // Retrieve fields from WorkaroundAwareResult
+    EntryInfoPtr entryInfo = result.getEntryInfo();
+    bool effectiveHidden = result.getEffectiveHidden();
+
     // Retrieve entry from entryInfo
     MusxInstance<Entry> currentEntry = entryInfo->getEntry();
     IF_ASSERT_FAILED (currentEntry) {
@@ -374,7 +378,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
     }
     EntryNumber currentEntryNumber = currentEntry->getEntryNumber();
 
-    const bool isGrace = entryInfo->getEntry()->graceNote;
+    const bool isGrace = currentEntry->graceNote;
     if (isGrace != graceNotes) {
         return true;
     }
@@ -388,9 +392,9 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             logger()->logWarning(String(u"Grace rests are not supported"));
             return false;
         }
-        entryStartTick = findParentTickForGraceNote(entryInfo, graceAfterType, logger());
+        entryStartTick = findParentTickForGraceNote(result.getEntryInfo(), graceAfterType, logger()); // use iterated entry to get start tick for source entries.
     } else {
-        entryStartTick = musxFractionToFraction(entryInfo.calcGlobalElapsedDuration()).reduced();
+        entryStartTick = musxFractionToFraction(result.getEffectiveElapsedDuration(/*global*/ true));
     }
     if (entryStartTick.negative()) {
         // Return true for non-anchorable grace notes, else false
@@ -482,7 +486,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             engraving::Note* note = Factory::createNote(chord);
             note->setParent(chord);
             note->setTrack(curTrackIdx);
-            note->setVisible(!currentEntry->isHidden);
+            note->setVisible(!effectiveHidden);
             note->setPlay(!currentEntry->noPlayback && !neverPlayback); /// @todo account for spanners
             note->setAutoplace(!noteInfoPtr->noSpacing);
 
@@ -652,23 +656,25 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
         } else {
             // Stem and stem direction
             const auto [freezeStem, upStem] = entryInfo.calcEntryStemSettings();
-            if (freezeStem || currentEntry->voice2 || currentEntry->v2Launch) {
-                // LayerAttributes are read later on, once all voices have been added to the score.
-                // Additionally, beams have their own vertical direction, which is set in processBeams.
+            // LayerAttributes are read later on, once all voices have been added to the score.
+            // Additionally, beams have their own vertical direction, which is set in processBeams.
+            if (freezeStem) {
                 chord->setStemDirection(upStem ? DirectionV::UP : DirectionV::DOWN);
-                if (freezeStem) {
-                    m_fixedChords.insert(chord);
-                }
+                m_fixedChords.insert(chord);
+            } else if (hasVoice1Voice2) {
+                // Freeze all stems in a v1v2 context, because otherwise MuseScore treats it
+                // like layers, flipping all stems in track 0 up, track 1 down, etc.
+                chord->setStemDirection(entryInfo.calcUpStem() ? DirectionV::UP : DirectionV::DOWN);
             }
             if (chord->shouldHaveStem() || d.hasStem()) {
                 Stem* stem = Factory::createStem(chord);
-                stem->setVisible(!currentEntry->isHidden);
+                stem->setVisible(!effectiveHidden);
                 chord->add(stem);
             }
             if (unbeamed && d.hooks() > 0) {
                 chord->setBeamMode(BeamMode::NONE);
                 Hook* hook = new Hook(chord);
-                hook->setVisible(!currentEntry->isHidden);
+                hook->setVisible(!effectiveHidden);
                 chord->setHook(hook);
                 chord->add(hook);
             }
@@ -687,7 +693,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             EntryInfoPtr entryInfo = noteInfoPtr.getEntryInfo();
             StaffCmper targetMusxStaffId = muse::value(m_staff2Inst, idx, 0);
             IF_ASSERT_FAILED (targetMusxStaffId) {
-                logger()->logWarning(String(u"Entry %1 (a rest) was not mapped to a known musx staff.").arg(entryInfo->getEntry()->getEntryNumber()), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
+                logger()->logWarning(String(u"Entry %1 (a rest) was not mapped to a known musx staff.").arg(currentEntry->getEntryNumber()), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
                 return false;
             }
             if (noteInfoPtr->getNoteId() == musx::dom::Note::RESTID) {
@@ -720,7 +726,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
             }
         }
         cr = toChordRest(rest);
-        cr->setVisible(!musxStaff->hideRests && !currentEntry->isHidden);
+        cr->setVisible(!musxStaff->hideRests && !effectiveHidden);
     }
 
     int entrySize = entryInfo.calcEntrySize();
@@ -796,7 +802,8 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr entryInfo, track_idx_t curTrack
 
 bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackIdx)
 {
-    if (!entryInfoPtr.calcIsBeamStart()) {
+    if (!entryInfoPtr.calcIsBeamStart(EntryInfoPtr::BeamIterationMode::Interpreted)) {
+        // This check is necessary because we process beams one measure at a time.
         const bool isBeamContinuation = !entryInfoPtr.getPreviousSameV() && entryInfoPtr.getPreviousInBeamGroupAcrossBars();
         if (!isBeamContinuation) {
             return true;
@@ -840,7 +847,9 @@ bool FinaleParser::processBeams(EntryInfoPtr entryInfoPtr, track_idx_t curTrackI
 
     const MeasCmper startMeasureId = entryInfoPtr.getMeasure();
 
-    for (EntryInfoPtr nextInBeam = entryInfoPtr.getNextInBeamGroupAcrossBars(); nextInBeam; nextInBeam = nextInBeam.getNextInBeamGroupAcrossBars()) {
+    for (EntryInfoPtr nextInBeam = entryInfoPtr.getNextInBeamGroupAcrossBars(EntryInfoPtr::BeamIterationMode::Interpreted);
+         nextInBeam;
+         nextInBeam = nextInBeam.getNextInBeamGroupAcrossBars(EntryInfoPtr::BeamIterationMode::Interpreted)) {
         if (nextInBeam.getMeasure() != startMeasureId) {
             break;
         }
@@ -1073,20 +1082,29 @@ void FinaleParser::importEntries()
                         createTupletMap(entryFrame->tupletInfo, tupletMap, tremoloMap, voice);
                         createTupletsFromMap(measure, curTrackIdx, tupletMap);
 
+                        // MuseScore cannot use the default mode of EntryInfoPtr::InterpretedIterator
+                        // for two reasons:
+                        //
+                        // 1. Beam processing: MuseScore must create all CRs (ChordRests) involved in a
+                        //    beam *before* running processBeams. The default mode remaps continuation
+                        //    notes into later measures, preventing us from constructing all CRs in
+                        //    the first measure prior to beam processing. (This could eventually be
+                        //    addressed by restructuring processBeams to run in a separate pass.)
+                        //
+                        // 2. Grace notes: MuseScore’s current grace-note model requires access to the
+                        //    hidden source entries in their raw measure positions so grace notes can be
+                        //    attached to the correct CR. The default mode substitutes those hidden
+                        //    entries with their displayed counterparts, obscuring the true attachment
+                        //    point. This limitation may disappear if MuseScore ever supports grace notes
+                        //    as independent notes rather than CR-attached items.
+                        //
+                        constexpr static bool remapBeamovers = false;
                         // add chords and rests
-                        bool skipNext = false;
-                        for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
-                            if (skipNext || entryInfoPtr.calcCreatesSingletonBeamLeft()) {
-                                skipNext = false;
-                                continue;
-                            }
-                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ false, notesWithUnmanagedTies, tupletMap);
-                            if (entryInfoPtr.calcCreatesSingletonBeamRight()) {
-                                skipNext = true;
-                            }
+                        for (EntryInfoPtr::InterpretedIterator result = entryFrame->getFirstInterpretedIterator(voice + 1, remapBeamovers); result; result = result.getNext()) {
+                            processEntryInfo(result, curTrackIdx, measure, /*graceNotes*/ false, notesWithUnmanagedTies, tupletMap, bool(maxV1V2));
                         }
-                        for (EntryInfoPtr entryInfoPtr = entryFrame->getFirstInVoice(voice + 1); entryInfoPtr; entryInfoPtr = entryInfoPtr.getNextInVoice(voice + 1)) {
-                            processEntryInfo(entryInfoPtr, curTrackIdx, measure, /*graceNotes*/ true, notesWithUnmanagedTies, tupletMap);
+                        for (EntryInfoPtr::InterpretedIterator result = entryFrame->getFirstInterpretedIterator(voice + 1, remapBeamovers); result; result = result.getNext()) {
+                            processEntryInfo(result, curTrackIdx, measure, /*graceNotes*/ true, notesWithUnmanagedTies, tupletMap, bool(maxV1V2));
                         }
 
                         // add tremolos
