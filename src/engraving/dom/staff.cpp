@@ -1249,7 +1249,7 @@ void Staff::removeStaffType(const Fraction& tick)
 //   init
 //---------------------------------------------------------
 
-void Staff::init(const InstrumentTemplate* t, const StaffType* staffType, int cidx)
+void Staff::init(const InstrumentTemplate* t, const StaffType* staffType, staff_idx_t cidx)
 {
     // set staff-type-independent parameters
     const StaffType* pst = staffType ? staffType : t->staffTypePreset;
