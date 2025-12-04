@@ -60,7 +60,7 @@ void AudioConfiguration::init()
 #if defined(Q_OS_WIN)
     settings()->setDefaultValue(AUDIO_API_KEY, Val("WASAPI"));
 #elif defined(Q_OS_LINUX) || defined(Q_OS_FREEBSD)
-    settings()->setDefaultValue(AUDIO_API_KEY, Val("PipeWire"));
+    settings()->setDefaultValue(AUDIO_API_KEY, Val("ALSA"));
 #endif
     settings()->valueChanged(AUDIO_API_KEY).onReceive(nullptr, [this](const Val&) {
         m_currentAudioApiChanged.notify();
@@ -106,6 +106,11 @@ AudioEngineConfig AudioConfiguration::engineConfig() const
 void AudioConfiguration::onWorkerConfigChanged()
 {
     rpcChannel()->send(rpc::make_notification(rpc::Method::EngineConfigChanged, rpc::RpcPacker::pack(engineConfig())));
+}
+
+std::string AudioConfiguration::defaultAudioApi() const
+{
+    return settings()->defaultValue(AUDIO_API_KEY).toString();
 }
 
 std::string AudioConfiguration::currentAudioApi() const

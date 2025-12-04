@@ -23,7 +23,8 @@
         "theme_opts": {
             "default_theme": "light",
             "title": "Home",
-            "__sections": ["Tutorials", "Namespaces", "Classes"]
+            "sections": ["Tutorials", "Namespaces", "Classes", "Global"],
+            "sort": false
         }                
 	},
     "markdown": {

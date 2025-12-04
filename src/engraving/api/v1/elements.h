@@ -1665,7 +1665,6 @@ public:
 //   MeasureBase
 //    MeasureBase wrapper (Measures, frames)
 //---------------------------------------------------------
-
 class MeasureBase : public EngravingItem
 {
     Q_OBJECT
@@ -1719,7 +1718,8 @@ class MeasureBase : public EngravingItem
     /// \see \ref Score.firstMeasureMM
     /// \since MuseScore 3.6
     Q_PROPERTY(apiv1::Measure * nextMeasureMM READ nextMeasureMM)
-    /// Previous measure.
+
+    /// Previous measure
     Q_PROPERTY(apiv1::Measure * prevMeasure READ prevMeasure)
     /// Previous measure, accounting for multimeasure rests.
     /// See \ref nextMeasureMM for a reference on multimeasure rests.
@@ -1780,9 +1780,33 @@ public:
 //    Measure wrapper
 //---------------------------------------------------------
 
+/** APIDOC
+ * Class representing a measure.
+ * @class Measure
+ * @extends engraving.MeasureBase
+ * @memberof engraving
+ * @hideconstructor
+*/
 class Measure : public MeasureBase
 {
     Q_OBJECT
+
+    //! NOTE These are properties from MeasureBase, but we'll document them as if they were from Measure.
+
+    /** APIDOC
+     * Next measure, accounting for multimeasure rests.
+     * @readonly
+     * @q_property {engraving.Measure}
+     * @name nextMeasureMM
+     */
+
+    /** APIDOC
+     * Previous measure
+     * @readonly
+     * @q_property {engraving.Measure}
+     * @name prevMeasure
+     */
+
     /// The first segment of this measure
     Q_PROPERTY(apiv1::Segment * firstSegment READ firstSegment)
     /// The last segment of this measure
@@ -2274,12 +2298,13 @@ public:
     /// \endcond
 };
 
-//---------------------------------------------------------
-//   Spanner
-///  Provides access to internal mu::engraving::Spanner objects.
-///  \since MuseScore 4.6
-//---------------------------------------------------------
-
+/** APIDOC
+ * Provides access to internal mu::engraving::Spanner objects.
+ * @class Spanner
+ * @memberof engraving
+ * @hideconstructor
+ * @since 4.6
+*/
 class Spanner : public EngravingItem
 {
     Q_OBJECT
@@ -2300,7 +2325,8 @@ class Spanner : public EngravingItem
     Q_PROPERTY(apiv1::EngravingItem * endElement READ endElement)
     /// List of spanner segments belonging to this spanner.
     Q_PROPERTY(QQmlListProperty<apiv1::SpannerSegment> spannerSegments READ spannerSegments)
-
+    /// The ornament object of this spanner
+    Q_PROPERTY(apiv1::Ornament * ornament READ ornament)
     /// \cond MS_INTERNAL
 
 public:
@@ -2317,6 +2343,8 @@ public:
     {
         return wrapContainerProperty<SpannerSegment>(this, spanner()->spannerSegments());
     }
+
+    Ornament* ornament() const;
 
     /// \endcond
 };
@@ -2357,7 +2385,9 @@ public:
 /** APIDOC
  * Class representing a lyric.
  * @class Lyrics
+ * @memberof engraving
  * @hideconstructor
+ * @since 4.7
 */
 class Lyrics : public EngravingItem
 {

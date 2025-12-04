@@ -22,13 +22,21 @@
 
 #include "engravingapiv1.h"
 
+#include <QQmlEngine>
 #include <QJSValueIterator>
+
+#include "apitypes.h"
 
 #include "qmlpluginapi.h"
 
 #include "log.h"
 
 using namespace mu::engraving::apiv1;
+
+/** APIDOC
+ * Information and actions related to Score
+ * @namespace engraving
+ */
 
 EngravingApiV1::EngravingApiV1(muse::api::IApiEngine* e)
     : muse::api::ApiObject(e)
@@ -89,4 +97,9 @@ PluginAPI* EngravingApiV1::api() const
     }
 
     return m_api;
+}
+
+QJSValue EngravingApiV1::elementTypeEnum() const
+{
+    return makeEnum<enums::ElementType>();
 }

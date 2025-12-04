@@ -2497,10 +2497,10 @@ void Score::cmdFlip()
                 tremolo->undoChangeProperty(Pid::STEM_DIRECTION, dir);
             });
         } else if (e->isSlurTieSegment()) {
-            auto slurTieSegment = toSlurTieSegment(e)->slurTie();
-            flipOnce(slurTieSegment, [slurTieSegment]() {
-                DirectionV dir = slurTieSegment->up() ? DirectionV::DOWN : DirectionV::UP;
-                slurTieSegment->undoChangeProperty(Pid::SLUR_DIRECTION, dir);
+            DirectionV dir = toSlurTieSegment(e)->up() ? DirectionV::DOWN : DirectionV::UP;
+            auto slurTie = toSlurTieSegment(e)->slurTie();
+            flipOnce(slurTie, [slurTie, dir]() {
+                slurTie->undoChangeProperty(Pid::SLUR_DIRECTION, dir);
             });
         } else if (e->isArticulationFamily()) {
             auto artic = toArticulation(e);
@@ -2674,8 +2674,25 @@ void Score::cmdFlipHorizontally()
                     h->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::DIM_HAIRPIN));
                 } else if (h->hairpinType() == HairpinType::DIM_HAIRPIN) {
                     h->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::CRESC_HAIRPIN));
+                } else if (h->hairpinType() == HairpinType::CRESC_LINE) {
+                    h->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::DIM_LINE));
+                } else if (h->hairpinType() == HairpinType::DIM_LINE) {
+                    h->undoChangeProperty(Pid::HAIRPIN_TYPE, int(HairpinType::CRESC_LINE));
                 }
             });
+        } else if (e->isSlurTieSegment()) {
+            SlurTieSegment* slurTieSegment = toSlurTieSegment(e);
+            DirectionV dir = slurTieSegment->up() ? DirectionV::DOWN : DirectionV::UP;
+            SlurTie* slurTie = slurTieSegment->slurTie();
+            if (slurTie->nsegments() > 1) {
+                flipOnce(slurTieSegment, [slurTieSegment, dir] {
+                    slurTieSegment->undoChangeProperty(Pid::SLUR_DIRECTION, dir, PropertyFlags::NOSTYLE);
+                });
+            } else {
+                flipOnce(slurTie, [slurTie, dir] {
+                    slurTie->undoChangeProperty(Pid::SLUR_DIRECTION, dir);
+                });
+            }
         }
     }
 }
@@ -5208,14 +5225,11 @@ void Score::cloneVoice(track_idx_t strack, track_idx_t dtrack, Segment* sf, cons
                     }
                 }
 
-                if (oe->isChord()) {
-                    Chord* och = toChord(ocr);
-                    Chord* nch = toChord(ncr);
-
-                    size_t n = och->notes().size();
+                auto cloneChord = [&](Chord* oldChord, Chord* newChord) {
+                    size_t n = oldChord->notes().size();
                     for (size_t i = 0; i < n; ++i) {
-                        Note* on = och->notes().at(i);
-                        Note* nn = nch->notes().at(i);
+                        Note* on = oldChord->notes().at(i);
+                        Note* nn = newChord->notes().at(i);
                         staff_idx_t idx = track2staff(dtrack);
                         Fraction tick = oseg->tick();
                         Interval v = staff(idx) ? staff(idx)->transpose(tick) : Interval();
@@ -5270,31 +5284,39 @@ void Score::cloneVoice(track_idx_t strack, track_idx_t dtrack, Segment* sf, cons
                         }
                     }
                     // two note tremolo
-                    if (och->tremoloTwoChord()) {
-                        if (och == och->tremoloTwoChord()->chord1()) {
+                    if (oldChord->tremoloTwoChord()) {
+                        if (oldChord == oldChord->tremoloTwoChord()->chord1()) {
                             if (tremolo) {
                                 LOGD("unconnected two note tremolo");
                             }
                             if (link) {
-                                tremolo = item_cast<TremoloTwoChord*>(och->tremoloTwoChord()->linkedClone());
+                                tremolo = item_cast<TremoloTwoChord*>(oldChord->tremoloTwoChord()->linkedClone());
                             } else {
-                                tremolo = item_cast<TremoloTwoChord*>(och->tremoloTwoChord()->clone());
+                                tremolo = item_cast<TremoloTwoChord*>(oldChord->tremoloTwoChord()->clone());
                             }
-                            tremolo->setScore(nch->score());
-                            tremolo->setParent(nch);
-                            tremolo->setTrack(nch->track());
-                            tremolo->setChords(nch, nullptr);
-                            nch->setTremoloTwoChord(tremolo);
-                        } else if (och == och->tremoloTwoChord()->chord2()) {
+                            tremolo->setScore(newChord->score());
+                            tremolo->setParent(newChord);
+                            tremolo->setTrack(newChord->track());
+                            tremolo->setChords(newChord, nullptr);
+                            newChord->setTremoloTwoChord(tremolo);
+                        } else if (oldChord == oldChord->tremoloTwoChord()->chord2()) {
                             if (!tremolo) {
                                 LOGD("first note for two note tremolo missing");
                             } else {
-                                tremolo->setChords(tremolo->chord1(), nch);
-                                nch->setTremoloTwoChord(tremolo);
+                                tremolo->setChords(tremolo->chord1(), newChord);
+                                newChord->setTremoloTwoChord(tremolo);
                             }
                         } else {
                             LOGD("inconsistent two note tremolo");
                         }
+                    }
+                };
+                if (oe->isChord()) {
+                    cloneChord(toChord(ocr), toChord(ncr));
+                    for (size_t i = 0; i < toChord(ocr)->graceNotes().size(); ++i) {
+                        Chord* ogc = toChord(ocr)->graceNotes().at(i);
+                        Chord* ngc = toChord(ncr)->graceNotes().at(i);
+                        cloneChord(ogc, ngc);
                     }
                 }
 
@@ -6797,6 +6819,8 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
             && et != ElementType::VIBRATO
             && et != ElementType::TEXTLINE
             && et != ElementType::PEDAL
+            && et != ElementType::LET_RING
+            && et != ElementType::PALM_MUTE
             && et != ElementType::PARTIAL_LYRICSLINE
             && et != ElementType::BREATH
             && et != ElementType::DYNAMIC
@@ -7064,6 +7088,8 @@ void Score::undoAddElement(EngravingItem* element, bool addToLinkedStaves, bool 
                    || element->isVibrato()
                    || element->isTextLine()
                    || element->isPedal()
+                   || element->isLetRing()
+                   || element->isPalmMute()
                    || element->isPartialLyricsLine()) {
             Spanner* sp   = toSpanner(element);
             Spanner* nsp  = toSpanner(ne);

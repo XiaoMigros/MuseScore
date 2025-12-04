@@ -68,8 +68,6 @@ public:
 
     String label() const { return m_label; }
     void setLabel(const String& s) { m_label = s; }
-    void undoSetLabel(const String& s);
-    void undoSetMarkerType(MarkerType t);
 
     void styleChanged() override;
 
@@ -80,6 +78,8 @@ public:
     EngravingItem* nextSegmentElement() override;
     EngravingItem* prevSegmentElement() override;
     String accessibleInfo() const override;
+
+    bool positionRelativeToNoteheadRest() const override { return false; }
 
     bool centerOnSymbol() const { return m_centerOnSymbol; }
     void setCenterOnSymbol(bool val) { m_centerOnSymbol = val; }

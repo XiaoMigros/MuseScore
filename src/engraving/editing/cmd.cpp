@@ -414,7 +414,7 @@ void Score::endCmd(bool rollback, bool layoutAllParts)
         return;
     }
 
-    if (readOnly() || MScore::_error != MsError::MS_NO_ERROR) {
+    if (readOnly() || (MScore::_error != MsError::MS_NO_ERROR && !MScore::_errorIsWarning)) {
         rollback = true;
     }
 
@@ -3274,26 +3274,6 @@ void Score::cmdMirrorNoteHead()
                 }
                 undoChangeUserMirror(note, d);
             }
-        } else if (e->isHairpinSegment()) {
-            Hairpin* h = toHairpinSegment(e)->hairpin();
-            HairpinType st = h->hairpinType();
-            switch (st) {
-            case HairpinType::CRESC_HAIRPIN:
-                st = HairpinType::DIM_HAIRPIN;
-                break;
-            case HairpinType::DIM_HAIRPIN:
-                st = HairpinType::CRESC_HAIRPIN;
-                break;
-            case HairpinType::CRESC_LINE:
-                st = HairpinType::DIM_LINE;
-                break;
-            case HairpinType::DIM_LINE:
-                st = HairpinType::CRESC_LINE;
-                break;
-            case HairpinType::INVALID:
-                break;
-            }
-            h->undoChangeProperty(Pid::HAIRPIN_TYPE, int(st));
         }
     }
 }
@@ -3434,9 +3414,9 @@ void Score::cmdMoveRest(Rest* rest, DirectionV dir)
 {
     PointF pos(rest->offset());
     if (dir == DirectionV::UP) {
-        pos.ry() -= style().spatium();
+        pos.ry() -= rest->spatium() * rest->staffType()->lineDistance().val();
     } else if (dir == DirectionV::DOWN) {
-        pos.ry() += style().spatium();
+        pos.ry() += rest->spatium() * rest->staffType()->lineDistance().val();
     }
     rest->undoChangeProperty(Pid::OFFSET, pos);
 }

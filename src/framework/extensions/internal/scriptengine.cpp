@@ -23,6 +23,8 @@
 
 #include <QJSValueIterator>
 
+#include "global/api/apiutils.h"
+
 #include "jsmoduleloader.h"
 
 #include "../api/extapi.h"
@@ -34,14 +36,16 @@ using namespace muse;
 using namespace muse::extensions;
 using namespace muse::api;
 
-ScriptEngine::ScriptEngine(const modularity::ContextPtr& iocCtx, int apiverion)
+ScriptEngine::ScriptEngine(const modularity::ContextPtr& iocCtx, int apiversion)
     : m_iocContext(iocCtx)
 {
     m_engine = new QJSEngine();
     m_engine->installExtensions(QJSEngine::ConsoleExtension);
 
+    m_engine->setProperty("apiversion", apiversion);
+
     QJSValue globalObj = m_engine->globalObject();
-    if (apiverion == 1) {
+    if (apiversion == 1) {
         //! NOTE API v1 provides not only one global `api` object,
         //! but also a number of others, for example `curScore`,
         //! this is the legacy of the Qml plugin.
@@ -54,20 +58,11 @@ ScriptEngine::ScriptEngine(const modularity::ContextPtr& iocCtx, int apiverion)
 
     globalObj.setProperty("api", m_engine->newQObject(m_api));
 
-    QJSValue freezeFn = m_engine->evaluate("Object.freeze");
-
     const std::vector<muse::api::IApiRegister::GlobalEnum>& globalEnums = apiRegister()->globalEnums();
     for (const muse::api::IApiRegister::GlobalEnum& e : globalEnums) {
-        QJSValue enumObj = m_engine->newObject();
-        QString name = QString::fromLatin1(e.meta.enumName());
-
-        for (int i = 0; i < e.meta.keyCount(); ++i) {
-            QString key = QString::fromLatin1(e.meta.key(i));
-            enumObj.setProperty(key, key);
-        }
-
-        QJSValue frozenObj = freezeFn.call({ enumObj });
-        globalObj.setProperty(name, frozenObj);
+        QString name = QString::fromStdString(e.name);
+        QJSValue enumObj = muse::api::enumToJsValue(this, e.meta, e.type);
+        globalObj.setProperty(name, enumObj);
     }
 
     m_moduleLoader = new JsModuleLoader(m_iocContext, m_engine);
@@ -298,6 +293,12 @@ const modularity::ContextPtr& ScriptEngine::iocContext() const
     return m_iocContext;
 }
 
+int ScriptEngine::apiversion() const
+{
+    static const int ver = m_engine->property("apiversion").toInt();
+    return ver;
+}
+
 QJSValue ScriptEngine::newQObject(QObject* o)
 {
     if (!o->parent()) {
@@ -314,4 +315,10 @@ QJSValue ScriptEngine::newObject()
 QJSValue ScriptEngine::newArray(size_t length)
 {
     return m_engine->newArray(uint(length));
+}
+
+QJSValue ScriptEngine::freeze(const QJSValue& val)
+{
+    static QJSValue freezeFn = m_engine->evaluate("Object.freeze");
+    return freezeFn.call({ val });
 }

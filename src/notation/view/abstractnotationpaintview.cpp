@@ -312,9 +312,10 @@ void AbstractNotationPaintView::onLoadNotation(INotationPtr)
     });
 
     updateLoopMarkers();
+    // FIXME: only un-/re-subscribe when master notation changes
     notationPlayback()->loopBoundariesChanged().onNotify(this, [this]() {
         updateLoopMarkers();
-    }, Mode::SetReplace /*because this channel is from MasterNotation*/);
+    });
 
     m_notation->viewModeChanged().onNotify(this, [this]() {
         ensureViewportInsideScrollableArea();
@@ -356,9 +357,18 @@ void AbstractNotationPaintView::onUnloadNotation(INotationPtr)
     m_notation->notationChanged().disconnect(this);
     INotationInteractionPtr interaction = m_notation->interaction();
     interaction->noteInput()->stateChanged().disconnect(this);
+    interaction->noteInput()->noteInputStarted().disconnect(this);
     interaction->selectionChanged().disconnect(this);
+    interaction->showItemRequested().disconnect(this);
+    interaction->textEditingStarted().disconnect(this);
+    interaction->textEditingEnded().disconnect(this);
+    interaction->dropChanged().disconnect(this);
+    interaction->shadowNoteChanged().disconnect(this);
+    notationPlayback()->loopBoundariesChanged().disconnect(this);
+    m_notation->viewModeChanged().disconnect(this);
 
     if (isMainView()) {
+        disconnect(this, &QQuickPaintedItem::focusChanged, this, nullptr);
         m_notation->accessibility()->setMapToScreenFunc(nullptr);
         m_notation->interaction()->setGetViewRectFunc(nullptr);
     }
@@ -710,7 +720,7 @@ void AbstractNotationPaintView::onNotationSetup()
         scheduleRedraw();
     }, async::Asyncable::Mode::SetReplace);
 
-    engravingConfiguration()->selectionColorChanged().onReceive(this, [this](int, const muse::draw::Color&) {
+    engravingConfiguration()->selectionColorChanged().onReceive(this, [this](voice_idx_t, const muse::draw::Color&) {
         scheduleRedraw();
     });
 

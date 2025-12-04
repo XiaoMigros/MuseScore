@@ -47,17 +47,21 @@ enum class Ownership {
     SCORE,
 };
 
-//---------------------------------------------------------
-//   ScoreElement
-///   Base class for most of object wrappers exposed to QML
-//---------------------------------------------------------
-
+/** APIDOC
+ * Base class for API score elements
+ * @class ScoreElement
+ * @memberof engraving
+ * @hideconstructor
+*/
 class ScoreElement : public QObject
 {
     Q_OBJECT
-    /// Type of this element. See PluginAPI::PluginAPI::EngravingItem
-    /// for the list of possible values.
-    Q_PROPERTY(int type READ type)
+
+    /** APIDOC
+     * Type of this element.
+     * @q_property {engraving.ElementType}
+     */
+    Q_PROPERTY(QJSValue type READ type)
     /// Name of this element's type, not localized.
     /// Use ScoreElement::userName() to obtain a localized
     /// element name suitable for usage in a user interface.
@@ -93,7 +97,7 @@ public:
     const mu::engraving::EngravingObject* element() const { return e; }
 
     QString name() const;
-    int type() const;
+    QJSValue type() const;
 
     QString eid() const { return QString::fromStdString(element()->eid().toStdString()); }
 
@@ -106,6 +110,11 @@ public:
     Q_INVOKABLE QString userName() const;
     /// Checks whether two variables represent the same object. \since MuseScore 3.3
     Q_INVOKABLE bool is(apiv1::ScoreElement* other) { return other && element() == other->element(); }
+
+    int apiversion() const;
+private:
+
+    mutable int m_apiversion = -1;
 };
 
 //---------------------------------------------------------

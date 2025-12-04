@@ -55,7 +55,7 @@ static const ElementStyle lyricsElementStyle {
 //---------------------------------------------------------
 
 Lyrics::Lyrics(ChordRest* parent)
-    : TextBase(ElementType::LYRICS, parent, TextStyleType::LYRICS_ODD)
+    : TextBase(ElementType::LYRICS, parent, TextStyleType::LYRICS_ODD, ElementFlag::ON_STAFF)
 {
     m_separator  = 0;
     initElementStyle(&lyricsElementStyle);
@@ -280,7 +280,7 @@ bool Lyrics::isEditAllowed(EditData& ed) const
         }
     }
 
-    if (ed.key == Key_Left) {
+    if (ed.key == Key_Left || ed.key == Key_Backspace) {
         return cursor()->column() != 0 || cursor()->hasSelection();
     }
 

@@ -38,6 +38,8 @@
 
 #include "mpe/events.h"
 
+#include "log.h"
+
 namespace muse::audio {
 using msecs_t = int64_t;
 using secs_t = muse::secs_t;
@@ -79,6 +81,7 @@ static constexpr samples_t MINIMUM_BUFFER_SIZE = 128;
 #endif
 
 static constexpr samples_t MAXIMUM_BUFFER_SIZE = 4096;
+static constexpr samples_t DEFAULT_BUFFER_SIZE = 1024;
 
 struct OutputSpec {
     sample_rate_t sampleRate = 0;
@@ -405,7 +408,16 @@ struct AudioSignalsNotifier {
         }
     }
 
-    AudioSignalChanges audioSignalChanges;
+    //! NOTE It would be nice if the driver callback was called in one thread.
+    //! But some drivers, for example PipeWire, use queues
+    //! And then the callback can be called in different threads.
+    //! If a score is open, we will change the audio API (change the driver)
+    //! then the number of threads used may increase...
+    //! Channels allow 10 threads by default. Here we're increasing that to the maximum...
+    //! If this is not enough, then we need to make sure that the callback is called in one thread,
+    //! or use something else here instead of channels, some kind of queues.
+    const int _max_threads = 100;
+    AudioSignalChanges audioSignalChanges = AudioSignalChanges(_max_threads);
 
 private:
     static constexpr volume_dbfs_t PRESSURE_MINIMAL_VALUABLE_DIFF = volume_dbfs_t::make(2.5f);

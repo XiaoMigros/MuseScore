@@ -27,6 +27,7 @@
 #include "dom/instrtemplate.h"
 #include "dom/measure.h"
 #include "dom/score.h"
+#include "dom/masterscore.h"
 #include "dom/segment.h"
 #include "dom/text.h"
 #include "editing/editsystemlocks.h"
@@ -39,18 +40,6 @@
 
 using namespace mu::engraving::apiv1;
 
-/** APIDOC
- * Class representing a score.
- * We can get the current score by calling the `api.engraving.curScore`
- * @class Score
- * @hideconstructor
-*/
-
-/** APIDOC
- * Create a new Cursor
- * @method
- * @returns {Cursor} cursor
-*/
 Cursor* Score::newCursor()
 {
     return new Cursor(score());
@@ -247,46 +236,41 @@ void Score::createPlayEvents()
     mu::engraving::CompatMidiRender::createPlayEvents(score());
 }
 
-//---------------------------------------------------------
-//   Score::staves
-//---------------------------------------------------------
-
-QQmlListProperty<Staff> Score::staves()
+QQmlListProperty<Staff> Score::staves() const
 {
     return wrapContainerProperty<Staff>(this, score()->staves());
 }
 
-//---------------------------------------------------------
-//   Score::pages
-//---------------------------------------------------------
+QQmlListProperty<Part> Score::parts() const
+{
+    return wrapContainerProperty<Part>(this, score()->parts());
+}
 
-QQmlListProperty<Page> Score::pages()
+QQmlListProperty<Excerpt> Score::excerpts() const
+{
+    return wrapExcerptsContainerProperty<Excerpt>(this, score()->masterScore()->excerpts());
+}
+
+QQmlListProperty<Page> Score::pages() const
 {
     return wrapContainerProperty<Page>(this, score()->pages());
 }
 
-//---------------------------------------------------------
-//   Score::systems
-//---------------------------------------------------------
-
-QQmlListProperty<System> Score::systems()
+QQmlListProperty<System> Score::systems() const
 {
     return wrapContainerProperty<System>(this, score()->systems());
 }
 
-/** APIDOC @property {boolean} - has lyrics */
 bool Score::hasLyrics() const
 {
     return score()->hasLyrics();
 }
 
-/** APIDOC @property {number} - count of lyrics */
 int Score::lyricCount() const
 {
     return score()->lyricCount();
 }
 
-/** APIDOC @property {Lyric[]} - list of lyrics */
 QQmlListProperty<Lyrics> Score::lyrics() const
 {
     static std::vector<engraving::Lyrics*> list;
@@ -294,17 +278,11 @@ QQmlListProperty<Lyrics> Score::lyrics() const
     return wrapContainerProperty<Lyrics>(this, list);
 }
 
-/** APIDOC
-* Extracts all lyrics in the score and returns them in a single string.
-* @method
-* @return {string} - lyrics string
-*/
 QString Score::extractLyrics() const
 {
     return score()->extractLyrics();
 }
 
-/** APIDOC @property {Spanner[]} - list of spanners */
 QQmlListProperty<Spanner> Score::spanners()
 {
     static std::vector<mu::engraving::Spanner*> spannerList;

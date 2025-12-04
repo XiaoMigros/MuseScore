@@ -49,6 +49,11 @@ public:
         return m_iocContext;
     }
 
+    int apiversion() const override
+    {
+        return 2;
+    }
+
     QJSValue newQObject(QObject* o) override
     {
         if (!o->parent()) {
@@ -65,6 +70,12 @@ public:
     QJSValue newArray(size_t length = 0) override
     {
         return m_engine->newArray(uint(length));
+    }
+
+    QJSValue freeze(const QJSValue& val) override
+    {
+        static QJSValue freezeFn = m_engine->evaluate("Object.freeze");
+        return freezeFn.call({ val });
     }
 
 private:

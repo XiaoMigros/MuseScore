@@ -45,7 +45,7 @@ class StaffTextBase : public TextBase
     OBJECT_ALLOCATOR(engraving, StaffTextBase)
 
 public:
-    StaffTextBase(const ElementType& type, Segment* parent, TextStyleType tid, ElementFlags = ElementFlag::NOTHING);
+    StaffTextBase(const ElementType& type, Segment* parent, TextStyleType tid, ElementFlags = ElementFlag::ON_STAFF);
 
     void clear();
 
@@ -72,6 +72,8 @@ public:
     bool setAeolusStops() const { return m_setAeolusStops; }
     bool swing() const { return m_swing; }
     int capo() const { return m_capo; }
+
+    bool positionRelativeToNoteheadRest() const override { return true; }
 
 private:
 

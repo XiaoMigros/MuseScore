@@ -50,7 +50,7 @@ void AudioMidiPreferencesModel::setCurrentAudioApiIndex(int index)
         return;
     }
 
-    audioDriverController()->setCurrentAudioApi(apiList.at(index));
+    audioDriverController()->changeCurrentAudioApi(apiList.at(index));
     emit currentAudioApiIndexChanged(index);
 }
 

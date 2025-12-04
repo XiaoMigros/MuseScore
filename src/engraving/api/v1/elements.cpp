@@ -33,6 +33,7 @@
 #include "engraving/dom/spacer.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/tremolotwochord.h"
+#include "engraving/dom/trill.h"
 
 #include "engraving/editing/editnote.h"
 #include "engraving/editing/editsystemlocks.h"
@@ -86,10 +87,8 @@ bool EngravingItem::up() const
         return toChordRest(element())->ldata()->up;
     } else if (element()->isStem()) {
         return toStem(element())->up();
-    } else if (element()->isSlur()) {
-        return toSlur(element())->up();
-    } else if (element()->isTie()) {
-        return toTie(element())->up();
+    } else if (element()->isSlurTie()) {
+        return toSlurTie(element())->up();
     } else if (element()->isSlurTieSegment()) {
         return toSlurTieSegment(element())->slurTie()->up();
     } else if (element()->isArticulation()) {
@@ -647,6 +646,18 @@ int Staff::pitchOffset(FractionWrapper* tick)
 bool Staff::isVoiceVisible(int voice)
 {
     return staff()->isVoiceVisible(voice);
+}
+
+//---------------------------------------------------------
+//   Spanner::ornament
+//---------------------------------------------------------
+
+Ornament* Spanner::ornament() const
+{
+    if (spanner()->isTrill()) {
+        return wrap<Ornament>(toTrill(spanner())->ornament());
+    }
+    return nullptr;
 }
 
 //---------------------------------------------------------

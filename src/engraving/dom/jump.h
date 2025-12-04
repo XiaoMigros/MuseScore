@@ -65,9 +65,6 @@ public:
     void setJumpTo(const String& s) { m_jumpTo = s; }
     void setPlayUntil(const String& s) { m_playUntil = s; }
     void setContinueAt(const String& s) { m_continueAt = s; }
-    void undoSetJumpTo(const String& s);
-    void undoSetPlayUntil(const String& s);
-    void undoSetContinueAt(const String& s);
     bool playRepeats() const { return m_playRepeats; }
     void setPlayRepeats(bool val) { m_playRepeats = val; }
 
@@ -78,6 +75,8 @@ public:
     EngravingItem* nextSegmentElement() override;
     EngravingItem* prevSegmentElement() override;
     String accessibleInfo() const override;
+
+    bool positionRelativeToNoteheadRest() const override { return false; }
 
 private:
     String m_jumpTo;

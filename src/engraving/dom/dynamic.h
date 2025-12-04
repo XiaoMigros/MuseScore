@@ -120,6 +120,8 @@ public:
 
     bool isEditAllowed(EditData&) const override;
 
+    bool positionRelativeToNoteheadRest() const override { return true; }
+
     Hairpin* leftHairpin() const { return m_leftHairpin; }
     Hairpin* rightHairpin() const { return m_rightHairpin; }
 
@@ -141,7 +143,6 @@ public:
 private:
 
     M_PROPERTY(bool, avoidBarLines, setAvoidBarLines)
-    M_PROPERTY(double, dynamicsSize, setDynamicsSize)
     M_PROPERTY(bool, centerOnNotehead, setCenterOnNotehead)
 
     std::pair<DynamicType, String> parseDynamicText(const String&) const;

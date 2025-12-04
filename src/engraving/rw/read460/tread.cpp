@@ -774,8 +774,9 @@ void TRead::read(Dynamic* d, XmlReader& e, ReadContext& ctx)
             d->setVelChangeSpeed(TConv::fromXml(e.readAsciiText(), DynamicSpeed::NORMAL));
         } else if (tag == "play") {
             d->setPlayDynamic(e.readBool());
+        } else if (ctx.mscVersion() < 470 && tag == "dynamicsSize") {
+            d->setSymbolScale(e.readDouble());
         } else if (readProperty(d, tag, e, ctx, Pid::AVOID_BARLINES)) {
-        } else if (readProperty(d, tag, e, ctx, Pid::DYNAMICS_SIZE)) {
         } else if (readProperty(d, tag, e, ctx, Pid::CENTER_ON_NOTEHEAD)) {
         } else if (readProperty(d, tag, e, ctx, Pid::ANCHOR_TO_END_OF_PREVIOUS)) {
         } else if (!readProperties(static_cast<TextBase*>(d), e, ctx)) {
@@ -798,20 +799,10 @@ void TRead::read(Expression* expr, XmlReader& xml, ReadContext& ctx)
 
 void TRead::read(FretDiagram* d, XmlReader& e, ReadContext& ctx)
 {
-    // Read the old format first
-    bool hasBarre = false;
-    bool haveReadNew = false;
-
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
 
-        // Check for new format fret diagram
-        if (haveReadNew) {
-            e.skipCurrentElement();
-            continue;
-        }
         if (tag == "fretDiagram") {
-            // Read new
             while (e.readNextStartElement()) {
                 const AsciiStringView tag2(e.name());
 
@@ -843,38 +834,16 @@ void TRead::read(FretDiagram* d, XmlReader& e, ReadContext& ctx)
                     e.unknown();
                 }
             }
-            haveReadNew = true;
-        }
-        // Check for new properties
-        else if (tag == "showNut") {
+        } else if (tag == "showNut") {
             TRead::readProperty(d, e, ctx, Pid::FRET_NUT);
         } else if (tag == "orientation") {
             TRead::readProperty(d, e, ctx, Pid::ORIENTATION);
-        }
-        // Then read the rest if there is no new format diagram (compatibility read)
-        else if (tag == "strings") {
+        } else if (tag == "strings") {
             TRead::readProperty(d, e, ctx, Pid::FRET_STRINGS);
         } else if (tag == "frets") {
             TRead::readProperty(d, e, ctx, Pid::FRET_FRETS);
         } else if (tag == "fretOffset") {
             TRead::readProperty(d, e, ctx, Pid::FRET_OFFSET);
-        } else if (tag == "string") {
-            int no = e.intAttribute("no");
-            while (e.readNextStartElement()) {
-                const AsciiStringView t(e.name());
-                if (t == "dot") {
-                    d->setDot(no, e.readInt());
-                } else if (t == "marker") {
-                    d->setMarker(no, Char(e.readInt()) == u'X' ? FretMarkerType::CROSS : FretMarkerType::CIRCLE);
-                }
-                /*else if (t == "fingering")
-                      setFingering(no, e.readInt());*/
-                else {
-                    e.unknown();
-                }
-            }
-        } else if (tag == "barre") {
-            hasBarre = e.readBool();
         } else if (tag == "mag") {
             TRead::readProperty(d, e, ctx, Pid::MAG);
         } else if (tag == "Harmony") {
@@ -886,18 +855,6 @@ void TRead::read(FretDiagram* d, XmlReader& e, ReadContext& ctx)
         } else if (TRead::readProperty(d, tag, e, ctx, Pid::EXCLUDE_VERTICAL_ALIGN)) {
         } else if (!readItemProperties(d, e, ctx)) {
             e.unknown();
-        }
-    }
-
-    // Old handling of barres
-    if (hasBarre) {
-        for (int s = 0; s < d->strings(); ++s) {
-            for (auto& dot : d->dot(s)) {
-                if (dot.exists()) {
-                    d->setBarre(s, -1, dot.fret);
-                    return;
-                }
-            }
         }
     }
 }
@@ -3763,6 +3720,7 @@ void TRead::read(SlurTieSegment* s, XmlReader& e, ReadContext& ctx)
             s->ups(Grip::BEZIER2).off = e.readPoint() * _spatium;
         } else if (tag == "o4") {
             s->ups(Grip::END).off = e.readPoint() * _spatium;
+        } else if (TRead::readProperty(s, tag, e, ctx, Pid::SLUR_DIRECTION)) {
         } else if (tag == "HammerOnPullOffText") {
             DO_ASSERT(s->isHammerOnPullOffSegment());
             readHopoText(toHammerOnPullOffSegment(s), e, ctx, e.intAttribute("idx"));
@@ -4472,6 +4430,7 @@ bool TRead::readProperties(TextBase* t, XmlReader& e, ReadContext& ctx)
     } else if (readProperty(t, tag, e, ctx, Pid::DIRECTION)) {
     } else if (readProperty(t, tag, e, ctx, Pid::CENTER_BETWEEN_STAVES)) {
     } else if (readProperty(t, tag, e, ctx, Pid::MUSIC_SYMBOL_SIZE)) {
+    } else if (readProperty(t, tag, e, ctx, Pid::MUSICAL_SYMBOLS_SCALE)) {
     } else if (!readItemProperties(t, e, ctx)) {
         return false;
     }

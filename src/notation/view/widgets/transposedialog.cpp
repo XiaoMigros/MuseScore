@@ -22,6 +22,9 @@
 
 #include "transposedialog.h"
 
+#include "async/notifylist.h"
+
+#include "internal/mscoreerrorscontroller.h"
 #include "ui/view/widgetstatestore.h"
 
 using namespace mu::notation;
@@ -55,7 +58,7 @@ TransposeDialog::TransposeDialog(QWidget* parent)
 
     const std::vector<EngravingItem*>& elements = selection()->elements();
     bool hasChordNames = std::any_of(elements.cbegin(), elements.cend(), [](const EngravingItem* item) {
-        return item->isHarmony();
+        return item->isHarmony() || item->isFretDiagram();
     });
     setEnableTransposeChordNames(hasChordNames);
 
@@ -218,6 +221,8 @@ void TransposeDialog::apply()
 
     interaction()->transpose(options);
 
+    MScoreErrorsController(iocContext()).checkAndShowMScoreError();
+
     if (m_allSelected) {
         interaction()->clearSelection();
     }
@@ -238,7 +243,8 @@ Key TransposeDialog::firstPitchedStaffKey() const
 
     Key key = Key::C;
 
-    for (const Part* part : notation()->parts()->partList()) {
+    muse::async::NotifyList<const Part*> partList = notation()->parts()->partList();
+    for (const Part* part : partList) {
         for (const Staff* staff : part->staves()) {
             if (staff->idx() < startStaffIdx || staff->idx() > endStaffIdx) {
                 continue;

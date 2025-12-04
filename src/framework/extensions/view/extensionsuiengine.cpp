@@ -24,6 +24,8 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 
+#include "global/api/apiutils.h"
+
 #include "log.h"
 
 using namespace muse::extensions;
@@ -32,11 +34,19 @@ class QmlApiEngine : public muse::api::IApiEngine
 {
 public:
     QmlApiEngine(QQmlEngine* e, const modularity::ContextPtr& iocContext)
-        : m_engine(e), m_iocContext(iocContext) {}
+        : m_engine(e), m_iocContext(iocContext)
+    {
+        m_apiversion = m_engine->property("apiversion").toInt();
+    }
 
     const modularity::ContextPtr& iocContext() const override
     {
         return m_iocContext;
+    }
+
+    int apiversion() const override
+    {
+        return m_apiversion;
     }
 
     QJSValue newQObject(QObject* o) override
@@ -57,9 +67,19 @@ public:
         return m_engine->newArray(uint(length));
     }
 
+    QJSValue freeze(const QJSValue& val) override
+    {
+        if (m_freezeFn.isUndefined()) {
+            m_freezeFn = m_engine->evaluate("Object.freeze");
+        }
+        return m_freezeFn.call({ val });
+    }
+
 private:
     QQmlEngine* m_engine = nullptr;
     const modularity::ContextPtr& m_iocContext;
+    mutable int m_apiversion = -1;
+    QJSValue m_freezeFn;
 };
 }
 
@@ -76,6 +96,8 @@ ExtensionsUiEngine::~ExtensionsUiEngine()
 
 void ExtensionsUiEngine::setup()
 {
+    m_engine->setProperty("apiversion", 2);
+
     //! NOTE Needed for UI components, should not be used directly in extensions
     QObject* ui = dynamic_cast<QObject*>(uiEngine.get().get());
     m_engine->rootContext()->setContextProperty("ui", ui);
@@ -85,28 +107,12 @@ void ExtensionsUiEngine::setup()
     m_api = new api::ExtApi(m_apiEngine, m_engine);
     globalObject.setProperty("api", m_engine->newQObject(m_api));
 
-    QJSValue freezeFn = m_engine->evaluate("Object.freeze");
-
     const std::vector<muse::api::IApiRegister::GlobalEnum>& globalEnums = apiRegister()->globalEnums();
     for (const muse::api::IApiRegister::GlobalEnum& e : globalEnums) {
-        QJSValue enumObj = m_engine->newObject();
-        QString name = QString::fromLatin1(e.meta.enumName());
-
-        for (int i = 0; i < e.meta.keyCount(); ++i) {
-            QString key = QString::fromLatin1(e.meta.key(i));
-            enumObj.setProperty(key, key);
-        }
-
-        QJSValue frozenObj = freezeFn.call({ enumObj });
-        globalObject.setProperty(name, frozenObj);
+        QString name = QString::fromStdString(e.name);
+        QJSValue enumObj = muse::api::enumToJsValue(m_apiEngine, e.meta, e.type);
+        globalObject.setProperty(name, enumObj);
     }
-
-    //! NOTE We prohibit importing default modules;
-    //! only what is in the `api` folder will be imported.
-    m_engine->addImportPath(":/api");
-
-    //! NOTE Temporarily for development
-    m_engine->addImportPath(":/qml");
 }
 
 QQmlEngine* ExtensionsUiEngine::engine()
@@ -139,6 +145,8 @@ QQmlEngine* ExtensionsUiEngine::engineV1()
 
 void ExtensionsUiEngine::setupV1()
 {
+    m_engineV1->setProperty("apiversion", 1);
+
     //! NOTE Needed for UI components, should not be used directly in extensions
     QObject* ui = dynamic_cast<QObject*>(uiEngine.get().get());
     m_engineV1->rootContext()->setContextProperty("ui", ui);
