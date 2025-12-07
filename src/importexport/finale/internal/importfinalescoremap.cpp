@@ -1294,7 +1294,7 @@ void FinaleParser::importPageLayout()
 
         // Determine if system is first on the page
         // Determine the current page the staffsystem is on
-        const MusxInstanceList<others::Page>& page = m_doc->getOthers()->get<others::Page>(m_currentMusxPartId, leftStaffSystem->pageId);
+        const MusxInstance<others::Page>& page = m_doc->getOthers()->get<others::Page>(m_currentMusxPartId, leftStaffSystem->pageId);
         bool isFirstSystemOnPage = (i == 0) || (leftStaffSystem->pageId != staffSystems[i - 1]->pageId);
 
         // Compute system scaling factor
@@ -1305,22 +1305,22 @@ void FinaleParser::importPageLayout()
         // Commonly used in Finale for Coda Systems
         for (size_t j = i + 1; j < staffSystems.size(); ++j) {
             // Compare system one in advance to previous system:
+            // - Start of second system must be further right than end of first
             // - Same scaling
             // - Same page
             // - At same y-position on page
-            // - Start of second system must be further right than end of first
+            const double dist = staffSystems[j]->left * systemScaling
+                          - (page->width - page->margLeft - (-page->margRight) - (-staffSystems[j - 1]->right * systemScaling));
+            // check if horizontal distance between systems is larger than 0 and smaller than content width of the page
+            if (dist < 0.0 || dist > m_score->style().styleD(Sid::pagePrintableWidth)) {
+                break;
+            }
             auto instrumentsInSystem = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, staffSystems[j]->getCmper());
             if (musxFractionToFraction(staffSystems[j]->calcEffectiveScaling()) != musxFractionToFraction(staffSystems[j - 1]->calcEffectiveScaling())
                 || staffSystems[j]->pageId != staffSystems[j - 1]->pageId
                 || !muse::RealIsEqual(double(staffSystems[j]->top), double(staffSystems[j - 1]->top))
                 || (staffSystems[j]->distanceToPrev - staffSystems[j]->top) * systemScalingFraction.denominator()
                    != (instrumentsInSystem.at(instrumentsInSystem.size() - 1)->distFromTop + staffSystems[j - 1]->bottom) * systemScalingFraction.numerator()) {
-                break;
-            }
-            const double dist = staffSystems[j]->left * systemScaling
-                          - (page->width - page->margLeft - (-page->margRight) - (-staffSystems[j-1]->right * systemScaling));
-            // check if horizontal distance between systems is larger than 0 and smaller than content width of the page
-            if (dist < 0.0 || dist > m_score->style().styleD(Sid::pagePrintableWidth)) {
                 break;
             }
             Fraction distTick = muse::value(m_meas2Tick, staffSystems[j]->startMeas, Fraction(-1, 1));
@@ -1440,14 +1440,14 @@ void FinaleParser::importPageLayout()
             Spacer* upSpacer = Factory::createSpacer(startMeasure);
             upSpacer->setSpacerType(SpacerType::UP);
             upSpacer->setTrack(staff2track(muse::value(m_inst2Staff, instrumentsUsedInSystem.at(0)->staffId, 0)));
-            upSpacer->setGap(absoluteSpatiumFromEvpu(-leftStaffSystem->top - leftStaffSystem->distanceToPrev * systemScaling, upSpacer); // (signs reversed)
+            upSpacer->setGap(absoluteSpatiumFromEvpu(-leftStaffSystem->top - leftStaffSystem->distanceToPrev * systemScaling, upSpacer)); // (signs reversed)
             /// @todo account for title frames / perhaps header frames
             startMeasure->add(upSpacer);
         }
         if (!isLastSystemOnPage) {
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
-            upSpacer->setTrack(staff2track(muse::value(m_inst2Staff, instrumentsUsedInSystem.at(instrumentsUsedInSystem.size() - 1)->staffId, m_score->nstaves() - 1));
+            downSpacer->setTrack(staff2track(muse::value(m_inst2Staff, instrumentsUsedInSystem.at(instrumentsUsedInSystem.size() - 1)->staffId, m_score->nstaves() - 1));
             downSpacer->setGap(absoluteSpatiumFromEvpu(-rightStaffSystem->bottom * systemScaling - staffSystems[i+1]->top
                                                        - staffSystems[i+1]->distanceToPrev * musxFractionToFraction(staffSystems[i+1]->calcEffectiveScaling()).toDouble(), downSpacer)
                                - Spatium::fromMM(downSpacer->staff()->staffHeight(startMeasure->tick()), downSpacer->spatium())); // (signs reversed)
