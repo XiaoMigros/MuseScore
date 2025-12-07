@@ -579,33 +579,84 @@ void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
         setStyle(style, Sid::showMeasureNumberOne, !scorePart->hideFirstMeasure);
         setStyle(style, Sid::measureNumberInterval, scorePart->incidence);
         setStyle(style, Sid::measureNumberSystem, scorePart->showOnStart && !scorePart->showOnEvery);
+        const MusxInstanceList<others::StaffUsed> scrollView = context.musxDocument()->getScrollViewStaves(context.currentMusxPartId());
+        bool topOn = false;
+        bool bottomOn = false;
+        bool anyInteriorOn = false;
+        bool allStavesOn = !scrollView.empty();   // empty => false
+        for (std::size_t i = 0; i < scrollView.size(); ++i) {
+            if (const MusxInstance<others::Staff> staff = scrollView[i]->getStaffInstance()) {
+                const bool isOn = !staff->hideMeasNums;
+                allStavesOn = allStavesOn && isOn;
+                if (i == 0) {
+                    topOn = isOn;
+                } else if (i < scrollView.size() - 1) {
+                    if (isOn) {
+                        anyInteriorOn = true;
+                    }
+                } else {
+                    bottomOn = isOn;
+                }
+            }
+        }
+        const bool useAbove = scorePart->excludeOthers || (!anyInteriorOn && !bottomOn);
+        const bool useBelow = scorePart->excludeOthers || (!anyInteriorOn && !topOn);
+        if (useAbove && scorePart->showOnTop) {
+            setStyle(style, Sid::measureNumberPlacementMode, MeasureNumberPlacement::ABOVE_SYSTEM);
+        } else if (useBelow && scorePart->showOnBottom) {
+            setStyle(style, Sid::measureNumberPlacementMode, MeasureNumberPlacement::BELOW_SYSTEM);
+        } else if (allStavesOn) {
+            setStyle(style, Sid::measureNumberPlacementMode, MeasureNumberPlacement::ON_ALL_STAVES);
+        } else {
+            if (scorePart->showOnBottom) {
+                context.logger()->logWarning(u"Show on Bottom not supported when other staves also show measure numbers.");
+            }
+            setStyle(style, Sid::measureNumberPlacementMode, MeasureNumberPlacement::ON_SYSTEM_OBJECT_STAVES);
+        }
 
         auto processSegment = [&](const MusxInstance<FontInfo>& fontInfo,
                                   const others::Enclosure* enclosure,
                                   MeasureNumberRegion::AlignJustify justification,
                                   MeasureNumberRegion::AlignJustify alignment,
-                                  Evpu vertical,
+                                  Evpu horizontal, Evpu vertical,
                                   const std::string& prefix)
         {
             writeFontPref(style, prefix, fontInfo);
             setStyle(style, styleIdx(prefix + "VPlacement"), (vertical >= 0) ? PlacementV::ABOVE : PlacementV::BELOW);
-            setStyle(style, styleIdx(prefix + "HPlacement"), toAlignH(alignment));
-            setStyle(style, styleIdx(prefix + "Align"), Align(toAlignH(justification), AlignV::BASELINE));
+            setStyle(style, styleIdx(prefix + "HPlacement"), toAlignH(justification));
+            setStyle(style, styleIdx(prefix + "Align"), Align(toAlignH(alignment), AlignV::BASELINE));
+            setStyle(style, styleIdx(prefix + "Position"), toAlignH(justification));
+            /// @note This is tested with a variety of absolute and non-absolute fonts and produces results very close to Finale.
+            /// There may still be some additional tweaking possible, but this alogorithm seems to do quite well. This
+            /// is a bit weird because the MUSE_FINALE_SCALE_DIFFERENTIAL is being applied twice: once when the FontTracker is
+            /// created (assuming the font is not absolute) and again when the FontMetrics are created. I do not understand why this
+            /// seems to work.
+            /// The problem is that Finale always measures numbers from the baseline no matter their vertical position whereas
+            /// MuseScore measures them from the top of the character when they are below the staff. We need to come out
+            /// with a value in spatium from the bottom staffline to the top of the character.
+            RectF bbox = FontTracker(fontInfo).toFontMetrics(MUSE_FINALE_SCALE_DIFFERENTIAL).boundingRect(u"0123456789");
+            double heightSp = bbox.height() / style.defaultSpatium();
+            constexpr static Evpu normalStaffHeight = 4 * EVPU_PER_SPACE;
+            setStyle(style, styleIdx(prefix + "PosAbove"), PointF(horizontal / EVPU_PER_SPACE, std::min(-vertical / EVPU_PER_SPACE, 0.0)));
+            setStyle(style, styleIdx(prefix + "PosBelow"), PointF(horizontal / EVPU_PER_SPACE, std::max(-(vertical + normalStaffHeight) / EVPU_PER_SPACE - heightSp, 0.0)));
             writeFramePrefs(style, prefix, enclosure);
         };
 
         // Determine source for primary segment
-        auto fontInfo      = scorePart->showOnStart ? scorePart->startFont       : scorePart->multipleFont;
-        auto enclosure     = scorePart->showOnStart ? scorePart->startEnclosure  : scorePart->multipleEnclosure;
-        auto useEnclosure  = scorePart->showOnStart ? scorePart->useStartEncl    : scorePart->useMultipleEncl;
-        auto justification = scorePart->showOnEvery ? scorePart->multipleJustify : scorePart->startJustify;
-        auto alignment     = scorePart->showOnEvery ? scorePart->multipleAlign   : scorePart->startAlign;
-        auto vertical      = scorePart->showOnStart ? scorePart->startYdisp      : scorePart->multipleYdisp;
+        const bool useShowOnStart = scorePart->showOnStart && !scorePart->showOnEvery;
+        auto fontInfo      = useShowOnStart ? scorePart->startFont       : scorePart->multipleFont;
+        auto enclosure     = useShowOnStart ? scorePart->startEnclosure  : scorePart->multipleEnclosure;
+        auto useEnclosure  = useShowOnStart ? scorePart->useStartEncl    : scorePart->useMultipleEncl;
+        auto justification = useShowOnStart ? scorePart->startJustify    : scorePart->multipleJustify;
+        auto alignment     = useShowOnStart ? scorePart->startAlign      : scorePart->multipleAlign;
+        auto horizontal    = useShowOnStart ? scorePart->startXdisp      : scorePart->multipleXdisp;
+        auto vertical      = useShowOnStart ? scorePart->startYdisp      : scorePart->multipleYdisp;
 
+        setStyle(style, Sid::measureNumberAlignToBarline, alignment == MeasureNumberRegion::AlignJustify::Left);
         setStyle(style, Sid::measureNumberOffsetType, int(OffsetType::SPATIUM)); // Hardcoded offset type
-        processSegment(fontInfo, useEnclosure ? enclosure.get() : nullptr, justification, alignment, vertical, "measureNumber");
+        processSegment(fontInfo, useEnclosure ? enclosure.get() : nullptr, justification, alignment, horizontal, vertical, "measureNumber");
         /// @todo write other stored styles to measureNumberAlternate (VPlacement/HPlacement not supported)
-        processSegment(fontInfo, useEnclosure ? enclosure.get() : nullptr, justification, alignment, vertical, "measureNumberAlternate");
+        processSegment(fontInfo, useEnclosure ? enclosure.get() : nullptr, justification, alignment, horizontal, vertical, "measureNumberAlternate");
 
         setStyle(style, Sid::mmRestShowMeasureNumberRange, scorePart->showMmRange);
         if (scorePart->leftMmBracketChar == 0) {
@@ -617,7 +668,7 @@ void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
         }
 
         processSegment(scorePart->mmRestFont, scorePart->useMultipleEncl ? scorePart->multipleEnclosure.get() : nullptr,
-                       scorePart->mmRestJustify, scorePart->mmRestAlign, scorePart->mmRestYdisp, "mmRestRange");
+                       scorePart->mmRestJustify, scorePart->mmRestAlign, scorePart->mmRestXdisp, scorePart->mmRestYdisp, "mmRestRange");
     }
 
     setStyle(style, Sid::createMultiMeasureRests, context.partScore());
