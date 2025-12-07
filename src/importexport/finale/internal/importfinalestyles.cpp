@@ -627,7 +627,7 @@ void writeMeasureNumberPrefs(MStyle& style, const FinaleParser& context)
             setStyle(style, styleIdx(prefix + "Align"), Align(toAlignH(alignment), AlignV::BASELINE));
             setStyle(style, styleIdx(prefix + "Position"), toAlignH(justification));
             /// @note This is tested with a variety of absolute and non-absolute fonts and produces results very close to Finale.
-            /// There may still be some additional tweaking possible, but this alogorithm seems to make the most sense.
+            /// There may still be some additional tweaking possible, but this alogorithm seems to do quite well.
             /// The problem is that Finale always measures numbers from the baseline no matter their vertical position whereas
             /// MuseScore measures them from the top of the character when they are below the staff.
             RectF bbox = FontTracker(fontInfo).toFontMetrics(MUSE_FINALE_SCALE_DIFFERENTIAL).boundingRect(u"0123456789");
