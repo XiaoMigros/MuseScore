@@ -39,24 +39,25 @@ const black = "#000000"
 function main() {
     api.log.info("hello colornotes");
 
-    applyToNotesInSelection(colorNote)
+    if (!curScore.selection.elements.length) {
+        curScore.startCmd("Color notes in score")
+        cmd("select-all")
+        applyToNotesInSelection(colorNote)
+        cmd("escape")
+    } else {
+        curScore.startCmd("Color notes in selection")
+        applyToNotesInSelection(colorNote)
+    }
+    curScore.endCmd()
 }
 
 // Apply the given function to all notes (elements with pitch) in selection
-// or, if nothing is selected, in the entire score
 
 function applyToNotesInSelection(func) {
-    var fullScore = !curScore.selection.elements.length
-    if (fullScore) {
-        cmd("select-all")
-    }
-    curScore.startCmd()
-    for (var i in curScore.selection.elements)
-        if (curScore.selection.elements[i].pitch)
-            func(curScore.selection.elements[i])
-    curScore.endCmd()
-    if (fullScore) {
-        cmd("escape")
+    for (var el of curScore.selection.elements) {
+        if (el.type == Element.NOTE) {
+            func(el)
+        }
     }
 }
 
@@ -82,11 +83,9 @@ function colorNote(note) {
     note.color = base_color;
 
     // If the note has dots (augmentation dots), set each dot's color to match the note's color
-    if (note.dots) {
-        for (var i = 0; i < note.dots.length; i++) {
-            if (note.dots[i]) {
-                note.dots[i].color = note.color;
-            }
+    for (var dot of note.dots) {
+        if (dot) {
+            dot.color = note.color;
         }
     }
 }
