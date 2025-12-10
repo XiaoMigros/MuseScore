@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "engraving/dom/layoutbreak.h"
 #include "internal/importfinaleparser.h"
 #include "internal/importfinalelogger.h"
 #include "finaletypesconv.h"
@@ -87,7 +88,41 @@ FrameSettings::FrameSettings(const others::Enclosure* enclosure) {
 
     frameWidth   = doubleFromEfix(enclosure->lineWidth);
     paddingWidth = doubleFromEvpu(enclosure->xMargin);
-    frameRound   = enclosure->roundCorners ? int(lround(doubleFromEfix(enclosure->cornerRadius))) : 0;
+    /// @todo better approximation. Finale's corner radius values do not convert.
+    frameRound   = enclosure->roundCorners ? 100 : 0;
+}
+
+FrameSettings::FrameSettings(const musx::dom::others::TextBlock* textBlock)
+{
+    if (!textBlock || textBlock->shapeId || textBlock->width) {
+        // for now, we only support standard frames with no hard horizontal boundary
+        return;
+    }
+    if (textBlock->stdLineThickness && textBlock->showShape) {
+        frameType = FrameType::SQUARE;
+        frameWidth = doubleFromEfix(textBlock->stdLineThickness);
+        paddingWidth = doubleFromEfix(textBlock->inset) + 0.5; // fudge factor to ameliorate vertical discrepancy with Finale
+        /// @todo better approximation. Finale's corner radius values do not convert.
+        frameRound = textBlock->roundCorners ? 100 : 0;
+    }
+}
+
+void FrameSettings::setFrameProperties(TextBase* item) const
+{
+    setAndStyleProperty(item, Pid::FRAME_TYPE, int(frameType));
+    if (item->frameType() != FrameType::NO_FRAME) {
+        setAndStyleProperty(item, Pid::FRAME_WIDTH, absoluteSpatium(frameWidth, item)); // is this the correct scaling?
+        setAndStyleProperty(item, Pid::FRAME_PADDING, absoluteSpatium(paddingWidth, item)); // is this the correct scaling?
+        setAndStyleProperty(item, Pid::FRAME_ROUND, frameRound);
+    }
+}
+
+double FrameSettings::oneSidePaddingWidth() const
+{
+    if (frameType == FrameType::SQUARE) {
+        return frameWidth + paddingWidth;
+    }
+    return 0.0;
 }
 
 FontTracker::FontTracker(const MusxInstance<musx::dom::FontInfo>& fontInfo, double additionalSizeScaling)
@@ -117,7 +152,7 @@ FontTracker FontTracker::fromEngravingFont(const engraving::MStyle& style, engra
     return result;
 }
 
-muse::draw::FontMetrics FontTracker::toFontMetrics(double mag)
+muse::draw::FontMetrics FontTracker::toFontMetrics(double mag = 1.0)
 {
     muse::draw::Font f(fontName, muse::draw::Font::Type::Unknown);
     f.setBold(fontStyle & FontStyle::Bold);
@@ -584,12 +619,7 @@ void FinaleParser::importTextExpressions()
         item->setVisible(!expressionAssignment->hidden); /// @todo staff visibility, and save adding excessive links
         item->setXmlText(expression->xmlText);
         item->checkCustomFormatting(expression->xmlText);
-        setAndStyleProperty(item, Pid::FRAME_TYPE, int(expression->frameSettings.frameType));
-        if (item->frameType() != FrameType::NO_FRAME) {
-            setAndStyleProperty(item, Pid::FRAME_WIDTH, absoluteSpatium(expression->frameSettings.frameWidth, item)); // is this the correct scaling?
-            setAndStyleProperty(item, Pid::FRAME_PADDING, absoluteSpatium(expression->frameSettings.paddingWidth, item)); // is this the correct scaling?
-            setAndStyleProperty(item, Pid::FRAME_ROUND, expression->frameSettings.frameRound);
-        }
+        expression->frameSettings.setFrameProperties(item);
 
         setAndStyleProperty(item, Pid::POSITION, toAlignH(expressionDef->horzExprJustification));
         s->add(item);
@@ -984,6 +1014,11 @@ void FinaleParser::importTextExpressions()
                 setAndStyleProperty(text, Pid::SIZE_SPATIUM_DEPENDENT, false, true);
                 text->setAutoplace(false);
                 setAndStyleProperty(text, Pid::OFFSET, (evpuToPointF(rTick.isZero() ? measureTextAssign->xDispEvpu : 0, -measureTextAssign->yDisp) * text->defaultSpatium()), true);
+                /// @todo Account for Finale's weird handle placement. Anyhow, the following line gets us close. Measure Text is always aligned as follows.
+                /// It can have different justification (i.e., a multiline centered text) but the handle is always left aligned.
+                setAndStyleProperty(text, Pid::ALIGN, Align(AlignH::LEFT, AlignV::TOP));
+                FrameSettings frameSettings(measureTextAssign->getTextBlock().get());
+                frameSettings.setFrameProperties(text);
                 s->add(text);
                 collectElementStyle(text);
             }
@@ -1121,15 +1156,16 @@ static PointF pagePosOfPageTextAssign(Page* page, const MusxInstance<others::Pag
         break;
     }
 
+    const double fullWidth = bbox.width() + 2 * FrameSettings(pageTextAssign->getTextBlock().get()).oneSidePaddingWidth() * page->defaultSpatium();
     if (pageTextAssign->indRpPos && !(page->no() & 1)) {
         switch(pageTextAssign->hPosRp) {
         case others::PageTextAssign::HorizontalAlignment::Left:
             break;
         case others::PageTextAssign::HorizontalAlignment::Center:
-            p.rx() += (pageContentRect.width() - bbox.width()) / 2;
+            p.rx() += (pageContentRect.width() - fullWidth) / 2;
             break;
         case others::PageTextAssign::HorizontalAlignment::Right:
-            p.rx() += pageContentRect.width() - bbox.width();
+            p.rx() += pageContentRect.width() - fullWidth;
             break;
         }
         p.rx() += absoluteDoubleFromEvpu(pageTextAssign->rightPgXDisp, page);
@@ -1139,10 +1175,10 @@ static PointF pagePosOfPageTextAssign(Page* page, const MusxInstance<others::Pag
         case others::PageTextAssign::HorizontalAlignment::Left:
             break;
         case others::PageTextAssign::HorizontalAlignment::Center:
-            p.rx() += (pageContentRect.width() - bbox.width()) / 2;
+            p.rx() += (pageContentRect.width() - fullWidth) / 2;
             break;
         case others::PageTextAssign::HorizontalAlignment::Right:
-            p.rx() += pageContentRect.width() - bbox.width();
+            p.rx() += pageContentRect.width() - fullWidth;
             break;
         }
         p.rx() += absoluteDoubleFromEvpu(pageTextAssign->xDisp, page);
@@ -1288,6 +1324,7 @@ void FinaleParser::importPageTexts()
         std::optional<PageCmper> forPageId = hfType != HeaderFooterType::SecondPageToEnd ? startPage : std::nullopt;
         musx::util::EnigmaParsingContext parsingContext = pageText->getRawTextCtx(m_currentMusxPartId, forPageId);
         EnigmaParsingOptions options(hfType);
+        // RGP: This should probably be changed to what I did below to back out system scaling.
         options.scaleFontSizeBy = 6.0 / 5.0; // observed
         /// @todo set options.scaleFontSizeBy to per-page scaling if MuseScore can't do per-page scaling directly.
         return stringFromEnigmaText(parsingContext, options);
@@ -1350,6 +1387,7 @@ void FinaleParser::importPageTexts()
 
     auto addPageTextToMeasure = [&](const MusxInstance<others::PageTextAssign>& pageTextAssign, MeasureBase* mb, Page* page, const String& pageText) {
         /// @todo set text alignment / position
+        FrameSettings frameSettings(pageTextAssign->getTextBlock().get());
         if (mb->isMeasure()) {
             // Add as staff text
             Measure* measure = toMeasure(mb);
@@ -1371,6 +1409,7 @@ void FinaleParser::importPageTexts()
             setAndStyleProperty(text, Pid::ALIGN, Align(hAlignment, toAlignV(pageTextAssign->vPos)), true);
             setAndStyleProperty(text, Pid::POSITION, hAlignment, true);
             setAndStyleProperty(text, Pid::OFFSET, (p - mb->pagePos()), true); // is this accurate enough?
+            frameSettings.setFrameProperties(text);
             s->add(text);
             collectElementStyle(text);
         } else if (mb->isBox()) {
@@ -1390,6 +1429,7 @@ void FinaleParser::importPageTexts()
             setAndStyleProperty(text, Pid::ALIGN, Align(hAlignment, toAlignV(pageTextAssign->vPos)), true);
             setAndStyleProperty(text, Pid::POSITION, hAlignment, true);
             setAndStyleProperty(text, Pid::OFFSET, p);
+            frameSettings.setFrameProperties(text);
             toBox(mb)->add(text);
             collectElementStyle(text);
         }
@@ -1521,6 +1561,17 @@ void FinaleParser::importPageTexts()
                 /// @todo use sophisticated check for whether to import as frame or not. (i.e. distance to measure is too large, frame would get in the way of music)
             }();
             EnigmaParsingOptions options;
+            /// @todo Refine this calculation. The idea is to back out everything out of mag except the page percent. This is getting
+            /// the right font size to within a fraction of a point. I'm not sure what is causing the error.
+            /// Also, I do not know if it handles staff-level scaling or even if it needs to.
+            double systemScaling = musxOptions().pageFormat->calcSystemScaling().toDouble(); // fallback value
+            MeasCmper measId = muse::value(m_tick2Meas, mb->tick(), 0);
+            if (measId > 0) {
+                if (const MusxInstance<others::StaffSystem> system = m_doc->calculateSystemFromMeasure(m_currentMusxPartId, measId)) {
+                    systemScaling = system->calcSystemScaling().toDouble();
+                }
+            }
+            options.scaleFontSizeBy = mb->magS() / systemScaling;
             options.initialFont = FontTracker(m_score->style(), mb->isMeasure() ? u"staffText" : u"default");
             musx::util::EnigmaParsingContext parsingContext = pageTextAssign->getRawTextCtx(m_currentMusxPartId, i + 1);
             String pageText = stringFromEnigmaText(parsingContext, options);
