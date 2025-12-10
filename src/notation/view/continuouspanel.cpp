@@ -482,7 +482,7 @@ void ContinuousPanel::paint(Painter& painter, const NotationViewContext& ctx, co
             engraving::KeySig*& keySig = m_cachedKeySigs[staffIdx];
             keySig->setColor(color);
             posX += keySigLeftMargin;
-            const PointF ksPos = PointF(posX, 0.0);
+            const PointF ksPos = PointF(posX, keySig->pos().y());
             painter.translate(ksPos);
             scoreRender()->drawItem(keySig, &painter, opt);
             painter.translate(-ksPos);
@@ -493,7 +493,7 @@ void ContinuousPanel::paint(Painter& painter, const NotationViewContext& ctx, co
             engraving::TimeSig*& timeSig = m_cachedTimeSigs[staffIdx];
             timeSig->setColor(color);
             posX += timeSigLeftMargin;
-            const PointF tsPos = PointF(posX, 0.0);
+            const PointF tsPos = PointF(posX, timeSig->pos().y());
             painter.translate(tsPos);
             scoreRender()->drawItem(timeSig, &painter, opt);
             painter.translate(-tsPos);
