@@ -1915,7 +1915,7 @@ EngravingItem* Note::drop(EditData& data)
     case ElementType::GLISSANDO:
     {
         for (auto ee : m_spannerFor) {
-            if (ee->type() == ElementType::GLISSANDO) {
+            if (ee->isGlissando()) {
                 LOGD("there is already a glissando");
                 delete e;
                 return 0;
@@ -2462,7 +2462,8 @@ int Note::ottaveCapoFret() const
     const CapoParams& capo = staff->capo(segmentTick);
     int capoFret = 0;
 
-    if (capo.active) {
+    using MODE = CapoParams::TransposeMode;
+    if (capo.active && MODE::PLAYBACK_ONLY == capo.transposeMode) {
         if (capo.ignoredStrings.empty() || !muse::contains(capo.ignoredStrings, static_cast<string_idx_t>(m_string))) {
             capoFret = capo.fretPosition;
         }
@@ -2690,7 +2691,7 @@ void Note::verticalDrag(EditData& ed)
         const StringData* strData = part()->stringData(_tick, staffIdx());
         const int pitchOffset = staff()->pitchOffset(_tick);
         int nString = ned->string + (staffType()->upsideDown() ? -lineOffset : lineOffset);
-        int nFret   = strData->fret(m_pitch + pitchOffset, nString, staff());
+        int nFret   = strData->fret(m_pitch + pitchOffset, nString, staff(), tick());
 
         if (nFret >= 0) {                        // no fret?
             if (fret() != nFret || string() != nString) {
@@ -3431,7 +3432,7 @@ EngravingItem* Note::nextElement()
             return m_tieFor->frontSegment();
         } else if (!m_spannerFor.empty()) {
             for (auto i : m_spannerFor) {
-                if (i->type() == ElementType::GLISSANDO) {
+                if (i->isGlissando()) {
                     return i->spannerSegments().front();
                 }
             }
@@ -3444,7 +3445,7 @@ EngravingItem* Note::nextElement()
     case ElementType::PARTIAL_TIE_SEGMENT:
         if (!m_spannerFor.empty()) {
             for (auto i : m_spannerFor) {
-                if (i->type() == ElementType::GLISSANDO) {
+                if (i->isGlissando()) {
                     return i->spannerSegments().front();
                 }
             }
@@ -3561,7 +3562,7 @@ EngravingItem* Note::lastElementBeforeSegment()
 {
     if (!m_spannerFor.empty()) {
         for (auto i : m_spannerFor) {
-            if (i->type() == ElementType::GLISSANDO || i->type() == ElementType::GUITAR_BEND || i->type() == ElementType::NOTELINE) {
+            if (i->isGlissando() || i->isGuitarBend() || i->isNoteLine()) {
                 return i->spannerSegments().front();
             }
         }

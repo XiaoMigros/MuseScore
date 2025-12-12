@@ -48,6 +48,7 @@
 #include "engraving/dom/tripletfeel.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/volta.h"
+#include "engraving/dom/capo.h"
 #include "engraving/types/symid.h"
 
 #include "../utils.h"
@@ -260,6 +261,7 @@ void GPConverter::convertGP()
 
     clearDefectedSpanner();
     fixPercussion();
+    addCapos();
 }
 
 void GPConverter::fixPercussion()
@@ -562,7 +564,7 @@ Fraction GPConverter::convertBeat(const GPBeat* beat, ChordRestContainer& graceC
         rest->add(dc);
     } else {
         if (beat->graceNotes() != GPBeat::GraceNotes::None) {
-            if (cr->type() == ElementType::REST) {
+            if (cr->isRest()) {
                 delete cr;
                 return ctx.curTick;
             }
@@ -592,8 +594,8 @@ Fraction GPConverter::convertBeat(const GPBeat* beat, ChordRestContainer& graceC
 
             for (auto [pGrChord, pBeat] : graceChords) {
                 configureGraceChord(pBeat, pGrChord, beat->ottavaType());
-                if (pGrChord->type() == ElementType::CHORD) {
-                    static_cast<Chord*>(pGrChord)->setGraceIndex(grIndex++);
+                if (pGrChord->isChord()) {
+                    toChord(pGrChord)->setGraceIndex(grIndex++);
                 }
 
                 Fraction fr(1, (graceChords.size() == 1 ? 1 : 2) * 8);
@@ -653,18 +655,18 @@ void GPConverter::convertNotes(const std::vector<std::shared_ptr<GPNote> >& note
 
     //! NOTE: later notes order is used in linked staff to create ties, glissando
     if (cr->isChord()) {
-        Chord* ch = static_cast<Chord*>(cr);
+        Chord* ch = toChord(cr);
         ch->sortNotes();
     }
 }
 
 void GPConverter::convertNote(const GPNote* gpnote, ChordRest* cr)
 {
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
-    Chord* ch = static_cast<Chord*>(cr);
+    Chord* ch = toChord(cr);
 
     Note* note = mu::engraving::Factory::createNote(ch);
     note->setTrack(cr->track());
@@ -748,22 +750,6 @@ void GPConverter::addTimeSig(const GPMasterBar* mB, Measure* measure)
             }
             Segment* s = measure->getSegment(SegmentType::TimeSig, tick);
             s->add(t);
-
-            /// adding "Capo fret" text
-            // TODO-gp: settings if we need to show capo
-            if (m_showCapo && !m_hasCapo[curTrack]) {
-                Fraction fr = { 0, 1 };
-                int capo = staff->capo(fr).fretPosition;
-
-                if (capo != 0 && !engravingConfiguration()->guitarProImportExperimental()) {
-                    StaffText* st = Factory::createStaffText(s);
-                    st->setTrack(curTrack);
-                    String capoText = String(u"Capo fret %1").arg(capo);
-                    st->setPlainText(muse::mtrc("iex_guitarpro", capoText));
-                    s->add(st);
-                    m_hasCapo[curTrack] = true;
-                }
-            }
         }
     }
 }
@@ -1154,12 +1140,8 @@ void GPConverter::setUpTrack(const std::unique_ptr<GPTrack>& tR)
 
         int capoFret = staffProperty[0].capoFret;
 
-        CapoParams params;
-        params.active = true;
-        params.fretPosition = capoFret;
-
-        part->staff(0)->insertCapoParams({ 0, 1 }, params);
         part->setCapoFret(capoFret);
+        m_capoParams.insert_or_assign(part->id().toUint64(), capoFret);
         auto tunning = staffProperty[0].tunning;
         bool usePresetTable = staffProperty[0].ignoreFlats;
 
@@ -1258,12 +1240,12 @@ void GPConverter::addContinuousSlideHammerOn()
 {
     auto searchEndNote = [] (Note* start) -> Note* {
         ChordRest* nextCr;
-        if (static_cast<Chord*>(start->parent())->ChordRest::isGrace()) {
+        if (toChord(start->parent())->ChordRest::isGrace()) {
             //! this case when start note is a grace note so end note can be next note in grace notes
             //! or parent note of grace notes
-            Chord* startChord =  static_cast<Chord*>(start->parent());
+            Chord* startChord =  toChord(start->parent());
 
-            Chord* parentGrace = static_cast<Chord*>(start->parent()->parent());
+            Chord* parentGrace = toChord(start->parent()->parent());
 
             auto it = parentGrace->graceNotes().begin();
             for (; it != parentGrace->graceNotes().end(); ++it) {
@@ -1285,8 +1267,8 @@ void GPConverter::addContinuousSlideHammerOn()
                 return nullptr;
             }
 
-            if (nextCr->isChord() && !static_cast<Chord*>(nextCr)->graceNotes().empty()) {
-                nextCr = static_cast<Chord*>(nextCr)->graceNotes().front();
+            if (nextCr->isChord() && !toChord(nextCr)->graceNotes().empty()) {
+                nextCr = toChord(nextCr)->graceNotes().front();
             }
         }
 
@@ -1294,10 +1276,10 @@ void GPConverter::addContinuousSlideHammerOn()
             return nullptr;
         }
 
-        if (nextCr->type() != ElementType::CHORD) {
+        if (!nextCr->isChord()) {
             return nullptr;
         }
-        auto nextChord = static_cast<Chord*>(nextCr);
+        auto nextChord = toChord(nextCr);
         for (auto note : nextChord->notes()) {
             if (note->string() == start->string() && (note->harmonic() == start->harmonic())) {
                 return note;
@@ -2178,7 +2160,7 @@ int GPConverter::calculateDrumPitch(int element, int variation, const String& in
 
 void GPConverter::addDynamic(const GPBeat* gpb, ChordRest* cr)
 {
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
@@ -2492,7 +2474,7 @@ void GPConverter::addTapping(const GPBeat* beat, ChordRest* cr)
 
 void GPConverter::addSlapped(const GPBeat* beat, ChordRest* cr)
 {
-    if (!beat->slapped() || cr->type() != ElementType::CHORD) {
+    if (!beat->slapped() || !cr->isChord()) {
         return;
     }
 
@@ -2503,7 +2485,7 @@ void GPConverter::addSlapped(const GPBeat* beat, ChordRest* cr)
 
 void GPConverter::addPopped(const GPBeat* beat, ChordRest* cr)
 {
-    if (!beat->popped() || cr->type() != ElementType::CHORD) {
+    if (!beat->popped() || !cr->isChord()) {
         return;
     }
 
@@ -2686,7 +2668,7 @@ void GPConverter::addFadding(const GPBeat* beat, ChordRest* cr)
     if (beat->fadding() == GPBeat::Fadding::None) {
         return;
     }
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
@@ -2702,7 +2684,7 @@ void GPConverter::addFadding(const GPBeat* beat, ChordRest* cr)
 
     Articulation* art = mu::engraving::Factory::createArticulation(_score->dummy()->chord());
     art->setSymId(scoreFadding(beat->fadding()));
-    if (!_score->toggleArticulation(static_cast<Chord*>(cr)->upNote(), art)) {
+    if (!_score->toggleArticulation(toChord(cr)->upNote(), art)) {
         delete art;
     }
 }
@@ -2718,7 +2700,7 @@ void GPConverter::addPickStroke(const GPBeat* beat, ChordRest* cr)
     if (beat->pickStroke() == GPBeat::PickStroke::None) {
         return;
     }
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
@@ -2732,7 +2714,7 @@ void GPConverter::addPickStroke(const GPBeat* beat, ChordRest* cr)
 
     Articulation* art = mu::engraving::Factory::createArticulation(_score->dummy()->chord());
     art->setSymId(scorePickStroke(beat->pickStroke()));
-    if (!_score->toggleArticulation(static_cast<Chord*>(cr)->upNote(), art)) {
+    if (!_score->toggleArticulation(toChord(cr)->upNote(), art)) {
         delete art;
     }
 }
@@ -2766,7 +2748,7 @@ void GPConverter::addWah(const GPBeat* beat, ChordRest* cr)
     if (beat->wah() == GPBeat::Wah::None) {
         return;
     }
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
@@ -2779,7 +2761,7 @@ void GPConverter::addWah(const GPBeat* beat, ChordRest* cr)
 
     Articulation* art = Factory::createArticulation(_score->dummy()->chord());
     art->setSymId(scoreWah(beat->wah()));
-    if (!_score->toggleArticulation(static_cast<Chord*>(cr)->upNote(), art)) {
+    if (!_score->toggleArticulation(toChord(cr)->upNote(), art)) {
         delete art;
     }
 }
@@ -2789,7 +2771,7 @@ void GPConverter::addGolpe(const GPBeat* beat, ChordRest* cr)
     if (beat->golpe() == GPBeat::Golpe::None) {
         return;
     }
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
@@ -2800,7 +2782,7 @@ void GPConverter::addGolpe(const GPBeat* beat, ChordRest* cr)
         art->setAnchor(ArticulationAnchor::BOTTOM);
     }
 
-    if (!_score->toggleArticulation(static_cast<Chord*>(cr)->upNote(), art)) {
+    if (!_score->toggleArticulation(toChord(cr)->upNote(), art)) {
         delete art;
     }
 }
@@ -2810,7 +2792,7 @@ void GPConverter::addBarre(const GPBeat* beat, ChordRest* cr)
     if (beat->barre().fret == -1) {
         return;
     }
-    if (cr->type() != ElementType::CHORD) {
+    if (!cr->isChord()) {
         return;
     }
 
@@ -2843,7 +2825,7 @@ void GPConverter::addBarre(const GPBeat* beat, ChordRest* cr)
         }
     }
 
-    addTextToNote(String::fromStdString(barreType(beat->barre()) + barreFret), static_cast<Chord*>(cr)->upNote());
+    addTextToNote(String::fromStdString(barreType(beat->barre()) + barreFret), toChord(cr)->upNote());
 }
 
 void GPConverter::addLyrics(const GPBeat* beat, ChordRest* cr, const Context& ctx)
@@ -2875,8 +2857,8 @@ void GPConverter::clearDefectedGraceChord(ChordRestContainer& graceGhords)
             continue;
         }
 
-        if (pCr->type() == ElementType::CHORD) {
-            Chord* pChord = static_cast<Chord*>(pCr);
+        if (pCr->isChord()) {
+            Chord* pChord = toChord(pCr);
             for (Note* pNote : pChord->notes()) {
                 auto it = _slideHammerOnMap.begin(), e = _slideHammerOnMap.end();
                 for (; it != e; ++it) {
@@ -2997,5 +2979,33 @@ void GPConverter::setBeamMode(const GPBeat* beat, ChordRest* cr, Measure* measur
 
     cr->setBeamMode(m_previousBeamMode);
     m_previousBeamMode = beamMode;
+}
+
+void GPConverter::addCapos()
+{
+    const Measure* firstMeasure = _score->firstMeasure();
+    const size_t stavesCount = _score->staves().size();
+
+    Segment* segment = firstMeasure->first(SegmentType::ChordRest);
+    for (size_t i = 0; i < stavesCount; ++i) {
+        Staff* staff = _score->staff(i);
+        const auto& it = m_capoParams.find(staff->part()->id().toUint64());
+
+        if (it != m_capoParams.end() && it->second > 0) {
+            size_t track = i * VOICES;
+
+            CapoParams params;
+            params.active = true;
+            params.transposeMode = CapoParams::TransposeMode::TAB_ONLY;
+            params.fretPosition = it->second;
+
+            Capo* capo = Factory::createCapo(_score->dummy()->segment());
+            capo->setTrack(track);
+            capo->setParams(params);
+            segment->add(capo);
+
+            staff->insertCapoParams({ 0, 1 }, params, true);
+        }
+    }
 }
 } // namespace mu::iex::guitarpro
