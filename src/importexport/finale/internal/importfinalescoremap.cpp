@@ -255,7 +255,7 @@ Staff* FinaleParser::createStaff(Part* part, const MusxInstance<others::Staff> m
         ClefType concertClef = toMuseScoreClefType(concerClefDef, musxStaff);
         ClefType transposeClef = concertClef;
         if (musxStaff->transposition && musxStaff->transposition->setToClef) {
-            const MusxInstance<options::ClefOptions::ClefDef>& trasposeClefDef = musxOptions().clefOptions->getClefDef(musxStaff->transposition->setToClef);
+            const MusxInstance<options::ClefOptions::ClefDef>& trasposeClefDef = musxOptions().clefOptions->getClefDef(musxStaff->transposedClef);
             transposeClef = toMuseScoreClefType(trasposeClefDef, musxStaff);
         }
         if (concertClef == ClefType::INVALID || transposeClef == ClefType::INVALID) {
@@ -534,7 +534,7 @@ void FinaleParser::importBrackets()
     }
 }
 
-Clef* FinaleParser::createClef(const MusxInstance<musx::dom::others::Staff>& musxStaff,
+Clef* FinaleParser::createClef(const MusxInstance<others::StaffComposite>& musxStaff,
                                staff_idx_t staffIdx, ClefIndex musxClef, Measure* measure, Edu musxEduPos,
                                bool afterBarline, bool visible)
 {
@@ -542,6 +542,11 @@ Clef* FinaleParser::createClef(const MusxInstance<musx::dom::others::Staff>& mus
     ClefType entryClefType = toMuseScoreClefType(clefDef, musxStaff);
     if (entryClefType == ClefType::INVALID) {
         return nullptr;
+    }
+    ClefType transposeClefType = entryClefType;
+    if (musxStaff->transposition && musxStaff->transposition->setToClef) {
+        const MusxInstance<options::ClefOptions::ClefDef>& trasposeClefDef = musxOptions().clefOptions->getClefDef(musxStaff->transposedClef);
+        transposeClefType = toMuseScoreClefType(trasposeClefDef, musxStaff);
     }
     // Clef positions in musx are staff-level, so back out any time stretch to get global position.
     Staff* staff = measure->score()->staff(staffIdx);
@@ -552,7 +557,7 @@ Clef* FinaleParser::createClef(const MusxInstance<musx::dom::others::Staff>& mus
     Clef* clef = Factory::createClef(clefSeg);
     clef->setTrack(staff2track(staffIdx));
     clef->setConcertClef(entryClefType);
-    clef->setTransposingClef(entryClefType);
+    clef->setTransposingClef(transposeClefType);
     // clef->setShowCourtesy();
     // clef->setForInstrumentChange();
     clef->setVisible(visible && !clefDef->isBlank());
@@ -573,18 +578,25 @@ void FinaleParser::importClefs(const MusxInstance<others::StaffUsed>& musxScroll
                                ClefIndex& musxCurrClef, const MusxInstance<others::Measure>& prevMusxMeasure)
 {
     const StaffCmper musxStaffId = musxScrollViewItem->staffId;
+    const auto& musxStaffAtMeasureStart = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxStaffId, musxMeasure->getCmper(), 0);
+    IF_ASSERT_FAILED(musxStaffAtMeasureStart) {
+        logger()->logDebugTrace(u"unable to find staff composite.", musxDocument(), musxStaffId, musxMeasure->getCmper());
+        return;
+    }
     // The Finale UI requires transposition to be a full-measure staff-style assignment, so checking only the beginning of the bar should be sufficient.
     // However, it is possible to defeat this requirement using plugins. That said, doing so produces erratic results, so I'm not sure we should support it.
     // For now, only check the start of the measure.
-    const auto& musxStaffAtMeasureStart = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxStaffId, musxMeasure->getCmper(), 0);
-    if (musxStaffAtMeasureStart && musxStaffAtMeasureStart->transposition && musxStaffAtMeasureStart->transposition->setToClef) {
-        if (musxStaffAtMeasureStart->transposedClef != musxCurrClef) {
-            if (Clef* clef = createClef(musxStaffAtMeasureStart, curStaffIdx, musxStaffAtMeasureStart->transposedClef, measure, /*xEduPos*/ 0, false, true)) {
-                clef->setShowCourtesy(clef->visible() && (!prevMusxMeasure || !prevMusxMeasure->hideCaution));
-                musxCurrClef = musxStaffAtMeasureStart->transposedClef;
+    if (musxOptions().partGlobals->showTransposed) {
+        if (musxStaffAtMeasureStart->transposition && musxStaffAtMeasureStart->transposition->setToClef) {
+            if (musxStaffAtMeasureStart->transposedClef != musxCurrClef) {
+                const ClefIndex concertClef = musxStaffAtMeasureStart->calcClefIndex(/*forWrittenPitch*/false);
+                if (Clef* clef = createClef(musxStaffAtMeasureStart, curStaffIdx, concertClef, measure, /*xEduPos*/ 0, false, true)) {
+                    clef->setShowCourtesy(clef->visible() && (!prevMusxMeasure || !prevMusxMeasure->hideCaution));
+                    musxCurrClef = musxStaffAtMeasureStart->transposedClef;
+                }
             }
+            return;
         }
-        return;
     }
     if (auto gfHold = m_doc->getDetails()->get<details::GFrameHold>(m_currentMusxPartId, musxStaffId, musxMeasure->getCmper())) {
         if (gfHold->clefId.has_value()) {
@@ -1036,7 +1048,13 @@ void FinaleParser::importStaffItems()
                         ksEvent.setMode(KeyMode::NONE);
                     } else if (musxKeySig->isLinear()) {
                         ksEvent.setConcertKey(keyFromAlteration(musxKeySig->getAlteration(KeySignature::KeyContext::Concert)));
-                        ksEvent.setKey(keyFromAlteration(musxKeySig->getAlteration(KeySignature::KeyContext::Written)));
+                        if (!score()->style().styleB(Sid::concertPitch)) {
+                            ksEvent.setKey(keyFromAlteration(musxKeySig->getAlteration(KeySignature::KeyContext::Written)));
+                        } else {
+                            // Setting this to the transposing key causes MuseScore to display the transposed key in concert pitch view.
+                            // Anyway, this is what the musicxml import does, and it fixes the problem.
+                            ksEvent.setKey(ksEvent.concertKey());
+                        }
                         if (musxKeySig->isMajor()) {
                             ksEvent.setMode(KeyMode::MAJOR);
                         } else if (musxKeySig->isMinor()) {
@@ -1534,7 +1552,7 @@ void FinaleParser::importPageLayout()
             s->setVisible(!staffIsInvisible);
         }
         if (alwaysVisible || alwaysInvisible) {
-            p->setHideWhenEmpty(AutoOnOff::AUTO);
+            p->setHideWhenEmpty(alwaysVisible ? AutoOnOff::OFF : AutoOnOff::AUTO);
             p->setShow(alwaysVisible);
         }
     }
