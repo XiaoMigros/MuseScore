@@ -147,6 +147,8 @@ class UndoStack;
 
 class ShadowNote;
 
+class IAutomation;
+
 struct Interval;
 struct NoteVal;
 struct ShowAnchors;
@@ -775,7 +777,7 @@ public:
 
     void updateSwing();
 
-    void updateCapo();
+    void updateCapo(bool ignoreNotationUpdate = false);
     void updateChannel();
 
     void cmdConcertPitchChanged(bool);
@@ -1065,6 +1067,8 @@ public:
     const std::map<size_t, std::array<SystemDivider*, 2> > systemDividers() const { return m_systemDividers; }
     SystemDivider* systemDivider(size_t systemIdx, SystemDividerType type) const;
     void addSystemDivider(size_t systemIdx, SystemDivider* divider);
+
+    virtual IAutomation* automation() const;
 
     friend class Chord;
 

@@ -104,6 +104,8 @@
 #include "utils.h"
 #include "volta.h"
 
+#include "engraving/automation/iautomation.h"
+
 #ifndef ENGRAVING_NO_ACCESSIBILITY
 #include "accessibility/accessibleitem.h"
 #include "accessibility/accessibleroot.h"
@@ -4481,6 +4483,16 @@ void Score::insertTime(const Fraction& tick, const Fraction& len)
     for (Part* part : parts()) {
         part->insertTime(tick, len);
     }
+
+    if (isMaster() && automation()) {
+        const int utick = repeatList().tick2utick(tick.ticks());
+
+        if (len.negative()) {
+            automation()->removeTicks(utick, std::abs(len.ticks()));
+        } else if (len.isNotZero()) {
+            automation()->moveTicks(utick, utick + len.ticks());
+        }
+    }
 }
 
 //---------------------------------------------------------
@@ -6048,12 +6060,8 @@ void Score::updateSwing()
 //   updateCapo
 //---------------------------------------------------------
 
-void Score::updateCapo()
+void Score::updateCapo(bool ignoreNotationUpdate /* = false */)
 {
-    for (Staff* s : m_staves) {
-        s->clearCapoParams();
-    }
-
     Measure* fm = firstMeasure();
     if (!fm) {
         return;
@@ -6072,7 +6080,7 @@ void Score::updateCapo()
             }
 
             for (Staff* staff : e->staff()->staffList()) {
-                staff->insertCapoParams(segmentTick, toCapo(e)->params());
+                staff->insertCapoParams(segmentTick, toCapo(e)->params(), ignoreNotationUpdate);
             }
         }
     }
@@ -6178,6 +6186,8 @@ void Score::addSystemDivider(size_t systemIdx, SystemDivider* divider)
 
     m_systemDividers.at(systemIdx)[static_cast<size_t>(divider->dividerType())] = divider;
 }
+
+IAutomation* Score::automation() const { return m_masterScore->automation(); }
 
 UndoStack* Score::undoStack() const { return m_masterScore->undoStack(); }
 const RepeatList& Score::repeatList()  const { return m_masterScore->repeatList(); }
