@@ -267,7 +267,7 @@ class FinaleParser : public muse::Injectable
 public:
     muse::Inject<mu::engraving::IEngravingFontsProvider> engravingFonts = { this };
 
-    FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger);
+    FinaleParser(engraving::MasterScore* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger);
 
     void parse();
 
@@ -357,10 +357,13 @@ private:
                            engraving::Staff* staff, engraving::Measure* measure);
 
     engraving::Score* m_score;
+    musx::dom::Cmper m_currentPartId;
+    engraving::MasterScore* m_masterScore;
+    const musx::dom::Cmper m_currentMusxPartId = musx::dom::SCORE_PARTID; /// @todo rename to m_masterPartId
+    std::unordered_map<musx::dom::Cmper, engraving::Score*> m_scorePartList; // list of part (not-main) scores and associated Cmpers
     const std::shared_ptr<musx::dom::Document> m_doc;
     FinaleOptions m_finaleOptions;
     FinaleLoggerPtr m_logger;
-    const musx::dom::Cmper m_currentMusxPartId = musx::dom::SCORE_PARTID; // eventually this may be changed per excerpt/linked part
     bool m_smallNoteMagFound = false;
     std::unordered_map<std::string, const engraving::IEngravingFontPtr> m_engravingFonts;
 

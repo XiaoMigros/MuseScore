@@ -20,7 +20,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "internal/importfinaleparser.h"
-#include "engraving/dom/measurenumber.h"
 #include "internal/importfinalelogger.h"
 #include "internal/finaletypesconv.h"
 
@@ -32,8 +31,10 @@
 #include "global/stringutils.h"
 #include "types/string.h"
 
+#include "engraving/dom/excerpt.h"
 #include "engraving/dom/linkedobjects.h"
 #include "engraving/dom/masterscore.h"
+#include "engraving/dom/measurenumber.h"
 #include "engraving/dom/mscore.h"
 
 #include "log.h"
@@ -45,8 +46,8 @@ using namespace mu::iex::finale;
 
 namespace mu::iex::finale {
 
-FinaleParser::FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger)
-    : m_score(score), m_doc(doc), m_logger(logger), m_embeddedGraphics(std::move(graphics))
+FinaleParser::FinaleParser(engraving::MasterScore* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger)
+    : m_masterScore(score), m_doc(doc), m_logger(logger), m_embeddedGraphics(std::move(graphics))
 {
     const std::vector<IEngravingFontPtr> fonts = engravingFonts()->fonts();
     for (const IEngravingFontPtr& font : fonts) {
@@ -57,23 +58,53 @@ FinaleParser::FinaleParser(engraving::Score* score, const std::shared_ptr<musx::
 
 void FinaleParser::parse()
 {
-    // set score metadata
+    // Create parts
+    const MusxInstanceList<others::PartDefinition>& partDefinitions = others::PartDefinition::getInUserOrder(m_doc);
+    for (const auto& partDef : partDefinitions) {
+        if (partDef->isScore()) {
+            continue;
+        }
+        Score* s = m_masterScore->createScore();
+
+        Excerpt* ex = new Excerpt(m_masterScore);
+        ex->setExcerptScore(s);
+        ex->setName(String::fromStdString(partDef->getName()));
+
+        // s->linkMeasures(m);
+        m_masterScore->addExcerpt(ex);
+        m_scorePartList.emplace(partDef->getCmper(), s);
+    }
+
+    // Set score metadata
     muse::Date creationDate(m_doc->getHeader()->created.year, m_doc->getHeader()->created.month, m_doc->getHeader()->created.day);
-    m_score->setMetaTag(u"creationDate", creationDate.toString(muse::DateFormat::ISODate));
+    m_masterScore->setMetaTag(u"creationDate", creationDate.toString(muse::DateFormat::ISODate));
     MusxInstanceList<texts::FileInfoText> fileInfoTexts = m_doc->getTexts()->getArray<texts::FileInfoText>();
     for (const MusxInstance<texts::FileInfoText>& fileInfoText : fileInfoTexts) {
         String metaTag = metaTagFromFileInfo(fileInfoText->getTextType());
         std::string fileInfoValue = musx::util::EnigmaString::trimTags(fileInfoText->text);
         if (!metaTag.empty() && !fileInfoValue.empty()) {
-            m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
+            m_masterScore->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
         }
     }
 
-    // styles (first, so that spatium and other defaults are correct)
-    importStyles();
+    auto doForMasterThenParts = [this](std::function<void()> apply) {
+        m_score = m_masterScore;
+        m_currentPartId = m_currentMusxPartId;
+        apply();
+        for (auto [partId, score] : m_scorePartList) {
+            m_score = score;
+            m_currentPartId = partId;
+            apply();
+        }
+        m_score = m_masterScore;
+        m_currentPartId = m_currentMusxPartId;
+    };
+
+    // Styles (first, so that spatium and other defaults are correct)
+    doForMasterThenParts([this]() { importStyles(); });
 
     // scoremap
-    importParts();
+    doForMasterThenParts([this]() { importParts(); });
     importBrackets();
     importMeasures();
     importStaffItems();
@@ -147,6 +178,7 @@ void FinaleParser::parse()
             m_score->addElement(copy);
         }
     }
+    m_masterScore->setExcerptsChanged(false);
     logger()->logInfo(String(u"Import complete. Opening file..."));
 }
 
@@ -167,7 +199,7 @@ staff_idx_t FinaleParser::staffIdxForRepeats(bool onlyTop, Cmper staffList, Cmpe
     }
     std::vector<StaffCmper> list;
     if (partScore()) {
-        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatParts>(m_currentMusxPartId, staffList)) {
+        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatParts>(m_currentPartId, staffList)) {
             list = l->values;
         }
     } else {
@@ -176,14 +208,14 @@ staff_idx_t FinaleParser::staffIdxForRepeats(bool onlyTop, Cmper staffList, Cmpe
         }
     }
     for (StaffCmper musxStaffId : list) {
-        if (const auto& musxStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxStaffId, measureId, 0)) {
+        if (const auto& musxStaff = others::StaffComposite::createCurrent(m_doc, m_currentPartId, musxStaffId, measureId, 0)) {
             if (musxStaff->hideRepeats) {
                 muse::remove(list, musxStaffId);
             }
         }
     }
     if (partScore()) {
-        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatPartsForced>(m_currentMusxPartId, staffList)) {
+        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatPartsForced>(m_currentPartId, staffList)) {
             muse::join(list, l->values);
         }
     } else {

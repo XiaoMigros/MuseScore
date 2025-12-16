@@ -344,6 +344,10 @@ static void writeLyricsPrefs(MStyle& style, const FinaleParser& context)
 
 static void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
 {
+    setStyle(style, Sid::hideEmptyStaves, context.musxDocument()->calcHasVaryingSystemStaves(context.currentMusxPartId()));
+    if (context.partScore()) {
+        return;
+    }
     const auto& prefs = context.musxOptions();
 
     writeEfixSpace(style, Sid::barWidth, prefs.barlineOptions->barlineWidth);
@@ -420,8 +424,6 @@ static void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
 
     setStyle(style, Sid::keySigNaturals, prefs.keyOptions->doKeyCancel ? int(KeySigNatural::BEFORE) : int(KeySigNatural::NONE));
     setStyle(style, Sid::keySigShowNaturalsChangingSharpsFlats, prefs.keyOptions->doKeyCancelBetweenSharpsFlats);
-
-    setStyle(style, Sid::hideEmptyStaves, context.musxDocument()->calcHasVaryingSystemStaves(context.currentMusxPartId()));
 
     setStyle(style, Sid::placeClefsBeforeRepeats, true);
     setStyle(style, Sid::showCourtesiesRepeats,false);
@@ -876,6 +878,9 @@ static void writeMarkingPrefs(MStyle& style, const FinaleParser& context)
 
 void FinaleParser::importStyles()
 {
+    if (partScore()) {
+        m_score->setStyle(m_masterScore->style());
+    }
     MStyle& style = m_score->style();
     writePagePrefs(style, *this);
     writeLyricsPrefs(style, *this);

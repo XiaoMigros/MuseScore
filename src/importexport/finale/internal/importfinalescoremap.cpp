@@ -36,6 +36,7 @@
 #include "engraving/dom/bracketItem.h"
 #include "engraving/dom/clef.h"
 #include "engraving/dom/drumset.h"
+#include "engraving/dom/excerpt.h"
 #include "engraving/dom/factory.h"
 #include "engraving/dom/groups.h"
 #include "engraving/dom/instrument.h"
@@ -310,8 +311,11 @@ Staff* FinaleParser::createStaff(Part* part, const MusxInstance<others::Staff> m
     }
 
     m_score->appendStaff(s);
-    m_inst2Staff.emplace(StaffCmper(musxStaff->getCmper()), s->idx());
-    m_staff2Inst.emplace(s->idx(), StaffCmper(musxStaff->getCmper()));
+    /// @todo create sensible maps for part scores as well.
+    if (!partScore()) {
+        m_inst2Staff.emplace(StaffCmper(musxStaff->getCmper()), s->idx());
+        m_staff2Inst.emplace(s->idx(), StaffCmper(musxStaff->getCmper()));
+    }
     return s;
 }
 
@@ -367,7 +371,7 @@ void FinaleParser::importMeasures()
 
 void FinaleParser::importParts()
 {
-    MusxInstanceList<others::StaffUsed> scrollView = m_doc->getScrollViewStaves(m_currentMusxPartId);
+    const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getScrollViewStaves(m_currentMusxPartId);
 
     const bool hideEmptyStaves = m_score->style().styleB(Sid::hideEmptyStaves);
     const AutoOnOff doNotHideVal = hideEmptyStaves ? AutoOnOff::OFF : AutoOnOff::AUTO;
@@ -419,6 +423,33 @@ void FinaleParser::importParts()
         }
 
         m_score->appendPart(part);
+
+        if (partScore()) {
+            staff_idx_t pStaff = muse::value(m_inst2Staff, staff->getCmper(), muse::nidx);
+            if (pStaff != muse::nidx) {
+                Part* p = m_masterScore->staff(pStaff)->part();
+                part->linkTo(p);
+                for (size_t i = 0; i < std::min(part->staves().size(), p->staves().size()); ++i) {
+                    part->staves().at(i)->linkTo(p->staves().at(i));
+                }
+            }
+        }
+    }
+
+    if (partScore()) {
+        std::set<Part*> usedParts;
+        for (const MusxInstance<others::StaffUsed>& item : m_doc->getScrollViewStaves(m_currentPartId)) {
+            if (Staff* s = staffFromCmper(item->staffId)) {
+                usedParts.insert(s->part());
+            }
+        }
+        if (usedParts.empty()) {
+            m_score->excerpt()->setParts(m_score->parts());
+        } else {
+            for (Part* p : usedParts) {
+                m_score->excerpt()->parts().push_back(p);
+            }
+        }
     }
 }
 
