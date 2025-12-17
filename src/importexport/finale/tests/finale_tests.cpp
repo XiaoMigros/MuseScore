@@ -162,6 +162,7 @@ void Finale_Tests::enigmaXmlImportTestRef(const char* file)
         finaleImportTestRef(#name); \
     }
 
+MUSX_IMPORT_TEST(onePartOneMeasure)
 MUSX_IMPORT_TEST(texts)
 MUSX_IMPORT_TEST(tremtest)
 MUSX_IMPORT_TEST_EDIT(texts)
@@ -177,7 +178,6 @@ MUSX_IMPORT_TEST_DISABLED(onePartNoMeasures)
 MUSX_IMPORT_TEST(grandStaffPartNoMeasures)
 MUSX_IMPORT_TEST_DISABLED(twoPartsNoMeasures)
 MUSX_IMPORT_TEST(twoPartsNoMeasuresWithBracket)
-MUSX_IMPORT_TEST_DISABLED(onePartOneMeasure)
 MUSX_IMPORT_TEST(onePartOneMeasureWithNotes)
 MUSX_IMPORT_TEST(oneMeasureCrossStaff)
 MUSX_IMPORT_TEST(onePartOneMeasureWithTuplets)

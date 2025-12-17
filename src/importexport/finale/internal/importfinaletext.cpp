@@ -811,7 +811,7 @@ void FinaleParser::importTextExpressions()
             }
             p.rx() += absoluteDoubleFromEvpu(expressionDef->measXAdjust, expr);
 
-            StaffCmper effectiveMusxStaffId = exprAssign->staffAssign >= 0 ? exprAssign->staffAssign : muse::value(m_staff2Inst, expr->staffIdx(), 1);
+            StaffCmper effectiveMusxStaffId = exprAssign->staffAssign >= 0 ? exprAssign->staffAssign : muse::value(m_staff2Inst, expr->staff()->id(), 1);
             const MusxInstance<others::StaffComposite> musxStaff = exprAssign->createCurrentStaff();
             const Staff* staff = m_score->staff(expr->staffIdx());
             const double staffReferenceOffset = musxStaff->calcTopLinePosition() * 0.5 * staff->spatium(s->tick()) * staff->staffType(s->tick())->lineDistance().val();
@@ -1027,7 +1027,7 @@ void FinaleParser::importTextExpressions()
         // per staff style calculations
         const MusxInstance<others::Staff>& rawStaff = m_doc->getOthers()->get<others::Staff>(m_currentMusxPartId, musxScrollViewItem->staffId);
 
-        staff_idx_t curStaffIdx = muse::value(m_inst2Staff, musxScrollViewItem->staffId, muse::nidx);
+        staff_idx_t curStaffIdx = staffIdxFromCmper(musxScrollViewItem->staffId);
         IF_ASSERT_FAILED(curStaffIdx != muse::nidx) {
             logger()->logWarning(String(u"MeasureTextAssign: Musx inst value not found for staff cmper %1").arg(String::fromStdString(std::to_string(rawStaff->getCmper()))));
             continue;

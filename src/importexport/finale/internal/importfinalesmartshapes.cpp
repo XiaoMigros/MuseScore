@@ -342,7 +342,7 @@ void FinaleParser::importSmartShapes()
                 }
             }
             logger()->logInfo(String(u"No anchor found"));
-            staff_idx_t staffIdx = muse::value(m_inst2Staff, termSeg->endPoint->staffId, muse::nidx);
+            staff_idx_t staffIdx = staffIdxFromCmper(termSeg->endPoint->staffId);
             Fraction mTick = muse::value(m_meas2Tick, termSeg->endPoint->measId, Fraction(-1, 1));
             Measure* measure = !mTick.negative() ? m_score->tick2measure(mTick) : nullptr;
             if (!measure || staffIdx == muse::nidx) {
@@ -423,8 +423,8 @@ void FinaleParser::importSmartShapes()
             newSpanner->setEndElement(endElement);
         } else {
             newSpanner->setAnchor(Spanner::Anchor::SEGMENT);
-            staff_idx_t staffIdx1 = muse::value(m_inst2Staff, smartShape->startTermSeg->endPoint->staffId, muse::nidx);
-            staff_idx_t staffIdx2 = muse::value(m_inst2Staff, smartShape->endTermSeg->endPoint->staffId, muse::nidx);
+            staff_idx_t staffIdx1 = staffIdxFromCmper(smartShape->startTermSeg->endPoint->staffId);
+            staff_idx_t staffIdx2 = staffIdxFromCmper(smartShape->endTermSeg->endPoint->staffId);
             if (staffIdx1 == muse::nidx || staffIdx2 == muse::nidx) {
                 logger()->logInfo(String(u"No start/end staff for spanner of %1 type").arg(TConv::userName(type).translated()));
                 delete newSpanner;

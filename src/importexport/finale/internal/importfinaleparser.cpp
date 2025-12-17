@@ -186,7 +186,7 @@ staff_idx_t FinaleParser::staffIdxFromAssignment(StaffCmper assign)
     switch (assign) {
     case -1: return 0;
     case -2: return m_score->nstaves() - 1;
-    default: return muse::value(m_inst2Staff, assign, muse::nidx);
+    default: return staffIdxFromCmper(assign);
     }
 }
 
@@ -244,6 +244,23 @@ void setAndStyleProperty(EngravingObject* e, Pid id, PropertyValue v, bool inher
     }
     const bool canLeaveStyled = inheritStyle && (e->getProperty(id) == e->propertyDefault(id));
     e->setPropertyFlags(id, canLeaveStyled ? PropertyFlags::STYLED : PropertyFlags::UNSTYLED);
+}
+
+Staff* FinaleParser::staffFromCmper(const StaffCmper& musxStaffId)
+{
+    const muse::ID staffId = muse::value(m_inst2Staff, musxStaffId, mu::engraving::INVALID_ID);
+    if (staffId != mu::engraving::INVALID_ID) {
+        return m_score->staffById(staffId);
+    }
+    return nullptr;
+}
+
+staff_idx_t FinaleParser::staffIdxFromCmper(const StaffCmper& musxStaffId)
+{
+    if (Staff* s = staffFromCmper(musxStaffId)) {
+        return s->idx();
+    }
+    return muse::nidx;
 }
 
 }

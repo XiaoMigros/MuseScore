@@ -410,7 +410,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr::InterpretedIterator result, tr
         NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, i);
         if (noteInfoPtr->crossStaff) {
             StaffCmper nextMusxStaff = noteInfoPtr.calcStaff();
-            staff_idx_t crossStaffIdx = muse::value(m_inst2Staff, nextMusxStaff, muse::nidx);
+            staff_idx_t crossStaffIdx = staffIdxFromCmper(nextMusxStaff);
             IF_ASSERT_FAILED(crossStaffIdx != muse::nidx) {
                 logger()->logWarning(String(u"Collect cross staffing: Musx inst value not found for staff cmper %1").arg(String::fromStdString(std::to_string(nextMusxStaff))));
                 continue;
@@ -652,7 +652,7 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr::InterpretedIterator result, tr
         // This allows MuseScore code to calculate correctly the voice offset for the rest.
         if (!currentEntry->floatRest && !currentEntry->notes.empty()) {
             NoteInfoPtr noteInfoPtr = NoteInfoPtr(entryInfo, 0);
-            StaffCmper targetMusxStaffId = muse::value(m_staff2Inst, idx, 0);
+            StaffCmper targetMusxStaffId = muse::value(m_staff2Inst, m_score->staff(idx)->id(), 0);
             IF_ASSERT_FAILED (targetMusxStaffId) {
                 logger()->logWarning(String(u"Entry %1 (a rest) was not mapped to a known musx staff.").arg(currentEntry->getEntryNumber()), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
                 return false;
@@ -1011,15 +1011,14 @@ void FinaleParser::importEntries()
     std::vector<engraving::Note*> notesWithUnmanagedTies;
     m_track2Layer.assign(m_score->ntracks(), std::map<int, LayerIndex>{});
     for (const MusxInstance<others::StaffUsed>& musxScrollViewItem : musxScrollView) {
-        StaffCmper musxStaffId = musxScrollViewItem->staffId;
-        staff_idx_t curStaffIdx = muse::value(m_inst2Staff, musxStaffId, muse::nidx);
-        IF_ASSERT_FAILED (curStaffIdx != muse::nidx) {
+        const StaffCmper musxStaffId = musxScrollViewItem->staffId;
+        Staff* curStaff = staffFromCmper(musxStaffId);
+        IF_ASSERT_FAILED (curStaff) {
             logger()->logWarning(String(u"Add entries: Musx inst value not found."), m_doc, musxStaffId, 1);
             continue;
         }
+        staff_idx_t curStaffIdx = curStaff->idx();
         track_idx_t staffTrackIdx = staff2track(curStaffIdx);
-
-        Staff* curStaff = m_score->staff(curStaffIdx);
 
         for (const MusxInstance<others::Measure>& musxMeasure : musxMeasures) {
             MeasCmper measureId = musxMeasure->getCmper();

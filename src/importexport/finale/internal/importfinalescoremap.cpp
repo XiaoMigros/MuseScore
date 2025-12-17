@@ -310,11 +310,17 @@ Staff* FinaleParser::createStaff(Part* part, const MusxInstance<others::Staff> m
         }
     }
 
+    // Staff ID
+    s->setId(std::to_string(musxStaff->getCmper()));
+
     m_score->appendStaff(s);
     /// @todo create sensible maps for part scores as well.
-    if (!partScore()) {
-        m_inst2Staff.emplace(StaffCmper(musxStaff->getCmper()), s->idx());
-        m_staff2Inst.emplace(s->idx(), StaffCmper(musxStaff->getCmper()));
+    if (partScore()) {
+        Staff* masterStaff = m_masterScore->staffById(s->id());
+        s->linkTo(masterStaff);
+    } else {
+        m_inst2Staff.emplace(StaffCmper(musxStaff->getCmper()), s->id());
+        m_staff2Inst.emplace(s->id(), StaffCmper(musxStaff->getCmper()));
     }
     return s;
 }
@@ -427,13 +433,8 @@ void FinaleParser::importParts()
         m_score->appendPart(part);
 
         if (partScore()) {
-            staff_idx_t pStaff = muse::value(m_inst2Staff, staff->getCmper(), muse::nidx);
-            if (pStaff != muse::nidx) {
-                Part* p = m_masterScore->staff(pStaff)->part();
-                part->linkTo(p);
-                for (size_t i = 0; i < std::min(part->staves().size(), p->staves().size()); ++i) {
-                    part->staves().at(i)->linkTo(p->staves().at(i));
-                }
+            if (Staff* masterStaff = m_masterScore->staffById(part->staves().front()->id())) {
+                part->linkTo(masterStaff->part());
             }
         }
     }
@@ -527,7 +528,7 @@ void FinaleParser::importBrackets()
             logger()->logWarning(String(u"Group info encountered missing start or end staff information"));
             continue;
         }
-        staff_idx_t startStaffIdx = muse::value(m_inst2Staff, StaffCmper(musxStartStaff->getCmper()), muse::nidx);
+        staff_idx_t startStaffIdx = staffIdxFromCmper(musxStartStaff->getCmper());
         IF_ASSERT_FAILED(startStaffIdx != muse::nidx) {
             logger()->logWarning(String(u"Create brackets: Musx inst value not found for staff cmper %1").arg(String::fromStdString(std::to_string(musxStartStaff->getCmper()))));
             continue;
@@ -923,7 +924,7 @@ void FinaleParser::importStaffItems()
             logger()->logWarning(String(u"Unable to retrieve musx raw staff"), m_doc, musxStaffId, 1);
             return;
         }
-        staff_idx_t staffIdx = muse::value(m_inst2Staff, musxStaffId, muse::nidx);
+        staff_idx_t staffIdx = staffIdxFromCmper(musxStaffId);
         Staff* staff = staffIdx != muse::nidx ? m_score->staff(staffIdx) : nullptr;
         IF_ASSERT_FAILED(staff) {
             logger()->logWarning(String(u"Unable to retrieve staff by idx"), m_doc, musxStaffId);
@@ -1529,7 +1530,7 @@ void FinaleParser::importPageLayout()
         std::vector<staff_idx_t> visibleStaves;
         visibleStaves.reserve(instrumentsUsedInSystem.size());
         for (const MusxInstance<others::StaffUsed>& musxStaff : instrumentsUsedInSystem) {
-            visibleStaves.emplace_back(muse::value(m_inst2Staff, musxStaff->staffId, muse::nidx));
+            visibleStaves.emplace_back(staffIdxFromCmper(musxStaff->staffId));
         }
         for (staff_idx_t j = 0; j < m_score->nstaves(); ++j) {
             Staff* s = m_score->staff(j);
@@ -1551,7 +1552,7 @@ void FinaleParser::importPageLayout()
         if (isFirstSystemOnPage) {
             Spacer* upSpacer = Factory::createSpacer(startMeasure);
             upSpacer->setSpacerType(SpacerType::UP);
-            upSpacer->setTrack(staff2track(muse::value(m_inst2Staff, instrumentsUsedInSystem.at(0)->staffId, 0)));
+            upSpacer->setTrack(staff2track(std::max(staffIdxFromCmper(instrumentsUsedInSystem.at(0)->staffId), staff_idx_t(0))));
             upSpacer->setGap(absoluteSpatiumFromEvpu(-leftStaffSystem->top - leftStaffSystem->distanceToPrev * systemScaling, upSpacer)); // (signs reversed)
             /// @todo account for title frames / perhaps header frames
             startMeasure->add(upSpacer);
@@ -1559,7 +1560,7 @@ void FinaleParser::importPageLayout()
         if (!isLastSystemOnPage) {
             Spacer* downSpacer = Factory::createSpacer(startMeasure);
             downSpacer->setSpacerType(SpacerType::FIXED);
-            downSpacer->setTrack(staff2track(muse::value(m_inst2Staff, instrumentsUsedInSystem.at(instrumentsUsedInSystem.size() - 1)->staffId, m_score->nstaves() - 1)));
+            downSpacer->setTrack(staff2track(std::min(staffIdxFromCmper(instrumentsUsedInSystem.at(instrumentsUsedInSystem.size() - 1)->staffId), m_score->nstaves() - 1)));
             downSpacer->setGap(absoluteSpatiumFromEvpu(-rightStaffSystem->bottom * systemScaling - staffSystems[i+1]->top
                                                        - staffSystems[i+1]->distanceToPrev * musxFractionToFraction(staffSystems[i+1]->calcEffectiveScaling()).toDouble(), downSpacer)
                                - Spatium::fromMM(downSpacer->staff()->staffHeight(startMeasure->tick()), downSpacer->spatium())); // (signs reversed)
@@ -1570,8 +1571,8 @@ void FinaleParser::importPageLayout()
         for (size_t j = 1; j < instrumentsUsedInSystem.size(); ++j) {
             const MusxInstance<others::StaffUsed>& prevMusxStaff = instrumentsUsedInSystem[j - 1];
             const MusxInstance<others::StaffUsed>& nextMusxStaff = instrumentsUsedInSystem[j];
-            staff_idx_t prevStaffIdx = muse::value(m_inst2Staff, prevMusxStaff->staffId, muse::nidx);
-            staff_idx_t nextStaffIdx = muse::value(m_inst2Staff, nextMusxStaff->staffId, muse::nidx);
+            staff_idx_t prevStaffIdx = staffIdxFromCmper(prevMusxStaff->staffId);
+            staff_idx_t nextStaffIdx = staffIdxFromCmper(nextMusxStaff->staffId);
             if (nextStaffIdx == muse::nidx || prevStaffIdx == muse::nidx) {
                 continue;
             }
