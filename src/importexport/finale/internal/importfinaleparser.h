@@ -377,7 +377,7 @@ private:
     ReadableCustomLineMap m_customLines;
     ReadableExpressionMap m_expressions;
     ReadableRepeatTextMap m_repeatTexts;
-    std::set<engraving::staff_idx_t> m_systemObjectStaves;
+    std::map<musx::dom::Cmper, std::set<engraving::staff_idx_t>> m_systemObjectStaves;
 };
 
 extern void setAndStyleProperty(mu::engraving::EngravingObject* e, mu::engraving::Pid id,

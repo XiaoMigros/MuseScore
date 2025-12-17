@@ -981,7 +981,7 @@ void FinaleParser::importTextExpressions()
         };
 
         if (item->systemFlag()) {
-            m_systemObjectStaves.insert(item->staffIdx());
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(item->staffIdx());
             parsedAssignments.push_back(expressionId);
             if (!expressionAssignment->staffList) {
                 continue;
@@ -1009,7 +1009,7 @@ void FinaleParser::importTextExpressions()
                 positionExpression(copy, linkedAssignment);
                 collectElementStyle(copy);
                 resizeExpressionIfNeeded(copy, linkedAssignment);
-                m_systemObjectStaves.insert(linkedStaffIdx);
+                muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
                 parsedAssignments.push_back(linkedExpressionId);
             }
         }
@@ -1159,7 +1159,7 @@ void FinaleParser::importTextExpressions()
 
         measure->add(item);
         collectElementStyle(item);
-        m_systemObjectStaves.insert(curStaffIdx);
+        muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
 
         for (auto [linkedStaffIdx, linkedMusxStaffId] : links) {
             /// @todo improved handling for bottom system objects
@@ -1174,7 +1174,7 @@ void FinaleParser::importTextExpressions()
             copy->linkTo(item);
             measure->add(copy);
             collectElementStyle(copy);
-            m_systemObjectStaves.insert(linkedStaffIdx);
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
         }
         /// @todo fine-tune playback
     }

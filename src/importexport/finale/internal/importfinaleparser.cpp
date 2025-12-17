@@ -153,32 +153,38 @@ void FinaleParser::parse()
 
     // Setup system object staves
     logger()->logInfo(String(u"Initialising system object staves"));
-    for (staff_idx_t staffIdx : m_systemObjectStaves) {
-        m_score->addSystemObjectStaff(m_score->staff(staffIdx));
-    }
-    std::vector<EngravingItem*> systemObjects = collectSystemObjects(m_score, m_score->staves());
-    for (EngravingItem* e : systemObjects) {
-        // cross-reference links with sys obj staves and add invisible linked clones as needed
-        std::set<staff_idx_t> unusedStaves = m_systemObjectStaves;
-        if (e->links()) {
-            for (EngravingObject* scoreElement : *e->links()) {
-                muse::remove(systemObjects, toEngravingItem(scoreElement));
-                muse::remove(unusedStaves, toEngravingItem(scoreElement)->staffIdx());
-            }
-        } else {
-            muse::remove(unusedStaves, e->staffIdx());
+    doForMasterThenParts([this]() {
+        std::set<engraving::staff_idx_t> sysObjStaffList = muse::value(m_systemObjectStaves, m_currentPartId);
+        for (staff_idx_t staffIdx : sysObjStaffList) {
+            m_score->addSystemObjectStaff(m_score->staff(staffIdx));
         }
-        for (staff_idx_t staffIdx : unusedStaves) {
-            EngravingItem* copy = e->clone();
-            copy->setStaffIdx(staffIdx);
-            copy->setVisible(false);
-            copy->linkTo(e);
-            if (!e->isSpanner()) {
-                copy->setParent(e->parentItem());
+        std::vector<EngravingItem*> systemObjects = collectSystemObjects(m_score, m_score->staves());
+        for (EngravingItem* e : systemObjects) {
+            // cross-reference links with sys obj staves and add invisible linked clones as needed
+            std::set<staff_idx_t> unusedStaves = sysObjStaffList;
+            if (e->links()) {
+                for (EngravingObject* scoreElement : *e->links()) {
+                    if (e->score() == m_score) {
+                        muse::remove(systemObjects, toEngravingItem(scoreElement));
+                        muse::remove(unusedStaves, toEngravingItem(scoreElement)->staffIdx());
+                    }
+                }
+            } else {
+                muse::remove(unusedStaves, e->staffIdx());
             }
-            m_score->addElement(copy);
+            for (staff_idx_t staffIdx : unusedStaves) {
+                EngravingItem* copy = e->clone();
+                copy->setStaffIdx(staffIdx);
+                copy->setVisible(false);
+                copy->linkTo(e);
+                if (!e->isSpanner()) {
+                    copy->setParent(e->parentItem());
+                }
+                m_score->addElement(copy);
+            }
         }
-    }
+    });
+
     m_masterScore->setExcerptsChanged(false);
     logger()->logInfo(String(u"Import complete. Opening file..."));
 }

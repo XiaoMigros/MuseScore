@@ -812,7 +812,7 @@ void FinaleParser::importSmartShapes()
         }
 
         if (newSpanner->systemFlag()) {
-            m_systemObjectStaves.insert(newSpanner->staffIdx());
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(newSpanner->staffIdx());
         }
     }
 
@@ -859,7 +859,7 @@ void FinaleParser::importSmartShapes()
             volta->setEndings(passList->values);
         }
         m_score->addElement(volta);
-        m_systemObjectStaves.insert(curStaffIdx);
+        muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
 
         volta->fixupSegments(1, [volta](System* parent) { return volta->createLineSegment(parent); });
         VoltaSegment* vs = toVoltaSegment(volta->frontSegment());
@@ -916,7 +916,7 @@ void FinaleParser::importSmartShapes()
             }
             copy->linkTo(volta);
             measure->add(copy);
-            m_systemObjectStaves.insert(linkedStaffIdx);
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
         }
         openings.push_back(volta);
     }
@@ -967,7 +967,7 @@ void FinaleParser::importSmartShapes()
                 cur->setStaffIdx(curStaffIdx);
                 cur->linkTo(prev);
                 measure->add(cur);
-                m_systemObjectStaves.insert(curStaffIdx);
+                muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
             }
             if (cur->voltaType() == Volta::Type::OPEN) {
                 cur->setEndHookHeight(0.0_sp);
@@ -987,7 +987,7 @@ void FinaleParser::importSmartShapes()
             cur->setAutoplace(false);
             cur->setText(String());
             m_score->addElement(cur);
-            m_systemObjectStaves.insert(curStaffIdx);
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
         }
 
         cur->fixupSegments(1, [cur](System* parent) { return cur->createLineSegment(parent); });
@@ -1049,7 +1049,7 @@ void FinaleParser::importSmartShapes()
                 copy->setStaffIdx(linkedStaffIdx);
                 copy->linkTo(cur);
                 measure->add(copy);
-                m_systemObjectStaves.insert(linkedStaffIdx);
+                muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
             }
 
             copy->fixupSegments(1, [copy](System* parent) { return copy->createLineSegment(parent); });
