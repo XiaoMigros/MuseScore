@@ -73,7 +73,7 @@ void FinaleParser::doForMasterThenParts(std::function<void()> apply)
 void FinaleParser::parse()
 {
     // Create parts
-    const MusxInstanceList<others::PartDefinition>& partDefinitions = others::PartDefinition::getInUserOrder(m_doc);
+    const MusxInstanceList<others::PartDefinition> partDefinitions = others::PartDefinition::getInUserOrder(m_doc);
     for (const auto& partDef : partDefinitions) {
         if (partDef->isScore()) {
             continue;

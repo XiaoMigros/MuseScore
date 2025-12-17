@@ -1736,7 +1736,7 @@ void FinaleParser::importPageTexts()
             /// @todo Refine this calculation. The idea is to back out everything out of mag except the page percent. This is getting
             /// the right font size to within a fraction of a point. I'm not sure what is causing the error.
             /// Also, I do not know if it handles staff-level scaling or even if it needs to.
-            double systemScaling = musxOptions().pageFormat->calcSystemScaling().toDouble(); // fallback value
+            double systemScaling = muse::value(musxOptions().pageFormats, m_currentPartId)->calcSystemScaling().toDouble(); // fallback value
             MeasCmper measId = muse::value(m_tick2Meas, mb->tick(), 0);
             if (measId > 0) {
                 if (const MusxInstance<others::StaffSystem> system = m_doc->calculateSystemFromMeasure(m_currentMusxPartId, measId)) {

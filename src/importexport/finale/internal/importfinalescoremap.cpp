@@ -208,7 +208,7 @@ static String nameFromEnigmaText(const FinaleParser& ctx, const MusxInstance<oth
     /// @todo is this scaled correctly? MS scales relative to largest staff spatium used
     const MusxInstanceList<others::StaffUsed> systemOneStaves = ctx.musxDocument()->getOthers()->getArray<others::StaffUsed>(ctx.currentMusxPartId(), 1);
     if (std::optional<size_t> index = systemOneStaves.getIndexForStaff(staff->getCmper())) {
-        const musx::util::Fraction staffMag = systemOneStaves[index.value()]->calcEffectiveScaling() / ctx.musxOptions().combinedDefaultStaffScaling;
+        const musx::util::Fraction staffMag = systemOneStaves[index.value()]->calcEffectiveScaling() / muse::value(ctx.musxOptions().pageFormats, ctx.currentMusxPartId())->calcCombinedSystemScaling();
         options.scaleFontSizeBy /= staffMag.toDouble();
     }
     return ctx.stringFromEnigmaText(parsingContext, options);
@@ -735,7 +735,7 @@ bool FinaleParser::collectStaffType(StaffType* staffType, const MusxInstance<oth
     if (MusxInstance<others::StaffSystem> system = m_doc->calculateSystemFromMeasure(m_currentPartId, currStaff->getMeasureId())) {
         const MusxInstanceList<others::StaffUsed> systemStaves = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentPartId, system->getCmper());
         if (std::optional<size_t> index = systemStaves.getIndexForStaff(currStaff->getCmper())) {
-            const double newUserMag = (systemStaves[index.value()]->calcEffectiveScaling() / musxOptions().combinedDefaultStaffScaling).toDouble();
+            const double newUserMag = (systemStaves[index.value()]->calcEffectiveScaling() / muse::value(musxOptions().pageFormats, m_currentPartId)->calcCombinedSystemScaling()).toDouble();
             if (changed(staffType->userMag(), newUserMag, result)) {
                 staffType->setUserMag(newUserMag);
             }

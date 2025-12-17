@@ -50,7 +50,6 @@ struct FinaleOptions
     void init(const FinaleParser& context);
     // common
     musx::dom::MusxInstance<musx::dom::FontInfo> defaultMusicFont;
-    musx::util::Fraction combinedDefaultStaffScaling;  // cache this so we don't need to calculate it every time
     engraving::String calculatedEngravingFontName;
     // options
     musx::dom::MusxInstance<musx::dom::options::AccidentalOptions> accidentalOptions;
@@ -68,7 +67,7 @@ struct FinaleOptions
     musx::dom::MusxInstance<musx::dom::options::MultimeasureRestOptions> mmRestOptions;
     musx::dom::MusxInstance<musx::dom::options::MusicSpacingOptions> musicSpacing;
     musx::dom::MusxInstance<musx::dom::options::MusicSymbolOptions> musicSymbols;
-    musx::dom::MusxInstance<musx::dom::options::PageFormatOptions::PageFormat> pageFormat;
+    std::map<musx::dom::Cmper, musx::dom::MusxInstance<musx::dom::options::PageFormatOptions::PageFormat>> pageFormats;
     musx::dom::MusxInstance<musx::dom::options::PianoBraceBracketOptions> braceOptions;
     musx::dom::MusxInstance<musx::dom::options::RepeatOptions> repeatOptions;
     musx::dom::MusxInstance<musx::dom::options::SmartShapeOptions> smartShapeOptions;
