@@ -421,6 +421,7 @@ void FinaleParser::importParts()
                 createStaff(part, instStaff, it);
             }
         }
+        part->setId(part->staves().front()->id());
 
         // Instrument names
         const String longName = nameFromEnigmaText(*this, staff, staff->getFullInstrumentNameCtx(m_currentMusxPartId), u"longInstrument");
@@ -1350,13 +1351,13 @@ void FinaleParser::importPageLayout()
     /// @todo fix scaling issues
 
     // Handle blank pages
-    MusxInstanceList<others::Page> pages = m_doc->getOthers()->getArray<others::Page>(m_currentMusxPartId);
+    const MusxInstanceList<others::Page> pages = m_doc->getOthers()->getArray<others::Page>(m_currentPartId);
     size_t blankPagesToAdd = 0;
     for (const auto& page : pages) {
         if (page->isBlank()) {
             ++blankPagesToAdd;
         } else if (blankPagesToAdd) {
-            const MusxInstance<others::StaffSystem>& firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentMusxPartId, page->firstSystemId);
+            const MusxInstance<others::StaffSystem> firstPageSystem = m_doc->getOthers()->get<others::StaffSystem>(m_currentPartId, page->firstSystemId);
             IF_ASSERT_FAILED(firstPageSystem) {
                 continue;
             }
@@ -1392,7 +1393,7 @@ void FinaleParser::importPageLayout()
     if (!m_score->firstMeasure() || m_score->noStaves()) {
         return;
     }
-    MusxInstanceList<others::StaffSystem> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
+    MusxInstanceList<others::StaffSystem> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentPartId);
     logger()->logDebugTrace(String(u"Document contains %1 staff systems and %2 pages.").arg(staffSystems.size(), pages.size()));
     std::vector<Staff*> alwaysVisibleStaves = m_score->staves();
     std::vector<Staff*> alwaysInvisibleStaves = m_score->staves();
@@ -1407,7 +1408,7 @@ void FinaleParser::importPageLayout()
 
         // Determine if system is first on the page
         // Determine the current page the staffsystem is on
-        const MusxInstance<others::Page>& page = m_doc->getOthers()->get<others::Page>(m_currentMusxPartId, leftStaffSystem->pageId);
+        const MusxInstance<others::Page>& page = m_doc->getOthers()->get<others::Page>(m_currentPartId, leftStaffSystem->pageId);
         bool isFirstSystemOnPage = (i == 0) || (leftStaffSystem->pageId != staffSystems[i - 1]->pageId);
 
         // Compute system scaling factor
@@ -1428,7 +1429,7 @@ void FinaleParser::importPageLayout()
             if (dist < 0.0 || dist > m_score->style().styleD(Sid::pagePrintableWidth)) {
                 break;
             }
-            auto instrumentsInSystem = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, staffSystems[j]->getCmper());
+            auto instrumentsInSystem = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentPartId, staffSystems[j]->getCmper());
             if (musxFractionToFraction(staffSystems[j]->calcEffectiveScaling()) != musxFractionToFraction(staffSystems[j - 1]->calcEffectiveScaling())
                 || staffSystems[j]->pageId != staffSystems[j - 1]->pageId
                 || staffSystems[j]->top != staffSystems[j - 1]->top
@@ -1512,7 +1513,7 @@ void FinaleParser::importPageLayout()
         }
 
         // If following measure should show full instrument names, add section break to sysEnd
-        const MusxInstance<others::Measure>& nextMeasure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, rightStaffSystem->endMeas);
+        const MusxInstance<others::Measure>& nextMeasure = m_doc->getOthers()->get<others::Measure>(m_currentPartId, rightStaffSystem->endMeas);
         if (nextMeasure && nextMeasure->showFullNames) {
             LayoutBreak* lb = Factory::createLayoutBreak(sysEnd);
             lb->setLayoutBreakType(LayoutBreakType::SECTION);
@@ -1520,13 +1521,13 @@ void FinaleParser::importPageLayout()
             lb->setStartWithLongNames(true);
             lb->setPause(0.0);
             lb->setFirstSystemIndentation(false);
-            const MusxInstance<others::Measure>& lastMeasure = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, rightStaffSystem->getLastMeasure());
+            const MusxInstance<others::Measure>& lastMeasure = m_doc->getOthers()->get<others::Measure>(m_currentPartId, rightStaffSystem->getLastMeasure());
             lb->setShowCourtesy(!lastMeasure->hideCaution);
             sysEnd->add(lb);
         }
 
         // Hide systems (when empty, but ideally whenever)
-        auto instrumentsUsedInSystem = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, leftStaffSystem->getCmper());
+        auto instrumentsUsedInSystem = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentPartId, leftStaffSystem->getCmper());
         std::vector<staff_idx_t> visibleStaves;
         visibleStaves.reserve(instrumentsUsedInSystem.size());
         for (const MusxInstance<others::StaffUsed>& musxStaff : instrumentsUsedInSystem) {
@@ -1605,6 +1606,21 @@ void FinaleParser::importPageLayout()
         if (alwaysVisible || alwaysInvisible) {
             p->setHideWhenEmpty(alwaysVisible ? AutoOnOff::OFF : AutoOnOff::AUTO);
             p->setShow(alwaysVisible);
+        }
+    }
+
+    if (partScore()) {
+        m_score->excerpt()->setInitialPartId(muse::ID());
+
+        for (Part* p : m_score->parts()) {
+            if (p->show()) {
+                if (!m_score->excerpt()->custom()) {
+                    m_score->excerpt()->setInitialPartId(p->id());
+                } else {
+                    m_score->excerpt()->setInitialPartId(muse::ID());
+                    break;
+                }
+            }
         }
     }
 }

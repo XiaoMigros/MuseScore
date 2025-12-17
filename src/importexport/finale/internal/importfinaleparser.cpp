@@ -107,7 +107,7 @@ void FinaleParser::parse()
     doForMasterThenParts([this]() { importBrackets(); });
     doForMasterThenParts([this]() { importMeasures(); });
     importStaffItems();
-    importPageLayout();
+    doForMasterThenParts([this]() { importPageLayout(); });
     // Requires clef/keysig/timesig segments to have been created (layout call needed for non-change keysigs)
     // And number of staff lines at ticks to have been set (no layout necessary)
     m_score->doLayout();
