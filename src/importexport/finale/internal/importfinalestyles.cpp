@@ -906,9 +906,9 @@ void FinaleParser::repositionMeasureNumbersBelow()
     }
 
     const bool useShowOnStart = scorePart->showOnStart && !scorePart->showOnEvery;
-    auto fontInfo      = useShowOnStart ? scorePart->startFont       : scorePart->multipleFont;
-    auto horizontal    = useShowOnStart ? scorePart->startXdisp      : scorePart->multipleXdisp;
-    auto vertical      = useShowOnStart ? scorePart->startYdisp      : scorePart->multipleYdisp;
+    auto fontInfo   = useShowOnStart ? scorePart->startFont  : scorePart->multipleFont;
+    auto horizontal = useShowOnStart ? scorePart->startXdisp : scorePart->multipleXdisp;
+    auto vertical   = useShowOnStart ? scorePart->startYdisp : scorePart->multipleYdisp;
     if (vertical >= 0 && scorePart->mmRestYdisp >= 0) {
         return;
     }

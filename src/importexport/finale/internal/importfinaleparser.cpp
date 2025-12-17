@@ -114,8 +114,8 @@ void FinaleParser::parse()
     doForMasterThenParts([&]() { m_score->doLayout(); });
     doForMasterThenParts([this]() { importBarlines(); });
     // Requires system layout
-    rebaseSystemLeftMargins();
-    repositionMeasureNumbersBelow();
+    doForMasterThenParts([this]() { rebaseSystemLeftMargins(); });
+    doForMasterThenParts([this]() { repositionMeasureNumbersBelow(); });
 
     // entries (notes, rests & tuplets)
     mapLayers();
