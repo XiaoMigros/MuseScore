@@ -1029,15 +1029,16 @@ void FinaleParser::collectElementStyle(const EngravingObject* e)
 
 void FinaleParser::collectGlobalProperty(const Sid styleId, const PropertyValue& newV)
 {
-    if (muse::contains(m_elementStyles, styleId)) {
+    std::unordered_map<Sid, PropertyValue>* styleList = &muse::value(m_elementStyles, m_currentPartId);
+    if (muse::contains(*styleList, styleId)) {
         // Replace currently found value with new match, assuming there has been no bad match
-        PropertyValue v = muse::value(m_elementStyles, styleId);
+        PropertyValue v = muse::value(*styleList, styleId);
         if (v.isValid()) {
-            muse::remove(m_elementStyles, styleId);
-            m_elementStyles.emplace(styleId, compareStyledProperty(v, newV));
+            muse::remove(*styleList, styleId);
+            styleList.emplace(*styleId, compareStyledProperty(v, newV));
         }
     } else {
-        m_elementStyles.emplace(styleId, newV);
+        (*styleList).emplace(styleId, newV);
     }
 }
 

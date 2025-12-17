@@ -138,17 +138,18 @@ void FinaleParser::parse()
     rebasePageTextOffsets();
 
     // Collect styles for spanners (requires they have been laid out)
-    auto smap = m_score->spannerMap().map();
-    for (auto it = smap.cbegin(); it != smap.cend(); ++it) {
-        collectElementStyle((*it).second);
-    }
-
-    // Apply collected element styles
-    for (auto [sid, value] : m_elementStyles) {
-        if (value.isValid()) {
-            m_score->style().set(sid, value);
+    // Apply all collected element styles
+    doForMasterThenParts([this]() {
+        auto smap = m_score->spannerMap().map();
+        for (auto it = smap.cbegin(); it != smap.cend(); ++it) {
+            collectElementStyle((*it).second);
         }
-    }
+        for (auto [sid, value] : muse::value(m_elementStyles, m_currentPartId)) {
+            if (value.isValid()) {
+                m_score->style().set(sid, value);
+            }
+        }
+    });
 
     // Setup system object staves
     logger()->logInfo(String(u"Initialising system object staves"));

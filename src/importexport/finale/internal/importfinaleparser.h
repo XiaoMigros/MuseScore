@@ -339,7 +339,7 @@ private:
     void collectElementStyle(const mu::engraving::EngravingObject* e);
     void collectGlobalProperty(const mu::engraving::Sid styleId, const mu::engraving::PropertyValue& newV);
     void collectGlobalFont(const std::string& namePrefix, const musx::dom::MusxInstance<musx::dom::FontInfo>& fontInfo);
-    std::unordered_map<engraving::Sid, engraving::PropertyValue> m_elementStyles;
+    std::map<musx::dom::Cmper, std::unordered_map<engraving::Sid, engraving::PropertyValue>> m_elementStyles; // Part Cmper
 
     // smart shapes
     void importSmartShapes();
