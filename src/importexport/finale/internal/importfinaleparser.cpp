@@ -56,6 +56,20 @@ FinaleParser::FinaleParser(engraving::MasterScore* score, const std::shared_ptr<
     m_finaleOptions.init(*this); // this must come after initializing m_engravingFonts
 }
 
+void FinaleParser::doForMasterThenParts(std::function<void()> apply)
+{
+    m_score = m_masterScore;
+    m_currentPartId = m_currentMusxPartId;
+    apply();
+    for (auto [partId, score] : m_scorePartList) {
+        m_score = score;
+        m_currentPartId = partId;
+        apply();
+    }
+    m_score = m_masterScore;
+    m_currentPartId = m_currentMusxPartId;
+}
+
 void FinaleParser::parse()
 {
     // Create parts
@@ -86,19 +100,6 @@ void FinaleParser::parse()
         }
     }
 
-    auto doForMasterThenParts = [this](std::function<void()> apply) {
-        m_score = m_masterScore;
-        m_currentPartId = m_currentMusxPartId;
-        apply();
-        for (auto [partId, score] : m_scorePartList) {
-            m_score = score;
-            m_currentPartId = partId;
-            apply();
-        }
-        m_score = m_masterScore;
-        m_currentPartId = m_currentMusxPartId;
-    };
-
     // Styles (first, so that spatium and other defaults are correct)
     doForMasterThenParts([this]() { importStyles(); });
 
@@ -106,7 +107,7 @@ void FinaleParser::parse()
     doForMasterThenParts([this]() { importParts(); });
     doForMasterThenParts([this]() { importBrackets(); });
     doForMasterThenParts([this]() { importMeasures(); });
-    importStaffItems();
+    doForMasterThenParts([this]() { importStaffItems(); });
     doForMasterThenParts([this]() { importPageLayout(); });
     // Requires clef/keysig/timesig segments to have been created (layout call needed for non-change keysigs)
     // And number of staff lines at ticks to have been set (no layout necessary)
