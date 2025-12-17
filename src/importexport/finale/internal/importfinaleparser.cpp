@@ -70,7 +70,6 @@ void FinaleParser::parse()
         ex->setExcerptScore(s);
         ex->setName(String::fromStdString(partDef->getName()));
 
-        // s->linkMeasures(m);
         m_masterScore->addExcerpt(ex);
         m_scorePartList.emplace(partDef->getCmper(), s);
     }
@@ -105,8 +104,8 @@ void FinaleParser::parse()
 
     // scoremap
     doForMasterThenParts([this]() { importParts(); });
-    importBrackets();
-    importMeasures();
+    doForMasterThenParts([this]() { importBrackets(); });
+    doForMasterThenParts([this]() { importMeasures(); });
     importStaffItems();
     importPageLayout();
     // Requires clef/keysig/timesig segments to have been created (layout call needed for non-change keysigs)

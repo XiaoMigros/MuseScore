@@ -321,30 +321,32 @@ Staff* FinaleParser::createStaff(Part* part, const MusxInstance<others::Staff> m
 
 void FinaleParser::importMeasures()
 {
+    int lastDisplayNum = 0;
+
     // add default time signature
     Fraction currTimeSig = Fraction(4, 4);
-    m_score->sigmap()->clear();
-    m_score->sigmap()->add(0, currTimeSig);
-
-    MusxInstanceList<others::Measure> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
-    MusxInstanceList<others::StaffSystem> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
-    int lastDisplayNum = 0;
+    if (!partScore()) {
+        m_masterScore->sigmap()->clear();
+        m_masterScore->sigmap()->add(0, currTimeSig);
+    }
+    const MusxInstanceList<others::Measure> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
     for (const MusxInstance<others::Measure>& musxMeasure : musxMeasures) {
         Measure* measure = Factory::createMeasure(m_score->dummy()->system());
         Fraction tick(m_score->last() ? m_score->last()->endTick() : Fraction(0, 1));
         measure->setTick(tick);
-        m_meas2Tick.emplace(musxMeasure->getCmper(), tick);
-        m_tick2Meas.emplace(tick, musxMeasure->getCmper());
-        MusxInstance<TimeSignature> musxTimeSig = musxMeasure->createTimeSignature();
+        const MusxInstance<TimeSignature> musxTimeSig = musxMeasure->createTimeSignature();
         Fraction scoreTimeSig = simpleMusxTimeSigToFraction(musxTimeSig->calcSimplified(), musxMeasure->calcMinLegacyPickupSpacer(), logger());
-        if (scoreTimeSig != currTimeSig) {
-            m_score->sigmap()->add(tick.ticks(), scoreTimeSig);
-            currTimeSig = scoreTimeSig;
+        if (!partScore()) {
+            m_meas2Tick.emplace(musxMeasure->getCmper(), tick);
+            m_tick2Meas.emplace(tick, musxMeasure->getCmper());
+            if (scoreTimeSig != currTimeSig) {
+                m_masterScore->sigmap()->add(tick.ticks(), scoreTimeSig);
+                currTimeSig = scoreTimeSig;
+            }
         }
         measure->setTimesig(scoreTimeSig);
         measure->setTicks(scoreTimeSig);
         m_score->measures()->append(measure);
-
         // Needed for later calculations, saves a global layout call
         if (!m_score->noStaves()) {
             measure->createStaves(m_score->nstaves() - 1);
@@ -505,14 +507,14 @@ void FinaleParser::importBrackets()
         return result;
     };
 
-    auto scorePartInfo = m_doc->getOthers()->get<others::PartDefinition>(SCORE_PARTID, m_currentMusxPartId);
+    auto scorePartInfo = m_doc->getOthers()->get<others::PartDefinition>(SCORE_PARTID, m_currentPartId);
     if (!scorePartInfo) {
         throw std::logic_error("Unable to read PartDefinition for score");
         return;
     }
-    const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getScrollViewStaves(m_currentMusxPartId);
+    const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getScrollViewStaves(m_currentPartId);
 
-    auto staffGroups = details::StaffGroupInfo::getGroupsAtMeasure(1, m_currentMusxPartId, scrollView);
+    auto staffGroups = details::StaffGroupInfo::getGroupsAtMeasure(1, m_currentPartId, scrollView);
     auto groupsByLayer = computeStaffGroupLayers(staffGroups);
     for (const auto& groupInfo : groupsByLayer) {
         IF_ASSERT_FAILED(groupInfo.info.startSlot && groupInfo.info.endSlot) {
@@ -538,6 +540,17 @@ void FinaleParser::importBrackets()
         bi->setBracketSpan(groupSpan);
         bi->setColumn(size_t(groupInfo.layer));
         m_score->staff(startStaffIdx)->addBracket(bi);
+
+        if (partScore()) {
+            if (Staff* masterStaff = bi->staff()->findLinkedInScore(m_masterScore)) {
+                for (BracketItem* lbi : masterStaff->brackets()) {
+                    if (lbi->bracketType() == bi->bracketType() && lbi->bracketSpan() == bi->bracketSpan()) {
+                        bi->linkTo(lbi);
+                        break;
+                    }
+                }
+            }
+        }
 
         // Barline defaults (these will be overridden later, but good to have nice defaults)
         if (groupInfo.info.group->ownBarline && groupInfo.info.group->barlineType == others::Measure::BarlineType::Tick) {
