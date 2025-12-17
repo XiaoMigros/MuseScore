@@ -111,8 +111,8 @@ void FinaleParser::parse()
     doForMasterThenParts([this]() { importPageLayout(); });
     // Requires clef/keysig/timesig segments to have been created (layout call needed for non-change keysigs)
     // And number of staff lines at ticks to have been set (no layout necessary)
-    m_score->doLayout();
-    importBarlines();
+    doForMasterThenParts([&]() { m_score->doLayout(); });
+    doForMasterThenParts([this]() { importBarlines(); });
     // Requires system layout
     rebaseSystemLeftMargins();
     repositionMeasureNumbersBelow();

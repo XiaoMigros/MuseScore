@@ -1213,8 +1213,8 @@ void FinaleParser::importStaffItems()
 
 void FinaleParser::importBarlines()
 {
-    MusxInstanceList<others::Measure> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId);
-    MusxInstanceList<others::StaffSystem> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentMusxPartId);
+    MusxInstanceList<others::Measure> musxMeasures = m_doc->getOthers()->getArray<others::Measure>(m_currentMusxPartId); /// @todo parts
+    MusxInstanceList<others::StaffSystem> staffSystems = m_doc->getOthers()->getArray<others::StaffSystem>(m_currentPartId);
     const MusxInstance<options::BarlineOptions>& config = musxOptions().barlineOptions;
     for (const MusxInstance<others::Measure>& musxMeasure : musxMeasures) {
         Fraction currTick = muse::value(m_meas2Tick, musxMeasure->getCmper(), Fraction(-1, 1));
@@ -1231,8 +1231,8 @@ void FinaleParser::importBarlines()
             startsStaffSystem = staffSystem->startMeas == musxMeasure->getCmper();
             endsStaffSystem = staffSystem->getLastMeasure() == musxMeasure->getCmper();
             if (currTick > muse::value(m_meas2Tick, staffSystem->startMeas, Fraction(-1, 1))) {
-                const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentMusxPartId, staffSystem->getCmper());
-                staffGroups = details::StaffGroupInfo::getGroupsAtMeasure(musxMeasure->getCmper(), m_currentMusxPartId, scrollView);
+                const MusxInstanceList<others::StaffUsed> scrollView = m_doc->getOthers()->getArray<others::StaffUsed>(m_currentPartId, staffSystem->getCmper());
+                staffGroups = details::StaffGroupInfo::getGroupsAtMeasure(musxMeasure->getCmper(), m_currentPartId, scrollView);
                 break;
             }
         }
@@ -1243,7 +1243,7 @@ void FinaleParser::importBarlines()
             if (musxBarlineType == others::Measure::BarlineType::OptionsDefault
                 && config->leftBarlineUsePrevStyle && measure->prevMeasure()) {
                 if (MeasCmper prevMeasureId = muse::value(m_tick2Meas, measure->prevMeasure()->tick(), 0)) {
-                    musxBarlineType = m_doc->getOthers()->get<others::Measure>(m_currentMusxPartId, prevMeasureId)->barlineType;
+                    musxBarlineType = m_doc->getOthers()->get<others::Measure>(m_currentPartId, prevMeasureId)->barlineType;
                 }
             }
             engraving::BarLineType lblt = toMuseScoreBarLineType(musxBarlineType);
@@ -1322,7 +1322,7 @@ void FinaleParser::importBarlines()
             bool mensurLast = false;
             size_t priority = m_score->nstaves() + 1;
 
-            StaffCmper musxStaffId = muse::value(m_staff2Inst, staffIdx, 0);
+            StaffCmper musxStaffId = muse::value(m_staff2Inst, m_score->staff(staffIdx)->id(), 0);
             for (details::StaffGroupInfo groupInfo : staffGroups) {
                 if (muse::contains(groupInfo.group->staves, musxStaffId)) {
                     bool canUseStaffBarline = !musxMeasure->groupBarlineOverride && groupInfo.group->ownBarline;
