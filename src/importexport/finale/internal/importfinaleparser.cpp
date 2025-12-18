@@ -111,7 +111,7 @@ void FinaleParser::parse()
     doForMasterThenParts([this]() { importPageLayout(); });
     // Requires clef/keysig/timesig segments to have been created (layout call needed for non-change keysigs)
     // And number of staff lines at ticks to have been set (no layout necessary)
-    doForMasterThenParts([&]() { m_score->doLayout(); });
+    doForMasterThenParts([this]() { m_score->doLayout(); });
     doForMasterThenParts([this]() { importBarlines(); });
     // Requires system layout
     doForMasterThenParts([this]() { rebaseSystemLeftMargins(); });
@@ -130,12 +130,12 @@ void FinaleParser::parse()
     importSmartShapes();
 
     // Text
-    importPageTexts();
+    doForMasterThenParts([this]() { importPageTexts(); });
     // Layout score (needed for offset calculations)
     logger()->logInfo(String(u"Laying out score before importing text..."));
-    m_score->doLayout();
+    doForMasterThenParts([this]() { m_score->doLayout(); });
     importTextExpressions();
-    rebasePageTextOffsets();
+    doForMasterThenParts([this]() { rebasePageTextOffsets(); });
 
     // Collect styles for spanners (requires they have been laid out)
     // Apply all collected element styles
