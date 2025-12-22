@@ -1,7 +1,7 @@
 ﻿
 ### Adding a new non-visual extension  
 
-Create a new folder in the custom extensions folder:  
+Create a new folder in the user extensions folder:  
 * Windows - `C:\Users\username\AppData\Local\MuseScore\MuseScore4\extensions`  
 * MacOS -   
 * Linux - `$HOME/.local/share/MuseScore/MuseScore4/extensions`  
@@ -17,12 +17,16 @@ Fill out the manifest as follows:
     "title": "My quick start",
     "description": "This is a development extension for API research.",
 
-    "path": "main.js"
+    "actions": [
+        {
+            "path": "main.js"
+        }
+    ]
 }
 ```
 
 Create a new file `main.js`  
-Fill out the manifest as follows:  
+Fill out as follows:  
 ```
 const Log = require("MuseApi.Log");
 const Interactive = require("MuseApi.Interactive");
@@ -57,12 +61,16 @@ Fill out the manifest as follows:
     "title": "My quick start visual",
     "description": "This is a development extension for API research.",
 
-    "path": "Main.qml"
+    "actions": [
+        {
+            "path": "Main.qml"
+        }
+    ]
 }
 ```
 
 Create a new file `Main.qml`  
-Fill out the manifest as follows:  
+Fill out as follows:  
 ```
 import QtQuick
 

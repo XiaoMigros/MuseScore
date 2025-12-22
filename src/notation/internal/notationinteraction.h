@@ -365,6 +365,7 @@ private:
 
     bool needStartEditGrip(QKeyEvent* event) const;
     bool handleKeyPress(QKeyEvent* event);
+    bool doTextEdit(QKeyEvent* event, TextBase* tb);
 
     void doEndEditElement();
     void doEndDrag();
@@ -504,6 +505,7 @@ private:
         engraving::staff_idx_t sourceStaffIdx = muse::nidx;
 
         engraving::Fraction tickLength;
+        engraving::Fraction timeStretch;
         size_t numStaves = 0;
 
         bool preserveMeasureAlignment = false;

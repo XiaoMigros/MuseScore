@@ -849,7 +849,12 @@ void TRead::read(FretDiagram* d, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Harmony") {
             Harmony* h = new Harmony(d->score()->dummy()->segment());
             read(h, e, ctx);
-            d->add(h);
+            if (h->chords().empty()) {
+                // Invalid harmony
+                delete h;
+            } else {
+                d->add(h);
+            }
         } else if (readProperty(d, tag, e, ctx, Pid::FRET_SHOW_FINGERINGS)) {
         } else if (readProperty(d, tag, e, ctx, Pid::FRET_FINGERING)) {
         } else if (TRead::readProperty(d, tag, e, ctx, Pid::EXCLUDE_VERTICAL_ALIGN)) {
@@ -2704,10 +2709,13 @@ void TRead::read(Capo* c, XmlReader& xml, ReadContext& ctx)
             }
         } else if (tag == "generateText") {
             c->setProperty(Pid::CAPO_GENERATE_TEXT, xml.readBool());
+        } else if (TRead::readProperty(c, tag, xml, ctx, Pid::CAPO_TRANSPOSE_MODE)) {
+            continue;
         } else if (!readProperties(static_cast<StaffTextBase*>(c), xml, ctx)) {
             xml.unknown();
         }
     }
+    params.transposeMode = c->params().transposeMode;
 
     c->setParams(params);
 }

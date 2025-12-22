@@ -913,7 +913,6 @@ void Segment::remove(EngravingItem* el)
     case ElementType::SYSTEM_TEXT:
     case ElementType::TRIPLET_FEEL:
     case ElementType::PLAYTECH_ANNOTATION:
-    case ElementType::CAPO:
     case ElementType::SYMBOL:
     case ElementType::TAB_DURATION_SYMBOL:
     case ElementType::TEMPO_TEXT:
@@ -922,6 +921,12 @@ void Segment::remove(EngravingItem* el)
     case ElementType::FERMATA:
     case ElementType::STICKING:
     case ElementType::PLAY_COUNT_TEXT:
+        removeAnnotation(el);
+        break;
+    case ElementType::CAPO:
+        for (Staff* staff : el->part()->staves()) {
+            staff->removeCapoParams(el->tick());
+        }
         removeAnnotation(el);
         break;
 
@@ -1093,9 +1098,10 @@ void Segment::setXPosInSystemCoords(double x)
     mutldata()->setPosX(x - measure()->x());
 }
 
-bool Segment::isTupletSubdivision() const
+bool Segment::isTupletSubdivisionOnStaff(staff_idx_t staffIdx) const
 {
-    int denom = tick().reduced().denominator();
+    Fraction timeStretch = score()->staff(staffIdx)->timeStretch(tick());
+    int denom = (m_tick * timeStretch).reduced().denominator();
     bool denomIsPowOfTwo = (denom & (denom - 1)) == 0;
     // A non-power-of-two denominator is possible only with tuplets
     return !denomIsPowOfTwo;

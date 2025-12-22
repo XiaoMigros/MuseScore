@@ -158,7 +158,6 @@ void MasterNotation::setMasterScore(mu::engraving::MasterScore* score)
     setScore(score);
 
     score->updateSwing();
-    score->updateCapo();
 
     initAfterSettingScore(score);
 }
@@ -289,6 +288,7 @@ void MasterNotation::applyOptions(mu::engraving::MasterScore* score, const Score
             nvb->setAutoSizeEnabled(tvb->isAutoSizeEnabled());
         }
 
+        score->clearSystemLocks();
         clearMeasures(score);
 
         // for templates using built-in base page style, set score page style to default (may be user-defined)

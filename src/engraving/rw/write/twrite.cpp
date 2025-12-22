@@ -1220,6 +1220,7 @@ void TWrite::write(const Capo* item, XmlWriter& xml, WriteContext& ctx)
     writeProperty(item, xml, Pid::ACTIVE);
     writeProperty(item, xml, Pid::CAPO_FRET_POSITION);
     writeProperty(item, xml, Pid::CAPO_GENERATE_TEXT);
+    writeProperty(item, xml, Pid::CAPO_TRANSPOSE_MODE);
 
     std::set<string_idx_t> orderedStrings;
     for (string_idx_t idx : item->params().ignoredStrings) {
@@ -1711,7 +1712,7 @@ static void writeHarmonyInfo(const HarmonyInfo* item, const Harmony* h, XmlWrite
 
 void TWrite::write(const Harmony* item, XmlWriter& xml, WriteContext& ctx)
 {
-    if (!ctx.canWrite(item)) {
+    if (!ctx.canWrite(item) || item->chords().empty()) {
         return;
     }
     xml.startElement(item);
