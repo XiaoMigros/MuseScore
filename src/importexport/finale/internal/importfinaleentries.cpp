@@ -1436,6 +1436,8 @@ void FinaleParser::importEntryAdjustments()
         const double middleLinePos = beamStaffY + (beam->staffType()->lines() - 1) * beam->spatium() * beam->staffType()->lineDistance().val() * 0.5;
 
         // Set beam direction
+        /// @todo this can probably be moved to the end of importEntries
+        /// - we just need to set the lines for the notes, system distances are already known
         if (beam->direction() == DirectionV::AUTO) {
             beam->doSetDirection(getDirectionVForLayer(chordRest));
         }
@@ -1475,10 +1477,10 @@ void FinaleParser::importEntryAdjustments()
         // Calculate non-adjusted position, in system coordinates
         ChordRest* startCr = beam->elements().front();
         ChordRest* endCr = beam->elements().back();
-        double stemLengthAdjust =  (up ? -1.0 : 1.0) * doubleFromEvpu(musxOptions().stemOptions->stemLength)
-                                   * (startCr->isGrace() ? m_score->style().styleD(Sid::graceNoteMag) : 1.0);
-        double preferredStart = systemPosByLine(startCr, up) + stemLengthAdjust * startCr->spatium();
-        double preferredEnd = systemPosByLine(endCr, up) + stemLengthAdjust * endCr->spatium();
+        const double stemLengthAdjust = (up ? -1.0 : 1.0) * doubleFromEvpu(musxOptions().stemOptions->stemLength)
+                                        * (startCr->isGrace() ? m_score->style().styleD(Sid::graceNoteMag) : 1.0);
+        double preferredStart = systemPosByLine(startCr, up);
+        double preferredEnd = systemPosByLine(endCr, up);
         auto getInnermost = [&]() {
             return up ? std::max(preferredStart, preferredEnd) : std::min(preferredStart, preferredEnd); // farthest start/end note
         };
@@ -1491,60 +1493,52 @@ void FinaleParser::importEntryAdjustments()
         // Flatten beams as needed
         bool forceFlatten = musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::AlwaysFlat;
         setAndStyleProperty(beam, Pid::BEAM_NO_SLOPE, forceFlatten, true);
-        if (!forceFlatten && !muse::RealIsEqual(preferredStart, preferredEnd) && beam->elements().size() > 2) {
+        if (!forceFlatten && !muse::RealIsEqual(preferredStart, preferredEnd) && beam->elements().size() > 2) { /// @todo contains at least one chord that's not start or end
             if (musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::OnExtremeNote) {
                 for (ChordRest* cr : beam->elements()) {
                     if (cr == startCr || cr == endCr || cr->isRest()) {
                         continue;
                     }
-                    double beamPos = systemPosByLine(cr, up) + stemLengthAdjust * cr->spatium();
+                    double beamPos = systemPosByLine(cr, up);
                     if (up ? muse::RealIsEqualOrLess(beamPos, outermost) : muse::RealIsEqualOrMore(beamPos, outermost)) {
                         forceFlatten = true;
                         break;
                     }
                 }
             } else if (musxOptions().beamOptions->beamingStyle == options::BeamOptions::FlattenStyle::OnStandardNote) {
-                double outermost2 = up ? DBL_MAX : -DBL_MAX;
-                outermost -= stemLengthAdjust * beam->spatium();
-                bool downwardsContour = preferredEnd > preferredStart;
-                bool notesFollowContour = true; // Assume we can slope
-                double prevPos = systemPosByLine(startCr, up);
+                double standardDist = DBL_MAX;
+                double standardPos = 0.0;
 
                 for (ChordRest* cr : beam->elements()) {
-                    if (cr == startCr || cr->isRest()) {
+                    if (cr == startCr || cr == endCr || cr->isRest()) {
                         continue;
                     }
 
                     double contourPos = systemPosByLine(cr, up);
-
-                    // If the note doesn't follow the contour, don't slope.
-                    // Notes having the same line is not good enough and disallows sloping.
-                    if (notesFollowContour) {
-                        if (downwardsContour) {
-                            notesFollowContour = contourPos > prevPos;
+                    double contourDist = std::abs(contourPos - middleLinePos);
+                    if (contourDist < standardDist) {
+                        standardDist = contourDist;
+                        standardPos = contourPos;
+                    }
+                }
+                double startDist = std::abs(preferredStart - middleLinePos);
+                double endDist = std::abs(preferredEnd - middleLinePos);
+                if (muse::RealIsEqualOrLess(standardPos, std::min(preferredStart, preferredEnd))
+                    || muse::RealIsEqualOrMore(standardPos, std::max(preferredStart, preferredEnd))) {
+                    double edgeDist = std::min(startDist, endDist);
+                    if (muse::RealIsEqual(standardDist, edgeDist)) {
+                        if (up) {
+                            forceFlatten = !(muse::RealIsEqual(standardDist, startDist) && preferredStart < standardPos)
+                                           && !(muse::RealIsEqual(standardDist, endDist) && preferredEnd < standardPos);
                         } else {
-                            notesFollowContour = contourPos < prevPos;
+                            forceFlatten = !(muse::RealIsEqual(standardDist, startDist) && preferredStart > standardPos)
+                                           && !(muse::RealIsEqual(standardDist, endDist) && preferredEnd > standardPos);
                         }
-                    }
-                    if (cr != endCr) {
-                        outermost2 = up ? std::min(outermost2, contourPos) : std::max(outermost2, contourPos);
-                        prevPos = contourPos;
-                    }
-                }
-
-                // If the notes don't follow the contour, we flatten if the outermost not-start-end note
-                // is closer to the middle staff line than the outermost.
-                // If their distances are equal, we only flatten if the outermost note is lower (pitchwise) for up, or higher (pitchwise) for down.
-                if (!notesFollowContour) {
-                    double dist = std::abs(outermost - middleLinePos);
-                    double dist2 = std::abs(outermost2 - middleLinePos);
-                    if (up ? outermost2 > outermost : outermost2 < outermost) {
-                        forceFlatten = dist2 < dist;
+                        forceFlatten = up ? outermost > standardPos : outermost < standardPos;
                     } else {
-                        forceFlatten = muse::RealIsEqualOrLess(dist2, dist);
+                        forceFlatten = standardDist < edgeDist;
                     }
                 }
-                outermost = getOutermost();
             }
         }
         if (forceFlatten) {
@@ -1568,6 +1562,10 @@ void FinaleParser::importEntryAdjustments()
                 preferredStart = preferredEnd + slope * -totalX;
             }
         }
+
+        // Add stem lengths
+        preferredStart += stemLengthAdjust * startCr->spatium();
+        preferredEnd += stemLengthAdjust * endCr->spatium();
 
         // Ensure middle staff line distance is respected
         outermost = getOutermost();
@@ -1651,26 +1649,24 @@ void FinaleParser::importEntryAdjustments()
         }
         setAndStyleProperty(beam, Pid::GROW_LEFT, feathering.x());
         setAndStyleProperty(beam, Pid::GROW_RIGHT, feathering.y());
-        setAndStyleProperty(beam, Pid::USER_MODIFIED, true);
-        setAndStyleProperty(beam, Pid::GENERATED, false);
 
         // Smoothing
-        if (!musxOptions().beamOptions->spanSpace && !muse::RealIsEqual(preferredStart, preferredEnd)) {
+        if (!musxOptions().beamOptions->spanSpace && !muse::RealIsEqual(preferredStart, preferredEnd) && posAdjust.isNull()) {
             innermost = getInnermost();
             if (up ? muse::RealIsEqualOrMore(innermost, beamStaffY) : innermost < beamStaffY + beam->staff()->staffHeight(beam->tick())) {
                 /// @todo figure out these calculations - they seem more complex than the rest of the code
-                /// For now, set to default position and add offset
+                /// For now, set to default position
                 logger()->logInfo(String(u"Beam at tick %1, track %2 should inherit default placement.").arg(beam->tick().toString(), String::number(beam->track())));
                 if (beam->cross()) {
                     int crossStaffMove = (up ? beam->minCRMove() : beam->maxCRMove() + 1) - beam->defaultCrossStaffIdx();
                     setAndStyleProperty(beam, Pid::BEAM_CROSS_STAFF_MOVE, crossStaffMove);
                 }
-                /// @todo requires layout call first - else unexpected results
-                setAndStyleProperty(beam, Pid::BEAM_POS, PairF(beam->beamPos().first - (posAdjust.x() / beam->spatium()),
-                                                               beam->beamPos().second - (posAdjust.y() / beam->spatium())));
                 continue;
             }
         }
+
+        setAndStyleProperty(beam, Pid::USER_MODIFIED, true);
+        setAndStyleProperty(beam, Pid::GENERATED, false);
 
         preferredStart -= posAdjust.x();
         preferredEnd -= posAdjust.y();
@@ -1689,7 +1685,7 @@ void FinaleParser::importEntryAdjustments()
             if (chordRest->isChord()) {
                 double rightmostNoteX = -DBL_MAX;
                 for (engraving::Note* n : toChord(chordRest)->notes()) {
-                    rightmostNoteX = std::max(rightmostNoteX, n->ldata()->bbox().right() - n->offset().x());
+                    rightmostNoteX = std::max(rightmostNoteX, n->ldata()->pos().x() + n->width());
                 }
                 rightmostNoteX += dotDistance;
                 for (engraving::Note* n : toChord(chordRest)->notes()) {
@@ -1697,7 +1693,7 @@ void FinaleParser::importEntryAdjustments()
                     if (n->dots().empty()) {
                         continue;
                     }
-                    double difference = n->dots().front()->pos().x() - rightmostNoteX;
+                    double difference = n->dots().front()->ldata()->pos().x() - rightmostNoteX;
                     for (NoteDot* nd : n->dots()) {
                         nd->rxoffset() -= difference;
                     }
