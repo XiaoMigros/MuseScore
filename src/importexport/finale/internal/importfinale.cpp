@@ -99,7 +99,7 @@ static bool gunzipBuffer(const ByteArray& gzDataInput, ByteArray& output)
     return true;
 }
 
-Err importEnigmaXmlfromBuffer(Score* score, ByteArray&& data, MusxEmbeddedGraphicsMap&& graphics)
+Err importEnigmaXmlfromBuffer(MasterScore* score, ByteArray&& data, MusxEmbeddedGraphicsMap&& graphics)
 {
     FinaleLoggerPtr logger = std::make_shared<FinaleLogger>();
     logger->setLoggingLevel(FinaleLogger::Level::MUSX_TRACE); // for now

@@ -114,8 +114,12 @@ void FinaleOptions::init(const FinaleParser& context)
     mmRestOptions = getDocOptions<MultimeasureRestOptions>(context, "multimeasure rest");
     musicSpacing = getDocOptions<MusicSpacingOptions>(context, "music spacing");
     musicSymbols = getDocOptions<MusicSymbolOptions>(context, "music symbols");
-    auto pageFormatOptions = getDocOptions<PageFormatOptions>(context, "page format");
-    pageFormat = pageFormatOptions->calcPageFormatForPart(context.currentMusxPartId());
+    auto pageFormatOptions = getDocOptions<options::PageFormatOptions>(context, "page format");
+    pageFormats.emplace(context.currentMusxPartId(), pageFormatOptions->calcPageFormatForPart(context.currentMusxPartId()));
+    const MusxInstanceList<others::PartDefinition> partDefinitions = others::PartDefinition::getInUserOrder(context.musxDocument());
+    for (const auto& partDef : partDefinitions) {
+        pageFormats.emplace(partDef->getCmper(), pageFormatOptions->calcPageFormatForPart(partDef->getCmper()));
+    }
     braceOptions = getDocOptions<PianoBraceBracketOptions>(context, "piano braces & brackets");
     repeatOptions = getDocOptions<RepeatOptions>(context, "repeat");
     smartShapeOptions = getDocOptions<SmartShapeOptions>(context, "smart shape");
@@ -143,7 +147,6 @@ void FinaleOptions::init(const FinaleParser& context)
     if (!layerOneAttributes) {
         throw std::invalid_argument("document contains no options for Layer 1");
     }
-    combinedDefaultStaffScaling = pageFormat->calcCombinedSystemScaling();
 
     // Musical symbols font
     std::string defaultMusicalSymbolsFont = context.musxOptions().defaultMusicFont->getName();
@@ -279,7 +282,7 @@ static void writeCategoryTextFontPref(MStyle& style, const FinaleParser& context
 static void writePagePrefs(MStyle& style, const FinaleParser& context)
 {
     const auto& prefs = context.musxOptions();
-    const auto& pagePrefs = prefs.pageFormat;
+    const auto& pagePrefs = muse::value(prefs.pageFormats, context.currentMusxPartId());
 
     writeEvpuInch(style, Sid::pageWidth, pagePrefs->pageWidth);
     writeEvpuInch(style, Sid::pageHeight, pagePrefs->pageHeight);
@@ -307,7 +310,7 @@ static void writePagePrefs(MStyle& style, const FinaleParser& context)
     writeEvpuSpace(style, Sid::firstSystemIndentationValue, pagePrefs->firstSysMarginLeft);
 
     // Calculate Spatium
-    setStyle(style, Sid::spatium, prefs.combinedDefaultStaffScaling.toDouble() * (EVPU_PER_SPACE / EVPU_PER_MM) * DPMM);
+    setStyle(style, Sid::spatium, pagePrefs->calcCombinedSystemScaling().toDouble() * (EVPU_PER_SPACE / EVPU_PER_MM) * DPMM);
 
     // Calculate small staff size and small note size from first system, if any is there
     if (const auto& firstSystem = context.musxDocument()->getOthers()->get<others::StaffSystem>(context.currentMusxPartId(), 1)) {
@@ -344,6 +347,10 @@ static void writeLyricsPrefs(MStyle& style, const FinaleParser& context)
 
 static void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
 {
+    setStyle(style, Sid::hideEmptyStaves, context.musxDocument()->calcHasVaryingSystemStaves(context.currentMusxPartId()));
+    if (context.partScore()) {
+        return;
+    }
     const auto& prefs = context.musxOptions();
 
     writeEfixSpace(style, Sid::barWidth, prefs.barlineOptions->barlineWidth);
@@ -420,8 +427,6 @@ static void writeLineMeasurePrefs(MStyle& style, const FinaleParser& context)
 
     setStyle(style, Sid::keySigNaturals, prefs.keyOptions->doKeyCancel ? int(KeySigNatural::BEFORE) : int(KeySigNatural::NONE));
     setStyle(style, Sid::keySigShowNaturalsChangingSharpsFlats, prefs.keyOptions->doKeyCancelBetweenSharpsFlats);
-
-    setStyle(style, Sid::hideEmptyStaves, context.musxDocument()->calcHasVaryingSystemStaves(context.currentMusxPartId()));
 
     setStyle(style, Sid::placeClefsBeforeRepeats, true);
     setStyle(style, Sid::showCourtesiesRepeats,false);
@@ -876,6 +881,9 @@ static void writeMarkingPrefs(MStyle& style, const FinaleParser& context)
 
 void FinaleParser::importStyles()
 {
+    if (partScore()) {
+        m_score->setStyle(m_masterScore->style());
+    }
     MStyle& style = m_score->style();
     writePagePrefs(style, *this);
     writeLyricsPrefs(style, *this);
@@ -898,9 +906,9 @@ void FinaleParser::repositionMeasureNumbersBelow()
     }
 
     const bool useShowOnStart = scorePart->showOnStart && !scorePart->showOnEvery;
-    auto fontInfo      = useShowOnStart ? scorePart->startFont       : scorePart->multipleFont;
-    auto horizontal    = useShowOnStart ? scorePart->startXdisp      : scorePart->multipleXdisp;
-    auto vertical      = useShowOnStart ? scorePart->startYdisp      : scorePart->multipleYdisp;
+    auto fontInfo   = useShowOnStart ? scorePart->startFont  : scorePart->multipleFont;
+    auto horizontal = useShowOnStart ? scorePart->startXdisp : scorePart->multipleXdisp;
+    auto vertical   = useShowOnStart ? scorePart->startYdisp : scorePart->multipleYdisp;
     if (vertical >= 0 && scorePart->mmRestYdisp >= 0) {
         return;
     }
@@ -1021,15 +1029,16 @@ void FinaleParser::collectElementStyle(const EngravingObject* e)
 
 void FinaleParser::collectGlobalProperty(const Sid styleId, const PropertyValue& newV)
 {
-    if (muse::contains(m_elementStyles, styleId)) {
+    std::unordered_map<Sid, PropertyValue>* styleList = &muse::value(m_elementStyles, m_currentPartId);
+    if (muse::contains(*styleList, styleId)) {
         // Replace currently found value with new match, assuming there has been no bad match
-        PropertyValue v = muse::value(m_elementStyles, styleId);
+        PropertyValue v = muse::value(*styleList, styleId);
         if (v.isValid()) {
-            muse::remove(m_elementStyles, styleId);
-            m_elementStyles.emplace(styleId, compareStyledProperty(v, newV));
+            muse::remove(*styleList, styleId);
+            styleList.emplace(*styleId, compareStyledProperty(v, newV));
         }
     } else {
-        m_elementStyles.emplace(styleId, newV);
+        (*styleList).emplace(styleId, newV);
     }
 }
 

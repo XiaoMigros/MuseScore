@@ -20,7 +20,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "internal/importfinaleparser.h"
-#include "engraving/dom/measurenumber.h"
 #include "internal/importfinalelogger.h"
 #include "internal/finaletypesconv.h"
 
@@ -32,8 +31,10 @@
 #include "global/stringutils.h"
 #include "types/string.h"
 
+#include "engraving/dom/excerpt.h"
 #include "engraving/dom/linkedobjects.h"
 #include "engraving/dom/masterscore.h"
+#include "engraving/dom/measurenumber.h"
 #include "engraving/dom/mscore.h"
 
 #include "log.h"
@@ -45,8 +46,8 @@ using namespace mu::iex::finale;
 
 namespace mu::iex::finale {
 
-FinaleParser::FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger)
-    : m_score(score), m_doc(doc), m_logger(logger), m_embeddedGraphics(std::move(graphics))
+FinaleParser::FinaleParser(engraving::MasterScore* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger)
+    : m_masterScore(score), m_doc(doc), m_logger(logger), m_embeddedGraphics(std::move(graphics))
 {
     const std::vector<IEngravingFontPtr> fonts = engravingFonts()->fonts();
     for (const IEngravingFontPtr& font : fonts) {
@@ -55,36 +56,66 @@ FinaleParser::FinaleParser(engraving::Score* score, const std::shared_ptr<musx::
     m_finaleOptions.init(*this); // this must come after initializing m_engravingFonts
 }
 
+void FinaleParser::doForMasterThenParts(std::function<void()> apply)
+{
+    m_score = m_masterScore;
+    m_currentPartId = m_currentMusxPartId;
+    apply();
+    for (auto [partId, score] : m_scorePartList) {
+        m_score = score;
+        m_currentPartId = partId;
+        apply();
+    }
+    m_score = m_masterScore;
+    m_currentPartId = m_currentMusxPartId;
+}
+
 void FinaleParser::parse()
 {
-    // set score metadata
+    // Create parts
+    const MusxInstanceList<others::PartDefinition> partDefinitions = others::PartDefinition::getInUserOrder(m_doc);
+    for (const auto& partDef : partDefinitions) {
+        if (partDef->isScore()) {
+            continue;
+        }
+        Score* s = m_masterScore->createScore();
+
+        Excerpt* ex = new Excerpt(m_masterScore);
+        ex->setExcerptScore(s);
+        ex->setName(String::fromStdString(partDef->getName()));
+
+        m_masterScore->addExcerpt(ex);
+        m_scorePartList.emplace(partDef->getCmper(), s);
+    }
+
+    // Set score metadata
     muse::Date creationDate(m_doc->getHeader()->created.year, m_doc->getHeader()->created.month, m_doc->getHeader()->created.day);
-    m_score->setMetaTag(u"creationDate", creationDate.toString(muse::DateFormat::ISODate));
+    m_masterScore->setMetaTag(u"creationDate", creationDate.toString(muse::DateFormat::ISODate));
     MusxInstanceList<texts::FileInfoText> fileInfoTexts = m_doc->getTexts()->getArray<texts::FileInfoText>();
     for (const MusxInstance<texts::FileInfoText>& fileInfoText : fileInfoTexts) {
         String metaTag = metaTagFromFileInfo(fileInfoText->getTextType());
         std::string fileInfoValue = musx::util::EnigmaString::trimTags(fileInfoText->text);
         if (!metaTag.empty() && !fileInfoValue.empty()) {
-            m_score->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
+            m_masterScore->setMetaTag(metaTag, String::fromStdString(fileInfoValue));
         }
     }
 
-    // styles (first, so that spatium and other defaults are correct)
-    importStyles();
+    // Styles (first, so that spatium and other defaults are correct)
+    doForMasterThenParts([this]() { importStyles(); });
 
     // scoremap
-    importParts();
-    importBrackets();
-    importMeasures();
-    importStaffItems();
-    importPageLayout();
+    doForMasterThenParts([this]() { importParts(); });
+    doForMasterThenParts([this]() { importBrackets(); });
+    doForMasterThenParts([this]() { importMeasures(); });
+    doForMasterThenParts([this]() { importStaffItems(); });
+    doForMasterThenParts([this]() { importPageLayout(); });
     // Requires clef/keysig/timesig segments to have been created (layout call needed for non-change keysigs)
     // And number of staff lines at ticks to have been set (no layout necessary)
-    m_score->doLayout();
-    importBarlines();
+    doForMasterThenParts([this]() { m_score->doLayout(); });
+    doForMasterThenParts([this]() { importBarlines(); });
     // Requires system layout
-    rebaseSystemLeftMargins();
-    repositionMeasureNumbersBelow();
+    doForMasterThenParts([this]() { rebaseSystemLeftMargins(); });
+    doForMasterThenParts([this]() { repositionMeasureNumbersBelow(); });
 
     // entries (notes, rests & tuplets)
     mapLayers();
@@ -99,54 +130,62 @@ void FinaleParser::parse()
     importSmartShapes();
 
     // Text
-    importPageTexts();
+    doForMasterThenParts([this]() { importPageTexts(); });
     // Layout score (needed for offset calculations)
     logger()->logInfo(String(u"Laying out score before importing text..."));
-    m_score->doLayout();
+    doForMasterThenParts([this]() { m_score->doLayout(); });
     importTextExpressions();
-    rebasePageTextOffsets();
+    doForMasterThenParts([this]() { rebasePageTextOffsets(); });
 
     // Collect styles for spanners (requires they have been laid out)
-    auto smap = m_score->spannerMap().map();
-    for (auto it = smap.cbegin(); it != smap.cend(); ++it) {
-        collectElementStyle((*it).second);
-    }
-
-    // Apply collected element styles
-    for (auto [sid, value] : m_elementStyles) {
-        if (value.isValid()) {
-            m_score->style().set(sid, value);
+    // Apply all collected element styles
+    doForMasterThenParts([this]() {
+        auto smap = m_score->spannerMap().map();
+        for (auto it = smap.cbegin(); it != smap.cend(); ++it) {
+            collectElementStyle((*it).second);
         }
-    }
+        for (auto [sid, value] : muse::value(m_elementStyles, m_currentPartId)) {
+            if (value.isValid()) {
+                m_score->style().set(sid, value);
+            }
+        }
+    });
 
     // Setup system object staves
     logger()->logInfo(String(u"Initialising system object staves"));
-    for (staff_idx_t staffIdx : m_systemObjectStaves) {
-        m_score->addSystemObjectStaff(m_score->staff(staffIdx));
-    }
-    std::vector<EngravingItem*> systemObjects = collectSystemObjects(m_score, m_score->staves());
-    for (EngravingItem* e : systemObjects) {
-        // cross-reference links with sys obj staves and add invisible linked clones as needed
-        std::set<staff_idx_t> unusedStaves = m_systemObjectStaves;
-        if (e->links()) {
-            for (EngravingObject* scoreElement : *e->links()) {
-                muse::remove(systemObjects, toEngravingItem(scoreElement));
-                muse::remove(unusedStaves, toEngravingItem(scoreElement)->staffIdx());
-            }
-        } else {
-            muse::remove(unusedStaves, e->staffIdx());
+    doForMasterThenParts([this]() {
+        std::set<engraving::staff_idx_t> sysObjStaffList = muse::value(m_systemObjectStaves, m_currentPartId);
+        for (staff_idx_t staffIdx : sysObjStaffList) {
+            m_score->addSystemObjectStaff(m_score->staff(staffIdx));
         }
-        for (staff_idx_t staffIdx : unusedStaves) {
-            EngravingItem* copy = e->clone();
-            copy->setStaffIdx(staffIdx);
-            copy->setVisible(false);
-            copy->linkTo(e);
-            if (!e->isSpanner()) {
-                copy->setParent(e->parentItem());
+        std::vector<EngravingItem*> systemObjects = collectSystemObjects(m_score, m_score->staves());
+        for (EngravingItem* e : systemObjects) {
+            // cross-reference links with sys obj staves and add invisible linked clones as needed
+            std::set<staff_idx_t> unusedStaves = sysObjStaffList;
+            if (e->links()) {
+                for (EngravingObject* scoreElement : *e->links()) {
+                    if (e->score() == m_score) {
+                        muse::remove(systemObjects, toEngravingItem(scoreElement));
+                        muse::remove(unusedStaves, toEngravingItem(scoreElement)->staffIdx());
+                    }
+                }
+            } else {
+                muse::remove(unusedStaves, e->staffIdx());
             }
-            m_score->addElement(copy);
+            for (staff_idx_t staffIdx : unusedStaves) {
+                EngravingItem* copy = e->clone();
+                copy->setStaffIdx(staffIdx);
+                copy->setVisible(false);
+                copy->linkTo(e);
+                if (!e->isSpanner()) {
+                    copy->setParent(e->parentItem());
+                }
+                m_score->addElement(copy);
+            }
         }
-    }
+    });
+
+    m_masterScore->setExcerptsChanged(false);
     logger()->logInfo(String(u"Import complete. Opening file..."));
 }
 
@@ -155,7 +194,7 @@ staff_idx_t FinaleParser::staffIdxFromAssignment(StaffCmper assign)
     switch (assign) {
     case -1: return 0;
     case -2: return m_score->nstaves() - 1;
-    default: return muse::value(m_inst2Staff, assign, muse::nidx);
+    default: return staffIdxFromCmper(assign);
     }
 }
 
@@ -167,7 +206,7 @@ staff_idx_t FinaleParser::staffIdxForRepeats(bool onlyTop, Cmper staffList, Cmpe
     }
     std::vector<StaffCmper> list;
     if (partScore()) {
-        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatParts>(m_currentMusxPartId, staffList)) {
+        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatParts>(m_currentPartId, staffList)) {
             list = l->values;
         }
     } else {
@@ -176,14 +215,14 @@ staff_idx_t FinaleParser::staffIdxForRepeats(bool onlyTop, Cmper staffList, Cmpe
         }
     }
     for (StaffCmper musxStaffId : list) {
-        if (const auto& musxStaff = others::StaffComposite::createCurrent(m_doc, m_currentMusxPartId, musxStaffId, measureId, 0)) {
+        if (const auto& musxStaff = others::StaffComposite::createCurrent(m_doc, m_currentPartId, musxStaffId, measureId, 0)) {
             if (musxStaff->hideRepeats) {
                 muse::remove(list, musxStaffId);
             }
         }
     }
     if (partScore()) {
-        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatPartsForced>(m_currentMusxPartId, staffList)) {
+        if (const auto& l = m_doc->getOthers()->get<others::StaffListRepeatPartsForced>(m_currentPartId, staffList)) {
             muse::join(list, l->values);
         }
     } else {
@@ -213,6 +252,23 @@ void setAndStyleProperty(EngravingObject* e, Pid id, PropertyValue v, bool inher
     }
     const bool canLeaveStyled = inheritStyle && (e->getProperty(id) == e->propertyDefault(id));
     e->setPropertyFlags(id, canLeaveStyled ? PropertyFlags::STYLED : PropertyFlags::UNSTYLED);
+}
+
+Staff* FinaleParser::staffFromCmper(const StaffCmper& musxStaffId)
+{
+    const muse::ID staffId = muse::value(m_inst2Staff, musxStaffId, mu::engraving::INVALID_ID);
+    if (staffId != mu::engraving::INVALID_ID) {
+        return m_score->staffById(staffId);
+    }
+    return nullptr;
+}
+
+staff_idx_t FinaleParser::staffIdxFromCmper(const StaffCmper& musxStaffId)
+{
+    if (Staff* s = staffFromCmper(musxStaffId)) {
+        return s->idx();
+    }
+    return muse::nidx;
 }
 
 }

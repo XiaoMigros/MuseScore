@@ -50,7 +50,6 @@ struct FinaleOptions
     void init(const FinaleParser& context);
     // common
     musx::dom::MusxInstance<musx::dom::FontInfo> defaultMusicFont;
-    musx::util::Fraction combinedDefaultStaffScaling;  // cache this so we don't need to calculate it every time
     engraving::String calculatedEngravingFontName;
     // options
     musx::dom::MusxInstance<musx::dom::options::AccidentalOptions> accidentalOptions;
@@ -68,7 +67,7 @@ struct FinaleOptions
     musx::dom::MusxInstance<musx::dom::options::MultimeasureRestOptions> mmRestOptions;
     musx::dom::MusxInstance<musx::dom::options::MusicSpacingOptions> musicSpacing;
     musx::dom::MusxInstance<musx::dom::options::MusicSymbolOptions> musicSymbols;
-    musx::dom::MusxInstance<musx::dom::options::PageFormatOptions::PageFormat> pageFormat;
+    std::map<musx::dom::Cmper, musx::dom::MusxInstance<musx::dom::options::PageFormatOptions::PageFormat>> pageFormats;
     musx::dom::MusxInstance<musx::dom::options::PianoBraceBracketOptions> braceOptions;
     musx::dom::MusxInstance<musx::dom::options::RepeatOptions> repeatOptions;
     musx::dom::MusxInstance<musx::dom::options::SmartShapeOptions> smartShapeOptions;
@@ -267,7 +266,7 @@ class FinaleParser : public muse::Injectable
 public:
     muse::Inject<mu::engraving::IEngravingFontsProvider> engravingFonts = { this };
 
-    FinaleParser(engraving::Score* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger);
+    FinaleParser(engraving::MasterScore* score, const std::shared_ptr<musx::dom::Document>& doc, MusxEmbeddedGraphicsMap&& graphics, FinaleLoggerPtr& logger);
 
     void parse();
 
@@ -277,6 +276,7 @@ public:
     const FinaleOptions& musxOptions() const { return m_finaleOptions; }
     musx::dom::Cmper currentMusxPartId() const { return m_currentMusxPartId; }
     bool partScore() const { return m_currentMusxPartId != musx::dom::SCORE_PARTID; }
+    void doForMasterThenParts(std::function<void()> apply);
 
     // Text
     engraving::String stringFromEnigmaText(const musx::util::EnigmaParsingContext& parsingContext, const EnigmaParsingOptions& options = {}, FontTracker* firstFontInfo = nullptr) const;
@@ -285,6 +285,8 @@ public:
     bool fontIsEngravingFont(const engraving::String& fontName) const { return fontIsEngravingFont(fontName.toStdString()); }
 
     // Utility
+    engraving::Staff* staffFromCmper(const musx::dom::StaffCmper& musxStaffId);
+    engraving::staff_idx_t staffIdxFromCmper(const musx::dom::StaffCmper& musxStaffId);
     musx::dom::EvpuFloat evpuAugmentationDotWidth() const;
     engraving::staff_idx_t staffIdxFromAssignment(musx::dom::StaffCmper assign);
     engraving::staff_idx_t staffIdxForRepeats(bool onlyTop, musx::dom::Cmper staffList, musx::dom::Cmper measureId,
@@ -308,11 +310,6 @@ private:
                                 engraving::staff_idx_t staffIdx, musx::dom::ClefIndex musxClef,
                                 engraving::Measure* measure, musx::dom::Edu musxEduPos,
                                 bool afterBarline, bool visible);
-    void importClefs(const musx::dom::MusxInstance<musx::dom::others::StaffUsed>& musxScrollViewItem,
-                     const musx::dom::MusxInstance<musx::dom::others::Measure>& musxMeasure,
-                     engraving::Measure* measure, engraving::staff_idx_t curStaffIdx,
-                     musx::dom::ClefIndex& musxCurrClef,
-                     const musx::dom::MusxInstance<musx::dom::others::Measure>& nextMusxMeasure);
     bool collectStaffType(engraving::StaffType* staffType, const musx::dom::MusxInstance<musx::dom::others::StaffComposite>& currStaff);
 
     // entries
@@ -342,7 +339,7 @@ private:
     void collectElementStyle(const mu::engraving::EngravingObject* e);
     void collectGlobalProperty(const mu::engraving::Sid styleId, const mu::engraving::PropertyValue& newV);
     void collectGlobalFont(const std::string& namePrefix, const musx::dom::MusxInstance<musx::dom::FontInfo>& fontInfo);
-    std::unordered_map<engraving::Sid, engraving::PropertyValue> m_elementStyles;
+    std::map<musx::dom::Cmper, std::unordered_map<engraving::Sid, engraving::PropertyValue>> m_elementStyles; // Part Cmper
 
     // smart shapes
     void importSmartShapes();
@@ -357,16 +354,19 @@ private:
                            engraving::Staff* staff, engraving::Measure* measure);
 
     engraving::Score* m_score;
+    musx::dom::Cmper m_currentPartId;
+    engraving::MasterScore* m_masterScore;
+    const musx::dom::Cmper m_currentMusxPartId = musx::dom::SCORE_PARTID; /// @todo rename to m_masterPartId
+    std::unordered_map<musx::dom::Cmper, engraving::Score*> m_scorePartList; // list of part (not-main) scores and associated Cmpers
     const std::shared_ptr<musx::dom::Document> m_doc;
     FinaleOptions m_finaleOptions;
     FinaleLoggerPtr m_logger;
-    const musx::dom::Cmper m_currentMusxPartId = musx::dom::SCORE_PARTID; // eventually this may be changed per excerpt/linked part
     bool m_smallNoteMagFound = false;
     std::unordered_map<std::string, const engraving::IEngravingFontPtr> m_engravingFonts;
 
     MusxEmbeddedGraphicsMap m_embeddedGraphics;
-    std::unordered_map<engraving::staff_idx_t, musx::dom::StaffCmper> m_staff2Inst;
-    std::unordered_map<musx::dom::StaffCmper, engraving::staff_idx_t> m_inst2Staff;
+    std::map<muse::ID, musx::dom::StaffCmper> m_staff2Inst;
+    std::map<musx::dom::StaffCmper, muse::ID> m_inst2Staff;
     std::unordered_map<musx::dom::MeasCmper, engraving::Fraction> m_meas2Tick;
     std::map<engraving::Fraction, musx::dom::MeasCmper> m_tick2Meas; // use std::map to avoid need for Fraction hash function
     std::unordered_map<musx::dom::LayerIndex, engraving::voice_idx_t> m_layer2Voice;
@@ -377,7 +377,7 @@ private:
     ReadableCustomLineMap m_customLines;
     ReadableExpressionMap m_expressions;
     ReadableRepeatTextMap m_repeatTexts;
-    std::set<engraving::staff_idx_t> m_systemObjectStaves;
+    std::map<musx::dom::Cmper, std::set<engraving::staff_idx_t>> m_systemObjectStaves;
 };
 
 extern void setAndStyleProperty(mu::engraving::EngravingObject* e, mu::engraving::Pid id,

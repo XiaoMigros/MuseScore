@@ -342,7 +342,7 @@ void FinaleParser::importSmartShapes()
                 }
             }
             logger()->logInfo(String(u"No anchor found"));
-            staff_idx_t staffIdx = muse::value(m_inst2Staff, termSeg->endPoint->staffId, muse::nidx);
+            staff_idx_t staffIdx = staffIdxFromCmper(termSeg->endPoint->staffId);
             Fraction mTick = muse::value(m_meas2Tick, termSeg->endPoint->measId, Fraction(-1, 1));
             Measure* measure = !mTick.negative() ? m_score->tick2measure(mTick) : nullptr;
             if (!measure || staffIdx == muse::nidx) {
@@ -423,8 +423,8 @@ void FinaleParser::importSmartShapes()
             newSpanner->setEndElement(endElement);
         } else {
             newSpanner->setAnchor(Spanner::Anchor::SEGMENT);
-            staff_idx_t staffIdx1 = muse::value(m_inst2Staff, smartShape->startTermSeg->endPoint->staffId, muse::nidx);
-            staff_idx_t staffIdx2 = muse::value(m_inst2Staff, smartShape->endTermSeg->endPoint->staffId, muse::nidx);
+            staff_idx_t staffIdx1 = staffIdxFromCmper(smartShape->startTermSeg->endPoint->staffId);
+            staff_idx_t staffIdx2 = staffIdxFromCmper(smartShape->endTermSeg->endPoint->staffId);
             if (staffIdx1 == muse::nidx || staffIdx2 == muse::nidx) {
                 logger()->logInfo(String(u"No start/end staff for spanner of %1 type").arg(TConv::userName(type).translated()));
                 delete newSpanner;
@@ -812,7 +812,7 @@ void FinaleParser::importSmartShapes()
         }
 
         if (newSpanner->systemFlag()) {
-            m_systemObjectStaves.insert(newSpanner->staffIdx());
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(newSpanner->staffIdx());
         }
     }
 
@@ -859,7 +859,7 @@ void FinaleParser::importSmartShapes()
             volta->setEndings(passList->values);
         }
         m_score->addElement(volta);
-        m_systemObjectStaves.insert(curStaffIdx);
+        muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
 
         volta->fixupSegments(1, [volta](System* parent) { return volta->createLineSegment(parent); });
         VoltaSegment* vs = toVoltaSegment(volta->frontSegment());
@@ -916,7 +916,7 @@ void FinaleParser::importSmartShapes()
             }
             copy->linkTo(volta);
             measure->add(copy);
-            m_systemObjectStaves.insert(linkedStaffIdx);
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
         }
         openings.push_back(volta);
     }
@@ -967,7 +967,7 @@ void FinaleParser::importSmartShapes()
                 cur->setStaffIdx(curStaffIdx);
                 cur->linkTo(prev);
                 measure->add(cur);
-                m_systemObjectStaves.insert(curStaffIdx);
+                muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
             }
             if (cur->voltaType() == Volta::Type::OPEN) {
                 cur->setEndHookHeight(0.0_sp);
@@ -987,7 +987,7 @@ void FinaleParser::importSmartShapes()
             cur->setAutoplace(false);
             cur->setText(String());
             m_score->addElement(cur);
-            m_systemObjectStaves.insert(curStaffIdx);
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
         }
 
         cur->fixupSegments(1, [cur](System* parent) { return cur->createLineSegment(parent); });
@@ -1049,7 +1049,7 @@ void FinaleParser::importSmartShapes()
                 copy->setStaffIdx(linkedStaffIdx);
                 copy->linkTo(cur);
                 measure->add(copy);
-                m_systemObjectStaves.insert(linkedStaffIdx);
+                muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
             }
 
             copy->fixupSegments(1, [copy](System* parent) { return copy->createLineSegment(parent); });

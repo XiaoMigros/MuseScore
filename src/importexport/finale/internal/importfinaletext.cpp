@@ -811,7 +811,7 @@ void FinaleParser::importTextExpressions()
             }
             p.rx() += absoluteDoubleFromEvpu(expressionDef->measXAdjust, expr);
 
-            StaffCmper effectiveMusxStaffId = exprAssign->staffAssign >= 0 ? exprAssign->staffAssign : muse::value(m_staff2Inst, expr->staffIdx(), 1);
+            StaffCmper effectiveMusxStaffId = exprAssign->staffAssign >= 0 ? exprAssign->staffAssign : muse::value(m_staff2Inst, expr->staff()->id(), 1);
             const MusxInstance<others::StaffComposite> musxStaff = exprAssign->createCurrentStaff();
             const Staff* staff = m_score->staff(expr->staffIdx());
             const double staffReferenceOffset = musxStaff->calcTopLinePosition() * 0.5 * staff->spatium(s->tick()) * staff->staffType(s->tick())->lineDistance().val();
@@ -981,7 +981,7 @@ void FinaleParser::importTextExpressions()
         };
 
         if (item->systemFlag()) {
-            m_systemObjectStaves.insert(item->staffIdx());
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(item->staffIdx());
             parsedAssignments.push_back(expressionId);
             if (!expressionAssignment->staffList) {
                 continue;
@@ -1009,7 +1009,7 @@ void FinaleParser::importTextExpressions()
                 positionExpression(copy, linkedAssignment);
                 collectElementStyle(copy);
                 resizeExpressionIfNeeded(copy, linkedAssignment);
-                m_systemObjectStaves.insert(linkedStaffIdx);
+                muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
                 parsedAssignments.push_back(linkedExpressionId);
             }
         }
@@ -1027,7 +1027,7 @@ void FinaleParser::importTextExpressions()
         // per staff style calculations
         const MusxInstance<others::Staff>& rawStaff = m_doc->getOthers()->get<others::Staff>(m_currentMusxPartId, musxScrollViewItem->staffId);
 
-        staff_idx_t curStaffIdx = muse::value(m_inst2Staff, musxScrollViewItem->staffId, muse::nidx);
+        staff_idx_t curStaffIdx = staffIdxFromCmper(musxScrollViewItem->staffId);
         IF_ASSERT_FAILED(curStaffIdx != muse::nidx) {
             logger()->logWarning(String(u"MeasureTextAssign: Musx inst value not found for staff cmper %1").arg(String::fromStdString(std::to_string(rawStaff->getCmper()))));
             continue;
@@ -1159,7 +1159,7 @@ void FinaleParser::importTextExpressions()
 
         measure->add(item);
         collectElementStyle(item);
-        m_systemObjectStaves.insert(curStaffIdx);
+        muse::value(m_systemObjectStaves, m_currentPartId).insert(curStaffIdx);
 
         for (auto [linkedStaffIdx, linkedMusxStaffId] : links) {
             /// @todo improved handling for bottom system objects
@@ -1174,7 +1174,7 @@ void FinaleParser::importTextExpressions()
             copy->linkTo(item);
             measure->add(copy);
             collectElementStyle(copy);
-            m_systemObjectStaves.insert(linkedStaffIdx);
+            muse::value(m_systemObjectStaves, m_currentPartId).insert(linkedStaffIdx);
         }
         /// @todo fine-tune playback
     }
@@ -1365,7 +1365,7 @@ static PointF pagePosOfPageTextAssign(Page* page, const MusxInstance<others::Pag
 
 void FinaleParser::importPageTexts()
 {
-    MusxInstanceList<others::PageTextAssign> pageTextAssignList = m_doc->getOthers()->getArray<others::PageTextAssign>(m_currentMusxPartId);
+    const MusxInstanceList<others::PageTextAssign> pageTextAssignList = m_doc->getOthers()->getArray<others::PageTextAssign>(m_currentPartId);
     logger()->logInfo(String(u"Importing %1 page text assignments").arg(pageTextAssignList.size()));
 
     struct HeaderFooter {
@@ -1387,8 +1387,8 @@ void FinaleParser::importPageTexts()
 
     // gather texts by position
     for (const MusxInstance<others::PageTextAssign>& pageTextAssign : pageTextAssignList) {
-        const std::optional<PageCmper> startPage = pageTextAssign->calcStartPageNumber(m_currentMusxPartId);
-        const std::optional<PageCmper> endPage = pageTextAssign->calcEndPageNumber(m_currentMusxPartId);
+        const std::optional<PageCmper> startPage = pageTextAssign->calcStartPageNumber(m_currentPartId);
+        const std::optional<PageCmper> endPage = pageTextAssign->calcEndPageNumber(m_currentPartId);
         if (!startPage || !endPage) {
             // this page text does not appear on any page in this musx score/linked part.
             // it happens
@@ -1487,14 +1487,14 @@ void FinaleParser::importPageTexts()
     }
 
     auto stringFromPageText = [this](const MusxInstance<others::PageTextAssign>& pageText, bool isForHeaderFooter = true) {
-        std::optional<PageCmper> startPage = pageText->calcStartPageNumber(m_currentMusxPartId);
-        std::optional<PageCmper> endPage = pageText->calcEndPageNumber(m_currentMusxPartId);
+        std::optional<PageCmper> startPage = pageText->calcStartPageNumber(m_currentPartId);
+        std::optional<PageCmper> endPage = pageText->calcEndPageNumber(m_currentPartId);
         HeaderFooterType hfType = isForHeaderFooter ? HeaderFooterType::FirstPage : HeaderFooterType::None;
         if (isForHeaderFooter && startPage == 2 && endPage.value() == PageCmper(m_score->npages())) {
             hfType = HeaderFooterType::SecondPageToEnd;
         }
         std::optional<PageCmper> forPageId = hfType != HeaderFooterType::SecondPageToEnd ? startPage : std::nullopt;
-        musx::util::EnigmaParsingContext parsingContext = pageText->getRawTextCtx(m_currentMusxPartId, forPageId);
+        musx::util::EnigmaParsingContext parsingContext = pageText->getRawTextCtx(m_currentPartId, forPageId);
         EnigmaParsingOptions options(hfType);
         // RGP: This should probably be changed to what I did below to back out system scaling.
         options.scaleFontSizeBy = 6.0 / 5.0; // observed
@@ -1535,7 +1535,7 @@ void FinaleParser::importPageTexts()
     }
 
     auto getPages = [&](const MusxInstance<others::PageTextAssign>& pageTextAssign) -> std::vector<page_idx_t> {
-        page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentMusxPartId).value_or(1) - 1);
+        page_idx_t startP = page_idx_t(pageTextAssign->calcStartPageNumber(m_currentPartId).value_or(1) - 1);
         if (startP + 1 > m_score->npages()) {
             return {};
         }
@@ -1544,7 +1544,7 @@ void FinaleParser::importPageTexts()
             return { startP };
         }
         page_idx_t endP = m_score->npages();
-        std::optional<PageCmper> lastPage = pageTextAssign->calcEndPageNumber(m_currentMusxPartId);
+        std::optional<PageCmper> lastPage = pageTextAssign->calcEndPageNumber(m_currentPartId);
         if (lastPage.has_value()) {
             endP = std::min(page_idx_t(lastPage.value()), endP);
         }
@@ -1621,7 +1621,7 @@ void FinaleParser::importPageTexts()
                     /// @todo move this out of the for loop??
                     EnigmaParsingOptions options;
                     options.plainText = true;
-                    musx::util::EnigmaParsingContext parsingContext = pageTextAssign->getRawTextCtx(m_currentMusxPartId);
+                    musx::util::EnigmaParsingContext parsingContext = pageTextAssign->getRawTextCtx(m_currentPartId);
                     FontTracker firstFontInfo;
                     String pagePlainText = stringFromEnigmaText(parsingContext, options, &firstFontInfo);
                     muse::draw::FontMetrics fm = firstFontInfo.toFontMetrics();
@@ -1736,16 +1736,16 @@ void FinaleParser::importPageTexts()
             /// @todo Refine this calculation. The idea is to back out everything out of mag except the page percent. This is getting
             /// the right font size to within a fraction of a point. I'm not sure what is causing the error.
             /// Also, I do not know if it handles staff-level scaling or even if it needs to.
-            double systemScaling = musxOptions().pageFormat->calcSystemScaling().toDouble(); // fallback value
+            double systemScaling = muse::value(musxOptions().pageFormats, m_currentPartId)->calcSystemScaling().toDouble(); // fallback value
             MeasCmper measId = muse::value(m_tick2Meas, mb->tick(), 0);
             if (measId > 0) {
-                if (const MusxInstance<others::StaffSystem> system = m_doc->calculateSystemFromMeasure(m_currentMusxPartId, measId)) {
+                if (const MusxInstance<others::StaffSystem> system = m_doc->calculateSystemFromMeasure(m_currentPartId, measId)) {
                     systemScaling = system->calcSystemScaling().toDouble();
                 }
             }
             options.scaleFontSizeBy = mb->magS() / systemScaling;
             options.initialFont = FontTracker(m_score->style(), mb->isMeasure() ? u"staffText" : u"default");
-            musx::util::EnigmaParsingContext parsingContext = pageTextAssign->getRawTextCtx(m_currentMusxPartId, PageCmper(i + 1));
+            musx::util::EnigmaParsingContext parsingContext = pageTextAssign->getRawTextCtx(m_currentPartId, PageCmper(i + 1));
             String pageText = stringFromEnigmaText(parsingContext, options);
             addPageTextToMeasure(pageTextAssign, mb, page, pageText);
         }
