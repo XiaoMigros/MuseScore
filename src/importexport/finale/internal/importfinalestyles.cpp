@@ -168,7 +168,10 @@ EvpuFloat FinaleParser::evpuAugmentationDotWidth() const
 
 static void setStyle(MStyle& style, const Sid sid, const PropertyValue& v)
 {
-    if (v.type() == P_TYPE::REAL && style.value(sid).type() == P_TYPE::SPATIUM) {
+    if (sid == Sid::NOSTYLE) {
+        return;
+    }
+    if (v.type() == P_TYPE::REAL && style.valueType(sid) == P_TYPE::SPATIUM) {
         style.set(sid, Spatium(v.toDouble()));
     } else {
         style.set(sid, v);
@@ -975,7 +978,7 @@ static PropertyValue getFormattedValue(const EngravingObject* e, const Pid id)
         }
     }
     if (v.type() == P_TYPE::SPATIUM) {
-        return v.value<Spatium>().val() / sp;
+        return v.value<Spatium>() / sp;
     }
     // or all point types?
     if (id == Pid::OFFSET) {
@@ -1015,6 +1018,7 @@ void FinaleParser::collectElementStyle(const EngravingObject* e)
         if (styleId == Sid::NOSTYLE) {
             continue;
         }
+        logger()->logInfo(String(u"Collecting property %1").arg(propertyUserName(propertyId)));
         collectGlobalProperty(styleId, styledValueByElement(e, propertyId));
     }
 }
@@ -1024,6 +1028,9 @@ void FinaleParser::collectGlobalProperty(const Sid styleId, const PropertyValue&
     if (muse::contains(m_elementStyles, styleId)) {
         // Replace currently found value with new match, assuming there has been no bad match
         PropertyValue v = muse::value(m_elementStyles, styleId);
+        IF_ASSERT_FAILED (newV.type() == m_score->style().valueType(styleId)) {
+            logger()->logInfo(String(u"Bad value for style %1").arg(String::fromAscii(m_score->style().valueName(styleId))));
+        }
         if (v.isValid()) {
             muse::remove(m_elementStyles, styleId);
             m_elementStyles.emplace(styleId, compareStyledProperty(v, newV));
