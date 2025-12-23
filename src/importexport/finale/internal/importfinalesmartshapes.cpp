@@ -68,18 +68,18 @@ using namespace musx::dom;
 namespace mu::iex::finale {
 
 static const std::map<std::wstring, ElementType> elementByRegexTable = {
-    { L"(\bped(ale?)?\b)",                                         ElementType::PEDAL },
-    { L"(<sym>keyboardPedal[^>]*?</sym>)",                         ElementType::PEDAL },
-    { L"(\b(((de)?cresc)|(dim))\.?\b)",                            ElementType::HAIRPIN },
-    { L"(\b((rit(\.|ardando)?)|(rall(\.|entando)?))\b)",           ElementType::GRADUAL_TEMPO_CHANGE },
-    { L"(\blet ring\b)",                                           ElementType::LET_RING },
-    { L"(\b(?:(?:8v)|(?:(?:15|22)m))(a|b)\b)",                     ElementType::OTTAVA },
-    { L"(<sym>((ottava|quindicesima)|ventiduesima)[^>]*?<sym>)",   ElementType::OTTAVA },
-    { L"(\bw(?:\/|(?:hammy ))bar\b)",                              ElementType::WHAMMY_BAR },
-    { L"(\brasg(?:ueado)?\b)",                                     ElementType::RASGUEADO },
-    { L"(\bp(?:\.|ick) ?s(?:\.\B|crape\b))",                       ElementType::PICK_SCRAPE },
-    { L"(\bp(?:\.|alm) ?m(?:\.\B|ute\b))",                         ElementType::PALM_MUTE },
-    { L"(<sym>ornamentTrill[^>]*?</sym>)",                         ElementType::TRILL },
+    { LR"(\bped(ale?)?\b)",                                         ElementType::PEDAL },
+    { LR"(<sym>keyboardPedal[^>]*?</sym>)",                         ElementType::PEDAL },
+    { LR"(\b(((de)?cresc)|(dim))\.?\b)",                            ElementType::HAIRPIN },
+    { LR"(\b((rit(\.|ardando)?)|(rall(\.|entando)?))\b)",           ElementType::GRADUAL_TEMPO_CHANGE },
+    { LR"(\blet ring\b)",                                           ElementType::LET_RING },
+    { LR"(\b(?:(?:8v)|(?:(?:15|22)m))(a|b)\b)",                     ElementType::OTTAVA },
+    { LR"(<sym>((ottava|quindicesima)|ventiduesima)[^>]*?<sym>)",   ElementType::OTTAVA },
+    { LR"(\bw(?:\/|(?:hammy ))bar\b)",                              ElementType::WHAMMY_BAR },
+    { LR"(\brasg(?:ueado)?\b)",                                     ElementType::RASGUEADO },
+    { LR"(\bp(?:\.|ick) ?s(?:\.\B|crape\b))",                       ElementType::PICK_SCRAPE },
+    { LR"(\bp(?:\.|alm) ?m(?:\.\B|ute\b))",                         ElementType::PALM_MUTE },
+    { LR"(<sym>ornamentTrill[^>]*?</sym>)",                         ElementType::TRILL },
 };
 
 ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxInstance<others::SmartShapeCustomLine>& customLine)
@@ -175,7 +175,7 @@ ReadableCustomLine::ReadableCustomLine(const FinaleParser& context, const MusxIn
     case others::SmartShapeCustomLine::LineStyle::Dashed:
         lineStyle   = LineType::DASHED; /// @todo When should we set lineStyle to LineType::DOTTED ?
         lineVisible = customLine->dashedParams->lineWidth != 0;
-        lineWidth   = Spatium(doubleFromEfix(customLine->dashedParams->lineWidth)); /// @todo de-apply staff scaling later
+        lineWidth   = Spatium(doubleFromEfix(customLine->dashedParams->lineWidth));
         dashLineLen = doubleFromEfix(customLine->dashedParams->dashOn) / lineWidth.val();
         dashGapLen  = doubleFromEfix(customLine->dashedParams->dashOff) / lineWidth.val();
         break;
