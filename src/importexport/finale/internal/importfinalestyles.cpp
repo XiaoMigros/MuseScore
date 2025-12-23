@@ -974,9 +974,9 @@ static PropertyValue getFormattedValue(const EngravingObject* e, const Pid id)
             return PointF(0.0, p.ry());
         }
     }
-    if (v.type() == P_TYPE::SPATIUM) {
-        return v.value<Spatium>().val() / sp;
-    }
+    // if (v.type() == P_TYPE::SPATIUM) {
+        // return v.value<Spatium>().val() / sp;
+    // }
     // or all point types?
     if (id == Pid::OFFSET) {
         return v.value<PointF>() / sp;
