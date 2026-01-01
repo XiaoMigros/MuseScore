@@ -1147,7 +1147,6 @@ void FinaleParser::importEntries()
                     Segment* segment = measure->getSegmentR(SegmentType::ChordRest, Fraction(0, 1));
                     Rest* rest = Factory::createRest(segment, musxDurationInfoToDuration(pickupRestDura.value()));
                     rest->setScore(m_score);
-                    rest->setTicks(measure->timesig() * curStaff->timeStretch(measure->tick()));
                     rest->setTrack(staffTrackIdx);
                     rest->setVisible(!currMusxStaff->hideRests && !currMusxStaff->blankMeasure && !measureHasVoices);
                     segment->add(rest);
