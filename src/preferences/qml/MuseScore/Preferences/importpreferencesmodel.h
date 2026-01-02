@@ -58,6 +58,7 @@ class ImportPreferencesModel : public QObject, public muse::Injectable, public m
     Q_PROPERTY(bool roundTempo READ roundTempo WRITE setRoundTempo NOTIFY roundTempoChanged)
 
     Q_PROPERTY(int importPositionsType READ importPositionsType WRITE setImportPositionsType NOTIFY importPositionsTypeChanged)
+    Q_PROPERTY(bool convertTextSymbols READ convertTextSymbols WRITE setConvertTextSymbols NOTIFY convertTextSymbolsChanged)
 
     Q_PROPERTY(
         bool needAskAboutApplyingNewStyle READ needAskAboutApplyingNewStyle WRITE setNeedAskAboutApplyingNewStyle NOTIFY needAskAboutApplyingNewStyleChanged)
@@ -98,6 +99,7 @@ public:
     bool meiImportLayout() const;
 
     int importPositionsType() const;
+    bool convertTextSymbols() const;
 
 public slots:
     void setStyleFileImportPath(QString path);
@@ -116,6 +118,7 @@ public slots:
     void setMeiImportLayout(bool import);
 
     void setImportPositionsType(int importPositionsType);
+    void setConvertTextSymbols(bool convert);
 
 signals:
     void styleFileImportPathChanged(QString styleFileImportPath);
@@ -129,5 +132,6 @@ signals:
     void needAskAboutApplyingNewStyleChanged(bool needAskAboutApplyingNewStyle);
     void meiImportLayoutChanged(bool importLayout);
     void importPositionsTypeChanged(int importPositionsType);
+    void convertTextSymbolsChanged(bool convert);
 };
 }
