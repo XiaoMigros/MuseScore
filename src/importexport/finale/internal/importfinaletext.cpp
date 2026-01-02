@@ -425,8 +425,8 @@ ReadableExpression::ReadableExpression(const FinaleParser& context, const MusxIn
     }
     EnigmaParsingOptions options;
     musx::util::EnigmaParsingContext parsingContext = textExpression->getRawTextCtx(context.currentMusxPartId());
-    options.convertSymbols = !catMusicFont || catMusicFont->calcIsDefaultMusic()
-                             || catMusicFont->getName() == context.musxOptions().calculatedEngravingFontName.toStdString();
+    // options.convertSymbols = !catMusicFont || catMusicFont->calcIsDefaultMusic()
+    //                          || catMusicFont->getName() == context.musxOptions().calculatedEngravingFontName.toStdString();
     FontTracker firstFont;
     xmlText = context.stringFromEnigmaText(parsingContext, options, &firstFont);
     // must always be set as property
