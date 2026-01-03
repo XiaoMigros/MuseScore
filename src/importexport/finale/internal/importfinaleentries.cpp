@@ -374,7 +374,8 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr::InterpretedIterator result, tr
         entryRTick -= measure->ticks();
         measure = measure->nextMeasure();
         if (!measure) {
-            logger()->logWarning(String(u"Encountered entry number %1 beyond the end of the document.").arg(currentEntry->getEntryNumber()));
+            logger()->logWarning(String(u"Encountered entry number %1 beyond the end of the document.").arg(
+                                     currentEntry->getEntryNumber()));
             measure = originalMeasure;
             entryRTick = originalTick;
             break;
@@ -471,7 +472,12 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr::InterpretedIterator result, tr
             } else {
                 // calculate pitch & accidentals
                 NoteVal nval = notePropertiesToNoteVal(noteInfoPtr.calcNotePropertiesConcert(), baseStaff->concertKey(entryTick));
-                NoteVal nvalTransposed = notePropertiesToNoteVal(noteInfoPtr.calcNoteProperties(), baseStaff->key(entryTick));
+                std::optional<bool> enharmonicRespell;
+                if (m_currentMusxPartId == SCORE_PARTID && noteInfoPtr.calcIsEnharmonicRespellInAnyPart()) {
+                    enharmonicRespell = true;
+                }
+                NoteVal nvalTransposed = notePropertiesToNoteVal(noteInfoPtr.calcNoteProperties(enharmonicRespell),
+                                                                 baseStaff->key(entryTick));
                 nval.tpc2 = nvalTransposed.tpc2;
                 note->setNval(nval);
 
@@ -1279,12 +1285,14 @@ DirectionV FinaleParser::calculateTieDirection(Tie* tie, EntryNumber entryNumber
     DirectionV stemDir = c->beam() ? c->beam()->direction() : c->stemDirection();
     if (stemDir == DirectionV::AUTO) {
         logger()->logWarning(String(
-                                 u"The stem direction for ChordRest corresponding to EntryNumber %1 could not be determined. Getting it from EntryInfoPtr instead.").arg(
+                                 u"The stem direction for ChordRest corresponding to EntryNumber %1 could not be determined. Getting it from EntryInfoPtr instead.")
+                             .arg(
                                  entryNumber));
         EntryInfoPtr entryInfoPtr = EntryInfoPtr::fromEntryNumber(m_doc, m_currentMusxPartId, entryNumber);
         IF_ASSERT_FAILED(entryInfoPtr) {
             logger()->logWarning(String(
-                                     u"The stem direction for ChordRest corresponding to EntryNumber %1 could not be deterimed at all. Returning AUTO.").arg(
+                                     u"The stem direction for ChordRest corresponding to EntryNumber %1 could not be deterimed at all. Returning AUTO.")
+                                 .arg(
                                      entryNumber));
             return DirectionV::AUTO;
         }
