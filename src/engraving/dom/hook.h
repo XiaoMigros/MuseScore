@@ -52,6 +52,9 @@ public:
     //! @p straight: whether to use straight flags
     static SymId symIdForHookIndex(int index, bool straight);
 
+    bool acceptDrop(EditData&) const override;
+    EngravingItem* drop(EditData&) override;
+
 private:
     int m_hookType = 0;
 };
