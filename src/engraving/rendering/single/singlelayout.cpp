@@ -1414,6 +1414,10 @@ void SingleLayout::layout(MeasureRepeat* item, const Context& ctx)
         break;
     }
 
+    constexpr int lines = 5;
+    constexpr double lineDist = 1.0;
+    double spatium = ctx.style().spatium();
+    ldata->setPos(0.0, (lines - 1) * 0.5 * spatium * lineDist);
     RectF bbox = item->symBbox(ldata->symId);
     ldata->setBbox(bbox);
 }
