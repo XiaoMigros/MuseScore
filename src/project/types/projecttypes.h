@@ -108,6 +108,7 @@ struct CloudProjectInfo {
     {
         return !sourceUrl.isEmpty();
     }
+    QString customAudioPath;
 };
 
 struct CloudAudioInfo {
