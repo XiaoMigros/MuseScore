@@ -63,7 +63,7 @@ bool StaffText::isEditAllowed(EditData& ed) const
 
 EngravingItem* StaffText::linkedClone()
 {
-    StaffText* clone = static_cast<StaffText*>(StaffTextBase::linkedClone());
+    StaffText* clone = toStaffText(StaffTextBase::linkedClone());
 
     if (clone->m_soundFlag && m_soundFlag) {
         score()->undo(new Link(clone->m_soundFlag, m_soundFlag));

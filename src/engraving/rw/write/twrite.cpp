@@ -513,7 +513,7 @@ void TWrite::writeItemLink(const EngravingObject* item, XmlWriter& xml, WriteCon
         return;
     }
 
-    EngravingItem* mainElement = static_cast<EngravingItem*>(item->links()->mainElement());
+    EngravingItem* mainElement = toEngravingItem(item->links()->mainElement());
     if (mainElement != item) {
         EID eidOfMainElement = mainElement->eid();
         DO_ASSERT(eidOfMainElement.isValid());

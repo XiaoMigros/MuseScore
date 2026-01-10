@@ -376,7 +376,7 @@ GradualTempoChangeSegment* GradualTempoChangeSegment::clone() const
 
 GradualTempoChange* GradualTempoChangeSegment::tempoChange() const
 {
-    return static_cast<GradualTempoChange*>(spanner());
+    return toGradualTempoChange(spanner());
 }
 
 Sid GradualTempoChangeSegment::getPropertyStyle(Pid id) const

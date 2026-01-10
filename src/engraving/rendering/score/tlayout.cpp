@@ -463,7 +463,7 @@ void TLayout::layoutItem(EngravingItem* item, LayoutContext& ctx)
     case ElementType::TIMESIG:
         layoutTimeSig(item_cast<const TimeSig*>(item), static_cast<TimeSig::LayoutData*>(ldata), ctx);
         break;
-    case ElementType::TIME_TICK_ANCHOR: layoutTimeTickAnchor(static_cast<TimeTickAnchor*>(item), ctx);
+    case ElementType::TIME_TICK_ANCHOR: layoutTimeTickAnchor(toTimeTickAnchor(item), ctx);
         break;
     case ElementType::TREMOLO_SINGLECHORD: layoutTremoloSingle(item_cast<TremoloSingleChord*>(item), ctx);
         break;
@@ -6359,7 +6359,7 @@ void TLayout::layoutTripletFeel(const TripletFeel* item, TripletFeel::LayoutData
 void TLayout::layoutTrill(Trill* item, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    layoutLine(static_cast<SLine*>(item), ctx);
+    layoutLine(toSLine(item), ctx);
 }
 
 void TLayout::layoutTuplet(Tuplet* item, LayoutContext& ctx)
@@ -6447,7 +6447,7 @@ void TLayout::layoutVibratoSegment(VibratoSegment* item, LayoutContext& ctx)
 void TLayout::layoutVibrato(Vibrato* item, LayoutContext& ctx)
 {
     LAYOUT_CALL_ITEM(item);
-    layoutLine(static_cast<SLine*>(item), ctx);
+    layoutLine(toSLine(item), ctx);
 
     if (ctx.conf().isPaletteMode()) {
         return;
@@ -6520,7 +6520,7 @@ SpannerSegment* TLayout::layoutSystem(Spanner* item, System* system, LayoutConte
     SpannerSegment* seg = nullptr;
     bool found = LayoutSystemVisitor::visit(LayoutSystemTypes {}, item, system, ctx, &seg);
     if (!found) {
-        SLine* line = dynamic_cast<SLine*>(item);
+        SLine* line = toSLine(item);
         if (line) {
             seg = layoutSystemSLine(line, system, ctx);
         } else {

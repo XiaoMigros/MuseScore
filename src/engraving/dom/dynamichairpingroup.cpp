@@ -97,7 +97,7 @@ void HairpinWithDynamicsDragGroup::startDrag(EditData& ed)
     if (m_startDynamic) {
         m_startDynamic->startDrag(ed);
     }
-    static_cast<EngravingItem*>(m_hairpinSegment)->startDrag(ed);
+    toEngravingItem(m_hairpinSegment)->startDrag(ed);
     if (m_endDynamic) {
         m_endDynamic->startDrag(ed);
     }
@@ -108,11 +108,11 @@ RectF HairpinWithDynamicsDragGroup::drag(EditData& ed)
     RectF r;
 
     if (m_startDynamic) {
-        r.unite(static_cast<EngravingItem*>(m_startDynamic)->drag(ed));
+        r.unite(toEngravingItem(m_startDynamic)->drag(ed));
     }
     r.unite(m_hairpinSegment->drag(ed));
     if (m_endDynamic) {
-        r.unite(static_cast<EngravingItem*>(m_endDynamic)->drag(ed));
+        r.unite(toEngravingItem(m_endDynamic)->drag(ed));
     }
 
     Hairpin* h = m_hairpinSegment->hairpin();
@@ -176,7 +176,7 @@ void DynamicNearHairpinsDragGroup::startDrag(EditData& ed)
 
 RectF DynamicNearHairpinsDragGroup::drag(EditData& ed)
 {
-    RectF r(static_cast<EngravingItem*>(m_dynamic)->drag(ed));
+    RectF r(toEngravingItem(m_dynamic)->drag(ed));
 
     const Fraction tick = m_dynamic->segment()->tick();
 

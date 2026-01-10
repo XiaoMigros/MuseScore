@@ -571,7 +571,7 @@ TEST_F(Engraving_SpannersTests, spanners15)
 
     for (auto it = score->spanner().cbegin(); it != score->spanner().cend(); ++it) {
         Spanner* spanner = (*it).second;
-        SLine* sl = static_cast<SLine*>(spanner);
+        SLine* sl = toSLine(spanner);
         sl->setProperty(Pid::COLOR, Color(255, 0, 0, 255));
         for (auto ss : sl->spannerSegments()) {
             ss->setProperty(Pid::MIN_DISTANCE, 0.0_sp);

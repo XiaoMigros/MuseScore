@@ -2316,7 +2316,7 @@ void Read206::readTrill206(XmlReader& e, ReadContext& ctx, Trill* t)
             read400::TRead::readProperty(t, e, ctx, Pid::ORNAMENT_STYLE);
         } else if (tag == "play") {
             t->setPlaySpanner(e.readBool());
-        } else if (!TRead::readProperties(static_cast<SLine*>(t), e, ctx)) {
+        } else if (!TRead::readProperties(toSLine(t), e, ctx)) {
             e.unknown();
         }
     }
@@ -3134,7 +3134,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             // set tick to previous measure
             m->setTick(ctx.lastMeasure()->tick());
             ctx.setTick(ctx.lastMeasure()->tick());
-        } else if (read400::TRead::readProperties(static_cast<MeasureBase*>(m), e, ctx)) {
+        } else if (read400::TRead::readProperties(toMeasureBase(m), e, ctx)) {
         } else {
             e.unknown();
         }

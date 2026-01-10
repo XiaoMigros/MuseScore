@@ -621,7 +621,7 @@ void Selection::appendChordRest(ChordRest* cr)
     if (totalAppendedNotes < totalNotesInChord) {
         return;
     }
-    if (chord->beam() && !muse::contains(m_el, static_cast<EngravingItem*>(chord->beam()))) {
+    if (chord->beam() && !muse::contains(m_el, toEngravingItem(chord->beam()))) {
         m_el.push_back(chord->beam());
     }
     if (chord->stem()) {
@@ -637,7 +637,7 @@ void Selection::appendChordRest(ChordRest* cr)
 
 void Selection::appendTupletHierarchy(Tuplet* innermostTuplet)
 {
-    if (!canSelectVoice(innermostTuplet->voice()) || muse::contains(m_el, static_cast<EngravingItem*>(innermostTuplet))) {
+    if (!canSelectVoice(innermostTuplet->voice()) || muse::contains(m_el, toEngravingItem(innermostTuplet))) {
         return;
     }
 
