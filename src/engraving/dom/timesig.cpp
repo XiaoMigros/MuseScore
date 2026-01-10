@@ -95,7 +95,7 @@ void TimeSig::setSig(const Fraction& f, TimeSigType st)
 
 bool TimeSig::acceptDrop(EditData& data) const
 {
-    return data.dropElement->isTimeSig();
+    return data.dropElement->isTimeSig() || data.dropElement->isTempoText();
 }
 
 //---------------------------------------------------------
@@ -128,6 +128,14 @@ EngravingItem* TimeSig::drop(EditData& data)
         // Apply change to next measure
         score()->cmdAddTimeSig(measure()->nextMeasure(), staffIdx(), toTimeSig(e), false);
         return nullptr;
+    } else if (e->isTempoText()) {
+        Segment* s = segment()->next1(SegmentType::ChordRest);
+        if (s) {
+            e->setTrack(track());
+            e->setParent(s);
+            score()->undoAddElement(e);
+            return e;
+        }
     }
     delete e;
     return nullptr;
