@@ -126,7 +126,7 @@ TextLineSegment::TextLineSegment(Spanner* sp, System* parent, bool system)
 EngravingObject* TextLineSegment::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::SYSTEM_FLAG) {
-        return static_cast<TextLine*>(spanner());
+        return toTextLine(spanner());
     }
     return TextLineBaseSegment::propertyDelegate(pid);
 }

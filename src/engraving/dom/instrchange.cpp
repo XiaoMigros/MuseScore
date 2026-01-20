@@ -133,7 +133,7 @@ void InstrumentChange::setupInstrument(const Instrument* instrument)
 
     // change instrument in all linked scores
     for (EngravingObject* se : linkList()) {
-        InstrumentChange* lic = static_cast<InstrumentChange*>(se);
+        InstrumentChange* lic = toInstrumentChange(se);
         Instrument* newInstrument = new Instrument(*instrument);
         lic->score()->undo(new ChangeInstrument(lic, newInstrument));
     }

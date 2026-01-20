@@ -2131,7 +2131,7 @@ static void readMeasure(Measure* m, int staffIdx, XmlReader& e, ReadContext& ctx
             // set tick to previous measure
             m->setTick(ctx.lastMeasure()->tick());
             ctx.setTick(ctx.lastMeasure()->tick());
-        } else if (TRead::readProperties(static_cast<MeasureBase*>(m), e, ctx)) {
+        } else if (TRead::readProperties(toMeasureBase(m), e, ctx)) {
         } else {
             e.unknown();
         }

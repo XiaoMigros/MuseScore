@@ -1233,7 +1233,7 @@ Segment* Score::setNoteRest(Segment* segment, track_idx_t track, NoteVal nval, F
             for (EngravingObject* se : is.slur()->linkList()) {
                 Slur* slur = toSlur(se);
                 for (EngravingObject* ee : chord->linkList()) {
-                    EngravingItem* e = static_cast<EngravingItem*>(ee);
+                    EngravingItem* e = toEngravingItem(ee);
                     if (e->score() == slur->score() && e->track() == slur->track2()) {
                         slur->score()->undo(new ChangeSpannerElements(slur, slur->startElement(), e));
                         break;
