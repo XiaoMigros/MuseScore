@@ -69,7 +69,7 @@ Marker::Marker(EngravingItem* parent, TextStyleType tid)
 void Marker::setMarkerType(MarkerType t)
 {
     m_markerType = t;
-    const char* txt = 0;
+    const char* txt = nullptr;
     switch (t) {
     case MarkerType::SEGNO:
         txt = "<sym>segno</sym>";
@@ -81,6 +81,11 @@ void Marker::setMarkerType(MarkerType t)
         setLabel(u"varsegno");
         break;
 
+    case MarkerType::JPN_SEGNO:
+        txt = "<sym>segnoJapanese</sym>";
+        setLabel(u"segno");
+        break;
+
     case MarkerType::CODA:
         txt = "<sym>coda</sym>";
         setLabel(u"codab");
@@ -89,6 +94,11 @@ void Marker::setMarkerType(MarkerType t)
     case MarkerType::VARCODA:
         txt = "<sym>codaSquare</sym>";
         setLabel(u"varcoda");
+        break;
+
+    case MarkerType::JPN_CODA:
+        txt = "<sym>codaJapanese</sym>";
+        setLabel(u"codab");
         break;
 
     case MarkerType::CODETTA:
