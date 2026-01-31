@@ -403,6 +403,9 @@ void MoveElementAnchors::moveSegment(EngravingItem* element, Segment* newSeg, Fr
     case ElementType::FRET_DIAGRAM:
         doMoveHarmonyOrFretDiagramSegment(element, newSeg, tickDiff);
         break;
+    case ElementType::CLEF:
+        doMoveSegment(toClef(element), newSeg);
+        break;
     default:
         doMoveSegment(toEngravingItem(element), newSeg, tickDiff);
         break;
@@ -517,6 +520,20 @@ void MoveElementAnchors::doMoveHarmonyOrFretDiagramSegment(EngravingItem* elemen
             }
         }
     }
+}
+
+void MoveElementAnchors::doMoveSegment(Clef* clef, Segment* newSeg)
+{
+    IF_ASSERT_FAILED(clef->parent() && clef->parent()->isSegment()) {
+        return;
+    }
+
+    Segment* clefSeg = newSeg->measure()->findSegmentR(SegmentType::Clef, newSeg->rtick());
+    if (!clefSeg) {
+        clefSeg = newSeg->measure()->undoGetSegmentR(SegmentType::Clef, newSeg->rtick());
+    }
+
+    clef->score()->undoChangeElement(clefSeg->element(clef->track()), clef);
 }
 
 void MoveElementAnchors::moveSnappedItems(EngravingItem* element, Segment* newSeg, Fraction tickDiff)

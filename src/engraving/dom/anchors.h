@@ -57,6 +57,7 @@ private:
 
     static void doMoveSegment(EngravingItem* element, Segment* newSeg, Fraction tickDiff);
     static void doMoveSegment(FiguredBass* element, Segment* newSeg, Fraction tickDiff);
+    static void doMoveSegment(Clef* clef, Segment* newSeg);
     static void doMoveHarmonyOrFretDiagramSegment(EngravingItem* element, Segment* newSeg, Fraction tickDiff);
 
     static void moveSnappedItems(EngravingItem* element, Segment* newSeg, Fraction tickDiff);
