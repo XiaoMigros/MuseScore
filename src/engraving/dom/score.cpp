@@ -2081,7 +2081,7 @@ bool Score::appendMeasuresFromScore(Score* score, const Fraction& startTick, con
             curTick += nm->ticks();
             nmb = toMeasureBase(nm);
         } else {
-            nmb = static_cast<MeasureBase*>(cmb->clone());
+            nmb = toMeasureBase(cmb->clone());
         }
 
         nmb->setScore(this);

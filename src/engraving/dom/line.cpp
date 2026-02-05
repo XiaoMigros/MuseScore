@@ -796,7 +796,6 @@ void LineSegment::localSpatiumChanged(double ov, double nv)
 EngravingObject* LineSegment::propertyDelegate(Pid pid) const
 {
     if (pid == Pid::DIAGONAL
-        || pid == Pid::COLOR
         || pid == Pid::LINE_WIDTH
         || pid == Pid::LINE_STYLE
         || pid == Pid::DASH_LINE_LEN

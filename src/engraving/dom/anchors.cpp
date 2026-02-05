@@ -439,7 +439,7 @@ void MoveElementAnchors::doMoveSegment(EngravingItem* element, Segment* newSeg, 
                 score->undoRemoveElement(toEngravingItem(child));
             }
             linkedElement->undoUnlink();
-            score->undoRemoveElement(static_cast<EngravingItem*>(linkedElement));
+            score->undoRemoveElement(toEngravingItem(linkedElement));
         }
     }
 

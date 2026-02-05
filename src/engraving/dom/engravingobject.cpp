@@ -61,7 +61,7 @@ EngravingObject::EngravingObject(const ElementType& type, EngravingObject* paren
     }
 
     if (type == ElementType::SCORE) {
-        m_score = static_cast<Score*>(this);
+        m_score = toScore(this);
     }
 
     // reg to debug

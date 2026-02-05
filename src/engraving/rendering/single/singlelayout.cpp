@@ -1381,7 +1381,7 @@ void SingleLayout::layout(Lyrics* item, const Context& ctx)
 
 void SingleLayout::layout(NoteHead* item, const Context& ctx)
 {
-    layout(static_cast<Symbol*>(item), ctx);
+    layout(toSymbol(item), ctx);
 }
 
 void SingleLayout::layout(NoteLine*, const Context&)
@@ -1813,7 +1813,7 @@ void SingleLayout::layout(TremoloBar* item, const Context&)
 
 void SingleLayout::layout(Trill* item, const Context& ctx)
 {
-    layoutLine(static_cast<SLine*>(item), ctx);
+    layoutLine(toSLine(item), ctx);
 }
 
 void SingleLayout::layout(TrillSegment* item, const Context& ctx)
@@ -1881,7 +1881,7 @@ void SingleLayout::layout(TrillSegment* item, const Context& ctx)
 
 void SingleLayout::layout(Vibrato* item, const Context& ctx)
 {
-    layoutLine(static_cast<SLine*>(item), ctx);
+    layoutLine(toSLine(item), ctx);
 }
 
 void SingleLayout::layout(VibratoSegment* item, const Context&)
