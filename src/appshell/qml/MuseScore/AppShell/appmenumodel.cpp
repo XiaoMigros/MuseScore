@@ -808,7 +808,15 @@ MenuItemList AppMenuModel::makePluginsItems()
             if (!a.showOnAppmenu) {
                 return;
             }
-            items << makeMenuItem(makeActionQuery(m.uri, a.code).toString(), TranslatableString::untranslatable(a.title));
+            String titleStr = a.title;
+            if (titleStr.empty()) {
+                titleStr = m.title;
+            }
+            std::string codeStr = a.code;
+            if (codeStr.empty()) {
+                codeStr = "main";
+            }
+            items << makeMenuItem(makeActionQuery(m.uri, codeStr).toString(), TranslatableString::untranslatable(titleStr));
         } else {
             MenuItemList sub;
             for (const muse::extensions::Action& a : m.actions) {
