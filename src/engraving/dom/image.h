@@ -95,11 +95,14 @@ public:
     muse::draw::SvgRenderer* svgRenderer() const { return m_svgDoc; }
     const std::shared_ptr<muse::draw::Pixmap>& rasterImage() const { return m_rasterDoc; }
 
-    bool needStartEditingAfterSelecting() const override { return true; }
+    bool hasParentSegment() const { return explicitParent() && parent()->isSegment(); }
+    virtual bool allowTimeAnchor() const override { return hasParentSegment(); }
+
     int gripsCount() const override { return 2; }
     Grip initialEditModeGrip() const override { return Grip(1); }
     Grip defaultGrip() const override { return Grip(1); }
     std::vector<PointF> gripsPositions(const EditData&) const override;
+    RectF drag(EditData&) override;
 
     SizeF pixel2size(const SizeF& s) const;
     SizeF size2pixel(const SizeF& s) const;

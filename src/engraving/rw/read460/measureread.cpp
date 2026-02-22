@@ -524,7 +524,7 @@ void MeasureRead::readVoice(Measure* measure, XmlReader& e, ReadContext& ctx, in
             if (MScore::noImages) {
                 e.skipCurrentElement();
             } else {
-                segment = measure->getSegment(SegmentType::ChordRest, ctx.tick());
+                segment = measure->getChordRestOrTimeTickSegment(ctx.tick());
                 Image* el = Factory::createImage(segment);
                 el->setTrack(ctx.track());
                 TRead::read(el, e, ctx);
