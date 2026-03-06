@@ -28,7 +28,7 @@
 #include "global/itickerprovider.h"
 
 namespace muse {
-class BaseApplication : public IApplication, public muse::Injectable
+class BaseApplication : public IApplication, public muse::Contextable
 {
     GlobalInject<ITickerProvider> tickerProvider;
 public:
@@ -56,6 +56,7 @@ public:
     bool noGui() const override;
 
     void restart() override;
+    void finish() override;
 
     const modularity::ContextPtr iocContext() const override;
     modularity::ModulesIoC* ioc() const override;
@@ -75,6 +76,7 @@ protected:
 
 private:
     RunMode m_runMode = RunMode::GuiApp;
+    FinishMode m_finishMode = FinishMode::Default;
     modularity::ContextPtr m_iocContext;
 };
 }

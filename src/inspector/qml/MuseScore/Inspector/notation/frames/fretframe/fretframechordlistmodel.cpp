@@ -32,7 +32,7 @@ using namespace mu::inspector;
 using namespace mu::engraving;
 
 FretFrameChordListModel::FretFrameChordListModel(QObject* parent)
-    : muse::uicomponents::SelectableItemListModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : muse::uicomponents::SelectableItemListModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -179,7 +179,7 @@ void FretFrameChordListModel::saveOrder()
 
     for (const Item* item: items()) {
         const FretFrameChordItem* chordItem = dynamic_cast<const FretFrameChordItem*>(item);
-        newOrder.push_back(String::fromQString(chordItem->plainText()));
+        newOrder.push_back(String::fromQString(chordItem->title()));
     }
 
     m_fretBox->undoReorderElements(newOrder);

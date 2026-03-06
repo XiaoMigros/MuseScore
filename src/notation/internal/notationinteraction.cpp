@@ -229,7 +229,7 @@ inline QString extractSyllable(const QString& text)
 }
 
 NotationInteraction::NotationInteraction(Notation* notation, INotationUndoStackPtr undoStack)
-    : muse::Injectable(notation->iocContext()), m_notation(notation), m_undoStack(undoStack), m_editData(&m_scoreCallbacks)
+    : muse::Contextable(notation->iocContext()), m_notation(notation), m_undoStack(undoStack), m_editData(&m_scoreCallbacks)
 {
     m_noteInput = std::make_shared<NotationNoteInput>(notation, this, m_undoStack, iocContext());
     m_selection = std::make_shared<NotationSelection>(notation);
@@ -1643,7 +1643,8 @@ bool NotationInteraction::updateDropSingle(const PointF& pos, Qt::KeyboardModifi
     case ElementType::OTTAVA:
     case ElementType::TRILL:
     case ElementType::HAIRPIN:
-    case ElementType::TEXTLINE: {
+    case ElementType::TEXTLINE:
+    case ElementType::WHAMMY_BAR: {
         edd.ed.modifiers = keyboardModifier(modifiers);
         return prepareDropTimeAnchorElement(pos);
     }
@@ -1978,6 +1979,7 @@ bool NotationInteraction::dropSingle(const PointF& pos, Qt::KeyboardModifiers mo
     case ElementType::VIBRATO:
     case ElementType::PALM_MUTE:
     case ElementType::HAIRPIN:
+    case ElementType::WHAMMY_BAR:
     {
         mu::engraving::Spanner* spanner = ptr::checked_cast<mu::engraving::Spanner>(edd.ed.dropElement);
         score()->cmdAddSpanner(spanner, pos, systemStavesOnly);
@@ -2430,9 +2432,20 @@ void NotationInteraction::applyPaletteElementToList(EngravingItem* element, mu::
         return;
     }
 
-    if (element->isActionIcon() && toActionIcon(element)->actionType() == ActionIconType::SYSTEM_LOCK) {
-        EditSystemLocks::applyLockToSelection(score);
-        return;
+    if (element->isActionIcon()) {
+        const ActionIcon* icon = toActionIcon(element);
+        switch (icon->actionType()) {
+        case ActionIconType::SYSTEM_LOCK: {
+            EditSystemLocks::applyLockToSelection(score);
+            return;
+        }
+        case ActionIconType::PARENTHESES: {
+            score->cmdAddParenthesesToNotes();
+            return;
+        }
+        default:
+            break;
+        }
     }
 
     if (element->isSlur()) {
@@ -2669,6 +2682,10 @@ void NotationInteraction::applyPaletteElementToRange(EngravingItem* element, mu:
         switch (actionType) {
         case ActionIconType::SYSTEM_LOCK: {
             EditSystemLocks::applyLockToSelection(score);
+            return;
+        }
+        case ActionIconType::PARENTHESES: {
+            score->cmdAddParenthesesToNotes();
             return;
         }
         case ActionIconType::STANDARD_BEND:
@@ -4454,12 +4471,14 @@ bool NotationInteraction::handleKeyPress(QKeyEvent* event)
             return false;
         }
         editElem->nextGrip(m_editData);
+        notifyAboutNotationChanged();
         return true;
     case Qt::Key_Backtab:
         if (!editElem->hasGrips()) {
             return false;
         }
         editElem->prevGrip(m_editData);
+        notifyAboutNotationChanged();
         return true;
     case Qt::Key_Left:
         m_editData.delta = PointF(-nudgeDistance(m_editData, hRaster), 0);
@@ -4629,6 +4648,7 @@ void NotationInteraction::redo()
 
 void NotationInteraction::undoRedoToIndex(size_t idx)
 {
+    endEditElement();
     m_undoStack->undoRedoToIndex(idx, &m_editData);
 }
 
@@ -5145,7 +5165,7 @@ void NotationInteraction::addBoxes(BoxType boxType, int count, int beforeBoxInde
         case BoxType::Vertical: return TranslatableString("undoableAction", "Add vertical frame");
         case BoxType::Text: return TranslatableString("undoableAction", "Add text frame");
         case BoxType::Fret: return TranslatableString("undoableAction", "Add fretboard diagram legend");
-        case BoxType::Measure: return TranslatableString("undoableAction", "Add %n measure(s)", nullptr, count);
+        case BoxType::Measure: return TranslatableString("undoableAction", "Add %Ln measure(s)", nullptr, count);
         case BoxType::Unknown: break;
         }
 
@@ -5242,10 +5262,24 @@ void NotationInteraction::repeatSelection()
         return;
     }
 
+    //! NOTE: Ideally we would use our copy-paste logic for this case, but this isn't
+    //! fully compatible with list selections right now...
     if (selection.isList()) {
-        //! NOTE: Ideally we would use our copy-paste logic for this case, but this isn't
-        //! fully compatible with list selections right now...
-        repeatListSelection(selection);
+        const Fraction& firstTick = selection.tickStart();
+        const Fraction& lastTick = selection.tickEnd();
+        // Only "single-tick" list selections are currently supported...
+        if (firstTick != lastTick) {
+            MScore::setError(MsError::CANNOT_REPEAT_SELECTION);
+            checkAndShowError();
+            return;
+        }
+        startEdit(TranslatableString("undoableAction", "Repeat selection"));
+        if (!score()->cmdRepeatListSelection()) {
+            rollback();
+            MScore::setError(MsError::CANNOT_REPEAT_SELECTION);
+            return;
+        }
+        apply();
         return;
     }
 
@@ -5263,77 +5297,26 @@ void NotationInteraction::repeatSelection()
     if (endSegment && endSegment->segmentType() != SegmentType::ChordRest) {
         endSegment = endSegment->next1(SegmentType::ChordRest);
     }
-    if (endSegment) {
-        for (track_idx_t track = staff2track(dStaff); track < staff2track(dStaff + 1); ++track) {
-            EngravingItem* e = endSegment->element(track);
-            if (e) {
-                startEdit(TranslatableString("undoableAction", "Repeat selection"));
-                ChordRest* cr = toChordRest(e);
-                if (!score()->pasteStaff(xml, cr->segment(), cr->staffIdx())) {
-                    rollback();
-                    checkAndShowError();
-                    return;
-                }
-                apply();
-
-                showItem(cr);
-                break;
-            }
-        }
-    }
-}
-
-void NotationInteraction::repeatListSelection(const Selection& selection)
-{
-    const Fraction& firstTick = selection.tickStart();
-    const Fraction& lastTick = selection.tickEnd();
-    // Only "single-tick" list selections are currently supported...
-    if (firstTick != lastTick) {
-        MScore::setError(MsError::CANNOT_REPEAT_SELECTION);
-        checkAndShowError();
+    if (!endSegment) {
         return;
     }
-
-    startEdit(TranslatableString("undoableAction", "Repeat selection"));
-
-    InputState& is = score()->inputState();
-
-    std::vector<Note*> notes = selection.noteList();
-    std::sort(notes.begin(), notes.end(), [](const Note* a, const Note* b) { return a->track() < b->track(); });
-
-    std::vector<EngravingItem*> toSelect;
-    std::unordered_set<const Chord*> foundChords;
-    for (Note* n : notes) {
-        if (n->isGrace() || n->incomingPartialTie() || n->outgoingPartialTie()) {
+    for (track_idx_t track = staff2track(dStaff); track < staff2track(dStaff + 1); ++track) {
+        EngravingItem* e = endSegment->element(track);
+        if (!e) {
             continue;
         }
-
-        const Chord* sourceChord = n->chord();
-        is.setTrack(sourceChord->track());
-
-        const bool addFlag = muse::contains(foundChords, sourceChord);
-        if (!addFlag) {
-            // If the note doesn't belong to a chord we've seen before...
-            foundChords.emplace(sourceChord);
-            is.setSegment(sourceChord->segment());
-            if (score()->inputState().endOfScore()) {
-                continue;
-            }
-            is.moveToNextInputPos();
-            is.setDuration(sourceChord->durationType());
+        startEdit(TranslatableString("undoableAction", "Repeat selection"));
+        ChordRest* cr = toChordRest(e);
+        if (!score()->pasteStaff(xml, cr->segment(), cr->staffIdx())) {
+            rollback();
+            checkAndShowError();
+            return;
         }
+        apply();
 
-        NoteVal nval = n->noteVal();
-        Note* newNote = score()->addPitch(nval, addFlag);
-        IF_ASSERT_FAILED(newNote) {
-            continue;
-        }
-        newNote->chord()->updateArticulations(sourceChord->articulationSymbolIds());
-        toSelect.push_back(newNote);
+        showItem(cr);
+        break;
     }
-    score()->select(toSelect, SelectType::ADD);
-
-    apply();
 }
 
 void NotationInteraction::copyLyrics()
@@ -5348,39 +5331,13 @@ void NotationInteraction::pasteSelection(const Fraction& scale)
 
     bool succeeded = true;
     if (isTextEditingStarted()) {
-        const QMimeData* mimeData = QApplication::clipboard()->mimeData();
-        if (mimeData->hasFormat(TextEditData::mimeRichTextFormat)) {
-            const QString txt = QString::fromUtf8(mimeData->data(TextEditData::mimeRichTextFormat));
-            toTextBase(m_editData.element)->paste(m_editData, txt);
-        } else {
-            QString clipboardText = mimeData->text();
-            QString textForPaste = clipboardText;
-            if ((!clipboardText.startsWith('<') || !clipboardText.contains('>')) && m_editData.element->isLyrics()) {
-                textForPaste = extractSyllable(clipboardText);
-            }
-
-            toTextBase(m_editData.element)->paste(m_editData, textForPaste);
-
-            if (!textForPaste.isEmpty() && m_editData.element->isLyrics()) {
-                if (textForPaste.endsWith('-')) {
-                    navigateToNextSyllable();
-                } else if (textForPaste.endsWith('_')) {
-                    addMelisma();
-                } else {
-                    navigateToLyrics(false, false, false);
-                }
-
-                QString textForNextPaste = clipboardText.remove(0, clipboardText.indexOf(textForPaste) + textForPaste.size());
-                QGuiApplication::clipboard()->setText(textForNextPaste);
-            }
-        }
+        pasteIntoTextEdit();
     } else {
         const QMimeData* mimeData = QApplication::clipboard()->mimeData();
         QMimeDataAdapter ma(mimeData);
         succeeded = score()->cmdPaste(&ma, nullptr, scale);
+        m_editData.element = nullptr;
     }
-
-    m_editData.element = nullptr;
 
     if (succeeded) {
         apply();
@@ -5392,6 +5349,39 @@ void NotationInteraction::pasteSelection(const Fraction& scale)
     }
 
     checkAndShowError();
+}
+
+void NotationInteraction::pasteIntoTextEdit()
+{
+    const QMimeData* mimeData = QApplication::clipboard()->mimeData();
+    if (mimeData->hasFormat(TextEditData::mimeRichTextFormat)) {
+        const QString txt = QString::fromUtf8(mimeData->data(TextEditData::mimeRichTextFormat));
+        toTextBase(m_editData.element)->paste(m_editData, txt);
+        return;
+    }
+
+    QString clipboardText = mimeData->text();
+    QString textForPaste = clipboardText;
+    if ((!clipboardText.startsWith('<') || !clipboardText.contains('>')) && m_editData.element->isLyrics()) {
+        textForPaste = extractSyllable(clipboardText);
+    }
+
+    toTextBase(m_editData.element)->paste(m_editData, textForPaste);
+
+    if (textForPaste.isEmpty() || !m_editData.element->isLyrics()) {
+        return;
+    }
+
+    if (textForPaste.endsWith('-')) {
+        navigateToNextSyllable();
+    } else if (textForPaste.endsWith('_')) {
+        addMelisma();
+    } else {
+        navigateToLyrics(false, false, false);
+    }
+
+    const QString textForNextPaste = clipboardText.remove(0, clipboardText.indexOf(textForPaste) + textForPaste.size());
+    QGuiApplication::clipboard()->setText(textForNextPaste);
 }
 
 void NotationInteraction::swapSelection()
@@ -6040,11 +6030,27 @@ void NotationInteraction::addIntervalToSelectedNotes(int interval)
     std::vector<Note*> notes;
 
     if (score()->selection().isRange()) {
+        const bool hasMultiNoteChords = score()->selection().rangeContainsMultiNoteChords();
         for (const ChordRest* chordRest : score()->getSelectedChordRests()) {
-            if (chordRest->isChord()) {
-                const Chord* chord = toChord(chordRest);
-                Note* note = interval > 0 ? chord->upNote() : chord->downNote();
-                notes.push_back(note);
+            if (!chordRest->isChord()) {
+                continue;
+            }
+            const Chord* chord = toChord(chordRest);
+            const std::vector<Note*> nl = chord->notes();
+            if (interval > 0) {
+                for (size_t noteIdx = nl.size(); noteIdx > 0; --noteIdx) {
+                    if (score()->selectionFilter().canSelectNoteIdx(noteIdx - 1, nl.size(), hasMultiNoteChords)) {
+                        notes.push_back(nl.at(noteIdx - 1));
+                        break;
+                    }
+                }
+            } else {
+                for (size_t noteIdx = 0; noteIdx < nl.size(); ++noteIdx) {
+                    if (score()->selectionFilter().canSelectNoteIdx(noteIdx, nl.size(), hasMultiNoteChords)) {
+                        notes.push_back(nl.at(noteIdx));
+                        break;
+                    }
+                }
             }
         }
     } else {
@@ -6414,7 +6420,7 @@ void NotationInteraction::removeSelectedMeasures()
 
     int numDeletedMeasures = 1 + lastMeasure->measureIndex() - firstMeasure->measureIndex();
 
-    startEdit(TranslatableString("undoableAction", "Delete %n measure(s)", nullptr, numDeletedMeasures));
+    startEdit(TranslatableString("undoableAction", "Delete %Ln measure(s)", nullptr, numDeletedMeasures));
     score()->cmdTimeDelete();
     apply();
 }
@@ -7762,6 +7768,28 @@ void NotationInteraction::addMelisma()
         score()->endCmd();
     }
 
+    auto getPartialLyricLineEndSegment = [&]() -> Fraction {
+        Segment* endSegment = segment;
+        while (endSegment && endSegment->tick() < endTick) {
+            endSegment = endSegment->nextCR(track, true);
+        }
+        EngravingItem* endSegmentElement = endSegment->element(track);
+        if (endSegment->tick() == endTick && endSegmentElement && endSegmentElement->isChord()) {
+            Segment* endChordSeg = endSegment;
+            Chord* endChord = toChord(endSegmentElement);
+
+            endSegment = endChordSeg->nextCR(track, false);
+
+            if (!endSegment || endSegment->tick() > endChord->endTick()) {
+                endSegment = endChordSeg;
+                while (endSegment && endSegment->tick() < endChord->endTick()) {
+                    endSegment = endSegment->nextCR(muse::nidx, true);
+                }
+            }
+        }
+        return endSegment ? endSegment->tick() : score()->endTick();
+    };
+
     if (!nextSegment) {
         score()->startCmd(TranslatableString("undoableAction", "Enter lyrics extension line"));
         if (fromLyrics) {
@@ -7793,7 +7821,8 @@ void NotationInteraction::addMelisma()
 
             score()->undoAddElement(melisma);
         } else if (prevPartialLyricsLine) {
-            const Fraction tickDiff = (segment->tick() + segment->ticks()) - prevPartialLyricsLine->tick2();
+            const Fraction segEndTick = getPartialLyricLineEndSegment();
+            const Fraction tickDiff = segEndTick - prevPartialLyricsLine->tick2();
             prevPartialLyricsLine->undoMoveEnd(tickDiff);
         }
 
@@ -7876,7 +7905,7 @@ void NotationInteraction::addMelisma()
 
         score()->undoAddElement(melisma);
     } else if (prevPartialLyricsLine) {
-        const Fraction segEndTick = segment->tick() + segment->ticks();
+        const Fraction segEndTick = getPartialLyricLineEndSegment();
         const Fraction tickDiff = segEndTick - prevPartialLyricsLine->tick2();
         prevPartialLyricsLine->undoMoveEnd(tickDiff);
         prevPartialLyricsLine->triggerLayout();

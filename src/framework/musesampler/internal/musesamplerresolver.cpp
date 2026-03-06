@@ -80,6 +80,8 @@ InstrumentInfo findInstrument(MuseSamplerLibHandlerPtr libHandler, const AudioRe
 
 void MuseSamplerResolver::init()
 {
+    TRACEFUNC;
+
     const io::path_t libraryPath = configuration()->libraryPath();
     if (io::isAbsolute(libraryPath) && !io::FileInfo::exists(libraryPath)) {
         LOGI() << "MuseSampler library not found: " << libraryPath;
@@ -128,6 +130,15 @@ void MuseSamplerResolver::init()
     });
 
     LOGI() << "MuseSampler successfully inited: " << libraryPath << ", version: " << m_samplerVersion.toString();
+}
+
+void MuseSamplerResolver::deinit()
+{
+    TRACEFUNC;
+
+    if (m_libHandler) {
+        m_libHandler->deinit();
+    }
 }
 
 bool MuseSamplerResolver::reloadAllInstruments()
@@ -182,10 +193,6 @@ AudioResourceMetaList MuseSamplerResolver::resolveResources() const
         const String instrumentSoundId = String::fromUtf8(m_libHandler->getMpeSoundId(instrument));
         const String vendorName = String::fromUtf8(m_libHandler->getInstrumentVendorName(instrument));
         const bool isOnline = m_libHandler->isOnlineInstrument(instrument);
-
-        if (instrumentSoundId.empty()) {
-            LOGE() << "MISSING INSTRUMENT ID for: " << internalName;
-        }
 
         String instrumentPackName = String::fromUtf8(m_libHandler->getInstrumentPackName(instrument));
         if (instrumentPackName.empty()) {

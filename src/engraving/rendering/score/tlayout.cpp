@@ -888,7 +888,23 @@ void TLayout::layoutChordBracket(const ChordBracket* item, Arpeggio::LayoutData*
     ldata->setMag(item->staff() ? item->staff()->staffMag(item->tick()) : item->mag());
     ldata->magS = conf.magS(ldata->mag());
 
-    ldata->setBbox(RectF(0.0, ldata->top, item->hookLength().toMM(spatium), ldata->bottom));
+    ldata->setShape(Shape(RectF(0.0, ldata->top, item->hookLength().toMM(spatium), ldata->bottom), item));
+
+    const Note* upnote = item->chord()->upNote();
+    ldata->setPosY(upnote->y() + upnote->ldata()->bbox().top());
+
+    Shape chordShape = item->chord()->shape();
+    chordShape.removeTypes({ ElementType::CHORD_BRACKET, ElementType::ARPEGGIO });
+    Shape itemShape = item->shape().translated(PointF(0.0, item->ldata()->pos().y()));
+    if (item->rightSide()) {
+        double x = HorizontalSpacing::minHorizontalDistance(chordShape, itemShape, spatium);
+        x = std::max(x, 0.0);
+        ldata->setPosX(x);
+    } else {
+        double x = HorizontalSpacing::minHorizontalDistance(itemShape, chordShape, spatium);
+        x = std::max(x, 0.0);
+        ldata->setPosX(-x);
+    }
 
     // Loop through staves spanned & regenerate chord shape
     // This makes sure the arpeggio's shape is added to the shape of each chord it spans
@@ -1475,6 +1491,8 @@ void TLayout::layoutBreath(const Breath* item, Breath::LayoutData* ldata, const 
     }
 
     ldata->setBbox(item->symBbox(item->symId()));
+
+    ldata->setPosX(-ldata->bbox().right());
 }
 
 void TLayout::layoutChord(Chord* item, LayoutContext& ctx)
@@ -1609,10 +1627,6 @@ void TLayout::layoutClef(const Clef* item, Clef::LayoutData* ldata, const Layout
     LAYOUT_CALL_ITEM(item);
     LD_INDEPENDENT;
 
-    if (ldata->isValid()) {
-        return;
-    }
-
     // determine current number of lines and line distance
     int lines = 5;
     double lineDist = 1.0;
@@ -1623,11 +1637,15 @@ void TLayout::layoutClef(const Clef* item, Clef::LayoutData* ldata, const Layout
 
     // check clef visibility and type compatibility
     if (clefSeg && item->staff()) {
-        const Fraction tick = clefSeg->tick();
+        StaffType* stVisibility = item->staff()->staffType(item->tick());
+        bool show = stVisibility->genClef();            // check staff type allows clef display
+
+        const bool endOfMeasureClef = clefSeg->rtick() == clefSeg->measure()->ticks();
+        const Fraction tick = endOfMeasureClef && !item->isTrailer() ? item->tick() : clefSeg->measure()->tick();
+
         const Fraction tickPrev = tick - Fraction::eps();
         const StaffType* st = item->staff()->staffType(tick);
         const StaffType* stPrev = !tickPrev.negative() ? item->staff()->staffType(tickPrev) : nullptr;
-        bool show = st->genClef();            // check staff type allows clef display
         StaffGroup staffGroup = st->group();
         const bool hideClef = st->isTabStaff() ? conf.styleB(Sid::hideTabClefAfterFirst) : !conf.styleB(Sid::genClef);
 
@@ -3384,10 +3402,13 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
     ldata->setBbox(RectF());
     ldata->keySymbols.clear();
 
-    const StaffType* st = item->staffType();
-    if (st && !st->genKeysig()) {
+    const Staff* staff = item->staff();
+    const StaffType* stVisibility = staff ? staff->staffType(item->tick()) : nullptr;
+    if (stVisibility && !stVisibility->genKeysig()) {
         return;
     }
+
+    const StaffType* st = item->staffType();
     const Segment* s = item->segment();
     track_idx_t track = item->track();
     double spatium = item->spatium();
@@ -3499,10 +3520,11 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
         // AND we're not force hiding naturals (continuous mode)
         // AND key sig is CMaj/Amin OR style says they are on
         const Measure* pm = item->measure() ? item->measure()->prevMeasureMM() : nullptr;
+        const bool isCourtesy = s && (s->isType(SegmentType::CourtesyKeySigType) || !s->rtick().isZero());
+        const bool prevTrailerCourtesy = pm && !pm->sectionBreak() && (!pm->trailer() || !pm->hasCourtesyKeySig());
         if (!item->hideNaturals() && track != muse::nidx
             && (conf.styleI(Sid::keySigNaturals) != int(KeySigNatural::NONE) || (t1 == 0))
-            && ((s && (s->isType(SegmentType::CourtesyKeySigType) || !s->rtick().isZero()))
-                || (pm && !pm->sectionBreak() && !pm->hasCourtesyKeySig()))) {
+            && (isCourtesy || prevTrailerCourtesy)) {
             KeySigEvent prevKsEvent = item->staff() ? item->staff()->keySigEvent(item->tick() - Fraction::eps()) : KeySigEvent();
             int t2 = int(prevKsEvent.key());
 
@@ -5277,13 +5299,14 @@ void TLayout::layoutStringTunings(StringTunings* item, LayoutContext& ctx)
 
     TextLayout::layoutBaseTextBase(item, ctx);
 
+    double spatium = item->spatium();
+
     if (item->noStringVisible()) {
-        double spatium = item->spatium();
         Font font(item->font());
 
         RectF rect;
-        rect.setTopLeft({ 0, item->ldata()->bbox().y() - font.weight() - spatium * .15 });
-        rect.setSize({ font.weight() - spatium, (font.weight() - spatium * .35) * 1.5 });
+        rect.setTopLeft({ 0, item->ldata()->bbox().y() - 2.5 * spatium });
+        rect.setSize({ spatium, 2.5 * spatium });
 
         item->setbbox(rect);
     }
@@ -5294,7 +5317,7 @@ void TLayout::layoutStringTunings(StringTunings* item, LayoutContext& ctx)
             if (font.type() == Font::Type::MusicSymbol) {
                 // HACK: the music symbol doesn't have a good baseline
                 // to go with text so we correct it here
-                const double baselineAdjustment = 0.35 * font.pointSizeF();
+                const double baselineAdjustment = 0.35 * spatium * item->symbolScale();
                 fragment.pos.setY(fragment.pos.y() + baselineAdjustment);
             }
         }
@@ -6038,7 +6061,8 @@ void TLayout::layoutTimeSig(const TimeSig* item, TimeSig::LayoutData* ldata, con
 
     if (staff) {
         // if staff is without time sig, format as if no text at all
-        if (!staff->staffTypeForElement(item)->genTimesig()) {
+        const StaffType* stVisibility = staff->staffType(item->tick());
+        if (!stVisibility->genTimesig()) {
             // reset position and box sizes to 0
             // LOGD("staff: no time sig");
             ldata->pointLargeLeftParen.rx() = 0.0;

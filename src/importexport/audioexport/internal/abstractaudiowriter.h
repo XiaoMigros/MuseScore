@@ -25,6 +25,7 @@
 #include "async/asyncable.h"
 #include "modularity/ioc.h"
 #include "audio/main/iplayback.h"
+#include "audio/main/istartaudiocontroller.h"
 #include "iaudioexportconfiguration.h"
 #include "context/iglobalcontext.h"
 #include "playback/iplaybackcontroller.h"
@@ -33,18 +34,19 @@
 #include "project/inotationwriter.h"
 
 namespace mu::iex::audioexport {
-class AbstractAudioWriter : public project::INotationWriter, public muse::Injectable, public muse::async::Asyncable
+class AbstractAudioWriter : public project::INotationWriter, public muse::Contextable, public muse::async::Asyncable
 {
 public:
     muse::GlobalInject<IAudioExportConfiguration> configuration;
-    muse::Inject<muse::audio::IPlayback> playback = { this };
-    muse::Inject<context::IGlobalContext> globalContext = { this };
-    muse::Inject<playback::IPlaybackController> playbackController  = { this };
-    muse::Inject<muse::IApplication> application  = { this };
+    muse::ContextInject<muse::audio::IPlayback> playback = { this };
+    muse::ContextInject<context::IGlobalContext> globalContext = { this };
+    muse::ContextInject<muse::audio::IStartAudioController> startAudioController = { this };
+    muse::ContextInject<playback::IPlaybackController> playbackController  = { this };
+    muse::ContextInject<muse::IApplication> application  = { this };
 
 public:
     AbstractAudioWriter(const muse::modularity::ContextPtr& iocCtx)
-        : muse::Injectable(iocCtx) {}
+        : muse::Contextable(iocCtx) {}
 
     std::vector<UnitType> supportedUnitTypes() const override;
     bool supportsUnitType(UnitType unitType) const override;
@@ -57,10 +59,11 @@ public:
     void abort() override;
 
 protected:
-    muse::Ret doWriteAndWait(notation::INotationPtr notation, muse::io::IODevice& dstDevice, const muse::audio::SoundTrackFormat& format);
+    muse::Ret doWriteAndWait(notation::INotationPtr notation, muse::io::IODevice& dstDevice, const muse::audio::SoundTrackFormat& format,
+                             const Options& options = Options());
 
 private:
-    void doWrite(const QString& path, const muse::audio::SoundTrackFormat& format, bool startProgress = true);
+    void doWrite(const QString& path, const muse::audio::SoundTrackFormat& format);
 
     UnitType unitTypeFromOptions(const Options& options) const;
 

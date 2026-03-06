@@ -32,7 +32,7 @@ using namespace muse::actions;
 const int AbstractMenuModel::INVALID_ITEM_INDEX = -1;
 
 AbstractMenuModel::AbstractMenuModel(QObject* parent)
-    : QAbstractListModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QAbstractListModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -214,6 +214,8 @@ MenuItem* AbstractMenuModel::makeMenu(const TranslatableString& title, const Men
     UiActionState state;
     state.enabled = enabled;
     item->setState(state);
+
+    updateShortcuts(item);
 
     return item;
 }

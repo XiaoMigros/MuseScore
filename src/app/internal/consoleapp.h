@@ -44,7 +44,6 @@
 #include "notation/inotationconfiguration.h"
 #include "project/iprojectconfiguration.h"
 #include "playback/isoundprofilesrepository.h"
-#include "appshell/iappshellconfiguration.h"
 #include "importexport/imagesexport/iimagesexportconfiguration.h"
 #include "importexport/midi/imidiconfiguration.h"
 #include "importexport/audioexport/iaudioexportconfiguration.h"
@@ -56,7 +55,6 @@ namespace mu::app {
 class ConsoleApp : public muse::BaseApplication, public std::enable_shared_from_this<ConsoleApp>
 {
     muse::GlobalInject<muse::ui::IUiConfiguration> uiConfiguration;
-    muse::GlobalInject<appshell::IAppShellConfiguration> appshellConfiguration;
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
     muse::GlobalInject<project::IProjectConfiguration> projectConfiguration;
     muse::GlobalInject<iex::imagesexport::IImagesExportConfiguration> imagesExportConfiguration;
@@ -65,11 +63,12 @@ class ConsoleApp : public muse::BaseApplication, public std::enable_shared_from_
     muse::GlobalInject<iex::videoexport::IVideoExportConfiguration> videoExportConfiguration;
     muse::GlobalInject<iex::guitarpro::IGuitarProConfiguration> guitarProConfiguration;
     muse::GlobalInject<iex::musicxml::IMusicXmlConfiguration> musicXmlConfiguration;
-    muse::Inject<converter::IConverterController> converter = { this };
-    muse::Inject<engraving::IDiagnosticDrawProvider> diagnosticDrawProvider = { this };
-    muse::Inject<muse::autobot::IAutobot> autobot = { this };
-    muse::Inject<muse::audioplugins::IRegisterAudioPluginsScenario> registerAudioPluginsScenario = { this };
-    muse::Inject<playback::ISoundProfilesRepository> soundProfilesRepository = { this };
+
+    muse::ContextInject<converter::IConverterController> converter = { this };
+    muse::ContextInject<engraving::IDiagnosticDrawProvider> diagnosticDrawProvider = { this };
+    muse::ContextInject<muse::autobot::IAutobot> autobot = { this };
+    muse::ContextInject<muse::audioplugins::IRegisterAudioPluginsScenario> registerAudioPluginsScenario = { this };
+    muse::ContextInject<playback::ISoundProfilesRepository> soundProfilesRepository = { this };
 
 public:
     ConsoleApp(const CmdOptions& options, const muse::modularity::ContextPtr& ctx);
@@ -77,8 +76,11 @@ public:
     void addModule(muse::modularity::IModuleSetup* module);
 
     void setup() override;
-    muse::modularity::ContextPtr setupNewContext() override;
     void finish() override;
+
+    muse::modularity::ContextPtr setupNewContext() override;
+    int contextCount() const override;
+    std::vector<muse::modularity::ContextPtr> contexts() const override;
 
 private:
     void applyCommandLineOptions(const CmdOptions& options, muse::IApplication::RunMode runMode);
@@ -87,13 +89,22 @@ private:
     int processAudioPluginRegistration(const CmdOptions::AudioPluginRegistration& task);
     void processAutobot(const CmdOptions::Autobot& task);
 
+    std::vector<muse::modularity::IContextSetup*>& contextSetups(const muse::modularity::ContextPtr& ctx);
+
     CmdOptions m_options;
 
     //! NOTE Separately to initialize logger and profiler as early as possible
     muse::GlobalModule m_globalModule;
 
     std::vector<muse::modularity::IModuleSetup*> m_modules;
-    std::map<muse::modularity::IoCID, std::vector<muse::modularity::IContextSetup*> > m_contexts;
+    muse::modularity::ContextPtr m_context;
+
+    struct Context {
+        muse::modularity::ContextPtr ctx;
+        std::vector<muse::modularity::IContextSetup*> setups;
+    };
+
+    std::vector<Context> m_contexts;
 };
 }
 

@@ -161,7 +161,7 @@ static BeatsPerSecond roundTempo(const BeatsPerSecond& bps)
 //---------------------------------------------------------
 
 Score::Score(const modularity::ContextPtr& iocCtx)
-    : EngravingObject(ElementType::SCORE, nullptr), muse::Injectable(iocCtx),
+    : EngravingObject(ElementType::SCORE, nullptr), muse::Contextable(iocCtx),
     m_selection(this),
     m_elementDestroyed(muse::async::makeOpt().disableWaitPendingsOnSend())
 {
@@ -1684,8 +1684,6 @@ void Score::removeElement(EngravingItem* element)
     }
     break;
     case ElementType::INSTRUMENT_CHANGE: {
-        InstrumentChange* ic = toInstrumentChange(element);
-        ic->part()->removeInstrument(ic->segment()->tick());
         addLayoutFlags(LayoutFlag::REBUILD_MIDI_MAPPING);
         cmdState().instrumentsChanged = true;
     }

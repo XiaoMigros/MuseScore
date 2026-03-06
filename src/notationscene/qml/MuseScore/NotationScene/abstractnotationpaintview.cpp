@@ -44,7 +44,7 @@ static void compensateFloatPart(RectF& rect)
 }
 
 AbstractNotationPaintView::AbstractNotationPaintView(QQuickItem* parent)
-    : muse::uicomponents::QuickPaintedView(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : muse::uicomponents::QuickPaintedView(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
     setFlag(ItemHasContents, true);
     setFlag(ItemAcceptsDrops, true);
@@ -85,7 +85,7 @@ void AbstractNotationPaintView::load()
     m_inputController = std::make_unique<NotationViewInputController>(this, iocContext());
     m_playbackCursor = std::make_unique<PlaybackCursor>(iocContext());
     m_playbackCursor->setVisible(false);
-    m_noteInputCursor = std::make_unique<NoteInputCursor>(iocContext(), configuration()->thinNoteInputCursor());
+    m_noteInputCursor = std::make_unique<NoteInputCursor>(iocContext(), notationConfiguration()->thinNoteInputCursor());
     m_ruler = std::make_unique<NotationRuler>(iocContext());
 
     m_loopInMarker = std::make_unique<LoopMarker>(LoopBoundaryType::LoopIn, iocContext());
@@ -116,22 +116,32 @@ void AbstractNotationPaintView::load()
         emit viewportChanged();
     }, async::Asyncable::Mode::SetReplace);
 
+    m_isAutomaticallyPanEnabled = notationConfiguration()->isAutomaticallyPanEnabled();
+    notationConfiguration()->isAutomaticallyPanEnabledChanged().onNotify(this, [this]() {
+        m_isAutomaticallyPanEnabled = notationConfiguration()->isAutomaticallyPanEnabled();
+    }, async::Asyncable::Mode::SetReplace);
+
+    m_isSmoothPanningEnabled = configuration()->isSmoothPanning();
+    configuration()->isSmoothPanningChanged().onNotify(this, [this]() {
+        m_isSmoothPanningEnabled = configuration()->isSmoothPanning();
+    }, async::Asyncable::Mode::SetReplace);
+
     scheduleRedraw();
 }
 
 void AbstractNotationPaintView::initBackground()
 {
-    emit backgroundColorChanged(configuration()->backgroundColor());
+    emit backgroundColorChanged(notationConfiguration()->backgroundColor());
 
-    configuration()->backgroundChanged().onNotify(this, [this]() {
-        emit backgroundColorChanged(configuration()->backgroundColor());
+    notationConfiguration()->backgroundChanged().onNotify(this, [this]() {
+        emit backgroundColorChanged(notationConfiguration()->backgroundColor());
         scheduleRedraw();
     }, async::Asyncable::Mode::SetReplace);
 }
 
 void AbstractNotationPaintView::initNavigatorOrientation()
 {
-    configuration()->canvasOrientation().ch.onReceive(this, [this](muse::Orientation) {
+    notationConfiguration()->canvasOrientation().ch.onReceive(this, [this](muse::Orientation) {
         moveCanvasToPosition(PointF(0, 0));
     }, async::Asyncable::Mode::SetReplace);
 }
@@ -656,7 +666,7 @@ void AbstractNotationPaintView::paint(QPainter* qp)
         return;
     }
 
-    qreal guiScaling = configuration()->guiScaling();
+    qreal guiScaling = notationConfiguration()->guiScaling();
     Transform guiScalingCompensation;
     guiScalingCompensation.scale(guiScaling, guiScaling);
 
@@ -671,7 +681,7 @@ void AbstractNotationPaintView::paint(QPainter* qp)
     const INotationNoteInputPtr noteInput = notationNoteInput();
     if (noteInput->isNoteInputMode() && isOnNotationPage) {
         if (noteInput->usingNoteInputMethod(NoteInputMethod::BY_DURATION)
-            && !configuration()->useNoteInputCursorInInputByDuration()) {
+            && !notationConfiguration()->useNoteInputCursorInInputByDuration()) {
             m_ruler->paint(painter, noteInput->state());
         } else {
             m_noteInputCursor->paint(painter);
@@ -689,7 +699,7 @@ void AbstractNotationPaintView::paint(QPainter* qp)
         nvCtx.fromLogical = [this](const PointF& pos) -> PointF { return fromLogical(pos); };
 
         engraving::rendering::PaintOptions opt;
-        opt.invertColors = configuration()->shouldInvertScore();
+        opt.invertColors = notationConfiguration()->shouldInvertScore();
         m_continuousPanel->paint(*painter, nvCtx, opt);
     }
 }
@@ -712,7 +722,7 @@ void AbstractNotationPaintView::onNotationSetup()
         movePlaybackCursor(tick);
     });
 
-    configuration()->foregroundChanged().onNotify(this, [this]() {
+    notationConfiguration()->foregroundChanged().onNotify(this, [this]() {
         scheduleRedraw();
     });
 
@@ -745,10 +755,10 @@ void AbstractNotationPaintView::paintBackground(const RectF& rect, muse::draw::P
 {
     TRACEFUNC;
 
-    const QPixmap& wallpaper = configuration()->backgroundWallpaper();
+    const QPixmap& wallpaper = notationConfiguration()->backgroundWallpaper();
 
-    if (configuration()->backgroundUseColor() || wallpaper.isNull()) {
-        painter->fillRect(rect, configuration()->backgroundColor());
+    if (notationConfiguration()->backgroundUseColor() || wallpaper.isNull()) {
+        painter->fillRect(rect, notationConfiguration()->backgroundColor());
     } else {
         painter->drawTiledPixmap(rect, wallpaper, rect.topLeft() - PointF(m_matrix.m31(), m_matrix.m32()));
     }
@@ -1495,8 +1505,8 @@ void AbstractNotationPaintView::movePlaybackCursor(muse::midi::tick_t tick)
         return;
     }
 
-    if (configuration()->isAutomaticallyPanEnabled()) {
-        if ((notation()->viewMode() == engraving::LayoutMode::LINE) && configuration()->isSmoothPanning()
+    if (m_isAutomaticallyPanEnabled) {
+        if ((notation()->viewMode() == engraving::LayoutMode::LINE) && m_isSmoothPanningEnabled
             && adjustCanvasPositionSmoothPan(newCursorRect)) {
             return;
         }
@@ -1622,7 +1632,7 @@ void AbstractNotationPaintView::setPlaybackCursorItem(QQuickItem* cursor)
     if (m_playbackCursorItem) {
         m_playbackCursorItem->setVisible(playbackController()->isPlaying());
         m_playbackCursorItem->setEnabled(false); // ignore mouse & keyboard events
-        m_playbackCursorItem->setProperty("color", configuration()->playbackCursorColor());
+        m_playbackCursorItem->setProperty("color", notationConfiguration()->playbackCursorColor());
 
         connect(m_playbackCursorItem, &QObject::destroyed, this, [this]() {
             m_playbackCursorItem = nullptr;

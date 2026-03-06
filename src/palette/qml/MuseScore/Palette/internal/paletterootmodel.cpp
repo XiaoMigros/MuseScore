@@ -24,7 +24,7 @@
 using namespace mu::palette;
 
 PaletteRootModel::PaletteRootModel(QObject* parent)
-    : QObject(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QObject(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -37,6 +37,11 @@ PaletteRootModel::~PaletteRootModel()
 }
 
 void PaletteRootModel::classBegin()
+{
+    init();
+}
+
+void PaletteRootModel::init()
 {
     dispatcher()->reg(this, "palette-search", [this]() {
         emit paletteSearchRequested();

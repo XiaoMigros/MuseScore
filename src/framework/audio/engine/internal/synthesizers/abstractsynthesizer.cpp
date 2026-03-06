@@ -30,7 +30,7 @@ using namespace muse::audio;
 using namespace muse::audio::synth;
 
 AbstractSynthesizer::AbstractSynthesizer(const AudioInputParams& params, const modularity::ContextPtr& iocCtx)
-    : Injectable(iocCtx), m_params(params)
+    : Contextable(iocCtx), m_params(params)
 {
     ONLY_AUDIO_ENGINE_THREAD;
 
@@ -85,6 +85,13 @@ async::Notification AbstractSynthesizer::readyToPlayChanged() const
 void AbstractSynthesizer::updateRenderingMode(const RenderMode /*mode*/)
 {
     ONLY_AUDIO_ENGINE_THREAD;
+}
+
+bool AbstractSynthesizer::hasPendingChunks() const
+{
+    ONLY_AUDIO_ENGINE_THREAD;
+
+    return m_hasPendingChunks;
 }
 
 void AbstractSynthesizer::processInput()

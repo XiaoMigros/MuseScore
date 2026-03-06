@@ -36,7 +36,9 @@ using namespace muse::audio;
 
 struct AsioData {
     // Drivers list
-    AsioDrivers drivers;
+    //! NOTE COM initialization may be called in the constructor.
+    //! This conflicts with WASAPI.
+    AsioDrivers* drivers = nullptr;
     std::set<std::string> baddrivers;
 
     // ASIOInit()
@@ -80,8 +82,18 @@ AsioAudioDriver::AsioAudioDriver()
 {
 }
 
+AsioAudioDriver::~AsioAudioDriver()
+{
+    doClose();
+
+    delete s_adata.drivers;
+    s_adata.drivers = nullptr;
+}
+
 void AsioAudioDriver::init()
 {
+    CoUninitialize();
+    s_adata.drivers = new AsioDrivers();
 }
 
 std::string AsioAudioDriver::name() const
@@ -416,7 +428,7 @@ bool AsioAudioDriver::open(const Spec& spec, Spec* activeSpec)
     }
 
     const char* name = spec.deviceId.c_str();
-    bool ok = s_adata.drivers.loadDriver(const_cast<char*>(name));
+    bool ok = s_adata.drivers->loadDriver(const_cast<char*>(name));
     if (!ok) {
         LOGE() << "failed load driver: " << name;
         return ok;
@@ -536,6 +548,11 @@ bool AsioAudioDriver::open(const Spec& spec, Spec* activeSpec)
 
 void AsioAudioDriver::close()
 {
+    doClose();
+}
+
+void AsioAudioDriver::doClose()
+{
     m_running = false;
     if (m_thread.joinable()) {
         m_thread.join();
@@ -551,7 +568,7 @@ void AsioAudioDriver::close()
     // don't use
     // ASIOExit();
 
-    s_adata.drivers.removeCurrentDriver();
+    s_adata.drivers->removeCurrentDriver();
 }
 
 void AsioAudioDriver::reset()
@@ -627,7 +644,7 @@ static bool isDriverAvailable(long index, const char* name)
     }
 
     IASIO* driver = 0;
-    LONG ret = s_adata.drivers.asioOpenDriver(index, (void**)&driver);
+    LONG ret = s_adata.drivers->asioOpenDriver(index, (void**)&driver);
     if (ret == DRVERR_DEVICE_ALREADY_OPEN) {
         return true;
     }
@@ -643,7 +660,7 @@ static bool isDriverAvailable(long index, const char* name)
         s_adata.baddrivers.insert(std::string(name));
     }
 
-    s_adata.drivers.asioCloseDriver(index);
+    s_adata.drivers->asioCloseDriver(index);
 
     return ok;
 }
@@ -657,7 +674,7 @@ AudioDeviceList AsioAudioDriver::availableOutputDevices() const
         pointers[i] = names[i];
     }
 
-    long count = s_adata.drivers.getDriverNames(pointers, 16);
+    long count = s_adata.drivers->getDriverNames(pointers, 16);
 
     AudioDeviceList devices;
     devices.reserve(count);

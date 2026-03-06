@@ -48,6 +48,7 @@ AbstractElementPopup {
     function updatePosition() {
         var h = Math.max(root.contentHeight, capoModel.capoIsOn ? 360 : 160)
         root.y = (root.parent.y + root.parent.height / 2) - root.parent.y - h / 2
+        Qt.callLater(root.repositionWindowIfNeed)
     }
 
     ColumnLayout {
@@ -115,9 +116,9 @@ AbstractElementPopup {
             navigation.accessible.name: titleLabel.text + " " + currentText
 
             model: [
-                { text: qsTrc("notation", "Affects playback only") },
-                { text: qsTrc("notation", "Affects stave notation only") },
-                { text: qsTrc("notation", "Affects tablature fingering only") },
+                { text: qsTrc("notation", "Notation/tab in open position") },
+                { text: qsTrc("notation", "Notation shows sounding pitches") },
+                { text: qsTrc("notation", "No transposition") },
             ]
 
             currentIndex: capoModel.transposeMode

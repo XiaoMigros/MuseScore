@@ -23,17 +23,22 @@ import QtQuick
 import QtQuick.Controls
 
 import Muse.Ui
+import Muse.UiComponents
 
 Slider {
     id: root
 
     property bool fillBackground: true
 
+    property alias navigation: navCtrl
+
     implicitWidth: vertical ? prv.handleSize : prv.defaultLength
     implicitHeight: vertical ? prv.defaultLength : prv.handleSize
 
     hoverEnabled: root.enabled
     wheelEnabled: true
+
+    stepSize: 1
 
     QtObject {
         id: prv
@@ -44,10 +49,43 @@ Slider {
         readonly property int defaultLength: 220
     }
 
+    NavigationControl {
+        id: navCtrl
+        name: root.objectName !== "" ? root.objectName : "StyledSlider"
+        enabled: root.enabled && root.visible
+
+        accessible.role: MUAccessible.Range
+        accessible.visualItem: root
+
+        accessible.value: root.value
+        accessible.minimumValue: root.from
+        accessible.maximumValue: root.to
+        accessible.stepSize: root.stepSize
+
+        onNavigationEvent: function (event) {
+            switch (event.type) {
+            case NavigationEvent.Down:
+                root.decrease()
+                root.moved()
+                event.accepted = true
+                break;
+            case NavigationEvent.Up:
+                root.increase()
+                root.moved()
+                event.accepted = true
+                break;
+            }
+        }
+    }
+
     background: Item {
         id: mainBackground
 
         anchors.fill: parent
+
+        NavigationFocusBorder {
+            navigationCtrl: navCtrl
+        }
 
         Rectangle {
             id: filledBackground
@@ -112,7 +150,6 @@ Slider {
                         opacity: 0.5
                     }
                 },
-
                 State {
                     name: "PRESSED"
                     when: root.pressed
@@ -162,4 +199,8 @@ Slider {
             }
         }
     ]
+
+    onMoved: {
+        navigation.requestActiveByInteraction()
+    }
 }

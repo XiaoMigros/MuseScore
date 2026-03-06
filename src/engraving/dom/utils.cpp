@@ -984,8 +984,10 @@ SymIdList timeSigSymIdsFromString(const String& string, TimeSigStyle timeSigStyl
         { 59666,  SymId::mensuralProlation3 },
         { 59667,  SymId::mensuralProlation4 },
         { 59668,  SymId::mensuralProlation5 },
+        { 59669,  SymId::mensuralProlation6 },
         { 59670,  SymId::mensuralProlation7 },
         { 59671,  SymId::mensuralProlation8 },
+        { 59672,  SymId::mensuralProlation9 },
         { 59673,  SymId::mensuralProlation10 },
         { 59674,  SymId::mensuralProlation11 },
     };
@@ -1353,6 +1355,10 @@ std::unordered_set<EngravingItem*> collectElementsAnchoredToChordRest(const Chor
     for (Articulation* art : chord->articulations()) {
         elems.emplace(art);
     }
+    // Chord brackets and chord lines
+    for (EngravingItem* e : chord->el()) {
+        elems.emplace(e);
+    }
     for (Chord* grace : chord->graceNotes()) {
         elems.emplace(grace);
         for (Articulation* gArt : grace->articulations()) {
@@ -1410,6 +1416,11 @@ std::unordered_set<EngravingItem*> collectElementsAnchoredToNote(const Note* not
             }
             elems.emplace(sp);
         }
+    }
+    const NoteParenthesisInfo* noteParenInfo = note->parenthesisInfo();
+    if (noteParenInfo && noteParenInfo->notes().size()) {
+        elems.emplace(noteParenInfo->leftParen());
+        elems.emplace(noteParenInfo->rightParen());
     }
     return elems;
 }
@@ -1478,7 +1489,7 @@ String bendAmountToString(int fulls, int quarts, bool useFractions)
             break;
         }
     } else {
-        if (!string.empty()) {
+        if (!string.empty() && quarts != 0) {
             string += u" ";
         }
         switch (std::abs(quarts)) {
@@ -1556,6 +1567,10 @@ std::vector<Measure*> findPreviousRepeatMeasures(const Measure* measure)
     const RepeatList& repeatList = master->repeatList(true, false);
 
     std::vector<Measure*> measures;
+
+    if (repeatList.empty()) {
+        return measures;
+    }
 
     for (auto it = repeatList.begin() + 1; it != repeatList.end(); it++) {
         const RepeatSegment* rs = *it;

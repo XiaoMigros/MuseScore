@@ -93,7 +93,7 @@ public:
 
     QQuickItem* anchorItem() const;
     void setAnchorItem(QQuickItem* anchorItem);
-    Q_INVOKABLE QRectF anchorGeometry() const;
+    QRectF anchorGeometry() const;
 
     PlacementPolicies placementPolicies() const;
     void setPlacementPolicies(PlacementPolicies placementPolicies);
@@ -120,6 +120,8 @@ public:
 
     void close(bool force = false) override;
 
+    Q_INVOKABLE void repositionWindowIfNeed() override;
+
 signals:
     void closePoliciesChanged(muse::uicomponents::PopupView::ClosePolicies closePolicies);
 
@@ -145,7 +147,6 @@ protected:
 
     void initCloseController();
 
-    void repositionWindowIfNeed() override;
     void updateGeometry() override;
     virtual void updateContentPosition();
 

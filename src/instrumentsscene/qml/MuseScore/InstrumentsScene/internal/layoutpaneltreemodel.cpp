@@ -46,11 +46,16 @@ using namespace muse::uicomponents;
 static const muse::actions::ActionCode ADD_INSTRUMENTS_ACTIONCODE("instruments");
 
 LayoutPanelTreeModel::LayoutPanelTreeModel(QObject* parent)
-    : QAbstractItemModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QAbstractItemModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
 void LayoutPanelTreeModel::classBegin()
+{
+    init();
+}
+
+void LayoutPanelTreeModel::init()
 {
     m_partsNotifyReceiver = std::make_shared<muse::async::Asyncable>();
 

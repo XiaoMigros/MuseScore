@@ -39,7 +39,7 @@ class MuseScoreComService : public IMuseScoreComService, public AbstractCloudSer
 {
     GlobalInject<ICloudConfiguration> configuration;
     GlobalInject<network::INetworkManagerCreator> networkManagerCreator;
-    Inject<IApplication> application = { this };
+    ContextInject<IApplication> application = { this };
 
 public:
     explicit MuseScoreComService(const modularity::ContextPtr& iocCtx, QObject* parent = nullptr);
@@ -70,7 +70,8 @@ private:
 
     network::RequestHeaders headers() const;
 
-    async::Promise<RetVal<ScoreInfo> > doDownloadScoreInfo(int scoreId);
+    void doDownloadScoreInfo(int scoreId, std::function<void(const RetVal<ScoreInfo>& res)> finished);
+
     async::Promise<Ret> doDownloadScore(int scoreId, DevicePtr scoreData, const QString& hash, const QString& secret, ProgressPtr progress);
 
     async::Promise<RetVal<bool> > checkScoreAlreadyUploaded(const ID& scoreId);

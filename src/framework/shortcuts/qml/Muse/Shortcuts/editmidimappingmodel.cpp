@@ -28,7 +28,7 @@ using namespace muse::shortcuts;
 using namespace muse::midi;
 
 EditMidiMappingModel::EditMidiMappingModel(QObject* parent)
-    : QObject(parent), Injectable(muse::iocCtxForQmlObject(this))
+    : QObject(parent), Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -46,7 +46,7 @@ void EditMidiMappingModel::load(int originType, int originValue)
             m_event = remoteEventFromMidiEvent(event);
             emit mappingTitleChanged(mappingTitle());
         }
-    });
+    }, muse::async::Asyncable::Mode::SetReplace);
 
     m_event = RemoteEvent(static_cast<RemoteEventType>(originType), originValue);
     emit mappingTitleChanged(mappingTitle());

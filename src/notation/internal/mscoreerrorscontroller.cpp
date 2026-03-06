@@ -28,7 +28,7 @@ using namespace mu::engraving;
 using namespace mu::notation;
 
 MScoreErrorsController::MScoreErrorsController(const muse::modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx)
+    : muse::Contextable(iocCtx)
 {
 }
 
@@ -75,7 +75,7 @@ void MScoreErrorsController::checkAndShowMScoreError()
         break;
     case MsError::NO_MEASURE_SELECTED:
         title = muse::trc("notation", "No measure selected");
-        message = muse::trc("notation", "notation", "Please select a measure and retry");
+        message = muse::trc("notation", "Please select a measure and retry");
         break;
     case MsError::NO_STAFF_SELECTED:
         title = muse::trc("notation", "No staff selected");

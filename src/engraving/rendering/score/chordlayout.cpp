@@ -166,6 +166,12 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
         }
     }
 
+    for (EngravingItem* e : item->el()) {
+        if (e->isChordBracket()) {
+            TLayout::layoutItem(e, ctx);
+        }
+    }
+
     // A chord can have its own arpeggio and also be part of another arpeggio's span.  We need to lay out both of these arpeggios properly
     Arpeggio* oldSpanArp = item->spanArpeggio();
     Arpeggio* newSpanArp = nullptr;
@@ -189,10 +195,6 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
         }
 
         Arpeggio::LayoutData* arpldata = spanArp->mutldata();
-        if (spanArp->isChordBracket() && toChordBracket(spanArp)->rightSide()) {
-            arpldata->setPosX(0.0); // If on the right, must be done later
-            continue;
-        }
 
         const Segment* seg = spanArp->chord()->segment();
         const EngravingItem* endItem = seg->element(spanArp->endTrack());
@@ -283,18 +285,6 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
                 double x = item->hook()->ldata()->bbox().right() + item->stem()->flagPosition().x() + chordX;
                 rrr = std::max(rrr, x);
             }
-        }
-    }
-
-    for (Arpeggio* spanArp : { oldSpanArp, newSpanArp }) {
-        if (!spanArp || !spanArp->chord() || !(spanArp->isChordBracket() && toChordBracket(spanArp)->rightSide())) {
-            continue;
-        }
-        spanArp->mutldata()->setPosX(std::max(spanArp->mutldata()->pos().x(), rrr + ctx.conf().styleMM(Sid::chordBracketNoteDistance)));
-        // If first chord in arpeggio set y
-        if (item->arpeggio() && item->arpeggio() == spanArp) {
-            double y1 = upnote->pos().y() - upnote->headHeight() * .5;
-            item->arpeggio()->mutldata()->setPosY(y1);
         }
     }
 
@@ -3233,8 +3223,8 @@ void ChordLayout::createParenGroups(Chord* chord)
     std::vector<Note*> removeParens;
 
     for (Note* note : chord->notes()) {
-        const NoteParenthesisInfo* noteParenInfo = note->parenInfo();
-        const Parenthesis* leftParen = noteParenInfo ? noteParenInfo->leftParen : nullptr;
+        const NoteParenthesisInfo* noteParenInfo = note->parenthesisInfo();
+        const Parenthesis* leftParen = noteParenInfo ? noteParenInfo->leftParen() : nullptr;
         bool parenGenerated = leftParen && leftParen->generated();
 
         if (note->ldata()->hasGeneratedParens()) {
@@ -3422,9 +3412,9 @@ void ChordLayout::fillShape(const Chord* item, ChordRest::LayoutData* ldata)
         shape.add(note->shape().translate(note->pos()));
     }
 
-    for (const NoteParenthesisInfo& parenInfo : item->noteParens()) {
-        Parenthesis* leftParen = parenInfo.leftParen;
-        Parenthesis* rightParen = parenInfo.rightParen;
+    for (const NoteParenthesisInfo* parenInfo : item->noteParentheses()) {
+        Parenthesis* leftParen = parenInfo->leftParen();
+        Parenthesis* rightParen = parenInfo->rightParen();
 
         if (leftParen && leftParen->addToSkyline()) {
             shape.add(leftParen->shape().translate(leftParen->pos()));

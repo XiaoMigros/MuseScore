@@ -79,6 +79,14 @@ struct TefNote {
     bool hasGrace { false };
     int graceEffect{ -1 };  // invalid
     int graceFret { -1 };   // invalid
+    int fingeringLH { 0 };
+    int fingeringRH { 0 };
+};
+
+struct TefReadingListItem {
+    int firstMeasure { 0 };
+    int lastMeasure { 0 };
+    std::string label;
 };
 
 class TablEdit
@@ -129,11 +137,6 @@ class TablEdit
         int options { 0 };
         std::array<int, 12> tuning = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         std::string name;
-    };
-
-    struct TefReadingListItem {
-        int firstMeasure { 0 };
-        int lastMeasure { 0 };
     };
 
     struct TefTextMarker {

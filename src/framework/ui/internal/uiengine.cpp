@@ -38,7 +38,7 @@
 using namespace muse::ui;
 
 UiEngine::UiEngine(const modularity::ContextPtr& iocCtx)
-    : Injectable(iocCtx)
+    : Contextable(iocCtx)
 {
     m_engine = new QQmlApplicationEngine(this);
     m_apiEngine = new muse::api::JsApiEngine(m_engine, iocContext());
@@ -73,6 +73,9 @@ void UiEngine::init()
     QJSValue translator = m_engine->newQObject(m_translation);
     QJSValue translateFn = translator.property("translate");
     m_engine->globalObject().setProperty("qsTrc", translateFn);
+
+    m_networkManagerFactory = new QmlNetworkAccessManagerFactory();
+    m_engine->setNetworkAccessManagerFactory(m_networkManagerFactory);
 
 #ifdef Q_OS_WIN
     QDir dir(QCoreApplication::applicationDirPath() + QString("/../qml"));

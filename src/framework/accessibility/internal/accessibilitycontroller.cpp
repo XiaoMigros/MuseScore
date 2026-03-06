@@ -33,7 +33,7 @@
 
 #include "accessibleobject.h"
 #include "accessiblestub.h"
-#include "accessibleiteminterface.h"
+#include "accessiblewindowinterface.h"
 #include "iqaccessibleinterfaceregister.h"
 
 #include "log.h"
@@ -57,7 +57,7 @@ static void updateHandlerNoop(QAccessibleEvent*)
 }
 
 AccessibilityController::AccessibilityController(const muse::modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx)
+    : muse::Contextable(iocCtx)
 {
     m_pretendFocusTimer.setInterval(80); // Value found experimentally.
     m_pretendFocusTimer.setSingleShot(true);
@@ -72,9 +72,9 @@ AccessibilityController::~AccessibilityController()
     unreg(this);
 }
 
-QAccessibleInterface* AccessibilityController::accessibleInterface(QObject*)
+QAccessibleInterface* AccessibilityController::accessibleInterface(QObject* window)
 {
-    return static_cast<QAccessibleInterface*>(new AccessibleItemInterface(s_rootObject));
+    return static_cast<QAccessibleInterface*>(new AccessibleWindowInterface(window, s_rootObject));
 }
 
 void AccessibilityController::setAccesibilityEnabled(bool enabled)
@@ -846,7 +846,7 @@ QWindow* AccessibilityController::accessibleWindow() const
 
 muse::modularity::ContextPtr AccessibilityController::iocContext() const
 {
-    return Injectable::iocContext();
+    return Contextable::iocContext();
 }
 
 IAccessible::Role AccessibilityController::accessibleRole() const

@@ -372,9 +372,8 @@ void SingleDraw::draw(const Accidental* item, Painter* painter, const PaintOptio
 void SingleDraw::draw(const ActionIcon* item, Painter* painter, const PaintOptions&)
 {
     TRACE_DRAW_ITEM;
-    const ActionIcon::LayoutData* ldata = item->ldata();
     painter->setFont(item->iconFont());
-    painter->drawText(ldata->bbox(), muse::draw::AlignCenter, Char(item->icon()));
+    painter->drawText(PointF(), Char(item->icon()));
 }
 
 void SingleDraw::draw(const Ambitus* item, Painter* painter, const PaintOptions& opt)
@@ -1548,13 +1547,8 @@ void SingleDraw::drawTextBase(const TextBase* item, Painter* painter, const Pain
         if (item->circle()) {
             painter->drawEllipse(ldata->frame);
         } else {
-            double frameRoundFactor = (item->sizeIsSpatiumDependent() ? (item->spatium() / baseSpatium) / 2 : 0.5f);
-
-            int r2 = item->frameRound() * frameRoundFactor;
-            if (r2 > 99) {
-                r2 = 99;
-            }
-            painter->drawRoundedRect(ldata->frame, item->frameRound() * frameRoundFactor, r2);
+            double frameRadius = item->frameRound().val() * (item->sizeIsSpatiumDependent() ? item->spatium() : baseSpatium);
+            painter->drawRoundedRect(ldata->frame, frameRadius, frameRadius);
         }
     }
     painter->setBrush(BrushStyle::NoBrush);
@@ -1813,11 +1807,9 @@ void SingleDraw::draw(const Harmony* item, Painter* painter, const PaintOptions&
         if (item->circle()) {
             painter->drawArc(ldata->frame, 0, 5760);
         } else {
-            int r2 = item->frameRound();
-            if (r2 > 99) {
-                r2 = 99;
-            }
-            painter->drawRoundedRect(ldata->frame, item->frameRound(), r2);
+            double baseSpatium = DefaultStyle::baseStyle().value(Sid::spatium).toReal();
+            double frameRadius = item->frameRound().val() * (item->sizeIsSpatiumDependent() ? item->spatium() : baseSpatium);
+            painter->drawRoundedRect(ldata->frame, frameRadius, frameRadius);
         }
     }
     painter->setBrush(BrushStyle::NoBrush);

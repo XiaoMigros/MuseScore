@@ -225,7 +225,6 @@ enum class Sid : short {
     stemWidth,
     shortenStem,
     stemLength,
-    stemLengthSmall,
     shortStemStartLocation,
     shortestStem,
     combineVoice,
@@ -2120,6 +2119,8 @@ enum class Sid : short {
     useParensOtherJumpCourtesiesAfterCancelling,
 
     smallParens,
+
+    harmonyParenUseSmuflSym,
 
     repeatPlayCountPreset,
     repeatPlayCountShow,

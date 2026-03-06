@@ -71,7 +71,7 @@ struct TextStyleMap {
     TextStyleType ss;
 };
 
-class ReadContext : public muse::Injectable
+class ReadContext : public muse::Contextable
 {
 public:
     muse::GlobalInject<IEngravingFontsProvider> engravingFonts;
@@ -103,6 +103,9 @@ public:
     void setOriginalSpatium(double v) { m_originalSpatium = v; }
     bool overrideSpatium() const { return m_overrideSpatium; }
     void setOverrideSpatium(bool v) { m_overrideSpatium = v; }
+
+    bool forcePageMode() const { return m_forcePageMode; }
+    void setForcePageMode(bool v) { m_forcePageMode = v; }
 
     compat::DummyElement* dummy() const;
 
@@ -231,5 +234,6 @@ private:
     bool m_overrideSpatium = false;
     double m_originalSpatium = 0;
     PropertyIdSet m_propertiesToSkip;
+    bool m_forcePageMode = false;
 };
 }

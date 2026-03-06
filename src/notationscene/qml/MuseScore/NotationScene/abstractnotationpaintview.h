@@ -39,6 +39,7 @@
 #include "ui/iuicontextresolver.h"
 #include "uicomponents/qml/Muse/UiComponents/quickpaintedview.h"
 
+#include "notationscene/inotationsceneconfiguration.h"
 #include "notationviewinputcontroller.h"
 #include "noteinputcursor.h"
 #include "notationruler.h"
@@ -48,7 +49,7 @@
 #include "abstractelementpopupmodel.h"
 
 namespace mu::notation {
-class AbstractNotationPaintView : public muse::uicomponents::QuickPaintedView, public IControlledView, public muse::Injectable,
+class AbstractNotationPaintView : public muse::uicomponents::QuickPaintedView, public IControlledView, public muse::Contextable,
     public muse::async::Asyncable, public muse::actions::Actionable
 {
     Q_OBJECT
@@ -67,15 +68,16 @@ class AbstractNotationPaintView : public muse::uicomponents::QuickPaintedView, p
 
     Q_PROPERTY(bool isMainView READ isMainView WRITE setIsMainView NOTIFY isMainViewChanged)
 
-    muse::GlobalInject<INotationConfiguration> configuration;
+    muse::GlobalInject<INotationConfiguration> notationConfiguration;
+    muse::GlobalInject<INotationSceneConfiguration> configuration;
     muse::GlobalInject<engraving::IEngravingConfiguration> engravingConfiguration;
     muse::GlobalInject<muse::ui::IUiConfiguration> uiConfiguration;
-    muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
-    muse::Inject<context::IGlobalContext> globalContext = { this };
-    muse::Inject<playback::IPlaybackController> playbackController = { this };
-    muse::Inject<muse::ui::IUiContextResolver> uiContextResolver = { this };
-    muse::Inject<muse::ui::IMainWindow> mainWindow = { this };
-    muse::Inject<muse::ui::IUiActionsRegister> actionsRegister = { this };
+    muse::ContextInject<muse::actions::IActionsDispatcher> dispatcher = { this };
+    muse::ContextInject<context::IGlobalContext> globalContext = { this };
+    muse::ContextInject<playback::IPlaybackController> playbackController = { this };
+    muse::ContextInject<muse::ui::IUiContextResolver> uiContextResolver = { this };
+    muse::ContextInject<muse::ui::IMainWindow> mainWindow = { this };
+    muse::ContextInject<muse::ui::IUiActionsRegister> actionsRegister = { this };
 
 public:
     explicit AbstractNotationPaintView(QQuickItem* parent = nullptr);
@@ -291,6 +293,8 @@ private:
     bool m_isMainView = false;
 
     bool m_autoScrollEnabled = true;
+    bool m_isAutomaticallyPanEnabled = false;
+    bool m_isSmoothPanningEnabled = false;
     QTimer m_enableAutoScrollTimer;
 
     PopupModelType m_currentElementPopupType = PopupModelType::TYPE_UNDEFINED;

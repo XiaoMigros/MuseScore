@@ -28,25 +28,28 @@
 
 #include "iinteractive.h"
 #include "actions/iactionsdispatcher.h"
-#include "multiinstances/imultiinstancesprovider.h"
+#include "multiwindows/imultiwindowsprovider.h"
 #include "update/iupdateconfiguration.h"
 #include "update/iappupdateservice.h"
 
 namespace muse::update {
-class AppUpdateScenario : public IAppUpdateScenario, public Injectable, public async::Asyncable
+class AppUpdateScenario : public IAppUpdateScenario, public Contextable, public async::Asyncable
 {
-    GlobalInject<mi::IMultiInstancesProvider> multiInstancesProvider;
+    GlobalInject<mi::IMultiWindowsProvider> multiwindowsProvider;
     GlobalInject<IUpdateConfiguration> configuration;
-    Inject<IInteractive> interactive = { this };
-    Inject<actions::IActionsDispatcher> dispatcher = { this };
-    Inject<IAppUpdateService> service = { this };
+    ContextInject<IInteractive> interactive = { this };
+    ContextInject<actions::IActionsDispatcher> dispatcher = { this };
+    ContextInject<IAppUpdateService> service = { this };
 
 public:
     AppUpdateScenario(const modularity::ContextPtr& iocCtx)
-        : Injectable(iocCtx) {}
+        : Contextable(iocCtx) {}
 
     bool needCheckForUpdate() const override;
-    muse::async::Promise<Ret> checkForUpdate(bool manual) override;
+    void checkForUpdate(bool manual) override;
+
+    bool checkInProgress() const override;
+    async::Notification checkInProgressChanged() const override;
 
     bool hasUpdate() const override;
     muse::async::Promise<Ret> showUpdate() override;  // NOTE: Resolves to "OK" if the user wants to close and complete install of update...
@@ -64,5 +67,6 @@ private:
     bool shouldIgnoreUpdate(const ReleaseInfo& info) const;
 
     bool m_checkInProgress = false;
+    async::Notification m_checkInProgressChanged;
 };
 }

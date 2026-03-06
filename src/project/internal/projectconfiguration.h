@@ -35,7 +35,7 @@
 #include "../iprojectconfiguration.h"
 
 namespace mu::project {
-class ProjectConfiguration : public IProjectConfiguration, public muse::Injectable
+class ProjectConfiguration : public IProjectConfiguration, public muse::Contextable
 {
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
@@ -167,6 +167,9 @@ private:
     muse::io::path_t appTemplatesPath() const;
     muse::io::path_t legacyCloudProjectsPath() const;
     muse::io::path_t cloudProjectsPath() const;
+
+    std::string uniqueFileNameAddition(const muse::io::path_t& filename, const muse::io::path_t& folderPath,
+                                       const std::string& suffix) const;
 
     muse::async::Channel<muse::io::path_t> m_userTemplatesPathChanged;
     muse::async::Channel<muse::io::path_t> m_userScoresPathChanged;

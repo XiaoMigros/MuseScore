@@ -39,12 +39,11 @@ std::vector<INotationWriter::UnitType> ExportProjectScenario::supportedUnitTypes
         return {};
     }
 
-    auto writer = writers()->writer(exportType.suffixes.front().toStdString());
-    if (!writer) {
-        return {};
+    if (auto writer = writers()->writer(exportType.suffixes.front().toStdString())) {
+        return writer->supportedUnitTypes();
     }
 
-    return writer->supportedUnitTypes();
+    return {};
 }
 
 RetVal<muse::io::path_t> ExportProjectScenario::askExportPath(const INotationPtrList& notations, const ExportType& exportType,
@@ -157,7 +156,7 @@ bool ExportProjectScenario::exportScores(notation::INotationPtrList notations, c
 
         m_exportProgress.canceled().onNotify(this, [writer]() {
             writer->abort();
-        });
+        }, muse::async::Asyncable::Mode::SetReplace);
     }
 
     DEFER {
@@ -420,7 +419,7 @@ Ret ExportProjectScenario::doExportLoop(const muse::io::path_t& scorePath, std::
         Ret ret = exportFunction(outputFile);
         outputFile.close();
 
-        if (!ret) {
+        if (!ret || outputFile.hasError()) {
             if (ret.code() == static_cast<int>(Ret::Code::Cancel)) {
                 fileSystem()->remove(scorePath);
                 return ret;

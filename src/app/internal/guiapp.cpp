@@ -33,10 +33,6 @@ public:
 #include <QThreadPool>
 #endif
 
-#ifdef MUSE_MULTICONTEXT_WIP
-#include "multiwindowprovider.h"
-#endif
-
 #include "log.h"
 
 using namespace muse;
@@ -85,10 +81,13 @@ void GuiApp::setup()
         m->registerExports();
     }
 
-    //! NOTE Just for demonstration
-#ifdef MUSE_MULTICONTEXT_WIP
-    ioc()->unregister<muse::mi::IMultiInstancesProvider>("app");
-    ioc()->registerExport<muse::mi::IMultiInstancesProvider>("app", new MultiWindowProvider());
+#ifndef MUSE_MULTICONTEXT_WIP
+    modularity::ContextPtr ctx = std::make_shared<modularity::Context>();
+    ctx->id = 0;
+    std::vector<muse::modularity::IContextSetup*>& csetups = contextSetups(ctx);
+    for (modularity::IContextSetup* s : csetups) {
+        s->registerExports();
+    }
 #endif
 
     m_globalModule.resolveImports();
@@ -98,6 +97,12 @@ void GuiApp::setup()
         m->resolveImports();
         m->registerApi();
     }
+
+#ifndef MUSE_MULTICONTEXT_WIP
+    for (modularity::IContextSetup* s : csetups) {
+        s->resolveImports();
+    }
+#endif
 
     // ====================================================
     // Setup modules: apply the command line options
@@ -112,8 +117,18 @@ void GuiApp::setup()
         m->onPreInit(runMode);
     }
 
+#ifndef MUSE_MULTICONTEXT_WIP
+    for (modularity::IContextSetup* s : csetups) {
+        s->onPreInit(runMode);
+    }
+#endif
+
+    // Process all pending events (see IpcSocket::onReadyRead())
+    // so that we can use windowCount() as early as possible
+    muse::async::processMessages();
+
 #ifdef MUE_ENABLE_SPLASHSCREEN
-    if (multiInstancesProvider()->isMainInstance()) {
+    if (multiwindowsProvider()->windowCount() == 1) { // first
         m_splashScreen = new SplashScreen(SplashScreen::Default);
     } else {
         const project::ProjectFile& file = startupScenario()->startupScoreFile();
@@ -143,6 +158,12 @@ void GuiApp::setup()
         m->onInit(runMode);
     }
 
+#ifndef MUSE_MULTICONTEXT_WIP
+    for (modularity::IContextSetup* s : csetups) {
+        s->onInit(runMode);
+    }
+#endif
+
     // ====================================================
     // Setup modules: onAllInited
     // ====================================================
@@ -150,6 +171,12 @@ void GuiApp::setup()
     for (modularity::IModuleSetup* m : m_modules) {
         m->onAllInited(runMode);
     }
+
+#ifndef MUSE_MULTICONTEXT_WIP
+    for (modularity::IContextSetup* s : csetups) {
+        s->onAllInited(runMode);
+    }
+#endif
 
     // ====================================================
     // Setup modules: onStartApp (on next event loop)
@@ -230,6 +257,49 @@ void GuiApp::setup()
     }, Qt::DirectConnection);
 }
 
+std::vector<muse::modularity::IContextSetup*>& GuiApp::contextSetups(const muse::modularity::ContextPtr& ctx)
+{
+    for (Context& c : m_contexts) {
+        if (c.ctx->id == ctx->id) {
+            return c.setups;
+        }
+    }
+
+    m_contexts.emplace_back();
+
+    Context& ref = m_contexts.back();
+    ref.ctx = ctx;
+
+    modularity::IContextSetup* global = m_globalModule.newContext(ctx);
+    if (global) {
+        ref.setups.push_back(global);
+    }
+
+    for (modularity::IModuleSetup* m : m_modules) {
+        modularity::IContextSetup* s = m->newContext(ctx);
+        if (s) {
+            ref.setups.push_back(s);
+        }
+    }
+
+    return ref.setups;
+}
+
+int GuiApp::contextCount() const
+{
+    return static_cast<int>(m_contexts.size());
+}
+
+std::vector<muse::modularity::ContextPtr> GuiApp::contexts() const
+{
+    std::vector<muse::modularity::ContextPtr> ctxs;
+    ctxs.reserve(m_contexts.size());
+    for (const Context& c : m_contexts) {
+        ctxs.push_back(c.ctx);
+    }
+    return ctxs;
+}
+
 muse::modularity::ContextPtr GuiApp::setupNewContext()
 {
     //! NOTE
@@ -263,40 +333,30 @@ muse::modularity::ContextPtr GuiApp::setupNewContext()
 
     LOGI() << "New context created with id: " << ctx->id;
 
-    std::vector<muse::modularity::IContextSetup*>& contexts = m_contexts[ctx->id];
-
-    modularity::IContextSetup* global = m_globalModule.newContext(ctx);
-    if (global) {
-        contexts.push_back(global);
-    }
-
-    for (modularity::IModuleSetup* m : m_modules) {
-        modularity::IContextSetup* s = m->newContext(ctx);
-        if (s) {
-            contexts.push_back(s);
-        }
-    }
-
     // Setup
-    for (modularity::IContextSetup* s : contexts) {
+#ifdef MUSE_MULTICONTEXT_WIP
+    std::vector<muse::modularity::IContextSetup*>& csetups = contextSetups(ctx);
+
+    for (modularity::IContextSetup* s : csetups) {
         s->registerExports();
     }
 
-    for (modularity::IContextSetup* s : contexts) {
+    for (modularity::IContextSetup* s : csetups) {
         s->resolveImports();
     }
 
-    for (modularity::IContextSetup* s : contexts) {
+    for (modularity::IContextSetup* s : csetups) {
         s->onPreInit(runMode);
     }
 
-    for (modularity::IContextSetup* s : contexts) {
+    for (modularity::IContextSetup* s : csetups) {
         s->onInit(runMode);
     }
 
-    for (modularity::IContextSetup* s : contexts) {
+    for (modularity::IContextSetup* s : csetups) {
         s->onAllInited(runMode);
     }
+#endif
 
     // Load main window
 #if defined(Q_OS_MAC)
@@ -329,39 +389,25 @@ muse::modularity::ContextPtr GuiApp::setupNewContext()
         return nullptr;
     }
 
-    const auto finalizeStartup = [this, obj]() {
-        static bool haveFinalized = false;
-#ifndef MUSE_MULTICONTEXT_WIP
-        IF_ASSERT_FAILED(!haveFinalized) {
-            // Only call this once...
-            return;
-        }
-#endif
+    startupScenario()->runOnSplashScreen();
 
-        if (m_splashScreen) {
-            m_splashScreen->close();
-            delete m_splashScreen;
-            m_splashScreen = nullptr;
-        }
+    if (m_splashScreen) {
+        m_splashScreen->close();
+        delete m_splashScreen;
+        m_splashScreen = nullptr;
+    }
 
-        // The main window must be shown at this point so KDDockWidgets can read its size correctly
-        // and scale all sizes properly. https://github.com/musescore/MuseScore/issues/21148
-        // but before that, let's make the window transparent,
-        // otherwise the empty window frame will be visible
-        // https://github.com/musescore/MuseScore/issues/29630
-        // Transparency will be removed after the page loads.
-        QQuickWindow* w = dynamic_cast<QQuickWindow*>(obj);
-        w->setOpacity(0.01);
-        w->setVisible(true);
+    // The main window must be shown at this point so KDDockWidgets can read its size correctly
+    // and scale all sizes properly. https://github.com/musescore/MuseScore/issues/21148
+    // but before that, let's make the window transparent,
+    // otherwise the empty window frame will be visible
+    // https://github.com/musescore/MuseScore/issues/29630
+    // Transparency will be removed after the page loads.
+    QQuickWindow* w = dynamic_cast<QQuickWindow*>(obj);
+    w->setOpacity(0.01);
+    w->setVisible(true);
 
-        startupScenario()->runAfterSplashScreen();
-        haveFinalized = true;
-    };
-
-    muse::async::Promise<Ret> promise = startupScenario()->runOnSplashScreen();
-    promise.onResolve(nullptr, [finalizeStartup](Ret) {
-        finalizeStartup();
-    });
+    startupScenario()->runAfterSplashScreen();
 
     return ctx;
 }
@@ -399,7 +445,7 @@ void GuiApp::finish()
 
     // Delete contexts
     for (auto& c : m_contexts) {
-        qDeleteAll(c.second);
+        qDeleteAll(c.setups);
     }
 
     // Delete modules
@@ -407,6 +453,8 @@ void GuiApp::finish()
     m_modules.clear();
 
     removeIoC();
+
+    BaseApplication::finish();
 }
 
 void GuiApp::applyCommandLineOptions(const CmdOptions& options)

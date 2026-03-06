@@ -42,6 +42,10 @@
 //! we need to strive to ensure that there is work with the project everywhere;
 //! accordingly, only the project should create and load the master score.
 
+namespace mu::engraving::rw {
+struct ReadInOutData;
+}
+
 namespace mu::engraving::write {
 class WriteContext;
 }
@@ -50,10 +54,10 @@ namespace mu::engraving {
 class MasterScore;
 class MStyle;
 
-class EngravingProject : public std::enable_shared_from_this<EngravingProject>, public muse::Injectable
+class EngravingProject : public std::enable_shared_from_this<EngravingProject>, public muse::Contextable
 {
 public:
-    muse::Inject<IEngravingElementsProvider> engravingElementsProvider = { this };
+    muse::ContextInject<IEngravingElementsProvider> engravingElementsProvider = { this };
 
 public:
     ~EngravingProject();
@@ -73,7 +77,7 @@ public:
     void setMasterScore(MasterScore* score);
     muse::Ret setupMasterScore(bool forceMode);
 
-    muse::Ret loadMscz(const MscReader& msc, SettingsCompat& settingsCompat, bool ignoreVersionError);
+    muse::Ret loadMscz(const MscReader& msc, rw::ReadInOutData* data, bool ignoreVersionError);
     bool writeMscz(MscWriter& writer, bool createThumbnail, const write::WriteContext* ctx = nullptr);
 
     bool isCorruptedUponLoading() const;

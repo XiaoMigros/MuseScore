@@ -37,9 +37,14 @@ TextStylePopupModel::~TextStylePopupModel() = default;
 
 void TextStylePopupModel::classBegin()
 {
+    doInit();
+}
+
+void TextStylePopupModel::doInit()
+{
     AbstractElementPopupModel::init();
 
-    m_textSettingsModel = new TextSettingsModel(this, iocContext(), m_elementRepositoryService.get(), /*isTextLineText*/ false);
+    m_textSettingsModel = new TextSettingsModel(this, iocContext(), m_elementRepositoryService.get());
     m_textSettingsModel->init();
 
     m_elementRepositoryService->updateElementList({ m_item }, notation::SelectionState::LIST);

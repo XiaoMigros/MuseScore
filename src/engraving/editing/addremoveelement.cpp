@@ -539,3 +539,18 @@ Unlink::Unlink(EngravingObject* _e)
     le = e->links();
     assert(le);
 }
+
+void ChangeSegmentParent::flip(EditData*)
+{
+    Measure* p = segment->measure();
+    Fraction oldTick = segment->rtick();
+    p->remove(segment);
+    segment->setParent(parent);
+    segment->setRtick(tick);
+    parent->add(segment);
+
+    parent = p;
+    tick = oldTick;
+
+    segment->triggerLayout();
+}

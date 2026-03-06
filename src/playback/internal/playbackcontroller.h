@@ -33,7 +33,6 @@
 #include "notation/inotationplayback.h"
 #include "audio/main/iplayer.h"
 #include "audio/main/iplayback.h"
-#include "audio/main/iaudioconfiguration.h"
 #include "audio/common/audiotypes.h"
 #include "iinteractive.h"
 #include "tours/itoursservice.h"
@@ -47,21 +46,20 @@
 namespace mu::playback {
 class OnlineSoundsController;
 class PlaybackController : public IPlaybackController, public muse::actions::Actionable, public muse::async::Asyncable,
-    public muse::Injectable
+    public muse::Contextable
 {
     muse::GlobalInject<IPlaybackConfiguration> configuration;
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
-    muse::GlobalInject<muse::audio::IAudioConfiguration> audioConfiguration;
-    muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
-    muse::Inject<context::IGlobalContext> globalContext = { this };
-    muse::Inject<muse::audio::IPlayback> playback = { this };
-    muse::Inject<ISoundProfilesRepository> profilesRepo = { this };
-    muse::Inject<muse::IInteractive> interactive = { this };
-    muse::Inject<muse::tours::IToursService> tours = { this };
+    muse::ContextInject<muse::actions::IActionsDispatcher> dispatcher = { this };
+    muse::ContextInject<context::IGlobalContext> globalContext = { this };
+    muse::ContextInject<muse::audio::IPlayback> playback = { this };
+    muse::ContextInject<ISoundProfilesRepository> profilesRepo = { this };
+    muse::ContextInject<muse::IInteractive> interactive = { this };
+    muse::ContextInject<muse::tours::IToursService> tours = { this };
 
 public:
     PlaybackController(const muse::modularity::ContextPtr& iocCtx);
-    ~PlaybackController();
+    ~PlaybackController() override;
 
     void init();
 
@@ -107,10 +105,10 @@ public:
     bool actionChecked(const muse::actions::ActionCode& actionCode) const override;
     muse::async::Channel<muse::actions::ActionCode> actionCheckedChanged() const override;
 
-    QTime totalPlayTime() const override;
+    muse::secs_t totalPlayTime() const override;
     muse::async::Notification totalPlayTimeChanged() const override;
 
-    notation::Tempo currentTempo() const override;
+    const notation::Tempo& currentTempo() const override;
     muse::async::Notification currentTempoChanged() const override;
 
     notation::MeasureBeat currentBeat() const override;
@@ -180,7 +178,6 @@ private:
     void resume();
 
     muse::audio::secs_t playbackStartSecs() const;
-    muse::audio::secs_t playbackEndSecs() const;
 
     notation::InstrumentTrackIdSet instrumentTrackIdSetForRangePlayback() const;
 
@@ -255,6 +252,8 @@ private:
     muse::async::Channel<muse::audio::TrackId> m_trackRemoved;
 
     muse::async::Channel<muse::audio::aux_channel_idx_t, std::string> m_auxChannelNameChanged;
+
+    muse::async::Asyncable m_seqAsyncReceiver; //! HACK - see PlaybackController::setupSequenceTracks
 
     InstrumentTrackIdMap m_instrumentTrackIdMap;
     AuxTrackIdMap m_auxTrackIdMap;

@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_APPSHELL_IAPPSHELLCONFIGURATION_H
-#define MU_APPSHELL_IAPPSHELLCONFIGURATION_H
+
+#pragma once
 
 #include "modularity/imoduleinterface.h"
 #include "types/ret.h"
@@ -30,7 +30,7 @@
 #include "async/notification.h"
 
 namespace mu::appshell {
-class IAppShellConfiguration : MODULE_GLOBAL_EXPORT_INTERFACE
+class IAppShellConfiguration : MODULE_GLOBAL_INTERFACE
 {
     INTERFACE_ID(IAppshellConfiguration)
 
@@ -57,8 +57,6 @@ public:
     virtual muse::io::path_t startupScorePath() const = 0;
     virtual void setStartupScorePath(const muse::io::path_t& scorePath) = 0;
     virtual muse::async::Notification startupScorePathChanged() const = 0;
-
-    virtual muse::io::path_t userDataPath() const = 0;
 
     virtual std::string handbookUrl() const = 0;
     virtual std::string askForHelpUrl() const = 0;
@@ -94,5 +92,3 @@ public:
     virtual muse::Ret setSessionProjectsPaths(const muse::io::paths_t& paths) = 0;
 };
 }
-
-#endif // MU_APPSHELL_IAPPSHELLCONFIGURATION_H

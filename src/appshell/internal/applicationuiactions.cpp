@@ -286,7 +286,7 @@ const UiActionList ApplicationUiActions::m_actions = {
 };
 
 ApplicationUiActions::ApplicationUiActions(std::shared_ptr<ApplicationActionController> controller, const modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx), m_controller(controller)
+    : muse::Contextable(iocCtx), m_controller(controller)
 {
 }
 
@@ -308,7 +308,7 @@ void ApplicationUiActions::init()
         listenOpenedDocksChanged(dockWindowProvider()->window());
     });
 
-    notationConfiguration()->useNewPercussionPanelChanged().onNotify(this, [this]() {
+    notationSceneConfiguration()->useNewPercussionPanelChanged().onNotify(this, [this]() {
         m_actionEnabledChanged.send({ TOGGLE_PERCUSSION_PANEL_ACTION_CODE });
     });
 }
@@ -344,7 +344,7 @@ const muse::ui::UiActionList& ApplicationUiActions::actionsList() const
 bool ApplicationUiActions::actionEnabled(const UiAction& act) const
 {
     if (act.code == TOGGLE_PERCUSSION_PANEL_ACTION_CODE) {
-        return notationConfiguration()->useNewPercussionPanel();
+        return notationSceneConfiguration()->useNewPercussionPanel();
     }
 
     return m_controller->canReceiveAction(act.code);

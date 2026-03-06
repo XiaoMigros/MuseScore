@@ -27,7 +27,7 @@ using namespace mu::preferences;
 using namespace mu::notation;
 
 CanvasPreferencesModel::CanvasPreferencesModel(QObject* parent)
-    : QObject(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QObject(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -47,7 +47,7 @@ void CanvasPreferencesModel::setupConnections()
     notationConfiguration()->canvasOrientation().ch.onReceive(this, [this](muse::Orientation) {
         emit scrollPagesOrientationChanged();
     });
-    notationConfiguration()->isLimitCanvasScrollAreaChanged().onNotify(this, [this]() {
+    notationSceneConfiguration()->isLimitCanvasScrollAreaChanged().onNotify(this, [this]() {
         emit limitScrollAreaChanged();
     });
     notationConfiguration()->selectionProximityChanged().onReceive(this, [this](int selectionProximity) {
@@ -90,7 +90,7 @@ int CanvasPreferencesModel::scrollPagesOrientation() const
 
 bool CanvasPreferencesModel::limitScrollArea() const
 {
-    return notationConfiguration()->isLimitCanvasScrollArea();
+    return notationSceneConfiguration()->isLimitCanvasScrollArea();
 }
 
 int CanvasPreferencesModel::selectionProximity() const
@@ -144,7 +144,7 @@ void CanvasPreferencesModel::setLimitScrollArea(bool limit)
         return;
     }
 
-    notationConfiguration()->setIsLimitCanvasScrollArea(limit);
+    notationSceneConfiguration()->setIsLimitCanvasScrollArea(limit);
     emit limitScrollAreaChanged();
 }
 

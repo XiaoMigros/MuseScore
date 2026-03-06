@@ -153,6 +153,7 @@ struct SoundTrackFormat {
 
 struct AudioEngineConfig {
     bool autoProcessOnlineSoundsInBackground = false;
+    bool isLazyProcessingOfOnlineSoundsEnabled = false;
 };
 
 using AudioSourceName = std::string;
@@ -173,6 +174,14 @@ enum class AudioResourceType {
     MuseSamplerSoundPack,
     Lv2Plugin,
     AudioUnit,
+};
+
+static const std::map<AudioResourceType, QString> RESOURCE_TYPE_MAP = {
+    { AudioResourceType::Undefined, "undefined" },
+    { AudioResourceType::MuseSamplerSoundPack, "muse_sampler_sound_pack" },
+    { AudioResourceType::FluidSoundfont, "fluid_soundfont" },
+    { AudioResourceType::VstPlugin, "vst_plugin" },
+    { AudioResourceType::MusePlugin, "muse_plugin" },
 };
 
 struct AudioResourceMeta {
@@ -512,4 +521,12 @@ struct InputProcessingProgress {
     bool isStarted = false;
     async::Channel<StatusInfo, ChunkInfoList, ProgressInfo> processedChannel;
 };
+
+enum SaveSoundTrackStage {
+    Unknown = 0,
+    ProcessingOnlineSounds,
+    WritingSoundTrack,
+};
+
+using SaveSoundTrackProgress = async::Channel<int64_t /*current*/, int64_t /*total*/, SaveSoundTrackStage>;
 }

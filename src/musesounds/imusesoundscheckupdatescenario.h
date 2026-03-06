@@ -21,13 +21,13 @@
  */
 #pragma once
 
-#include "async/promise.h"
+#include "async/notification.h"
 #include "types/ret.h"
 
 #include "modularity/imoduleinterface.h"
 
 namespace mu::musesounds {
-class IMuseSoundsCheckUpdateScenario : MODULE_EXPORT_INTERFACE
+class IMuseSoundsCheckUpdateScenario : MODULE_CONTEXT_INTERFACE
 {
     INTERFACE_ID(IMuseSoundsCheckUpdateScenario)
 
@@ -35,7 +35,10 @@ public:
     virtual ~IMuseSoundsCheckUpdateScenario() = default;
 
     virtual bool needCheckForUpdate() const = 0;
-    virtual muse::async::Promise<muse::Ret> checkForUpdate(bool manual) = 0;
+    virtual void checkForUpdate(bool manual) = 0;
+
+    virtual bool checkInProgress() const = 0;
+    virtual muse::async::Notification checkInProgressChanged() const = 0;
 
     virtual bool hasUpdate() const = 0;
     virtual muse::Ret showUpdate() = 0;

@@ -1042,17 +1042,17 @@ void TWrite::write(const Chord* item, XmlWriter& xml, WriteContext& ctx)
     }
 
     // Write parens
-    for (const NoteParenthesisInfo& parenPair : item->noteParens()) {
+    for (const NoteParenthesisInfo* parenPair : item->noteParentheses()) {
         xml.startElement("NoteParenGroup");
-        if (parenPair.leftParen->isUserModified()) {
-            write(parenPair.leftParen, xml, ctx);
+        if (parenPair->leftParen()->isUserModified()) {
+            write(parenPair->leftParen(), xml, ctx);
         }
-        if (parenPair.rightParen->isUserModified()) {
-            write(parenPair.rightParen, xml, ctx);
+        if (parenPair->rightParen()->isUserModified()) {
+            write(parenPair->rightParen(), xml, ctx);
         }
 
         xml.startElement("Notes");
-        for (const Note* note : parenPair.notes) {
+        for (const Note* note : parenPair->notes()) {
             auto it = std::find(item->notes().begin(), item->notes().end(), note);
             size_t idx = it - item->notes().begin();
             xml.tag("NoteIdx", idx);
@@ -1601,6 +1601,19 @@ void TWrite::writeProperties(const SLine* item, XmlWriter& xml, WriteContext& ct
     writeProperty(item, xml, Pid::ANCHOR);
     writeProperty(item, xml, Pid::DASH_LINE_LEN);
     writeProperty(item, xml, Pid::DASH_GAP_LEN);
+
+    // TO PREVENT CRASH IN VERSIONS <4.6.5
+    if (item->score()->isPaletteScore()) {
+        const double COMPAT_SCALE = 0.5;
+        // when used as icon
+        if (!item->spannerSegments().empty()) {
+            const LineSegment* s = item->frontSegment();
+            xml.tag("length", s->pos2().x() * COMPAT_SCALE);
+        } else {
+            xml.tag("length", item->spatium() * 4 * COMPAT_SCALE);
+        }
+        return;
+    }
 
     if (!item->isUserModified()) {
         return;
@@ -2357,7 +2370,7 @@ void TWrite::write(const Note* item, XmlWriter& xml, WriteContext& ctx)
         }
         xml.endElement();
     }
-    for (Pid id : { Pid::PITCH, Pid::TPC1, Pid::TPC2, Pid::SMALL, Pid::MIRROR_HEAD, Pid::DOT_POSITION,
+    for (Pid id : { Pid::PITCH, Pid::CENT_OFFSET, Pid::TPC1, Pid::TPC2, Pid::SMALL, Pid::MIRROR_HEAD, Pid::DOT_POSITION,
                     Pid::HEAD_SCHEME, Pid::HEAD_GROUP, Pid::USER_VELOCITY, Pid::PLAY, Pid::TUNING, Pid::FRET, Pid::STRING,
                     Pid::GHOST, Pid::DEAD, Pid::HEAD_TYPE, Pid::FIXED, Pid::FIXED_LINE }) {
         writeProperty(item, xml, id);

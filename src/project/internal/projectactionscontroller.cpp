@@ -30,6 +30,7 @@
 #include <QTimer>
 
 #include "async/async.h"
+#include "async/processevents.h"
 #include "defer.h"
 #include "translation.h"
 
@@ -67,14 +68,14 @@ void ProjectActionsController::init()
     dispatcher()->reg(this, "file-open", this, &ProjectActionsController::openProject);
 
     dispatcher()->reg(this, "file-close", [this]() {
-        auto anyInstanceWithoutProject = multiInstancesProvider()->isHasAppInstanceWithoutProject();
+        auto anyInstanceWithoutProject = multiwindowsProvider()->isHasWindowWithoutProject();
         bool ok = closeOpenedProject();
         if (ok && anyInstanceWithoutProject) {
             //! NOTE: we need to call `quit` in the next event loop due to controlling the lifecycle of this method
             async::Async::call(this, [this]() {
                 dispatcher()->dispatch("quit", ActionData::make_arg1<bool>(false));
             });
-            multiInstancesProvider()->activateWindowWithoutProject();
+            multiwindowsProvider()->activateWindowWithoutProject();
         }
     });
 
@@ -182,7 +183,10 @@ void ProjectActionsController::openProject(const ActionData& args)
     QUrl url = !args.empty() ? args.arg<QUrl>(0) : QUrl();
     QString displayNameOverride = args.count() >= 2 ? args.arg<QString>(1) : QString();
 
-    openProject(ProjectFile(url, displayNameOverride));
+    Ret ret = openProject(ProjectFile(url, displayNameOverride));
+    if (!ret) {
+        LOGE() << ret.toString();
+    }
 }
 
 Ret ProjectActionsController::openProject(const ProjectFile& file)
@@ -218,7 +222,7 @@ Ret ProjectActionsController::openProject(const ProjectFile& file)
 Ret ProjectActionsController::openProject(const muse::io::path_t& givenPath, const QString& displayNameOverride)
 {
     //! NOTE This method is synchronous,
-    //! but inside `multiInstancesProvider` there can be an event loop
+    //! but inside `multiwindowsProvider` there can be an event loop
     //! to wait for the responses from other instances, accordingly,
     //! the events (like user click) can be executed and this method can be called several times,
     //! before the end of the current call.
@@ -245,8 +249,8 @@ Ret ProjectActionsController::openProject(const muse::io::path_t& givenPath, con
     }
 
     //! Step 3. Check, if the project already opened in another window, then activate the window with the project
-    if (multiInstancesProvider()->isProjectAlreadyOpened(actualPath)) {
-        multiInstancesProvider()->activateWindowWithProject(actualPath);
+    if (multiwindowsProvider()->isProjectAlreadyOpened(actualPath)) {
+        multiwindowsProvider()->activateWindowWithProject(actualPath);
         return make_ret(Ret::Code::Ok);
     }
 
@@ -260,7 +264,7 @@ Ret ProjectActionsController::openProject(const muse::io::path_t& givenPath, con
             args << "--score-display-name-override" << displayNameOverride;
         }
 
-        multiInstancesProvider()->openNewAppInstance(args);
+        multiwindowsProvider()->openNewWindow(args);
         return make_ret(Ret::Code::Ok);
     }
 
@@ -576,8 +580,8 @@ Ret ProjectActionsController::openScoreFromMuseScoreCom(const QUrl& url)
         }
 
         // or in another one
-        if (multiInstancesProvider()->isProjectAlreadyOpened(projectPath)) {
-            multiInstancesProvider()->activateWindowWithProject(projectPath);
+        if (multiwindowsProvider()->isProjectAlreadyOpened(projectPath)) {
+            multiwindowsProvider()->activateWindowWithProject(projectPath);
             return muse::make_ok();
         }
     }
@@ -591,7 +595,7 @@ Ret ProjectActionsController::openScoreFromMuseScoreCom(const QUrl& url)
             args << "--score-display-name-override" << scoreInfo.val.title;
         }
 
-        multiInstancesProvider()->openNewAppInstance(args);
+        multiwindowsProvider()->openNewWindow(args);
         return muse::make_ok();
     }
 
@@ -649,7 +653,7 @@ bool ProjectActionsController::isAnyProjectOpened() const
 void ProjectActionsController::newProject()
 {
     //! NOTE This method is synchronous,
-    //! but inside `multiInstancesProvider` there can be an event loop
+    //! but inside `multiwindowsProvider` there can be an event loop
     //! to wait for the responses from other instances, accordingly,
     //! the events (like user click) can be executed and this method can be called several times,
     //! before the end of the current call.
@@ -664,13 +668,13 @@ void ProjectActionsController::newProject()
     };
 
     if (globalContext()->currentProject()) {
-        if (multiInstancesProvider()->isHasAppInstanceWithoutProject()) {
-            multiInstancesProvider()->activateWindowWithoutProject({ "file-new" });
+        if (multiwindowsProvider()->isHasWindowWithoutProject()) {
+            multiwindowsProvider()->activateWindowWithoutProject({ "file-new" });
             return;
         }
         QStringList args;
         args << "--session-type" << "start-with-new";
-        multiInstancesProvider()->openNewAppInstance(args);
+        multiwindowsProvider()->openNewWindow(args);
         return;
     }
 
@@ -1327,6 +1331,7 @@ Ret ProjectActionsController::uploadProject(const CloudProjectInfo& info, const 
         }
     });
 
+    muse::async::processMessages();
     eventLoop.exec();
 
     return ret;
@@ -1886,12 +1891,13 @@ void ProjectActionsController::printScore()
 async::Promise<io::path_t> ProjectActionsController::selectScoreOpeningFile() const
 {
     std::string allExt = "*.mscz *.mxl *.musicxml *.xml *.mid *.midi *.kar *.md *.mgu *.sgu *.cap *.capx "
-                         "*.ove *.scw *.bmw *.bww *.gtp *.gp3 *.gp4 *.gp5 *.gpx *.gp *.ptb *.mei *.tef *.mscx *.mscs *.mscz~";
+                         "*.ove *.scw *.bmw *.bww *.gtp *.gp3 *.gp4 *.gp5 *.gpx *.gp *.ptb *.mei *.mnx *.json *.tef *.mscx *.mscs *.mscz~";
 
     std::vector<std::string> filter { muse::trc("project", "All supported files") + " (" + allExt + ")",
                                       muse::trc("project", "MuseScore files") + " (*.mscz)",
                                       muse::trc("project", "MusicXML files") + " (*.mxl *.musicxml *.xml)",
                                       muse::trc("project", "MIDI files") + " (*.mid *.midi *.kar)",
+                                      muse::trc("project", "MNX files (experimental)") + " (*.mnx *.json)",
                                       muse::trc("project", "MuseData files") + " (*.md)",
                                       muse::trc("project", "Capella files") + " (*.cap *.capx)",
                                       muse::trc("project", "BB files (experimental)") + " (*.mgu *.sgu)",

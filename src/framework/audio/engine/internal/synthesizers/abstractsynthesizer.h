@@ -34,11 +34,11 @@
 #include "../../isynthesizer.h"
 
 namespace muse::audio::synth {
-class AbstractSynthesizer : public ISynthesizer, public Injectable, public async::Asyncable
+class AbstractSynthesizer : public ISynthesizer, public Contextable, public async::Asyncable
 {
 public:
     muse::GlobalInject<engine::IAudioEngineConfiguration> config;
-    muse::Inject<engine::IAudioEngine> audioEngine = { this };
+    muse::ContextInject<engine::IAudioEngine> audioEngine = { this };
 
 public:
     AbstractSynthesizer(const audio::AudioInputParams& params, const modularity::ContextPtr& iocCtx);
@@ -53,6 +53,7 @@ public:
     bool readyToPlay() const override;
     async::Notification readyToPlayChanged() const override;
 
+    bool hasPendingChunks() const override;
     void processInput() override;
     InputProcessingProgress inputProcessingProgress() const override;
 
@@ -76,5 +77,6 @@ protected:
     async::Notification m_readyToPlayChanged;
 
     InputProcessingProgress m_inputProcessingProgress;
+    bool m_hasPendingChunks = false;
 };
 }

@@ -35,7 +35,7 @@ class ITracks;
 class IPlayer;
 class IAudioOutput;
 
-class IPlayback : MODULE_EXPORT_INTERFACE
+class IPlayback : MODULE_CONTEXT_INTERFACE
 {
     INTERFACE_ID(IPlayback)
 
@@ -108,8 +108,7 @@ public:
     virtual async::Promise<bool> saveSoundTrack(const TrackSequenceId sequenceId, const io::path_t& destination,
                                                 const SoundTrackFormat& format) = 0;
     virtual void abortSavingAllSoundTracks() = 0;
-    virtual async::Channel<int64_t /*current*/, int64_t /*total*/>
-    saveSoundTrackProgressChanged(const TrackSequenceId sequenceId) const = 0;
+    virtual SaveSoundTrackProgress saveSoundTrackProgressChanged(const TrackSequenceId sequenceId) const = 0;
 
     virtual void clearAllFx() = 0;
 };

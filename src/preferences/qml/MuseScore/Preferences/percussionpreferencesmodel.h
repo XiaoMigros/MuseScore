@@ -27,11 +27,11 @@
 #include <QObject>
 
 #include "modularity/ioc.h"
-#include "notation/inotationconfiguration.h"
+#include "notationscene/inotationsceneconfiguration.h"
 
 #include "async/asyncable.h"
 
-class PercussionPreferencesModel : public QObject, public muse::Injectable, public muse::async::Asyncable
+class PercussionPreferencesModel : public QObject, public muse::Contextable, public muse::async::Asyncable
 {
     Q_OBJECT
     QML_ELEMENT;
@@ -51,7 +51,7 @@ class PercussionPreferencesModel : public QObject, public muse::Injectable, publ
     Q_PROPERTY(bool percussionPanelMoveMidiNotesAndShortcuts READ percussionPanelMoveMidiNotesAndShortcuts
                WRITE setPercussionPanelMoveMidiNotesAndShortcuts NOTIFY percussionPanelMoveMidiNotesAndShortcutsChanged)
 
-    muse::GlobalInject<mu::notation::INotationConfiguration> configuration;
+    muse::GlobalInject<mu::notation::INotationSceneConfiguration> configuration;
 
 public:
     explicit PercussionPreferencesModel(QObject* parent = nullptr);

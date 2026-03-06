@@ -96,7 +96,7 @@ static std::string resolveAuxTrackTitle(aux_channel_idx_t index, const AudioOutp
 }
 
 PlaybackController::PlaybackController(const muse::modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx), m_drumsetLoader(iocCtx), m_onlineSoundsController(std::make_unique<OnlineSoundsController>(iocCtx))
+    : muse::Contextable(iocCtx), m_drumsetLoader(iocCtx), m_onlineSoundsController(std::make_unique<OnlineSoundsController>(iocCtx))
 {
 }
 
@@ -412,11 +412,11 @@ void PlaybackController::triggerControllers(const muse::mpe::ControllerChangeEve
 
 void PlaybackController::seekElement(const notation::EngravingItem* element, bool flushSound)
 {
-    IF_ASSERT_FAILED(element) {
+    IF_ASSERT_FAILED(notationPlayback()) {
         return;
     }
 
-    IF_ASSERT_FAILED(notationPlayback()) {
+    if (!element) {
         return;
     }
 
@@ -629,7 +629,7 @@ void PlaybackController::togglePlay(bool showErrors)
 
         if (currentPlayer()) {
             secs_t pos = currentPlayer()->playbackPosition();
-            secs_t endSecs = playbackEndSecs();
+            secs_t endSecs = totalPlayTime();
             if (pos == endSecs) {
                 secs_t startSecs = playbackStartSecs();
                 seek(startSecs);
@@ -713,7 +713,7 @@ void PlaybackController::play()
 void PlaybackController::rewind(const ActionData& args)
 {
     secs_t startSecs = playbackStartSecs();
-    secs_t endSecs = playbackEndSecs();
+    secs_t endSecs = totalPlayTime();
     secs_t newPosition = !args.empty() ? args.arg<secs_t>(0) : secs_t{ 0 };
     newPosition = std::clamp(newPosition, startSecs, endSecs);
 
@@ -803,11 +803,6 @@ secs_t PlaybackController::playbackStartSecs() const
     }
 
     return 0;
-}
-
-secs_t PlaybackController::playbackEndSecs() const
-{
-    return notationPlayback() ? notationPlayback()->totalPlayTime() : secs_t { 0 };
 }
 
 InstrumentTrackIdSet PlaybackController::instrumentTrackIdSetForRangePlayback() const
@@ -1043,6 +1038,8 @@ void PlaybackController::resetCurrentSequence()
     playback()->outputParamsChanged().disconnect(this);
     playback()->masterOutputParamsChanged().disconnect(this);
     playback()->clearMasterOutputParams();
+
+    m_seqAsyncReceiver.async_disconnectAll();
 
     m_currentTick = 0;
 
@@ -1469,7 +1466,10 @@ void PlaybackController::setupSequenceTracks()
     });
 
     NotifyList<const Part*> partList = masterNotationParts()->partList();
-    partList.onItemChanged(this, [this, onAddFinished](const Part* part) {
+
+    //! HACK - ideally we would use "this" (PlaybackController) instead of m_seqAsyncReceiver for the following
+    //! subscription, but we've already subscribed to onItemChanged for a different reason in setNotation...
+    partList.onItemChanged(&m_seqAsyncReceiver, [this, onAddFinished](const Part* part) {
         for (const InstrumentTrackId& trackId : part->instrumentTrackIdSet()) {
             auto search = m_instrumentTrackIdMap.find(trackId);
             if (search == m_instrumentTrackIdMap.cend()) {
@@ -1479,7 +1479,7 @@ void PlaybackController::setupSequenceTracks()
         }
 
         updateSoloMuteStates();
-    }, async::Asyncable::Mode::SetReplace);
+    });
 
     audioSettings()->auxSoloMuteStateChanged().onReceive(
         this, [this](aux_channel_idx_t, const notation::INotationSoloMuteState::SoloMuteState&) {
@@ -1497,7 +1497,7 @@ void PlaybackController::setupSequencePlayer()
 
         updateCurrentTempo();
 
-        secs_t endSecs = playbackEndSecs();
+        secs_t endSecs = totalPlayTime();
         if (pos + milisecsToSecs(1) >= endSecs) {
             stop();
         }
@@ -1613,13 +1613,10 @@ Channel<ActionCode> PlaybackController::actionCheckedChanged() const
     return m_actionCheckedChanged;
 }
 
-QTime PlaybackController::totalPlayTime() const
+secs_t PlaybackController::totalPlayTime() const
 {
-    if (!notationPlayback()) {
-        return ZERO_TIME;
-    }
-
-    return timeFromSeconds(notationPlayback()->totalPlayTime());
+    auto np = notationPlayback();
+    return np ? np->totalPlayTime() : secs_t { 0.0 };
 }
 
 Notification PlaybackController::totalPlayTimeChanged() const
@@ -1627,7 +1624,7 @@ Notification PlaybackController::totalPlayTimeChanged() const
     return m_totalPlayTimeChanged;
 }
 
-Tempo PlaybackController::currentTempo() const
+const Tempo& PlaybackController::currentTempo() const
 {
     return m_currentTempo;
 }
@@ -1814,16 +1811,8 @@ void PlaybackController::setIsExportingAudio(bool exporting)
     m_isExportingAudio = exporting;
     updateSoloMuteStates();
 
-    if (!exporting) {
-        return;
-    }
-
-    if (notationPlayback()) {
+    if (exporting && notationPlayback()) {
         notationPlayback()->sendEventsForChangedTracks();
-    }
-
-    if (!onlineSounds().empty() && !audioConfiguration()->autoProcessOnlineSoundsInBackground()) {
-        dispatcher()->dispatch("process-online-sounds");
     }
 }
 

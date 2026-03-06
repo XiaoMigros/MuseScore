@@ -29,7 +29,7 @@
 #include "global/serialization/xmlstreamreader.h"
 #include "global/serialization/xmlstreamwriter.h"
 
-#include "multiinstances/resourcelockguard.h"
+#include "multiwindows/resourcelockguard.h"
 
 #include "log.h"
 
@@ -46,6 +46,28 @@ static constexpr std::string_view AUTOREPEAT_TAG("autorepeat");
 
 static const std::string SHORTCUTS_RESOURCE_NAME("SHORTCUTS");
 
+static const std::map<QKeySequence::StandardKey, QKeyCombination> SHORTCUTS_EXPAND_IGNORE_MAP = {
+    { QKeySequence::StandardKey::HelpContents, Qt::Key_Help },
+    { QKeySequence::StandardKey::Open, Qt::Key_Open },
+    { QKeySequence::StandardKey::Close, Qt::Key_Close },
+    { QKeySequence::StandardKey::Save, Qt::Key_Save },
+    { QKeySequence::StandardKey::New, Qt::Key_New },
+    { QKeySequence::StandardKey::Cut, Qt::Key_Cut },
+    { QKeySequence::StandardKey::Copy, Qt::Key_Copy },
+    { QKeySequence::StandardKey::Paste, Qt::Key_Paste },
+    { QKeySequence::StandardKey::Undo, Qt::Key_Undo },
+    { QKeySequence::StandardKey::Redo, Qt::Key_Redo },
+    { QKeySequence::StandardKey::Forward, Qt::Key_Forward },
+    { QKeySequence::StandardKey::Refresh, Qt::Key_Refresh },
+    { QKeySequence::StandardKey::ZoomIn, Qt::Key_ZoomIn },
+    { QKeySequence::StandardKey::ZoomOut, Qt::Key_ZoomOut },
+    { QKeySequence::StandardKey::Find, Qt::Key_Find },
+    { QKeySequence::StandardKey::SaveAs, (Qt::SHIFT | Qt::Key_Save) },
+    { QKeySequence::StandardKey::Preferences, Qt::Key_Settings },
+    { QKeySequence::StandardKey::Quit, Qt::Key_Exit },
+    { QKeySequence::StandardKey::Cancel, Qt::Key_Cancel }
+};
+
 static const Shortcut& findShortcut(const ShortcutList& shortcuts, const std::string& actionCode)
 {
     for (const Shortcut& shortcut : shortcuts) {
@@ -60,7 +82,7 @@ static const Shortcut& findShortcut(const ShortcutList& shortcuts, const std::st
 
 void ShortcutsRegister::init()
 {
-    multiInstancesProvider()->resourceChanged().onReceive(this, [this](const std::string& resourceName) {
+    multiwindowsProvider()->resourceChanged().onReceive(this, [this](const std::string& resourceName) {
         if (resourceName == SHORTCUTS_RESOURCE_NAME) {
             reload();
         }
@@ -86,7 +108,7 @@ void ShortcutsRegister::reload(bool onlyDef)
 
         if (!onlyDef) {
             //! NOTE The user shortcut file may change, so we need to lock it
-            mi::ReadResourceLockGuard guard(multiInstancesProvider(), SHORTCUTS_RESOURCE_NAME);
+            mi::ReadResourceLockGuard guard(multiwindowsProvider(), SHORTCUTS_RESOURCE_NAME);
             ok = readFromFile(m_shortcuts, userPath);
         } else {
             ok = false;
@@ -189,7 +211,14 @@ void ShortcutsRegister::expandStandardKeys(ShortcutList& shortcuts) const
     ShortcutList notbonded;
 
     for (Shortcut& shortcut : shortcuts) {
+        QKeySequence ignoredSeq = QKeySequence(muse::value(SHORTCUTS_EXPAND_IGNORE_MAP, shortcut.standardKey, Qt::Key_unknown));
+
         if (!shortcut.sequences.empty()) {
+            std::string ignoredSeqStr = ignoredSeq.toString().toStdString();
+            muse::remove_if(shortcut.sequences, [&ignoredSeqStr](const std::string& seq) {
+                return seq == ignoredSeqStr;
+            });
+
             continue;
         }
 
@@ -207,6 +236,10 @@ void ShortcutsRegister::expandStandardKeys(ShortcutList& shortcuts) const
         //! these can be considered alternative shortcuts on the same platform for the given key.
         for (int i = 1; i < kslist.count(); ++i) {
             const QKeySequence& seq = kslist.at(i);
+            if (seq == ignoredSeq) {
+                continue;
+            }
+
             Shortcut esc = shortcut;
             esc.sequences = { seq.toString().toStdString() };
             //LOGD() << "for standard key: " << esc.standardKey << ", alternative sequence: " << esc.sequence;
@@ -343,7 +376,7 @@ Ret ShortcutsRegister::setShortcuts(const ShortcutList& shortcuts)
 void ShortcutsRegister::resetShortcuts()
 {
     {
-        mi::WriteResourceLockGuard guard(multiInstancesProvider(), SHORTCUTS_RESOURCE_NAME);
+        mi::WriteResourceLockGuard guard(multiwindowsProvider(), SHORTCUTS_RESOURCE_NAME);
         fileSystem()->remove(configuration()->shortcutsUserAppDataPath());
     }
 
@@ -374,7 +407,7 @@ bool ShortcutsRegister::writeToFile(const ShortcutList& shortcuts, const io::pat
 
     Ret ret;
     {
-        mi::WriteResourceLockGuard guard(multiInstancesProvider(), SHORTCUTS_RESOURCE_NAME);
+        mi::WriteResourceLockGuard guard(multiwindowsProvider(), SHORTCUTS_RESOURCE_NAME);
         ret = fileSystem()->writeFile(path, data);
     }
 
@@ -464,7 +497,7 @@ ShortcutList ShortcutsRegister::shortcutsForSequence(const std::string& sequence
 Ret ShortcutsRegister::importFromFile(const io::path_t& filePath)
 {
     {
-        mi::ReadResourceLockGuard guard(multiInstancesProvider(), SHORTCUTS_RESOURCE_NAME);
+        mi::ReadResourceLockGuard guard(multiwindowsProvider(), SHORTCUTS_RESOURCE_NAME);
         Ret ret = fileSystem()->copy(filePath, configuration()->shortcutsUserAppDataPath(), true);
         if (!ret) {
             LOGE() << "failed import file: " << ret.toString();

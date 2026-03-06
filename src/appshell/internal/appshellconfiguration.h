@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_APPSHELL_APPSHELLCONFIGURATION_H
-#define MU_APPSHELL_APPSHELLCONFIGURATION_H
+
+#pragma once
 
 #include "async/asyncable.h"
 
@@ -28,7 +28,7 @@
 #include "global/iglobalconfiguration.h"
 #include "global/iapplication.h"
 #include "global/io/ifilesystem.h"
-#include "multiinstances/imultiinstancesprovider.h"
+#include "multiwindows/imultiwindowsprovider.h"
 #include "ui/iuiconfiguration.h"
 #include "project/iprojectconfiguration.h"
 #include "notation/inotationconfiguration.h"
@@ -38,21 +38,21 @@
 #include "iappshellconfiguration.h"
 
 namespace mu::appshell {
-class AppShellConfiguration : public IAppShellConfiguration, public muse::Injectable, public muse::async::Asyncable
+class AppShellConfiguration : public IAppShellConfiguration, public muse::Contextable, public muse::async::Asyncable
 {
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
-    muse::GlobalInject<muse::mi::IMultiInstancesProvider> multiInstancesProvider;
+    muse::GlobalInject<muse::mi::IMultiWindowsProvider> multiwindowsProvider;
     muse::GlobalInject<muse::ui::IUiConfiguration> uiConfiguration;
     muse::GlobalInject<project::IProjectConfiguration> projectConfiguration;
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
     muse::GlobalInject<playback::IPlaybackConfiguration> playbackConfiguration;
     muse::GlobalInject<muse::languages::ILanguagesConfiguration> languagesConfiguration;
-    muse::Inject<muse::IApplication> application = { this };
+    muse::ContextInject<muse::IApplication> application = { this };
 
 public:
     AppShellConfiguration(const muse::modularity::ContextPtr& iocCtx)
-        : muse::Injectable(iocCtx) {}
+        : muse::Contextable(iocCtx) {}
 
     void init();
 
@@ -76,8 +76,6 @@ public:
     muse::io::path_t startupScorePath() const override;
     void setStartupScorePath(const muse::io::path_t& scorePath) override;
     muse::async::Notification startupScorePathChanged() const override;
-
-    muse::io::path_t userDataPath() const override;
 
     std::string handbookUrl() const override;
     std::string askForHelpUrl() const override;
@@ -133,5 +131,3 @@ private:
     muse::async::Notification m_startupScorePathChanged;
 };
 }
-
-#endif // MU_APPSHELL_APPSHELLCONFIGURATION_H

@@ -27,7 +27,6 @@
 #include "global/iglobalconfiguration.h"
 #include "global/iinteractive.h"
 #include "global/async/asyncable.h"
-#include "global/io/ifilesystem.h"
 
 #include "../iregisteraudiopluginsscenario.h"
 #include "../iknownaudiopluginsregister.h"
@@ -35,32 +34,32 @@
 #include "../iaudiopluginmetareaderregister.h"
 
 namespace muse::audioplugins {
-class RegisterAudioPluginsScenario : public IRegisterAudioPluginsScenario, public Injectable, public async::Asyncable
+class RegisterAudioPluginsScenario : public IRegisterAudioPluginsScenario, public Contextable, public async::Asyncable
 {
 public:
     GlobalInject<IGlobalConfiguration> globalConfiguration;
     GlobalInject<IProcess> process;
-    GlobalInject<io::IFileSystem> fileSystem;
-    Inject<IKnownAudioPluginsRegister> knownPluginsRegister = { this };
-    Inject<IAudioPluginsScannerRegister> scannerRegister = { this };
-    Inject<IAudioPluginMetaReaderRegister> metaReaderRegister = { this };
-    Inject<IInteractive> interactive = { this };
+    ContextInject<IKnownAudioPluginsRegister> knownPluginsRegister = { this };
+    ContextInject<IAudioPluginsScannerRegister> scannerRegister = { this };
+    ContextInject<IAudioPluginMetaReaderRegister> metaReaderRegister = { this };
+    ContextInject<IInteractive> interactive = { this };
 
 public:
     RegisterAudioPluginsScenario(const modularity::ContextPtr& iocCtx)
-        : Injectable(iocCtx) {}
+        : Contextable(iocCtx) {}
 
     void init();
 
-    io::paths_t scanForNewPluginPaths() const override;
+    PluginScanResult scanPlugins() const override;
 
-    Ret updatePluginsRegistry(io::paths_t newPluginPaths = {}) override;
+    Ret updatePluginsRegistry() override;
+    void registerNewPlugins(const io::paths_t& pluginPaths) override;
+    Ret unregisterRemovedPlugins(const audio::AudioResourceIdList& pluginIds) override;
+
     Ret registerPlugin(const io::path_t& pluginPath) override;
     Ret registerFailedPlugin(const io::path_t& pluginPath, int failCode) override;
 
 private:
-    Ret unregisterUninstalledPlugins();
-
     void processPluginsRegistration(const io::paths_t& pluginPaths);
     IAudioPluginMetaReaderPtr metaReader(const io::path_t& pluginPath) const;
     audio::AudioResourceType metaType(const io::path_t& pluginPath) const;

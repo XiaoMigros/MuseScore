@@ -58,7 +58,7 @@ static std::string moduleName()
 
 EngineController::EngineController(std::shared_ptr<rpc::IRpcChannel> rpcChannel,
                                    const muse::modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx), m_rpcChannel(rpcChannel)
+    : muse::Contextable(iocCtx), m_rpcChannel(rpcChannel)
 {
     m_rpcChannel->onMethod(rpc::Method::EngineInit, [this](const rpc::Msg& msg) {
         OutputSpec spec;
@@ -70,6 +70,11 @@ EngineController::EngineController(std::shared_ptr<rpc::IRpcChannel> rpcChannel,
 
         init(spec, conf);
 
+        m_rpcChannel->send(rpc::make_response(msg));
+    });
+
+    m_rpcChannel->onMethod(rpc::Method::EngineDeinit, [this](const rpc::Msg& msg) {
+        deinit();
         m_rpcChannel->send(rpc::make_response(msg));
     });
 }
@@ -98,6 +103,17 @@ void EngineController::registerExports()
     globalIoc()->registerExport<ISoundFontRepository>(moduleName(), m_soundFontRepository);
 }
 
+void EngineController::unregisterExports()
+{
+    //! MAIN THREAD
+    globalIoc()->unregister<IAudioEngineConfiguration>(moduleName());
+    globalIoc()->unregister<IAudioEngine>(moduleName());
+    globalIoc()->unregister<IEnginePlayback>(moduleName());
+    globalIoc()->unregister<IFxResolver>(moduleName());
+    globalIoc()->unregister<ISynthResolver>(moduleName());
+    globalIoc()->unregister<ISoundFontRepository>(moduleName());
+}
+
 void EngineController::onStartRunning()
 {
     //! NOTE After sending a EngineRunning,
@@ -117,6 +133,7 @@ void EngineController::onStartRunning()
 
 void EngineController::init(const OutputSpec& outputSpec, const AudioEngineConfig& conf)
 {
+    //! AUDIO THREAD
     m_configuration->setConfig(conf);
 
     engine::AudioEngine::RenderConstraints consts;
@@ -135,11 +152,10 @@ void EngineController::init(const OutputSpec& outputSpec, const AudioEngineConfi
 
 void EngineController::deinit()
 {
+    //! AUDIO THREAD
     m_playback->deinit();
     m_rpcController->deinit();
     m_audioEngine->deinit();
-    m_playback.reset();
-    m_rpcController.reset();
 }
 
 OutputSpec EngineController::outputSpec() const

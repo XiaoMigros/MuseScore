@@ -8,7 +8,10 @@ if (MSVC)
     # either the above or the below, or even both
     #add_compile_options(/wd4996) # disabled warning: C4996, needed for VS 17.8.1 to suppress tons (some 1000) of them in VS' own code
 else()
-    add_compile_options(-Wall -Wextra) #-Wconversion
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-Wall>
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-Wextra>
+    )
 endif()
 
 # Target
@@ -28,6 +31,12 @@ function(target_no_warning TARGET WNAME)
         set(MSVC_Warning /wd4100)
     elseif(WNAME STREQUAL "-Wno-unused-variable")
         set(MSVC_Warning /wd4101 /wd4189)
+    elseif(WNAME STREQUAL "-Wno-unused-result")
+        set(MSVC_Warning )
+    elseif(WNAME STREQUAL "-Wno-aggressive-loop-optimizations")
+        set(MSVC_Warning )
+        set(GCC_Warning $<$<COMPILE_LANGUAGE:C>:-Wno-aggressive-loop-optimizations>)
+        unset(CLANG_Warning)
     elseif(WNAME STREQUAL "-Wunused-const-variable=0")
     elseif(WNAME STREQUAL "-Wno-type-limits")
     elseif(WNAME STREQUAL "-Wno-unknown-pragmas")

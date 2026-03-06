@@ -224,7 +224,7 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
                 cs->setRtick(len);
             }
         }
-        MeasureLayout::removeSystemTrailer(mmrMeasure);
+        MeasureLayout::removeSystemTrailer(mmrMeasure, ctx);
     } else {
         mmrMeasure = Factory::createMeasure(ctx.mutDom().dummyParent()->system());
         mmrMeasure->setTicks(len);
@@ -803,8 +803,35 @@ static bool breakMultiMeasureRest(const LayoutContext& ctx, Measure* m)
                 }
             }
         }
-        if (pm->findSegment(SegmentType::Clef, m->tick())) {
-            return true;
+        // Check for courtesy clefs at the end of the previous measure
+        // Only break if the clef is on a visible staff
+        auto hasVisibleElement = [&ctx](Segment* seg) ->bool {
+            for (size_t staffIdx = 0; staffIdx < ctx.dom().nstaves(); ++staffIdx) {
+                if (!ctx.dom().staff(staffIdx)->show()) {
+                    continue;
+                }
+                EngravingItem* e = seg->element(staffIdx * VOICES);
+                if (e && !e->generated()) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        if (Segment* clefSeg = pm->findSegment(SegmentType::Clef, m->tick())) {
+            if (hasVisibleElement(clefSeg)) {
+                return true;
+            }
+        }
+        if (Segment* tsSeg = pm->findSegment(SegmentType::TimeSigType, m->tick())) {
+            if (hasVisibleElement(tsSeg)) {
+                return true;
+            }
+        }
+        if (Segment* ksSeg = pm->findSegment(SegmentType::KeySigType, m->tick())) {
+            if (hasVisibleElement(ksSeg)) {
+                return true;
+            }
         }
     }
     return false;
@@ -2764,13 +2791,14 @@ void MeasureLayout::addSystemTrailer(Measure* m, Measure* nm, LayoutContext& ctx
     }
 
     Segment* courtesyClefSeg = m->findSegmentR(SegmentType::Clef, m->ticks());
-    for (staff_idx_t staffIdx = 0; staffIdx < nstaves; ++staffIdx) {
-        const track_idx_t track = staffIdx * VOICES;
+    if (courtesyClefSeg) {
+        for (staff_idx_t staffIdx = 0; staffIdx < nstaves; ++staffIdx) {
+            const track_idx_t track = staffIdx * VOICES;
 
-        if (courtesyClefSeg) {
             Clef* courtesyClef = toClef(courtesyClefSeg->element(track));
             if (courtesyClef) {
                 courtesyClef->setSmall(true);
+                courtesyClef->setIsTrailer(true);
             }
         }
     }
@@ -2781,12 +2809,25 @@ void MeasureLayout::addSystemTrailer(Measure* m, Measure* nm, LayoutContext& ctx
     m->checkTrailer();
 }
 
-void MeasureLayout::removeSystemTrailer(Measure* m)
+void MeasureLayout::removeSystemTrailer(Measure* m, LayoutContext& ctx)
 {
     for (Segment* seg = m->last(); seg != m->first(); seg = seg->prev()) {
         if (seg->isChordRestType()) {
             break;
         }
+
+        if (seg->isClefType()) {
+            for (EngravingItem* el : seg->elist()) {
+                if (!el) {
+                    continue;
+                }
+                Clef* clef = toClef(el);
+                clef->setIsTrailer(false);
+                TLayout::layoutClef(clef, clef->mutldata(), ctx.conf());
+            }
+            seg->createShapes();
+        }
+
         if (seg->isTimeTickType() || !seg->trailer()) {
             continue;
         }
@@ -3087,4 +3128,27 @@ void MeasureLayout::layoutPartialWidth(StaffLines* lines, LayoutContext& ctx, do
         y += dist;
     }
     lines->setLines(ll);
+}
+
+void MeasureLayout::updateKeySignatures(const Measure* measure, LayoutContext& ctx)
+{
+    Measure* prevMeasure = measure->prevMeasure();
+    if (!prevMeasure || !prevMeasure->repeatEnd()) {
+        return;
+    }
+    for (const Segment& seg : measure->segments()) {
+        if (!seg.isType(SegmentType::KeySigType)) {
+            continue;
+        }
+
+        for (EngravingItem* el : seg.elist()) {
+            if (!el) {
+                continue;
+            }
+
+            KeySig* ks = toKeySig(el);
+
+            TLayout::layoutKeySig(ks, ks->mutldata(), ctx.conf());
+        }
+    }
 }

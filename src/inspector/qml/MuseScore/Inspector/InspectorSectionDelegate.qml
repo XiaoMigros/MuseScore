@@ -43,7 +43,6 @@ ExpandableBlank {
     property var anchorItem: null
 
     signal ensureContentVisibleRequested(int invisibleContentHeight)
-    signal popupOpened(var openedPopup, var visualControl)
 
     property NavigationPanel navigationPanel: NavigationPanel {
         name: root.title
@@ -68,7 +67,6 @@ ExpandableBlank {
         case AbstractInspectorModel.SECTION_GENERAL: return generalSection
         case AbstractInspectorModel.SECTION_MEASURES: return measuresSection
         case AbstractInspectorModel.SECTION_EMPTY_STAVES: return emptyStavesSection
-        case AbstractInspectorModel.SECTION_TEXT_LINES:
         case AbstractInspectorModel.SECTION_TEXT: return textSection
         case AbstractInspectorModel.SECTION_NOTATION:
             if ((sectionModel as AbstractInspectorProxyModel).isMultiModel) {
@@ -96,10 +94,6 @@ ExpandableBlank {
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
             }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
-            }
         }
     }
 
@@ -114,10 +108,6 @@ ExpandableBlank {
 
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
-            }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
             }
         }
     }
@@ -134,10 +124,6 @@ ExpandableBlank {
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
             }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
-            }
         }
     }
 
@@ -152,10 +138,6 @@ ExpandableBlank {
 
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
-            }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
             }
         }
     }
@@ -172,10 +154,6 @@ ExpandableBlank {
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
             }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
-            }
         }
     }
 
@@ -186,10 +164,6 @@ ExpandableBlank {
             model: root.sectionModel as NotationSettingsProxyModel
             navigationPanel: root.navigationPanel
             navigationRowStart: root.navigation.row + 1
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
-            }
         }
     }
 
@@ -200,10 +174,6 @@ ExpandableBlank {
             model: root.sectionModel as ScoreDisplaySettingsModel
             navigationPanel: root.navigationPanel
             navigationRowStart: root.navigation.row + 1
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
-            }
         }
     }
 
@@ -219,10 +189,6 @@ ExpandableBlank {
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
             }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
-            }
         }
     }
 
@@ -237,10 +203,6 @@ ExpandableBlank {
 
             onEnsureContentVisibleRequested: function(invisibleContentHeight) {
                 root.ensureContentVisibleRequested(-invisibleContentHeight)
-            }
-
-            onPopupOpened: function(openedPopup, control) {
-                root.popupOpened(openedPopup, control)
             }
         }
     }

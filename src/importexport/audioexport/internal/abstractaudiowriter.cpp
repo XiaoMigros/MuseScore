@@ -90,7 +90,8 @@ muse::Progress* AbstractAudioWriter::progress()
 
 Ret AbstractAudioWriter::doWriteAndWait(INotationPtr notation,
                                         io::IODevice& destinationDevice,
-                                        const SoundTrackFormat& format)
+                                        const SoundTrackFormat& format,
+                                        const Options& options)
 {
     //!Note Temporary workaround, since QIODevice is the alias for QIODevice, which falls with SIGSEGV
     //!     on any call from background thread. Once we have our own implementation of QIODevice
@@ -101,81 +102,87 @@ Ret AbstractAudioWriter::doWriteAndWait(INotationPtr notation,
         return make_ret(Ret::Code::InternalError);
     }
 
+    //! NOTE Waiting for the audio system to start if it is not already running
+    while (!startAudioController()->isAudioStarted()) {
+        application()->processEvents();
+        QThread::yieldCurrentThread();
+    }
+
     m_isCompleted = false;
     m_writeRet = muse::Ret();
 
     playbackController()->setNotation(notation);
     playbackController()->setIsExportingAudio(true);
 
-    Progress onlineSoundsProcessing = playbackController()->onlineSoundsProcessingProgress();
+    doWrite(path, format);
 
-    if (onlineSoundsProcessing.isStarted()) {
-        m_progress.start();
-
-        const std::string onlineSoundsMsg = trc("iex_audio", "Processing online sounds…");
-        onlineSoundsProcessing.progressChanged().onReceive(this, [this, onlineSoundsMsg](int64_t current, int64_t total,
-                                                                                         const std::string&) {
-            m_progress.progress(current, total, onlineSoundsMsg);
-        });
-
-        onlineSoundsProcessing.finished().onReceive(this, [this, path, format, onlineSoundsProcessing](const ProgressResult&) {
-            doWrite(path, format, false /*startProgress*/);
-
-            auto mut = onlineSoundsProcessing;
-            mut.progressChanged().disconnect(this);
-            mut.finished().disconnect(this);
-        });
-    } else {
-        doWrite(path, format);
-    }
-
-    m_progress.finished().onReceive(this, [this](const ProgressResult&) {
-        playbackController()->setIsExportingAudio(false);
-        playbackController()->setNotation(globalContext()->currentNotation());
-        m_progress.finished().disconnect(this);
-    });
-
-    while (!m_isCompleted) {
-        application()->processEvents();
-        QThread::yieldCurrentThread();
+    bool waitForCompletion = muse::value(options, OptionKey::WAIT_FOR_COMPLETION, Val(true)).toBool();
+    if (waitForCompletion) {
+        while (!m_isCompleted) {
+            application()->processEvents();
+            QThread::yieldCurrentThread();
+        }
     }
 
     return m_writeRet;
 }
 
-void AbstractAudioWriter::doWrite(const QString& path, const SoundTrackFormat& format, bool startProgress)
+void AbstractAudioWriter::doWrite(const QString& path, const SoundTrackFormat& format)
 {
-    playback()->sequenceIdList()
-    .onResolve(this, [this, path, format, startProgress](const TrackSequenceIdList& sequenceIdList) {
-        if (startProgress) {
-            m_progress.start();
+    const std::string processingOnlineSoundsMsg = trc("iex_audio", "Processing online sounds…");
+
+    auto restoreState = [this]() {
+        playbackController()->setIsExportingAudio(false);
+        playbackController()->setNotation(globalContext()->currentNotation());
+    };
+
+    auto sendProgress = [this, processingOnlineSoundsMsg](int64_t current, int64_t total, SaveSoundTrackStage stage) {
+        switch (stage) {
+        case SaveSoundTrackStage::ProcessingOnlineSounds:
+            m_progress.progress(current, total, processingOnlineSoundsMsg);
+            break;
+        case SaveSoundTrackStage::WritingSoundTrack:
+        case SaveSoundTrackStage::Unknown:
+            m_progress.progress(current, total);
+            break;
         }
+    };
+
+    playback()->sequenceIdList()
+    .onResolve(this, [this, path, format, sendProgress, restoreState](const TrackSequenceIdList& sequenceIdList) {
+        m_progress.start();
 
         for (const TrackSequenceId sequenceId : sequenceIdList) {
             playback()->saveSoundTrackProgressChanged(sequenceId)
-            .onReceive(this, [this](int64_t current, int64_t total) {
-                m_progress.progress(current, total);
+            .onReceive(this, [sendProgress](int64_t current, int64_t total, SaveSoundTrackStage stage) {
+                sendProgress(current, total, stage);
             });
 
             playback()->saveSoundTrack(sequenceId, muse::io::path_t(path), std::move(format))
-            .onResolve(this, [this, path, sequenceId](const bool /*result*/) {
-                LOGD() << "Successfully saved sound track by path: " << path;
+            .onResolve(this, [this, path, sequenceId, restoreState](const bool /*result*/) {
+                LOGI() << "Successfully saved sound track by path: " << path;
                 m_writeRet = muse::make_ok();
                 m_isCompleted = true;
                 m_progress.finish(muse::make_ok());
                 playback()->saveSoundTrackProgressChanged(sequenceId).disconnect(this);
+
+                restoreState();
             })
-            .onReject(this, [this, sequenceId](int errorCode, const std::string& msg) {
+            .onReject(this, [this, sequenceId, restoreState](int errorCode, const std::string& msg) {
                 m_writeRet = Ret(errorCode, msg);
                 m_isCompleted = true;
                 m_progress.finish(make_ret(errorCode, msg));
                 playback()->saveSoundTrackProgressChanged(sequenceId).disconnect(this);
+
+                restoreState();
             });
         }
     })
-    .onReject(this, [this](int errorCode, const std::string& msg) {
+    .onReject(this, [this, restoreState](int errorCode, const std::string& msg) {
         LOGE() << "errorCode: " << errorCode << ", " << msg;
         m_isCompleted = true;
+
+        restoreState();
     });
 }
 

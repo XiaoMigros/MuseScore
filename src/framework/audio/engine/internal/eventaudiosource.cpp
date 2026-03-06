@@ -36,7 +36,7 @@ EventAudioSource::EventAudioSource(const TrackId trackId,
                                    const mpe::PlaybackData& playbackData,
                                    OnOffStreamEventsReceived onOffStreamReceived,
                                    const modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx), m_trackId(trackId), m_playbackData(playbackData)
+    : muse::Contextable(iocCtx), m_trackId(trackId), m_playbackData(playbackData)
 {
     ONLY_AUDIO_ENGINE_THREAD;
 
@@ -237,6 +237,17 @@ async::Notification EventAudioSource::readyToPlayChanged() const
     }
 
     return m_synth->readyToPlayChanged();
+}
+
+bool EventAudioSource::hasPendingChunks() const
+{
+    ONLY_AUDIO_ENGINE_THREAD;
+
+    IF_ASSERT_FAILED(m_synth) {
+        return false;
+    }
+
+    return m_synth->hasPendingChunks();
 }
 
 void EventAudioSource::processInput()

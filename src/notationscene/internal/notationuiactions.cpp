@@ -690,38 +690,38 @@ const UiActionList NotationUiActions::s_actions = {
     UiAction("insert-measure",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
-             TranslatableString("action", "Insert one measure before selection"),
+             TranslatableString("action", "&Insert one measure before selection"),
              TranslatableString("action", "Insert one measure before selection"),
              IconCode::Code::INSERT_ONE_MEASURE
              ),
     UiAction("insert-measures",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
-             TranslatableString("action", "Insert measures before selection…"),
+             TranslatableString("action", "Insert &before selection…"),
              TranslatableString("action", "Insert measures before selection")
              ),
     UiAction("insert-measures-after-selection",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
-             TranslatableString("action", "Insert measures after selection…"),
+             TranslatableString("action", "Insert &after selection…"),
              TranslatableString("action", "Insert measures after selection")
              ),
     UiAction("insert-measures-at-start-of-score",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
-             TranslatableString("action", "Insert measures at start of score…"),
+             TranslatableString("action", "Insert at &start of score…"),
              TranslatableString("action", "Insert measures at start of score")
              ),
     UiAction("append-measure",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
-             TranslatableString("action", "Insert one measure at end of score"),
+             TranslatableString("action", "Insert &one measure at end of score"),
              TranslatableString("action", "Insert one measure at end of score")
              ),
     UiAction("append-measures",
              mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_OPENED,
-             TranslatableString("action", "Insert measures at end of score…"),
+             TranslatableString("action", "Insert at &end of score…"),
              TranslatableString("action", "Insert measures at end of score")
              ),
     UiAction("insert-hbox",
@@ -2760,7 +2760,7 @@ const UiActionList NotationUiActions::s_engravingDebuggingActions = {
 };
 
 NotationUiActions::NotationUiActions(std::shared_ptr<NotationActionController> controller, const muse::modularity::ContextPtr& iocCtx)
-    : muse::Injectable(iocCtx), m_controller(controller)
+    : muse::Contextable(iocCtx), m_controller(controller)
 {
 }
 
@@ -2777,6 +2777,9 @@ void NotationUiActions::init()
             actions.push_back(action.code);
         }
         m_actionCheckedChanged.send(actions);
+
+        m_actionEnabledMap.reserve(actionsList().size());
+        updateActionsEnabled(actionsList());
 
         const INotationInteractionPtr interaction = m_controller->currentNotationInteraction();
 
@@ -2829,11 +2832,6 @@ void NotationUiActions::init()
         }
         m_actionCheckedChanged.send(actions);
     });
-
-    m_actionEnabledMap.reserve(s_actions.size());
-    for (const UiAction& action : s_actions) {
-        m_actionEnabledMap.insert({ action.code, false });
-    }
 }
 
 const UiActionList& NotationUiActions::actionsList() const

@@ -60,6 +60,7 @@ signals:
 private:
     void classBegin() override;
     void componentComplete() override {}
+    void doInit();
 
     void updateItemRect() override;
     bool ignoreTextEditingChanges() const override { return false; }

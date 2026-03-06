@@ -631,16 +631,16 @@ ChordRest* MeiImporter::findStart(const libmei::Element& meiElement, Measure* me
         const libmei::AttStaffIdent* staffIdentAtt = dynamic_cast<const libmei::AttStaffIdent*>(&meiElement);
         const libmei::AttLayerIdent* layerIdentAtt = dynamic_cast<const libmei::AttLayerIdent*>(&meiElement);
 
-        IF_ASSERT_FAILED(timestampLogAtt && staffIdentAtt && layerIdentAtt) {
+        IF_ASSERT_FAILED(timestampLogAtt && staffIdentAtt) {
             return nullptr;
         }
 
         // If no @tstamp (invalid), put it on 1.0;
-        double tstampValue = timestampLogAtt->HasTstamp() ? timestampLogAtt->GetTstamp() : 1.0;
+        const double tstampValue = timestampLogAtt->HasTstamp() ? timestampLogAtt->GetTstamp() : 1.0;
         Fraction tstampFraction = Convert::tstampToFraction(tstampValue, measure->timesig());
-        int staffIdx = (staffIdentAtt->HasStaff() && staffIdentAtt->GetStaff().size() > 0) ? this->getStaffIndex(
+        const int staffIdx = (staffIdentAtt->HasStaff() && staffIdentAtt->GetStaff().size() > 0) ? this->getStaffIndex(
             staffIdentAtt->GetStaff().at(0)) : 0;
-        int layer = (layerIdentAtt->HasLayer()) ? this->getVoiceIndex(staffIdx, layerIdentAtt->GetLayer()) : 0;
+        const int layer = (layerIdentAtt && layerIdentAtt->HasLayer()) ? this->getVoiceIndex(staffIdx, layerIdentAtt->GetLayer()) : 0;
 
         chordRest = measure->findChordRest(measure->tick() + tstampFraction, staffIdx * VOICES + layer);
         if (!chordRest) {
@@ -2182,7 +2182,7 @@ bool MeiImporter::readVerse(pugi::xml_node verseNode, Chord* chord)
     meiVerse.Read(verseNode);
 
     int no = 0;
-    if (meiVerse.HasN()) {
+    if (meiVerse.HasN() && std::isdigit(meiVerse.GetN().at(0))) {
         no = std::stoi(meiVerse.GetN()) - 1;
         // Make sure we have no verse number below 0;
         no = std::max(0, no);
@@ -2217,13 +2217,19 @@ bool MeiImporter::readVerse(pugi::xml_node verseNode, Chord* chord)
 
     // Aggregate the syllable into line blocks
     Convert::textWithSmufl textBlocks;
-    pugi::xpath_node_set elements = verseNode.select_nodes("./syl");
+    pugi::xpath_node_set elements = verseNode.select_nodes("./label|./syl");
 
     // If we have more than one syl we assume to have elision
     ElisionType elision = (elements.size() > 1) ? ElisionFirst : ElisionNone;
     size_t sylCount = 0;
 
     for (pugi::xpath_node xpathNode : elements) {
+        if (xpathNode.node().name() == std::string("label")) {
+            textBlocks.push_back(std::make_pair(false, String(xpathNode.node().text().as_string())));
+            textBlocks.push_back(std::make_pair(false, u"\u00A0"));
+            continue;
+        }
+
         if (sylCount > 0) {
             textBlocks.push_back(std::make_pair(true, u"\uE551"));
         }

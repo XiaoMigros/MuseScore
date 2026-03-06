@@ -2526,7 +2526,7 @@ bool TRead::readProperties(Chord* ch, XmlReader& e, ReadContext& ctx)
         bracket->setTrack(ch->track());
         TRead::read(bracket, e, ctx);
         bracket->setParent(ch);
-        ch->setArpeggio(bracket);
+        ch->add(bracket);
     } else if (tag == "Tremolo") { // compat
         compat::TremoloCompat tcompat;
         tcompat.parent = ch;
@@ -3303,6 +3303,7 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
 
     if (tag == "pitch") {
         n->setPitch(clampPitch(e.readInt()), false);
+    } else if (TRead::readProperty(n, tag, e, ctx, Pid::CENT_OFFSET)) {
     } else if (tag == "tpc") {
         int tpc = e.readInt();
         n->setTpc1(tpc);
@@ -3893,9 +3894,9 @@ void TRead::readNoteParenGroup(Chord* ch, XmlReader& e, ReadContext& ctx)
         Chord* mainChord = toChord(ch->links()->mainElement());
         Note* firstNote = notes.front();
         Note* mainNote = firstNote ? toNote(firstNote->findLinkedInStaff(mainChord->staff())) : nullptr;
-        const NoteParenthesisInfo* mainNoteParenInfo = mainChord && mainNote ? mainChord->findNoteParenInfo(mainNote) : nullptr;
-        Parenthesis* mainLeftParen = mainNoteParenInfo ? mainNoteParenInfo->leftParen : nullptr;
-        Parenthesis* mainRightParen = mainNoteParenInfo ? mainNoteParenInfo->rightParen : nullptr;
+        const NoteParenthesisInfo* mainNoteParenInfo = mainChord && mainNote ? mainChord->findNoteParenthesisInfo(mainNote) : nullptr;
+        Parenthesis* mainLeftParen = mainNoteParenInfo ? mainNoteParenInfo->leftParen() : nullptr;
+        Parenthesis* mainRightParen = mainNoteParenInfo ? mainNoteParenInfo->rightParen() : nullptr;
 
         if (mainLeftParen && mainRightParen) {
             leftParen->linkTo(mainLeftParen);
@@ -3903,7 +3904,8 @@ void TRead::readNoteParenGroup(Chord* ch, XmlReader& e, ReadContext& ctx)
         }
     }
 
-    ch->addNoteParenInfo(leftParen, rightParen, notes);
+    NoteParenthesisInfo* noteParenInfo = new NoteParenthesisInfo(leftParen, rightParen, notes);
+    ch->addNoteParenthesisInfo(noteParenInfo);
 }
 
 bool TRead::readProperties(Spanner* s, XmlReader& e, ReadContext& ctx)

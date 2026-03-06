@@ -174,12 +174,14 @@ FocusScope {
                 text: root.currentText === undefined ? "" : root.currentText
                 wrapMode: TextInput.Wrap
 
-                TextInputModel {
-                    id: textInputModel
+                ShortcutOverrideModel {
+                    id: shortcutOverrideModel
+                    // Direction keys should not trigger navigation, override them...
+                    directionKeysForOverride: ShortcutOverrideModel.All
                 }
 
                 Component.onCompleted: {
-                    textInputModel.init()
+                    shortcutOverrideModel.init()
                 }
 
                 Keys.onShortcutOverride: function(event) {
@@ -199,7 +201,7 @@ FocusScope {
                         break
                     }
 
-                    if (textInputModel.isShortcutAllowedOverride(event.key, event.modifiers)) {
+                    if (shortcutOverrideModel.isShortcutOverrideAllowed(event.key, event.modifiers)) {
                         event.accepted = true
                     } else {
                         event.accepted = false

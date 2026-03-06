@@ -32,14 +32,14 @@
 #include "../iplayer.h"
 
 namespace muse::audio {
-class Playback : public IPlayback, public Injectable, public async::Asyncable
+class Playback : public IPlayback, public Contextable, public async::Asyncable
 {
-    Inject<rpc::IRpcChannel> channel = { this };
-    Inject<IStartAudioController> startAudioController = { this };
+    ContextInject<rpc::IRpcChannel> channel = { this };
+    ContextInject<IStartAudioController> startAudioController = { this };
 
 public:
     Playback(const muse::modularity::ContextPtr& iocCtx)
-        : Injectable(iocCtx) {}
+        : Contextable(iocCtx) {}
 
     void init();
     void deinit();
@@ -108,7 +108,7 @@ public:
     async::Promise<bool> saveSoundTrack(const TrackSequenceId sequenceId, const io::path_t& destination,
                                         const SoundTrackFormat& format) override;
     void abortSavingAllSoundTracks() override;
-    async::Channel<int64_t, int64_t> saveSoundTrackProgressChanged(const TrackSequenceId sequenceId) const override;
+    SaveSoundTrackProgress saveSoundTrackProgressChanged(const TrackSequenceId sequenceId) const override;
 
     void clearAllFx() override;
 
@@ -126,8 +126,8 @@ private:
     async::Channel<TrackSequenceId, TrackId, AudioOutputParams> m_outputParamsChanged;
     async::Channel<AudioOutputParams> m_masterOutputParamsChanged;
 
-    mutable std::map<TrackSequenceId, async::Channel<int64_t, int64_t> > m_saveSoundTrackProgressChannels;
-    async::Channel<TrackSequenceId, int64_t, int64_t> m_saveSoundTrackProgressStream;
+    mutable std::map<TrackSequenceId, SaveSoundTrackProgress> m_saveSoundTrackProgressChannels;
+    async::Channel<TrackSequenceId, int64_t, int64_t, SaveSoundTrackStage> m_saveSoundTrackProgressStream;
     mutable rpc::StreamId m_saveSoundTrackProgressStreamId = 0;
 };
 }

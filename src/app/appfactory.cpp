@@ -62,10 +62,10 @@
 #include "framework/stubs/mpe/mpestubmodule.h"
 #endif
 
-#ifdef MUSE_MODULE_MULTIINSTANCES
-#include "framework/multiinstances/multiinstancesmodule.h"
+#ifdef MUSE_MODULE_MULTIWINDOWS
+#include "framework/multiwindows/multiwindowsmodule.h"
 #else
-#include "framework/stubs/multiinstances/multiinstancesstubmodule.h"
+#include "framework/stubs/multiwindows/multiwindowsstubmodule.h"
 #endif
 
 #ifdef MUSE_MODULE_MUSESAMPLER
@@ -157,6 +157,11 @@
 #include "importexport/midi/midimodule.h"
 #else
 #include "stubs/importexport/midi/midimodule.h"
+#endif
+#ifdef MUE_BUILD_IMPEXP_MNX_MODULE
+#include "importexport/mnx/mnxmodule.h"
+#else
+#include "stubs/importexport/mnx/mnxmodule.h"
 #endif
 #ifdef MUE_BUILD_IMPEXP_MUSEDATA_MODULE
 #include "importexport/musedata/musedatamodule.h"
@@ -347,6 +352,7 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const CmdOptions& opti
     app->addModule(new mu::iex::capella::CapellaModule());
 #endif
     app->addModule(new mu::iex::midi::MidiModule());
+    app->addModule(new mu::iex::mnxio::MnxModule());
 #ifdef MUE_BUILD_IMPEXP_MUSEDATA_MODULE
     app->addModule(new mu::iex::musedata::MuseDataModule());
 #endif
@@ -443,10 +449,6 @@ static void addConsoleModules(std::shared_ptr<ConsoleApp> app)
     app->addModule(new muse::vst::VSTModule());
 #endif
 
-#ifdef MUE_BUILD_APPSHELL_MODULE
-    app->addModule(new mu::appshell::AppShellModule());
-#endif
-
 #ifdef MUSE_MODULE_AUTOBOT
     app->addModule(new muse::autobot::AutobotModule());
 #endif
@@ -469,6 +471,7 @@ static void addConsoleModules(std::shared_ptr<ConsoleApp> app)
     app->addModule(new mu::iex::capella::CapellaModule());
 #endif
     app->addModule(new mu::iex::midi::MidiModule());
+    app->addModule(new mu::iex::mnxio::MnxModule());
 #ifdef MUE_BUILD_IMPEXP_MUSEDATA_MODULE
     app->addModule(new mu::iex::musedata::MuseDataModule());
 #endif

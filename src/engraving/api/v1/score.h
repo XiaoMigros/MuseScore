@@ -66,7 +66,7 @@ extern Selection* selectionWrap(mu::engraving::Selection* select);
  * @memberof Engraving
  * @hideconstructor
 */
-class Score : public apiv1::ScoreElement, public muse::Injectable
+class Score : public apiv1::ScoreElement, public muse::Contextable
 {
     Q_OBJECT
 
@@ -358,11 +358,11 @@ class Score : public apiv1::ScoreElement, public muse::Injectable
      */
     Q_PROPERTY(QQmlListProperty<apiv1::Excerpt> excerpts READ excerpts)
 
-    muse::Inject<mu::context::IGlobalContext> context = { this };
+    muse::ContextInject<mu::context::IGlobalContext> context = { this };
 
 public:
     Score(mu::engraving::Score* s, Ownership o = Ownership::SCORE)
-        : ScoreElement(s, o), muse::Injectable(s->iocContext()) {}
+        : ScoreElement(s, o), muse::Contextable(s->iocContext()) {}
 
     QString name() const;
     void setName(const QString& name);
@@ -531,6 +531,17 @@ public:
      * @since 4.6
     */
     Q_INVOKABLE void doLayout(apiv1::Fraction* startTick, apiv1::Fraction* endTick);
+
+    /** APIDOC
+     * Replaces the instrument for a given part with a new instrument.
+     * This changes the instrument definition including its name, clef, and sound.
+     * @method
+     * @param {Engraving.Part} part The Part object whose instrument should be replaced.
+     * @param {String} instrumentId ID of the new instrument, as listed in
+     * {@link https://github.com/musescore/MuseScore/blob/master/share/instruments/instruments.xml|instruments.xml}
+     * @since 4.7
+    */
+    Q_INVOKABLE void replaceInstrument(apiv1::Part* part, const QString& instrumentId);
 
     /** APIDOC
      * Creates and returns a cursor to be used to navigate in the score

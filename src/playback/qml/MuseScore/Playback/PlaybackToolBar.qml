@@ -31,10 +31,7 @@ import "internal"
 Item {
     id: root
 
-    property bool floating: false
-
-    width: content.width + (floating ? 12 : 0)
-    height: content.height
+    property alias floating: thePlaybackModel.isToolbarFloating
 
     property NavigationPanel navigationPanel: NavigationPanel {
         id: navPanel
@@ -48,8 +45,10 @@ Item {
 
     PlaybackToolBarModel {
         id: thePlaybackModel
-        isToolbarFloating: root.floating
     }
+
+    width: content.width + (root.floating ? 12 : 0)
+    height: content.height
 
     Component.onCompleted: {
         thePlaybackModel.load()
@@ -73,24 +72,41 @@ Item {
             navPanel: root.navigationPanel
         }
 
-        StyledSlider {
-            width: playbackActions.width
-            visible: root.floating
-            value: thePlaybackModel.playPosition
+        Loader {
+            active: root.floating
 
-            onMoved: {
-                thePlaybackModel.playPosition = value
+            width: childrenRect.width
+
+            sourceComponent: Column {
+                spacing: 8
+
+                width: childrenRect.width
+
+                StyledSlider {
+                    id: playPositionSlider
+
+                    width: playbackActions.width
+
+                    value: thePlaybackModel.playPosition
+                    stepSize: 0.05
+
+                    navigation.panel: navPanel
+                    navigation.order: playbackActions.navigationOrderEnd + 1
+
+                    onMoved: {
+                        thePlaybackModel.playPosition = value
+                    }
+                }
+
+                PlaybackSpeedSlider {
+                    width: playbackActions.width
+
+                    playbackModel: thePlaybackModel
+
+                    navigationPanel: navPanel
+                    navigationOrderStart: playPositionSlider.navigation.order + 1
+                }
             }
-        }
-
-        PlaybackSpeedSlider {
-            width: playbackActions.width
-            visible: root.floating
-
-            playbackModel: thePlaybackModel
-
-            navigationPanel: navPanel
-            navigationOrderStart: playbackActions.navigationOrderEnd + 1
         }
     }
 }

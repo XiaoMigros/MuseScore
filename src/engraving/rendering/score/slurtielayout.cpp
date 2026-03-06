@@ -1914,11 +1914,11 @@ void SlurTieLayout::calculateLaissezVibY(LaissezVibSegment* segment, SlurTiePos&
     Note* note = lv->startNote();
     Chord* chord = note->chord();
 
-    const NoteParenthesisInfo* noteParenInfo = chord->findNoteParenInfo(note);
+    const NoteParenthesisInfo* noteParenInfo = chord->findNoteParenthesisInfo(note);
 
     Parenthesis* paren = nullptr;
     if (noteParenInfo) {
-        paren = noteParenInfo->leftParen;
+        paren = noteParenInfo->leftParen();
     }
 
     const bool avoidStem = chord->stem() && chord->stem()->visible() && chord->up() == lv->up();
@@ -2090,7 +2090,11 @@ void SlurTieLayout::layoutLaissezVibChord(Chord* chord, LayoutContext& ctx)
             ldata->setPos(sPos.p1);
         }
 
-        const PointF chordPos = chord->pos() + chord->segment()->pos() + chord->measure()->pos();
+        double yOrigin = sPos.system1->staff(chord->staffIdx())->y();
+        double yMoved = sPos.system1->staff(chord->vStaffIdx())->y();
+        double yDiff = yMoved - yOrigin;
+
+        const PointF chordPos = chord->pos() + chord->segment()->pos() + chord->measure()->pos() + PointF(0.0, yDiff);
         const PointF notePos = chordPos + note->pos();
         ldata->posRelativeToNote = sPos.p1 - notePos;
 

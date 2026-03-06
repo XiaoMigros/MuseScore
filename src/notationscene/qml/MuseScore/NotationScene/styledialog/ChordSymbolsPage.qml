@@ -33,8 +33,8 @@ import MuseScore.NotationScene
 StyledFlickable {
     id: root
 
-    contentWidth: column.width
-    contentHeight: column.height
+    contentWidth: Math.max(column.implicitWidth, root.width)
+    contentHeight: column.implicitHeight
 
     ChordSymbolsPageModel {
         id: chordSymbolsModel
@@ -110,6 +110,7 @@ StyledFlickable {
 
     ColumnLayout {
         id: column
+        width: parent.width
         spacing: 12
 
         StyledGroupBox {
@@ -597,6 +598,13 @@ StyledFlickable {
                         }
                     }
                 }
+
+                CheckBox {
+                        Layout.fillWidth: true
+                        text: qsTrc("notation/editstyle/chordsymbols", "Use SMuFL symbols")
+                        checked: chordSymbolsModel.useSmuflSymbols.value === true
+                        onClicked: chordSymbolsModel.useSmuflSymbols.value = !chordSymbolsModel.useSmuflSymbols.value
+                    }
             }
         }
 

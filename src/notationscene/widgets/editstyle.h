@@ -26,7 +26,6 @@
 
 #include "modularity/ioc.h"
 #include "context/iglobalcontext.h"
-#include "notation/inotationconfiguration.h"
 #include "iinteractive.h"
 #include "ui/iuiconfiguration.h"
 #include "ui/iuiengine.h"
@@ -34,23 +33,25 @@
 
 #include "engraving/style/textstyle.h"
 
+#include "inotationsceneconfiguration.h"
+
 class QQuickView;
 
 namespace mu::notation {
-class EditStyle : public QDialog, private Ui::EditStyleBase, public muse::Injectable
+class EditStyle : public QDialog, private Ui::EditStyleBase, public muse::Contextable
 {
     Q_OBJECT
 
     Q_PROPERTY(QString currentPageCode READ currentPageCode WRITE setCurrentPageCode NOTIFY currentPageChanged)
     Q_PROPERTY(QString currentSubPageCode READ currentSubPageCode WRITE setCurrentSubPageCode NOTIFY currentSubPageChanged)
 
-    muse::GlobalInject<mu::notation::INotationConfiguration> configuration;
+    muse::GlobalInject<mu::notation::INotationSceneConfiguration> configuration;
     muse::GlobalInject<muse::ui::IUiConfiguration> uiConfiguration;
     muse::GlobalInject<mu::engraving::IEngravingFontsProvider> engravingFonts;
-    muse::Inject<mu::context::IGlobalContext> globalContext = { this };
-    muse::Inject<muse::IInteractive> interactive = { this };
-    muse::Inject<muse::ui::IUiEngine> uiEngine = { this };
-    muse::Inject<muse::accessibility::IAccessibilityController> accessibilityController = { this };
+    muse::ContextInject<mu::context::IGlobalContext> globalContext = { this };
+    muse::ContextInject<muse::IInteractive> interactive = { this };
+    muse::ContextInject<muse::ui::IUiEngine> uiEngine = { this };
+    muse::ContextInject<muse::accessibility::IAccessibilityController> accessibilityController = { this };
 
 public:
     EditStyle(QWidget* = nullptr);

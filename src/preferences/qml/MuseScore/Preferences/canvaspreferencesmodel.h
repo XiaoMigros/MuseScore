@@ -29,9 +29,10 @@
 #include "async/asyncable.h"
 
 #include "notation/inotationconfiguration.h"
+#include "notationscene/inotationsceneconfiguration.h"
 
 namespace mu::preferences {
-class CanvasPreferencesModel : public QObject, public muse::Injectable, public muse::async::Asyncable
+class CanvasPreferencesModel : public QObject, public muse::Contextable, public muse::async::Asyncable
 {
     Q_OBJECT
     QML_ELEMENT;
@@ -45,6 +46,7 @@ class CanvasPreferencesModel : public QObject, public muse::Injectable, public m
     Q_PROPERTY(int selectionProximity READ selectionProximity WRITE setSelectionProximity NOTIFY selectionProximityChanged)
 
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
+    muse::GlobalInject<notation::INotationSceneConfiguration> notationSceneConfiguration;
 
 public:
     explicit CanvasPreferencesModel(QObject* parent = nullptr);

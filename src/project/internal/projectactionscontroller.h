@@ -32,8 +32,8 @@
 #include "context/iglobalcontext.h"
 #include "actions/actionable.h"
 #include "actions/iactionsdispatcher.h"
-#include "multiinstances/imultiinstancesprovider.h"
-#include "multiinstances/iprojectprovider.h"
+#include "multiwindows/imultiwindowsprovider.h"
+#include "multiwindows/iprojectprovider.h"
 #include "cloud/musescorecom/imusescorecomservice.h"
 #include "cloud/audiocom/iaudiocomservice.h"
 #include "playback/iplaybackcontroller.h"
@@ -56,35 +56,35 @@
 #include "iprojectautosaver.h"
 
 namespace mu::project {
-class ProjectActionsController : public IProjectFilesController, public muse::mi::IProjectProvider, public muse::Injectable,
+class ProjectActionsController : public IProjectFilesController, public muse::mi::IProjectProvider, public muse::Contextable,
     public muse::actions::Actionable, public muse::async::Asyncable
 {
     muse::GlobalInject<IProjectConfiguration> configuration;
-    muse::GlobalInject<muse::mi::IMultiInstancesProvider> multiInstancesProvider;
+    muse::GlobalInject<muse::mi::IMultiWindowsProvider> multiwindowsProvider;
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
     muse::GlobalInject<IMscMetaReader> mscMetaReader;
-    muse::Inject<INotationReadersRegister> readers = { this };
-    muse::Inject<IProjectCreator> projectCreator = { this };
-    muse::Inject<IRecentFilesController> recentFilesController = { this };
-    muse::Inject<IProjectAutoSaver> projectAutoSaver = { this };
-    muse::Inject<IOpenSaveProjectScenario> openSaveProjectScenario = { this };
-    muse::Inject<IExportProjectScenario> exportProjectScenario = { this };
-    muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
-    muse::Inject<muse::IInteractive> interactive = { this };
-    muse::Inject<context::IGlobalContext> globalContext = { this };
-    muse::Inject<muse::cloud::IMuseScoreComService> museScoreComService = { this };
-    muse::Inject<muse::cloud::IAudioComService> audioComService = { this };
-    muse::Inject<playback::IPlaybackController> playbackController = { this };
-    muse::Inject<print::IPrintProvider> printProvider = { this };
-    muse::Inject<musesounds::IMuseSoundsCheckUpdateScenario> museSoundsCheckUpdateScenario = { this };
-    muse::Inject<musesounds::IMuseSamplerCheckUpdateScenario> museSamplerCheckUpdateScenario = { this };
-    muse::Inject<muse::extensions::IExtensionsProvider> extensionsProvider = { this };
+    muse::GlobalInject<IProjectCreator> projectCreator;
+    muse::ContextInject<INotationReadersRegister> readers = { this };
+    muse::ContextInject<IRecentFilesController> recentFilesController = { this };
+    muse::ContextInject<IProjectAutoSaver> projectAutoSaver = { this };
+    muse::ContextInject<IOpenSaveProjectScenario> openSaveProjectScenario = { this };
+    muse::ContextInject<IExportProjectScenario> exportProjectScenario = { this };
+    muse::ContextInject<muse::actions::IActionsDispatcher> dispatcher = { this };
+    muse::ContextInject<muse::IInteractive> interactive = { this };
+    muse::ContextInject<context::IGlobalContext> globalContext = { this };
+    muse::ContextInject<muse::cloud::IMuseScoreComService> museScoreComService = { this };
+    muse::ContextInject<muse::cloud::IAudioComService> audioComService = { this };
+    muse::ContextInject<playback::IPlaybackController> playbackController = { this };
+    muse::ContextInject<print::IPrintProvider> printProvider = { this };
+    muse::ContextInject<musesounds::IMuseSoundsCheckUpdateScenario> museSoundsCheckUpdateScenario = { this };
+    muse::ContextInject<musesounds::IMuseSamplerCheckUpdateScenario> museSamplerCheckUpdateScenario = { this };
+    muse::ContextInject<muse::extensions::IExtensionsProvider> extensionsProvider = { this };
 
 public:
 
     ProjectActionsController(const muse::modularity::ContextPtr& iocCtx)
-        : muse::Injectable(iocCtx) {}
+        : muse::Contextable(iocCtx) {}
 
     void init();
 

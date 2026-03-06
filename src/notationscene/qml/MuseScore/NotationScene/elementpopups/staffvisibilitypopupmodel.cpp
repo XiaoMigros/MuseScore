@@ -50,6 +50,11 @@ StaffVisibilityPopupModel::StaffVisibilityPopupModel(QObject* parent)
 
 void StaffVisibilityPopupModel::classBegin()
 {
+    doInit();
+}
+
+void StaffVisibilityPopupModel::doInit()
+{
     AbstractElementPopupModel::init();
 
     System* system = m_item && m_item->isStaffVisibilityIndicator()
@@ -89,7 +94,7 @@ struct EmptyStavesVisibilityModel::StaffItem : public EmptyStavesVisibilityModel
 };
 
 EmptyStavesVisibilityModel::EmptyStavesVisibilityModel(QObject* parent)
-    : QAbstractItemModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QAbstractItemModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 

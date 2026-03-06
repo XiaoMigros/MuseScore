@@ -63,7 +63,6 @@ elseif(OS_IS_LIN)
 
 elseif(OS_IS_MAC)
 
-    set(MACOSX_BUNDLE_ICON_FILE AppIcon.icns)
     set(MACOSX_BUNDLE_GUI_IDENTIFIER ${MUSE_APP_GUI_IDENTIFIER})
     set(MACOSX_BUNDLE_BUNDLE_NAME ${MUSE_APP_TITLE})
     set(MACOSX_BUNDLE_LONG_VERSION_STRING ${MUSE_APP_VERSION})
@@ -132,7 +131,7 @@ add_to_link_if_exists(muse::languages)
 add_to_link_if_exists(muse::learn)
 add_to_link_if_exists(muse::midi)
 add_to_link_if_exists(muse::mpe)
-add_to_link_if_exists(muse::multiinstances)
+add_to_link_if_exists(muse::multiwindows)
 add_to_link_if_exists(muse::musesampler)
 add_to_link_if_exists(muse::network)
 add_to_link_if_exists(muse::shortcuts)
@@ -161,6 +160,7 @@ add_to_link_if_exists(iex_imagesexport)
 add_to_link_if_exists(iex_lyricsexport)
 add_to_link_if_exists(iex_mei)
 add_to_link_if_exists(iex_midi)
+add_to_link_if_exists(iex_mnx)
 add_to_link_if_exists(iex_musedata)
 add_to_link_if_exists(iex_musicxml)
 add_to_link_if_exists(iex_ove)
@@ -224,15 +224,6 @@ if (MUE_ENABLE_CONSOLEAPP)
     )
 endif()
 
-if (MUSE_MULTICONTEXT_WIP)
-    set(APP_SRC ${APP_SRC}
-        internal/multiwindowprovider.cpp
-        internal/multiwindowprovider.h
-        internal/windowscontroller.cpp
-        internal/windowscontroller.h
-    )
-endif()
-
 if (CC_IS_EMCC)
     set(APP_SRC ${APP_SRC} webapi_export.cpp)
 endif()
@@ -258,9 +249,13 @@ if (MUSE_ENABLE_UNIT_TESTS_CODE_COVERAGE)
 endif()
 
 if (OS_IS_MAC)
+    include(${PROJECT_SOURCE_DIR}/share/icons/SetupIconComposerIcon.cmake)
+    target_setup_iconcomposer_icon(MuseScoreStudio "${PROJECT_SOURCE_DIR}/share/icons/AppIcon/AppIcon.icon")
+
     set_target_properties(MuseScoreStudio PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/buildscripts/packaging/macOS/Info.plist.in
-        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${MACOSX_BUNDLE_GUI_IDENTIFIER})
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${MACOSX_BUNDLE_GUI_IDENTIFIER}
+    )
 endif (OS_IS_MAC)
 
 if (CC_IS_MINGW)

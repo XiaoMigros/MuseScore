@@ -31,9 +31,9 @@
 #include "track.h"
 
 namespace muse::audio::engine {
-class EventAudioSource : public ITrackAudioInput, public muse::Injectable, public async::Asyncable
+class EventAudioSource : public ITrackAudioInput, public muse::Contextable, public async::Asyncable
 {
-    Inject<synth::ISynthResolver> synthResolver = { this };
+    ContextInject<synth::ISynthResolver> synthResolver = { this };
 
 public:
     using OnOffStreamEventsReceived = std::function<void (const TrackId)>;
@@ -62,6 +62,7 @@ public:
     bool readyToPlay() const override;
     async::Notification readyToPlayChanged() const override;
 
+    bool hasPendingChunks() const override;
     void processInput() override;
     InputProcessingProgress inputProcessingProgress() const override;
 

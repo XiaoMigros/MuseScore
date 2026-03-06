@@ -65,7 +65,7 @@ public:
     static void addSystemHeader(Measure* m, bool isFirstSystem, LayoutContext& ctx);
     static void removeSystemHeader(Measure* m);
     static void addSystemTrailer(Measure* m, Measure* nm, LayoutContext& ctx);
-    static void removeSystemTrailer(Measure* m);
+    static void removeSystemTrailer(Measure* m, LayoutContext& ctx);
 
     static void setRepeatCourtesiesAndParens(Measure* m, LayoutContext& ctx);
 
@@ -79,6 +79,8 @@ public:
 
     static MeasureStartEndPos getMeasureStartEndPos(const Measure* measure, const Segment* firstCrSeg, const staff_idx_t staffIdx,
                                                     const bool needsHeaderException, const bool modernMMRest, const LayoutContext& ctx);
+
+    static void updateKeySignatures(const Measure* measure, LayoutContext& ctx);
 
 private:
 

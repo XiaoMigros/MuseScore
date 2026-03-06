@@ -757,8 +757,11 @@ TEST_F(MusicXml_Tests, incompleteTuplet) {
 TEST_F(MusicXml_Tests, incorrectMidiProgram) {
     musicXmlIoTestRef("testIncorrectMidiProgram");
 }
-TEST_F(MusicXml_Tests, invisibleNotations) {
-    musicXmlIoTest("testInvisibleNotations");
+TEST_F(MusicXml_Tests, invisibleNotations1) {
+    musicXmlIoTest("testInvisibleNotations1");
+}
+TEST_F(MusicXml_Tests, invisibleNotations2) {
+    musicXmlIoTest("testInvisibleNotations2");
 }
 TEST_F(MusicXml_Tests, incorrectStaffNumber1) {
     musicXmlIoTestRef("testIncorrectStaffNumber1");
@@ -1407,6 +1410,9 @@ TEST_F(MusicXml_Tests, voltaHiding2) {
 }
 TEST_F(MusicXml_Tests, wedgeOffset) {
     musicXmlImportTestRef("testWedgeOffset");
+}
+TEST_F(MusicXml_Tests, wedgeCR) {
+    musicXmlMscxExportTestRef("testWedgeCR");
 }
 TEST_F(MusicXml_Tests, wedge1) {
     musicXmlIoTest("testWedge1");

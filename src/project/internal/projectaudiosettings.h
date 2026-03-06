@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_PROJECT_PROJECTAUDIOSETTINGS_H
-#define MU_PROJECT_PROJECTAUDIOSETTINGS_H
+
+#pragma once
 
 #include <memory>
 #include <string>
@@ -34,7 +34,7 @@
 #include "../iprojectaudiosettings.h"
 
 namespace mu::project {
-class ProjectAudioSettings : public IProjectAudioSettings, public muse::Injectable
+class ProjectAudioSettings : public IProjectAudioSettings, public muse::Contextable
 {
     muse::GlobalInject<playback::IPlaybackConfiguration> playbackConfig;
 
@@ -46,6 +46,7 @@ public:
     const muse::audio::AudioOutputParams& auxOutputParams(muse::audio::aux_channel_idx_t index) const override;
     void setAuxOutputParams(muse::audio::aux_channel_idx_t index, const muse::audio::AudioOutputParams& params) override;
 
+    const TrackInputParamsMap& allTrackInputParams() const override;
     const muse::audio::AudioInputParams& trackInputParams(const engraving::InstrumentTrackId& partId) const override;
     void setTrackInputParams(const engraving::InstrumentTrackId& partId, const muse::audio::AudioInputParams& params) override;
     void clearTrackInputParams() override;
@@ -75,7 +76,7 @@ public:
 private:
     friend class NotationProject;
     ProjectAudioSettings(const muse::modularity::ContextPtr& iocCtx)
-        : muse::Injectable(iocCtx) {}
+        : muse::Contextable(iocCtx) {}
 
     muse::audio::AudioInputParams inputParamsFromJson(const QJsonObject& object) const;
     muse::audio::AudioOutputParams outputParamsFromJson(const QJsonObject& object) const;
@@ -103,7 +104,6 @@ private:
     muse::audio::AudioResourceType resourceTypeFromString(const QString& string) const;
 
     QString sourceTypeToString(const muse::audio::AudioSourceType& type) const;
-    QString resourceTypeToString(const muse::audio::AudioResourceType& type) const;
 
     QJsonObject buildAuxObject(muse::audio::aux_channel_idx_t index, const muse::audio::AudioOutputParams& params) const;
     QJsonObject buildTrackObject(notation::INotationSoloMuteStatePtr masterSoloMuteStatePtr, const engraving::InstrumentTrackId& id) const;
@@ -125,5 +125,3 @@ private:
 
 using ProjectAudioSettingsPtr = std::shared_ptr<ProjectAudioSettings>;
 }
-
-#endif // MU_PROJECT_PROJECTAUDIOSETTINGS_H

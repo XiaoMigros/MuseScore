@@ -48,6 +48,8 @@ RowLayout {
     }
 
     IncrementalPropertyControl {
+        id: speedControl
+
         Layout.preferredWidth: 76
         currentValue: root.playbackModel.tempoMultiplier * 100
 
@@ -77,6 +79,9 @@ RowLayout {
         stepSize: 0.05
 
         fillBackground: false
+
+        navigation.panel: root.navigationPanel
+        navigation.order: speedControl.navigation.order + 1
 
         onMoved: {
             root.playbackModel.tempoMultiplier = value

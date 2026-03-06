@@ -733,7 +733,9 @@ void Segment::add(EngravingItem* el)
 
     case ElementType::PLAY_COUNT_TEXT:
         assert(isType(SegmentType::BarLineType));
-        m_annotations.push_back(el);
+        if (!findAnnotation(ElementType::PLAY_COUNT_TEXT, el->track(), el->track())) {
+            m_annotations.push_back(el);
+        }
         break;
 
     case ElementType::STAFF_STATE:
@@ -945,9 +947,11 @@ void Segment::remove(EngravingItem* el)
 
     case ElementType::INSTRUMENT_CHANGE:
     {
-        InstrumentChange* is = toInstrumentChange(el);
-        Part* part = is->part();
-        part->removeInstrument(tick());
+        if (!isMMRestSegment()) {
+            InstrumentChange* is = toInstrumentChange(el);
+            Part* part = is->part();
+            part->removeInstrument(tick());
+        }
     }
         removeAnnotation(el);
         break;
@@ -1153,6 +1157,8 @@ PropertyValue Segment::getProperty(Pid propertyId) const
         return m_tick;
     case Pid::LEADING_SPACE:
         return extraLeadingSpace();
+    case Pid::END_OF_MEASURE_CHANGE:
+        return endOfMeasureChange();
     default:
         return EngravingItem::getProperty(propertyId);
     }
@@ -1189,6 +1195,9 @@ bool Segment::setProperty(Pid propertyId, const PropertyValue& v)
                 e->setGenerated(false);
             }
         }
+        break;
+    case Pid::END_OF_MEASURE_CHANGE:
+        setEndOfMeasureChange(v.toBool());
         break;
     default:
         return EngravingItem::setProperty(propertyId, v);

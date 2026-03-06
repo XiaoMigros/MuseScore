@@ -29,7 +29,7 @@ using namespace mu::preferences;
 using namespace muse;
 
 FoldersPreferencesModel::FoldersPreferencesModel(QObject* parent)
-    : QAbstractListModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QAbstractListModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
 }
 
@@ -111,7 +111,7 @@ void FoldersPreferencesModel::load()
         {
             FolderType::SoundFonts, muse::qtrc("preferences", "SoundFonts"), pathsToString(
                 audioConfiguration()->userSoundFontDirectories()),
-            configuration()->userDataPath().toQString(), FolderValueType::MultiDirectories
+            globalConfiguration()->userDataPath().toQString(), FolderValueType::MultiDirectories
         },
         {
             FolderType::MusicFonts, muse::qtrc("preferences", "Musical symbol fonts"),
@@ -121,7 +121,7 @@ void FoldersPreferencesModel::load()
 #ifdef MUSE_MODULE_VST
         {
             FolderType::VST3, muse::qtrc("preferences", "VST3"), pathsToString(vstConfiguration()->userVstDirectories()),
-            configuration()->userDataPath().toQString(), FolderValueType::MultiDirectories
+            globalConfiguration()->userDataPath().toQString(), FolderValueType::MultiDirectories
         }
 #endif
     };

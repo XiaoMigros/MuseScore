@@ -196,6 +196,11 @@ public:
     void setPitch(int val, bool notifyAboutChanged = true);
     void setPitch(int pitch, int tpc1, int tpc2);
     int pitch() const { return m_pitch; }
+
+    double centOffset() const { return m_centOffset; }
+    void setCentOffset(double v) { m_centOffset = v; }
+    int quarterToneOffset() const { return std::round(m_centOffset / 50); }
+
     int ottaveCapoFret() const;
     int linkedOttavaPitchOffset() const;
     int ppitch() const;             // playback pitch
@@ -405,7 +410,7 @@ public:
 
     void setParenthesesMode(const ParenthesesMode& v, bool addToLinked = true, bool generated = false) override;
 
-    const NoteParenthesisInfo* parenInfo() const;
+    const NoteParenthesisInfo* parenthesisInfo() const;
 
     void setHarmonic(bool val) { m_harmonic = val; }
     bool harmonic() const { return m_harmonic; }
@@ -478,8 +483,6 @@ private:
 
     void normalizeLeftDragDelta(Segment* seg, EditData& ed, NoteEditData* ned);
 
-    static String tpcUserName(int tpc, int pitch, bool explicitAccidental, bool full = false);
-
     void getNoteListForDots(std::vector<Note*>& topDownNotes, std::vector<Note*>& bottomUpNotes, std::vector<int>& anchoredDots);
 
     void addLineAttachPoint(PointF point, EngravingItem* line, bool start);
@@ -530,6 +533,7 @@ private:
     int m_string = -1;
     mutable int m_tpc[2] = { Tpc::TPC_INVALID, Tpc::TPC_INVALID };   // tonal pitch class  (concert/transposing)
     mutable int m_pitch = 0;      // Note pitch as midi value (0 - 127).
+    mutable double m_centOffset = 0.0; // Pitch offset in cents (100 cents = 1 semitone)
 
     int m_userVelocity = 0;     // velocity user offset in percent, or absolute velocity for this note
     int m_fixedLine = 0;        // fixed line number if _fixed == true

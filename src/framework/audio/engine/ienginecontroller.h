@@ -26,13 +26,15 @@
 #include "audio/common/audiotypes.h"
 
 namespace muse::audio::engine {
-class IEngineController : MODULE_EXPORT_INTERFACE
+class IEngineController : MODULE_CONTEXT_INTERFACE
 {
     INTERFACE_ID(IEngineController)
 public:
     virtual ~IEngineController() = default;
 
     virtual void registerExports() = 0;
+    virtual void unregisterExports() = 0;
+
     virtual void onStartRunning() = 0;
     virtual void init(const OutputSpec& outputSpec, const AudioEngineConfig& conf) = 0;
     virtual void deinit() = 0;

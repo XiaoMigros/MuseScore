@@ -235,7 +235,7 @@ void Read206::readTextStyle206(MStyle* style, XmlReader& e, ReadContext& ctx, st
         } else if (tag == "paddingWidthS") {
             paddingWidth = Spatium(e.readDouble());
         } else if (tag == "frameRound") {
-            e.readInt();
+            e.readDouble();
         } else if (tag == "frameColor") {
             frameColor = e.readColor();
         } else if (tag == "foregroundColor") {
@@ -3495,6 +3495,10 @@ bool Read206::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
                 score->excerpt()->setName(n, /*saveAndNotify=*/ false);
             }
         } else if (tag == "layoutMode") {
+            if (ctx.forcePageMode()) {
+                e.skipCurrentElement();
+                continue;
+            }
             String s = e.readText();
             if (s == "line") {
                 score->setLayoutMode(LayoutMode::LINE);
@@ -3546,6 +3550,7 @@ Ret Read206::readScoreFile(Score* score, XmlReader& e, ReadInOutData* out)
         }
 
         ctx.setPropertiesToSkip(out->propertiesToSkip);
+        ctx.setForcePageMode(out->forcePageMode);
     }
     DEFER {
         if (out) {
@@ -3593,7 +3598,8 @@ Ret Read206::readScoreFile(Score* score, XmlReader& e, ReadInOutData* out)
         for (staff_idx_t staffIdx = 0; staffIdx < numStaves; ++staffIdx) {
             const size_t maxSpan = numStaves - staffIdx - 1;
             const track_idx_t trackIdx = staff2track(staffIdx);
-            BarLine* barLine = toBarLine(s->element(trackIdx));
+            EngravingItem* el = s->element(trackIdx);
+            BarLine* barLine = el && el->isBarLine() ? toBarLine(el) : nullptr;
             if (barLine) {
                 if (const std::optional<size_t> span = ctx.getBarLineSpan(barLine)) {
                     if (*span > maxSpan) {
@@ -3618,13 +3624,17 @@ Ret Read206::readScoreFile(Score* score, XmlReader& e, ReadInOutData* out)
                     // clone previous bar line. This is safe because we always have a previous barline when
                     // barLineSpan != std::nullopt because it's either the one that was read or the one cloned
                     // in the previous iteration
-                    barLine = toBarLine(s->element(staff2track(staffIdx - 1)))
-                              ->clone();
-                    barLine->setTrack(trackIdx);
-                    s->add(barLine);
+                    el = s->element(staff2track(staffIdx - 1));
+                    if (el && el->isBarLine()) {
+                        barLine = toBarLine(el)->clone();
+                        barLine->setTrack(trackIdx);
+                        s->add(barLine);
+                    }
                 }
 
-                barLine->setSpanStaff(shouldBarLineSpan);
+                if (barLine) {
+                    barLine->setSpanStaff(shouldBarLineSpan);
+                }
             }
             if (*barLineSpan == 0) {
                 // we're done applying the local override

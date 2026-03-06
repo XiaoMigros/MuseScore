@@ -605,6 +605,7 @@ Note::Note(const Note& n, bool link)
     m_ghost             = n.m_ghost;
     m_deadNote          = n.m_deadNote;
     m_pitch             = n.m_pitch;
+    m_centOffset        = n.m_centOffset;
     m_tpc[0]            = n.m_tpc[0];
     m_tpc[1]            = n.m_tpc[1];
     m_dotsHidden        = n.m_dotsHidden;
@@ -828,26 +829,9 @@ int Note::tpc() const
 //   tpcUserName
 //---------------------------------------------------------
 
-String Note::tpcUserName(int tpc, int pitch, bool explicitAccidental, bool full)
-{
-    String pitchStr = tpc2name(tpc, NoteSpellingType::STANDARD, NoteCaseType::AUTO, explicitAccidental, full);
-    if (!explicitAccidental) {
-        pitchStr.replace(u"b", u"♭");
-        pitchStr.replace(u"#", u"♯");
-    }
-
-    const String octaveStr = String::number(((pitch - static_cast<int>(tpc2alter(tpc))) / PITCH_DELTA_OCTAVE) - 1);
-
-    return pitchStr + octaveStr;
-}
-
-//---------------------------------------------------------
-//   tpcUserName
-//---------------------------------------------------------
-
 String Note::tpcUserName(const bool explicitAccidental, bool full) const
 {
-    String pitchName = tpcUserName(tpc(), epitch() + ottaveCapoFret(), explicitAccidental, full);
+    String pitchName = engraving::tpcUserName(tpc(), epitch() + ottaveCapoFret(), explicitAccidental, full);
 
     pitchName = muse::mtrc("global/pitchName", pitchName);
 
@@ -873,7 +857,7 @@ String Note::tpcUserName(const bool explicitAccidental, bool full) const
     }
 
     if (!concertPitch() && transposition()) {
-        String soundingPitch = tpcUserName(tpc1(), ppitch(), explicitAccidental);
+        String soundingPitch = engraving::tpcUserName(tpc1(), ppitch(), explicitAccidental);
         soundingPitch = muse::mtrc("global/pitchName", soundingPitch);
         return muse::mtrc("engraving", "%1 (sounding as %2%3)").arg(pitchName, soundingPitch, pitchOffset);
     }
@@ -1306,6 +1290,7 @@ void Note::add(EngravingItem* e)
     break;
     case ElementType::ACCIDENTAL:
         m_accidental = toAccidental(e);
+        m_centOffset = Accidental::subtype2centOffset(toAccidental(e)->accidentalType());
         break;
     case ElementType::TEXTLINE:
     case ElementType::NOTELINE:
@@ -1371,6 +1356,7 @@ void Note::remove(EngravingItem* e)
 
     case ElementType::ACCIDENTAL:
         m_accidental = 0;
+        m_centOffset = 0;
         break;
 
     case ElementType::TEXTLINE:
@@ -1511,17 +1497,17 @@ bool Note::shouldForceShowFret() const
 void Note::setVisible(bool v)
 {
     EngravingItem::setVisible(v);
-    if (!chord() || chord()->noteParens().empty()) {
+    if (!chord() || chord()->noteParentheses().empty()) {
         return;
     }
 
-    const NoteParenthesisInfo* noteParenInfo = chord()->findNoteParenInfo(this);
+    const NoteParenthesisInfo* noteParenInfo = chord()->findNoteParenthesisInfo(this);
 
     if (!noteParenInfo) {
         return;
     }
 
-    const std::vector<Note*>& notes = noteParenInfo->notes;
+    const std::vector<Note*>& notes = noteParenInfo->notes();
     bool visible = false;
     for (const Note* note : notes) {
         if (note->visible()) {
@@ -1530,11 +1516,11 @@ void Note::setVisible(bool v)
         }
     }
 
-    if (noteParenInfo->leftParen) {
-        noteParenInfo->leftParen->setVisible(visible);
+    if (noteParenInfo->leftParen()) {
+        noteParenInfo->leftParen()->setVisible(visible);
     }
-    if (noteParenInfo->rightParen) {
-        noteParenInfo->rightParen->setVisible(visible);
+    if (noteParenInfo->rightParen()) {
+        noteParenInfo->rightParen()->setVisible(visible);
     }
 }
 
@@ -1869,9 +1855,11 @@ EngravingItem* Note::drop(EditData& data)
             break;
         }
 
-        case ActionIconType::PARENTHESES:
-            score()->cmdToggleParentheses(this);
+        case ActionIconType::PARENTHESES: {
+            std::list<Note*> note = { this };
+            score()->cmdAddParenthesesToNotes(note);
             break;
+        }
         case ActionIconType::STANDARD_BEND:
         case ActionIconType::SLIGHT_BEND:
         case ActionIconType::DIVE:
@@ -2148,6 +2136,24 @@ static bool hasAlteredUnison(Note* note)
 void Note::updateAccidental(AccidentalState* as)
 {
     int absLine = absStep(tpc(), epitch());
+
+    // Ensure m_centOffset and microtonal accidental match (they can mismatch when switching from TAB)
+    if (muse::RealIsNull(m_centOffset)) {
+        if (m_accidental && !muse::RealIsNull(Accidental::subtype2centOffset(m_accidental->accidentalType()))) {
+            score()->undoRemoveElement(m_accidental);
+        }
+    } else {
+        if (m_accidental) {
+            bool correct = muse::RealIsEqual(Accidental::subtype2centOffset(m_accidental->accidentalType()), m_centOffset);
+            if (!correct) {
+                m_accidental->undoChangeProperty(Pid::ACCIDENTAL_TYPE, static_cast<int>(Accidental::centOffset2Subtype(m_centOffset)));
+            }
+        } else {
+            AccidentalType accType = Accidental::value2MicrotonalSubtype(tpc2alter(tpc()), quarterToneOffset());
+            updateLine();
+            score()->changeAccidental(this, accType);
+        }
+    }
 
     // don't touch accidentals that don't concern tpc such as
     // quarter tones
@@ -2650,11 +2656,7 @@ int Note::playingOctave() const
 
 double Note::playingTuning() const
 {
-    if (!m_accidental) {
-        return m_tuning;
-    }
-
-    return m_tuning + Accidental::subtype2centOffset(m_accidental->accidentalType());
+    return m_tuning + m_centOffset;
 }
 
 //---------------------------------------------------------
@@ -3010,6 +3012,8 @@ PropertyValue Note::getProperty(Pid propertyId) const
     switch (propertyId) {
     case Pid::PITCH:
         return pitch();
+    case Pid::CENT_OFFSET:
+        return centOffset();
     case Pid::TPC1:
         return m_tpc[0];
     case Pid::TPC2:
@@ -3074,6 +3078,9 @@ bool Note::setProperty(Pid propertyId, const PropertyValue& v)
     case Pid::PITCH:
         setPitch(v.toInt());
         score()->setPlaylistDirty();
+        break;
+    case Pid::CENT_OFFSET:
+        setCentOffset(v.toDouble());
         break;
     case Pid::TPC1:
         m_tpc[0] = v.toInt();
@@ -3191,6 +3198,8 @@ bool Note::setProperty(Pid propertyId, const PropertyValue& v)
 PropertyValue Note::propertyDefault(Pid propertyId) const
 {
     switch (propertyId) {
+    case Pid::CENT_OFFSET:
+        return 0.0;
     case Pid::GHOST:
     case Pid::DEAD:
     case Pid::SMALL:
@@ -3950,9 +3959,9 @@ void Note::setParenthesesMode(const ParenthesesMode& v, bool addToLinked, bool g
         return;
     }
 
-    const NoteParenthesisInfo* noteParenInfo = parenInfo();
+    const NoteParenthesisInfo* noteParenInfo = parenthesisInfo();
 
-    Parenthesis* leftParen = noteParenInfo ? noteParenInfo->leftParen : nullptr;
+    Parenthesis* leftParen = noteParenInfo ? noteParenInfo->leftParen() : nullptr;
 
     const bool hasGeneratedParen = leftParen && leftParen->generated();
     const bool hasUserParen = leftParen && !leftParen->generated();
@@ -3976,9 +3985,9 @@ void Note::setParenthesesMode(const ParenthesesMode& v, bool addToLinked, bool g
     }
 }
 
-const NoteParenthesisInfo* Note::parenInfo() const
+const NoteParenthesisInfo* Note::parenthesisInfo() const
 {
-    return chord() ? chord()->findNoteParenInfo(this) : nullptr;
+    return chord() ? chord()->findNoteParenthesisInfo(this) : nullptr;
 }
 
 bool Note::isGrace() const

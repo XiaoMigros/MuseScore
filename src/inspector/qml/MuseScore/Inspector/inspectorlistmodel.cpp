@@ -38,7 +38,7 @@ using namespace mu::inspector;
 using namespace mu::notation;
 
 InspectorListModel::InspectorListModel(QObject* parent)
-    : QAbstractListModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QAbstractListModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
     , m_repository{std::make_unique<ElementRepositoryService>()}
 {
 }
@@ -46,6 +46,11 @@ InspectorListModel::InspectorListModel(QObject* parent)
 InspectorListModel::~InspectorListModel() = default;
 
 void InspectorListModel::classBegin()
+{
+    init();
+}
+
+void InspectorListModel::init()
 {
     listenSelectionChanged();
     listenScoreChanges();
@@ -226,10 +231,7 @@ void InspectorListModel::createModelsBySectionType(const InspectorSectionTypeSet
             newModel = new NotationSettingsProxyModel(this, iocContext(), m_repository.get(), selectedElementKeySet);
             break;
         case InspectorSectionType::SECTION_TEXT:
-            newModel = new TextSettingsModel(this, iocContext(), m_repository.get(), /*isTextLineText*/ false);
-            break;
-        case InspectorSectionType::SECTION_TEXT_LINES:
-            newModel = new TextSettingsModel(this, iocContext(), m_repository.get(), /*isTextLineText*/ true);
+            newModel = new TextSettingsModel(this, iocContext(), m_repository.get());
             break;
         case InspectorSectionType::SECTION_SCORE_DISPLAY:
             newModel = new ScoreDisplaySettingsModel(this, iocContext(), m_repository.get());

@@ -21,21 +21,25 @@
  */
 #include "importtef.h"
 #include "measurehandler.h"
+#include "readinglist.h"
 #include "tuplethandler.h"
 
 #include "engraving/dom/box.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/excerpt.h"
 #include "engraving/dom/factory.h"
+#include "engraving/dom/fingering.h"
 #include "engraving/dom/keysig.h"
 #include "engraving/dom/measurebase.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/part.h"
+#include "engraving/dom/playcounttext.h"
 #include "engraving/dom/rest.h"
 #include "engraving/dom/stafftext.h"
 #include "engraving/dom/tempotext.h"
 #include "engraving/dom/text.h"
 #include "engraving/dom/timesig.h"
+#include "engraving/dom/volta.h"
 #include "log.h"
 
 using namespace mu::engraving;
@@ -225,20 +229,55 @@ static void connectTie(mu::engraving::Chord* chord, Note* note)
     }
 }
 
-static void addNoteToChord(mu::engraving::Chord* chord, track_idx_t track, int pitch, int fret, int string, bool tie,
-                           muse::draw::Color color)
+static String fingeringTextLH(int leftFinger)
+{
+    switch (leftFinger) {
+    case 0: return u"0";
+    case 1: return u"1";
+    case 2: return u"2";
+    case 3: return u"3";
+    case 4: return u"4";
+    default: return u"invalid"; // shouldn't happen
+    }
+}
+
+static String fingeringTextRH(int rightFinger)
+{
+    switch (rightFinger) {
+    case 0: return u"p";
+    case 1: return u"i";
+    case 2: return u"m";
+    case 3: return u"a";
+    case 4: return u"c";
+    default: return u"invalid"; // shouldn't happen
+    }
+}
+
+static void addNoteToChord(mu::engraving::Chord* chord, const TefNote* tefNote, int pitch, muse::draw::Color color)
 {
     LOGN("pitch %d", pitch);
     mu::engraving::Note* note = Factory::createNote(chord);
     if (note) {
-        note->setTrack(track);
+        note->setTrack(chord->track());
         note->setPitch(pitch);
         note->setTpcFromPitch(Prefer::NEAREST);
-        note->setFret(fret);
-        note->setString(string);
+        note->setFret(tefNote->fret);
+        note->setString(tefNote->string - 1);
         note->setColor(color);
-        if (tie) {
+        if (tefNote->tie) {
             connectTie(chord, note);
+        }
+        if (tefNote->fingeringLH) {
+            Fingering* fi = Factory::createFingering(note, TextStyleType::LH_GUITAR_FINGERING);
+            String finger { fingeringTextLH(tefNote->fingeringLH - 1) };
+            fi->setPlainText(finger);
+            note->add(fi);
+        }
+        if (tefNote->fingeringRH) {
+            Fingering* fi = Factory::createFingering(note, TextStyleType::RH_GUITAR_FINGERING);
+            String finger { fingeringTextRH(tefNote->fingeringRH - 1) };
+            fi->setPlainText(finger);
+            note->add(fi);
         }
         chord->add(note);
     }
@@ -277,6 +316,31 @@ static void addRest(Segment* segment, track_idx_t track, TDuration tDuration, Fr
         rest->setVisible(visible);
         segment->add(rest);
     }
+}
+
+static void addVolta(Score* score, Measure* measure, const Ending& ending)
+{
+    constexpr track_idx_t voltaTrackIdx = 0;
+
+    Measure* endMeasure = measure;
+    for (int countdown = ending.duration - 1; countdown > 0; countdown--) {
+        Measure* next = endMeasure->nextMeasure();
+        if (!next) {
+            LOGD() << "Ending at " << "TBD" << " specifies non-existent end measure.";
+        }
+        endMeasure = next;
+    }
+
+    Volta* volta = Factory::createVolta(score->dummy());
+    volta->setTrack(voltaTrackIdx);
+    volta->setTick(measure->tick());
+    volta->setTick2(endMeasure->endTick());
+    volta->setVisible(true);
+    volta->setEndings({ ending.number });
+    String text;
+    text += String("%1").arg(ending.number);
+    volta->setText(text);
+    score->addElement(volta);
 }
 
 void TablEdit::createContents(const MeasureHandler& measureHandler)
@@ -374,7 +438,7 @@ void TablEdit::createContents(const MeasureHandler& measureHandler)
                             int pitch = 96 - instrument.tuning.at(note->string - stringOffset - 1) + note->fret;
                             LOGN("      -> string %d fret %d pitch %d", note->string, note->fret, pitch);
                             // note TableEdit's strings start at 1, MuseScore's at 0
-                            addNoteToChord(chord, track, pitch, note->fret, note->string - 1, note->tie, toColor(voice));
+                            addNoteToChord(chord, note, pitch, toColor(voice));
                             if (note->hasGrace) {
                                 // todo fix magical constant 96 and code duplication
                                 int gracePitch = 96 - instrument.tuning.at(/* todo */ note->string - stringOffset - 1) + note->graceFret;
@@ -564,24 +628,28 @@ void TablEdit::createProperties()
 void TablEdit::createRepeats()
 {
     LOGN("reading list size %zu number of measures %zu", tefReadingList.size(), tefMeasures.size());
-    // proof of concept: add repeat to whole score if
-    // - reading list contains two items
-    // - both spanning the entire score
-    if (tefReadingList.size() == 2
-        && tefReadingList.at(0).firstMeasure == 1 && tefReadingList.at(0).lastMeasure == static_cast<int>(tefMeasures.size())
-        && tefReadingList.at(1).firstMeasure == 1 && tefReadingList.at(1).lastMeasure == static_cast<int>(tefMeasures.size())
-        ) {
-        LOGN("do it");
-        if (score->measures()->empty()) {
-            LOGE("no measures in score");
-            return;
+    ReadingList readingList;
+    readingList.calculate(tefMeasures.size(), tefReadingList);
+    for (size_t i = 0; i < tefMeasures.size(); ++i) {
+        Measure* m { score->crMeasure(static_cast<int>(i)) };
+        m->setRepeatStart(readingList.status().at(i).repeatStart);
+        m->setRepeatEnd(readingList.status().at(i).repeatEnd);
+        const int repeatCount { readingList.status().at(i).repeatCount };
+        if (repeatCount > 2) {
+            m->setRepeatCount(repeatCount);
+            // generate default play count text
+            Segment* segment = m->getSegment(SegmentType::EndBarLine, m->tick() + m->ticks());
+            PlayCountText* playCountText = Factory::createPlayCountText(segment);
+            playCountText->setTrack(0); // todo check multi staff / part handling
+            segment->add(playCountText);
         }
-        Measure* first { score->firstMeasure() };
-        Measure* last { score->lastMeasure() };
-        first->setRepeatStart(true);
-        last->setRepeatEnd(true);
-    } else {
-        LOGN("no score repeat");
+        if (const std::optional<Ending>& ending = readingList.status().at(i).ending) {
+            addVolta(score, m, ending.value());
+        }
+    }
+    if (readingList.status().back().barlineEnd) {
+        Measure* m { score->crMeasure(static_cast<int>(tefMeasures.size()) - 1) };
+        m->setEndBarLineType(BarLineType::END, 0);
     }
 }
 
@@ -870,7 +938,7 @@ void TablEdit::readTefContents()
         uint8_t byte4 = readUInt8();
         /* uint8_t byte5 = */ readUInt8();
         /* uint8_t byte6 = */ readUInt8();
-        /* uint8_t byte7 = */ readUInt8();
+        uint8_t byte7 = readUInt8();
         /* uint8_t byte8 = */ readUInt8();
         TefNote note;
         note.position = (offset >> 3) / totalNumberOfStrings;
@@ -898,6 +966,9 @@ void TablEdit::readTefContents()
                 note.hasGrace = true;
                 //LOGD("graceEffect %d graceFret %d", note.graceEffect, note.graceFret);
             }
+            note.fingeringLH = (byte7 & 0x1F) % 6;
+            note.fingeringRH = (byte7 & 0x1F) / 6;
+            LOGN("fingeringLH %d fingeringRH %d", note.fingeringLH, note.fingeringRH);
             tefContents.push_back(note);
         } else if (noteRestMarker == 0x39) {
             TefTextMarker tefTextMarker;

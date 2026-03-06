@@ -27,7 +27,7 @@ using namespace mu::engraving;
 static void drawInputStringMarks(const StaffType& staffType, muse::draw::Painter* p, int string, const Color& color, const RectF& rect);
 
 NoteInputCursor::NoteInputCursor(const muse::modularity::ContextPtr& iocCtx, bool isThinLine)
-    : muse::Injectable(iocCtx), m_isThinLine(isThinLine)
+    : muse::Contextable(iocCtx), m_isThinLine(isThinLine)
 {
 }
 
@@ -54,7 +54,7 @@ void NoteInputCursor::paint(muse::draw::Painter* painter)
 
     const StaffType* staffType = state.staff()->staffType(state.tick());
     const double spatium = staffType->spatium();
-    const int leftLineWidth = 0.15 * spatium;
+    const int leftLineWidth = 0.14 * spatium;
 
     const RectF leftLine(cursorRect.topLeft().x(), cursorRect.topLeft().y(), leftLineWidth, cursorRect.height());
     const Color lineColor = fillColor;

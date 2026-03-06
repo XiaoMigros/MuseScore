@@ -26,6 +26,8 @@
 #include <qqmlintegration.h>
 #include <QQmlParserStatus>
 
+#include "app_config.h"
+
 #include "modularity/ioc.h"
 
 #include "async/asyncable.h"
@@ -36,8 +38,12 @@
 #include "importexport/musicxml/imusicxmlconfiguration.h"
 #include "importexport/midi/imidiconfiguration.h"
 #include "importexport/audioexport/iaudioexportconfiguration.h"
+#ifdef MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE
+#include "importexport/videoexport/ivideoexportconfiguration.h"
+#endif
 #include "importexport/mei/imeiconfiguration.h"
 #include "importexport/lyricsexport/ilyricsexportconfiguration.h"
+#include "importexport/mnx/imnxconfiguration.h"
 
 #include "iexportprojectscenario.h"
 #include "inotationwritersregister.h"
@@ -46,7 +52,7 @@
 class QItemSelectionModel;
 
 namespace mu::project {
-class ExportDialogModel : public QAbstractListModel, public QQmlParserStatus, public muse::async::Asyncable, public muse::Injectable
+class ExportDialogModel : public QAbstractListModel, public QQmlParserStatus, public muse::async::Asyncable, public muse::Contextable
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -73,6 +79,8 @@ class ExportDialogModel : public QAbstractListModel, public QQmlParserStatus, pu
         bool svgTransparentBackground READ svgTransparentBackground WRITE setSvgTransparentBackground NOTIFY svgTransparentBackgroundChanged)
     Q_PROPERTY(bool svgIllustratorCompat READ svgIllustratorCompat WRITE setSvgIllustratorCompat NOTIFY svgIllustratorCompatChanged FINAL)
 
+    Q_PROPERTY(QString videoResolution READ videoResolution WRITE setVideoResolution NOTIFY videoResolutionChanged)
+
     Q_PROPERTY(int sampleRate READ sampleRate WRITE setSampleRate NOTIFY sampleRateChanged)
     Q_PROPERTY(int bitRate READ bitRate WRITE setBitRate NOTIFY bitRateChanged)
     Q_PROPERTY(QVariantList availableSampleFormats READ availableSampleFormats NOTIFY availableSampleFormatsChanged)
@@ -88,6 +96,11 @@ class ExportDialogModel : public QAbstractListModel, public QQmlParserStatus, pu
 
     Q_PROPERTY(int lrcUseEnhancedFormat READ lrcUseEnhancedFormat WRITE setLrcUseEnhancedFormat NOTIFY lrcUseEnhancedFormatChanged)
 
+    Q_PROPERTY(int mnxIndentSpaces READ mnxIndentSpaces WRITE setMnxIndentSpaces NOTIFY mnxIndentSpacesChanged)
+    Q_PROPERTY(bool mnxExportBeams READ mnxExportBeams WRITE setMnxExportBeams NOTIFY mnxExportBeamsChanged)
+    Q_PROPERTY(bool mnxExportRestPositions READ mnxExportRestPositions WRITE setMnxExportRestPositions
+               NOTIFY mnxExportRestPositionsChanged)
+
     Q_PROPERTY(bool shouldDestinationFolderBeOpenedOnExport READ shouldDestinationFolderBeOpenedOnExport
                WRITE setShouldDestinationFolderBeOpenedOnExport NOTIFY shouldDestinationFolderBeOpenedOnExportChanged)
 
@@ -98,12 +111,16 @@ class ExportDialogModel : public QAbstractListModel, public QQmlParserStatus, pu
     muse::GlobalInject<iex::audioexport::IAudioExportConfiguration> audioExportConfiguration;
     muse::GlobalInject<iex::mei::IMeiConfiguration> meiConfiguration;
     muse::GlobalInject<iex::lrcexport::ILyricsExportConfiguration> lrcConfiguration;
+    muse::GlobalInject<iex::mnxio::IMnxConfiguration> mnxConfiguration;
     muse::GlobalInject<IProjectConfiguration> configuration;
+#ifdef MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE
+    muse::GlobalInject<iex::videoexport::IVideoExportConfiguration> videoExportConfiguration;
+#endif
     muse::GlobalInject<iex::imagesexport::IImagesExportConfiguration> imageExportConfiguration;
-    muse::Inject<muse::IInteractive> interactive = { this };
-    muse::Inject<context::IGlobalContext> context = { this };
-    muse::Inject<INotationWritersRegister> writers = { this };
-    muse::Inject<IExportProjectScenario> exportProjectScenario = { this };
+    muse::ContextInject<muse::IInteractive> interactive = { this };
+    muse::ContextInject<context::IGlobalContext> context = { this };
+    muse::ContextInject<INotationWritersRegister> writers = { this };
+    muse::ContextInject<IExportProjectScenario> exportProjectScenario = { this };
 
 public:
     explicit ExportDialogModel(QObject* parent = nullptr);
@@ -154,6 +171,10 @@ public:
     bool svgIllustratorCompat() const;
     void setSvgIllustratorCompat(bool compat);
 
+    Q_INVOKABLE QStringList availableVideoResolutions() const;
+    QString videoResolution() const;
+    void setVideoResolution(const QString& resolution);
+
     Q_INVOKABLE QList<int> availableSampleRates() const;
     int sampleRate() const;
     void setSampleRate(int sampleRate);
@@ -180,6 +201,15 @@ public:
 
     bool lrcUseEnhancedFormat() const;
     void setLrcUseEnhancedFormat(bool useEnhancedFormat);
+
+    int mnxIndentSpaces() const;
+    void setMnxIndentSpaces(int spaces);
+
+    bool mnxExportBeams() const;
+    void setMnxExportBeams(bool exportBeams);
+
+    bool mnxExportRestPositions() const;
+    void setMnxExportRestPositions(bool exportRestPositions);
 
     enum class MusicXmlLayoutType {
         AllLayout,
@@ -215,6 +245,8 @@ signals:
     void svgTransparentBackgroundChanged(bool transparent);
     void svgIllustratorCompatChanged(bool compat);
 
+    void videoResolutionChanged(const QString& resolution);
+
     void availableSampleRatesChanged();
     void sampleRateChanged(int sampleRate);
     void availableBitRatesChanged();
@@ -232,11 +264,16 @@ signals:
 
     void lrcUseEnhancedFormatChanged(bool enhancedFormat);
 
+    void mnxIndentSpacesChanged(int spaces);
+    void mnxExportBeamsChanged(bool exportBeams);
+    void mnxExportRestPositionsChanged(bool exportRestPositions);
+
     void shouldDestinationFolderBeOpenedOnExportChanged(bool shouldDestinationFolderBeOpenedOnExport);
 
 private:
     void classBegin() override;
     void componentComplete() override {}
+    void init();
 
     enum Roles {
         RoleTitle = Qt::UserRole + 1,

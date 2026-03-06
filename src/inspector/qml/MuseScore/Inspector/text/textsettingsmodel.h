@@ -77,11 +77,10 @@ class TextSettingsModel : public AbstractInspectorModel
     Q_PROPERTY(QString centerPositionText READ centerPositionText NOTIFY centerPositionTextChanged)
     Q_PROPERTY(QString rightPositionText READ rightPositionText NOTIFY rightPositionTextChanged)
 
-    muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
+    muse::ContextInject<muse::actions::IActionsDispatcher> dispatcher = { this };
 
 public:
-    explicit TextSettingsModel(QObject* parent, const muse::modularity::ContextPtr& iocCtx, IElementRepositoryService* repository,
-                               bool isTextLineText);
+    explicit TextSettingsModel(QObject* parent, const muse::modularity::ContextPtr& iocCtx, IElementRepositoryService* repository);
 
     Q_INVOKABLE void insertSpecialCharacters();
     Q_INVOKABLE void showStaffTextProperties();
@@ -183,12 +182,7 @@ private:
     void updateCenterPositionText();
     void updateRightPositionText();
 
-    void propertyChangedCallback(const mu::engraving::Pid propertyId, const QVariant& newValue);
-    void propertyResetCallback(const mu::engraving::Pid propertyId);
-
     void loadProperties(const mu::engraving::PropertyIdSet& propertyIdSet);
-
-    bool isTextLineText() const;
 
     PropertyItem* m_fontFamily = nullptr;
     PropertyItem* m_fontStyle = nullptr;

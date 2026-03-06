@@ -134,18 +134,17 @@ void GuitarBend::changeBendAmount(int endBendAmount, int startBendAmount)
 
     // All other bends: set bend amount by transposing end note appropriately
     int pitch = endBendAmount / 2 + startNoteOfChain()->pitch();
-    QuarterOffset quarterOff = endBendAmount % 2 == 1 ? QuarterOffset::QUARTER_SHARP
-                               : endBendAmount % 2 == -1 ? QuarterOffset::QUARTER_FLAT : QuarterOffset::NONE;
-    if (pitch == startNote()->pitch() && quarterOff == QuarterOffset::QUARTER_SHARP) {
+    int quarterOff = endBendAmount % 2;
+    if (pitch == startNote()->pitch() && quarterOff == 1) {
         // Because a flat second is more readable than a sharp unison
         pitch += 1;
-        quarterOff = QuarterOffset::QUARTER_FLAT;
+        quarterOff = -1;
     }
 
     setEndNotePitch(pitch, quarterOff);
 }
 
-void GuitarBend::setEndNotePitch(int pitch, QuarterOffset quarterOff)
+void GuitarBend::setEndNotePitch(int pitch, int quarterToneOffset)
 {
     Note* note = endNote();
     IF_ASSERT_FAILED(note) {
@@ -162,52 +161,39 @@ void GuitarBend::setEndNotePitch(int pitch, QuarterOffset quarterOff)
     int targetTpc1 = pitch2tpc(pitch, key, Prefer::NEAREST);
     int targetTpc2 = Transpose::transposeTpc(targetTpc1, interval, true);
 
-    score()->undoChangePitch(note, pitch, targetTpc1, targetTpc2);
-
-    Note* tiedNote = note->tieFor() ? note->tieFor()->endNote() : nullptr;
-    while (tiedNote) {
-        score()->undoChangePitch(tiedNote, pitch, targetTpc1, targetTpc2);
-        tiedNote = tiedNote->tieFor() ? tiedNote->tieFor()->endNote() : nullptr;
-    }
-
-    AccidentalType accidentalType = Accidental::value2subtype(tpc2alter(targetTpc1));
-    if (quarterOff == QuarterOffset::QUARTER_SHARP) {
-        switch (accidentalType) {
-        case AccidentalType::NONE:
-        case AccidentalType::NATURAL:
-            accidentalType = AccidentalType::SHARP_ARROW_DOWN;
-            break;
-        case AccidentalType::FLAT:
-            accidentalType = AccidentalType::FLAT_ARROW_UP;
-            break;
-        case AccidentalType::SHARP:
-            accidentalType = AccidentalType::SHARP_ARROW_UP;
-            break;
-        default:
-            break;
+    auto doChangeEndNotePitch = [&]() {
+        score()->undoChangePitch(note, pitch, targetTpc1, targetTpc2);
+        Note* tiedNote = note->tieFor() ? note->tieFor()->endNote() : nullptr;
+        while (tiedNote) {
+            score()->undoChangePitch(tiedNote, pitch, targetTpc1, targetTpc2);
+            tiedNote = tiedNote->tieFor() ? tiedNote->tieFor()->endNote() : nullptr;
         }
-    } else if (quarterOff == QuarterOffset::QUARTER_FLAT) {
-        switch (accidentalType) {
-        case AccidentalType::NONE:
-        case AccidentalType::NATURAL:
-            accidentalType = AccidentalType::FLAT_ARROW_UP;
-            break;
-        case AccidentalType::FLAT:
-            accidentalType = AccidentalType::FLAT_ARROW_DOWN;
-            break;
-        case AccidentalType::SHARP:
-            accidentalType = AccidentalType::SHARP_ARROW_DOWN;
-            break;
-        default:
+    };
+
+    Note* linkedNoteOnNotationStaff = nullptr;
+    for (EngravingObject* linked : note->linkList()) {
+        if (!toNote(linked)->staffType()->isTabStaff()) {
+            linkedNoteOnNotationStaff = toNote(linked);
             break;
         }
     }
 
-    if (accidentalType != note->accidentalType()) {
-        for (EngravingObject* linked : note->linkList()) {
-            toNote(linked)->updateLine();
-            score()->changeAccidental(toNote(linked), accidentalType);
+    if (linkedNoteOnNotationStaff) {
+        // Manage microtonal by setting appropriate microtonal accidentals, which will propagate to TAB staff too
+        AccidentalType accidentalType = Accidental::value2MicrotonalSubtype(tpc2alter(targetTpc1), quarterToneOffset);
+        if (Accidental::isMicrotonal(accidentalType)) {
+            doChangeEndNotePitch();
+            linkedNoteOnNotationStaff->updateLine();
+            score()->changeAccidental(linkedNoteOnNotationStaff, accidentalType);
+        } else {
+            linkedNoteOnNotationStaff->updateLine();
+            score()->changeAccidental(linkedNoteOnNotationStaff, accidentalType);
+            doChangeEndNotePitch();
         }
+    } else {
+        // Accidental logic doesn't work on TAB, so set cents offset directly
+        doChangeEndNotePitch();
+        note->undoChangeProperty(Pid::CENT_OFFSET, quarterToneOffset * 50.0);
     }
 
     computeBendAmount();
@@ -489,13 +475,8 @@ void GuitarBend::computeBendAmount()
 
     int pitchDiffInQuarterTones = 2 * (endPitch - startPitch);
 
-    Accidental* startAcc = startN->accidental();
-    Accidental* endAcc = endN->accidental();
-    int startCentsOff = startAcc ? Accidental::subtype2centOffset(startAcc->accidentalType()) : 0;
-    int endCentsOff = endAcc ? Accidental::subtype2centOffset(endAcc->accidentalType()) : 0;
-
-    int startOffInQuarterTones = round(double(startCentsOff) / 50);
-    int endOffInQuarterTones = round(double(endCentsOff) / 50);
+    int startOffInQuarterTones = round(startN->centOffset() / 50);
+    int endOffInQuarterTones = round(endN->centOffset() / 50);
 
     pitchDiffInQuarterTones += endOffInQuarterTones - startOffInQuarterTones;
 
@@ -1036,7 +1017,12 @@ void GuitarBend::adaptBendsFromTabToStandardStaff(const Staff* staff)
             if (!bend) {
                 continue;
             }
-            bend->endNote()->setVisible(true);
+            if (!bend->startNote()->overrideBendVisibilityRules()) {
+                bend->startNote()->setVisible(true);
+            }
+            if (!bend->endNote()->overrideBendVisibilityRules()) {
+                bend->endNote()->setVisible(true);
+            }
         }
     };
 

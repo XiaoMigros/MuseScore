@@ -24,11 +24,12 @@
 
 #include "types/ret.h"
 #include "async/promise.h"
+#include "async/notification.h"
 
 #include "modularity/imoduleinterface.h"
 
 namespace muse::update {
-class IAppUpdateScenario : MODULE_EXPORT_INTERFACE
+class IAppUpdateScenario : MODULE_CONTEXT_INTERFACE
 {
     INTERFACE_ID(IAppUpdateScenario)
 
@@ -36,7 +37,10 @@ public:
     virtual ~IAppUpdateScenario() = default;
 
     virtual bool needCheckForUpdate() const = 0;
-    virtual async::Promise<Ret> checkForUpdate(bool manual) = 0;
+    virtual void checkForUpdate(bool manual) = 0;
+
+    virtual bool checkInProgress() const = 0;
+    virtual async::Notification checkInProgressChanged() const = 0;
 
     virtual bool hasUpdate() const = 0;
     virtual async::Promise<Ret> showUpdate() = 0;

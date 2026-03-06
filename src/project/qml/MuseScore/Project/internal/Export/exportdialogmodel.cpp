@@ -21,7 +21,11 @@
  */
 #include "exportdialogmodel.h"
 
+#include <algorithm>
+
 #include <QItemSelectionModel>
+
+#include "app_config.h"
 
 #include "async/async.h"
 #include "translation.h"
@@ -37,7 +41,7 @@ using UnitType = INotationWriter::UnitType;
 static const UnitType DEFAULT_EXPORT_UNITTYPE = UnitType::PER_PART;
 
 ExportDialogModel::ExportDialogModel(QObject* parent)
-    : QAbstractListModel(parent), muse::Injectable(muse::iocCtxForQmlObject(this))
+    : QAbstractListModel(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
     , m_selectionModel(new QItemSelectionModel(this))
     , m_selectedUnitType(DEFAULT_EXPORT_UNITTYPE)
 {
@@ -75,10 +79,16 @@ ExportDialogModel::ExportDialogModel(QObject* parent)
                                      muse::qtrc("project/export", "MP3 audio"),
                                      muse::qtrc("project/export", "MP3 audio files"),
                                      "Mp3SettingsPage.qml"),
+#ifdef MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE
+        ExportType::makeWithSuffixes({ "mp4" },
+                                     muse::qtrc("project/export", "Video mp4"),
+                                     muse::qtrc("project/export", "Video mp4 files"),
+                                     "Mp4SettingsPage.qml"),
+#endif
         ExportType::makeWithSuffixes({ "wav" },
                                      muse::qtrc("project/export", "WAV audio"),
                                      muse::qtrc("project/export", "WAV audio files"),
-                                     "AudioSettingsPage.qml"),
+                                     "WavSettingsPage.qml"),
         ExportType::makeWithSuffixes({ "ogg" },
                                      muse::qtrc("project/export", "OGG audio"),
                                      muse::qtrc("project/export", "OGG audio files"),
@@ -86,7 +96,7 @@ ExportDialogModel::ExportDialogModel(QObject* parent)
         ExportType::makeWithSuffixes({ "flac" },
                                      muse::qtrc("project/export", "FLAC audio"),
                                      muse::qtrc("project/export", "FLAC audio files"),
-                                     "AudioSettingsPage.qml"),
+                                     "FlacSettingsPage.qml"),
         ExportType::makeWithSuffixes({ "mid", "midi", "kar" },
                                      muse::qtrc("project/export", "MIDI file"),
                                      muse::qtrc("project/export", "MIDI files"),
@@ -103,6 +113,10 @@ ExportDialogModel::ExportDialogModel(QObject* parent)
                                      muse::qtrc("project/export", "MEI"),
                                      muse::qtrc("project/export", "MEI files"),
                                      "MeiSettingsPage.qml"),
+        ExportType::makeWithSuffixes({ "mnx" },
+                                     muse::qtrc("project/export", "MNX (experimental)"),
+                                     muse::qtrc("project/export", "MNX files (experimental)"),
+                                     "MnxSettingsPage.qml"),
         ExportType::makeWithSuffixes({ "lrc" },
                                      muse::qtrc("project/export", "LRC file"),
                                      muse::qtrc("project/export", "LRC files"),
@@ -116,6 +130,11 @@ ExportDialogModel::~ExportDialogModel()
 }
 
 void ExportDialogModel::classBegin()
+{
+    init();
+}
+
+void ExportDialogModel::init()
 {
     TRACEFUNC;
 
@@ -541,6 +560,41 @@ void ExportDialogModel::setSvgIllustratorCompat(bool compat)
     emit svgIllustratorCompatChanged(compat);
 }
 
+QStringList ExportDialogModel::availableVideoResolutions() const
+{
+#ifdef MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE
+    const std::vector<std::string>& resolutions = videoExportConfiguration()->availableResolutions();
+    QStringList result;
+    for (const std::string& res : resolutions) {
+        result << QString::fromStdString(res);
+    }
+    return result;
+#else
+    return { };
+#endif
+}
+
+QString ExportDialogModel::videoResolution() const
+{
+#ifdef MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE
+    return QString::fromStdString(videoExportConfiguration()->resolution());
+#else
+    return "";
+#endif
+}
+
+void ExportDialogModel::setVideoResolution(const QString& resolution)
+{
+    if (resolution == videoResolution()) {
+        return;
+    }
+
+#ifdef MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE
+    videoExportConfiguration()->setResolution(resolution.toStdString());
+#endif
+    emit videoResolutionChanged(resolution);
+}
+
 QList<int> ExportDialogModel::availableSampleRates() const
 {
     const std::vector<int>& rates = audioExportConfiguration()->availableSampleRates();
@@ -656,6 +710,52 @@ void ExportDialogModel::setLrcUseEnhancedFormat(bool useEnhancedFormat)
 
     lrcConfiguration()->setLrcUseEnhancedFormat(useEnhancedFormat);
     emit lrcUseEnhancedFormatChanged(useEnhancedFormat);
+}
+
+int ExportDialogModel::mnxIndentSpaces() const
+{
+    return mnxConfiguration()->mnxIndentSpaces();
+}
+
+void ExportDialogModel::setMnxIndentSpaces(int spaces)
+{
+    spaces = std::clamp(spaces, -1, 8);
+    if (spaces == mnxIndentSpaces()) {
+        return;
+    }
+
+    mnxConfiguration()->setMnxIndentSpaces(spaces);
+    emit mnxIndentSpacesChanged(spaces);
+}
+
+bool ExportDialogModel::mnxExportBeams() const
+{
+    return mnxConfiguration()->mnxExportBeams();
+}
+
+void ExportDialogModel::setMnxExportBeams(bool exportBeams)
+{
+    if (exportBeams == mnxExportBeams()) {
+        return;
+    }
+
+    mnxConfiguration()->setMnxExportBeams(exportBeams);
+    emit mnxExportBeamsChanged(exportBeams);
+}
+
+bool ExportDialogModel::mnxExportRestPositions() const
+{
+    return mnxConfiguration()->mnxExportRestPositions();
+}
+
+void ExportDialogModel::setMnxExportRestPositions(bool exportRestPositions)
+{
+    if (exportRestPositions == mnxExportRestPositions()) {
+        return;
+    }
+
+    mnxConfiguration()->setMnxExportRestPositions(exportRestPositions);
+    emit mnxExportRestPositionsChanged(exportRestPositions);
 }
 
 QVariantList ExportDialogModel::musicXmlLayoutTypes() const
