@@ -715,8 +715,6 @@ void FinaleParser::importTextExpressions()
                 /// @note currently only CR
                 Segment* s = measure->getSegment(SegmentType::ChordRest, measure->tick() + rTick);
                 img->setTrack(curTrackIdx);
-                img->init();
-                img->setSize(img->size() * m_score->staff(curStaffIdx)->spatium(measure->ticks() + rTick) / m_score->style().spatium());
                 s->add(img);
                 continue;
             }

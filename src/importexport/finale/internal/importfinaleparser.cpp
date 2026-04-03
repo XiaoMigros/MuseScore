@@ -184,7 +184,7 @@ Image* FinaleParser::getImageFromShape(const Cmper& shapeId)
     if (!registeredImage) {
         const auto shape = m_doc->getOthers()->get<others::ShapeDef>(m_currentMusxPartId, shapeId);
         const std::string shapeSvgData
-            = Svg::toSvg(*shape,  m_score->style().spatium() / EVPU_PER_SPACE, Svg::SvgUnit::None,
+            = Svg::toSvg(*shape,  1.0 / EVPU_PER_SPACE, Svg::SvgUnit::None, // use spatium units in shape
                          [](const FontInfo& font, std::u32string_view text) -> std::optional<Svg::GlyphMetrics> {
             if (text.empty()) {
                 return std::nullopt;
@@ -208,8 +208,9 @@ Image* FinaleParser::getImageFromShape(const Cmper& shapeId)
 
         ByteArray ba(shapeSvgData.c_str(), shapeSvgData.size());
         registeredImage = new Image(score()->dummy());
-        // registeredImage->setImageType(ImageType::SVG);
         registeredImage->loadFromData(std::to_string(shapeId) + ".svg", ba);
+        registeredImage->init();
+        registeredImage->setSize(registeredImage->imageSize());
         m_registeredShapes.emplace(shapeId, registeredImage);
     }
     IF_ASSERT_FAILED(registeredImage) {
