@@ -209,7 +209,7 @@ Image* FinaleParser::getImageFromShape(const Cmper& shapeId)
         ByteArray ba(shapeSvgData.c_str(), shapeSvgData.size());
         registeredImage = new Image(score()->dummy());
         registeredImage->loadFromData(std::to_string(shapeId) + ".svg", ba);
-        registeredImage->init();
+        registeredImage->init(); // required so that `imageSize()` can work
         registeredImage->setSize(registeredImage->imageSize());
         m_registeredShapes.emplace(shapeId, registeredImage);
     }
