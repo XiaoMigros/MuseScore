@@ -122,6 +122,8 @@ QVariant ScoreElement::get(mu::engraving::Pid pid) const
         return val.toReal() / spatium();
     case P_TYPE::SPATIUM:
         return val.value<Spatium>().val();
+    case P_TYPE::PAIR_REAL:
+        return QVariant::fromValue(QList<double>(val.value<PairF>().first, val.value<PairF>().second));
     default:
         break;
     }

@@ -227,7 +227,7 @@ PropertyValue PropertyValue::fromQVariant(const QVariant& v, P_TYPE type)
     case P_TYPE::SCALE:         return PropertyValue(ScaleF::fromQSizeF(v.value<QSizeF>()));
     case P_TYPE::SPATIUM:       return PropertyValue(Spatium(v.toReal()));
     case P_TYPE::ABSOLUTE:    return PropertyValue(v.toReal());
-    case P_TYPE::PAIR_REAL:     return PropertyValue(v.value<std::pair<double, double> >());
+    case P_TYPE::PAIR_REAL:     return PropertyValue(v.value<PairF>());
 
     // Draw
     case P_TYPE::SYMID:         return PropertyValue(SymId(v.toInt()));
