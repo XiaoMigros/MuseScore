@@ -6265,6 +6265,10 @@ bool NotationInteraction::canAddTextToItem(TextStyleType type, const EngravingIt
         return true;
     }
 
+    if (type == TextStyleType::TEMPO && item->isTimeSig()) {
+        return muse::make_ok();
+    }
+
     static const std::set<TextStyleType> needSelectNoteOrRestTypes {
         TextStyleType::SYSTEM,
         TextStyleType::STAFF,
