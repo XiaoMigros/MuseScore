@@ -437,7 +437,7 @@ bool Accidental::acceptDrop(EditData& data) const
                || type == ActionIconType::BRACKETS;
     }
 
-    return false;
+    return note() ? note()->acceptDrop(data) : false;
 }
 
 //---------------------------------------------------------
@@ -468,7 +468,7 @@ EngravingItem* Accidental::drop(EditData& data)
         break;
     }
     delete e;
-    return nullptr;
+    return note() ? note()->drop(data) : nullptr;
 }
 
 //---------------------------------------------------------

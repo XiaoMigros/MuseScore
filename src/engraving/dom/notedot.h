@@ -48,6 +48,9 @@ public:
     Rest* rest() const { return explicitParent()->isRest() ? toRest(explicitParent()) : 0; }
     EngravingItem* elementBase() const override;
 
+    bool acceptDrop(EditData&) const override;
+    EngravingItem* drop(EditData&) override;
+
 private:
     friend class Factory;
     NoteDot(Note* parent);
