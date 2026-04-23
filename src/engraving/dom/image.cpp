@@ -31,6 +31,7 @@
 #include "../editing/editdata.h"
 #include "../editing/elementeditdata.h"
 
+#include "anchors.h"
 #include "imageStore.h"
 #include "masterscore.h"
 #include "mscore.h"
@@ -335,6 +336,15 @@ void Image::dragGrip(EditData& ed)
     }
 
     triggerLayout();
+}
+
+RectF Image::drag(EditData& ed)
+{
+    RectF result = BSymbol::drag(ed);
+
+    MoveElementAnchors::moveElementAnchorsOnDrag(this, ed);
+
+    return result;
 }
 
 //---------------------------------------------------------
