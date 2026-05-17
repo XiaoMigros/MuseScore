@@ -45,7 +45,7 @@ Column {
 
     StyledTextLabel {
         width: parent.width
-        text: qsTrc("inspector", "Marker type:") + " " + (root.model ? root.model.markerTypeName() : "--")
+        text: qsTrc("inspector", "Marker type: %1").arg(root.model ? root.model.markerTypeName : "--")
         horizontalAlignment: Text.AlignLeft
     }
 
