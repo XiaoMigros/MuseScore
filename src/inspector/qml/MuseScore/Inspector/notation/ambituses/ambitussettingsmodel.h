@@ -35,12 +35,10 @@ class AmbitusSettingsModel : public AbstractInspectorModel
     Q_PROPERTY(mu::inspector::PropertyItem * noteheadGroup READ noteheadGroup CONSTANT)
     Q_PROPERTY(mu::inspector::PropertyItem * noteheadType READ noteheadType CONSTANT)
 
-    Q_PROPERTY(mu::inspector::PropertyItem * topTpc READ topTpc CONSTANT)
-    Q_PROPERTY(mu::inspector::PropertyItem * bottomTpc READ bottomTpc CONSTANT)
-    Q_PROPERTY(mu::inspector::PropertyItem * topOctave READ topOctave CONSTANT)
-    Q_PROPERTY(mu::inspector::PropertyItem * bottomOctave READ bottomOctave CONSTANT)
-    Q_PROPERTY(mu::inspector::PropertyItem * topPitch READ topPitch CONSTANT)
-    Q_PROPERTY(mu::inspector::PropertyItem * bottomPitch READ bottomPitch CONSTANT)
+    Q_PROPERTY(PropertyItem * topTpc READ topTpc CONSTANT)
+    Q_PROPERTY(PropertyItem * bottomTpc READ bottomTpc CONSTANT)
+    Q_PROPERTY(PropertyItem * topOctave READ topOctave CONSTANT)
+    Q_PROPERTY(PropertyItem * bottomOctave READ bottomOctave CONSTANT)
 
     Q_PROPERTY(mu::inspector::PropertyItem * direction READ direction CONSTANT)
     Q_PROPERTY(mu::inspector::PropertyItem * lineThickness READ lineThickness CONSTANT)
@@ -62,8 +60,6 @@ public:
     PropertyItem* bottomTpc() const;
     PropertyItem* topOctave() const;
     PropertyItem* bottomOctave() const;
-    PropertyItem* topPitch() const;
-    PropertyItem* bottomPitch() const;
 
     PropertyItem* direction() const;
     PropertyItem* lineThickness() const;
@@ -76,8 +72,6 @@ private:
     PropertyItem* m_bottomTpc = nullptr;
     PropertyItem* m_topOctave = nullptr;
     PropertyItem* m_bottomOctave = nullptr;
-    PropertyItem* m_topPitch = nullptr;
-    PropertyItem* m_bottomPitch = nullptr;
 
     PropertyItem* m_direction = nullptr;
     PropertyItem* m_lineThickness = nullptr;
