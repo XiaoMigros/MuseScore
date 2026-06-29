@@ -44,7 +44,7 @@ MuseScore {
      * Each row is ordered in the cycle of fifths, so C, G, D, A, E, B, F#, C#, G#/Ab, Eb, Bb, F.
      * Values are adjusted for root and 'pure' note before being applied to the score.
      *
-     * Arabic tunings and most of western ones were provided by Fernando Martins. 
+     * Arabic tunings and most of western ones were provided by Fernando Martins.
      */
     function readDefaults() {
         return [
@@ -96,7 +96,7 @@ MuseScore {
             { "id": "w45",      "name": "C Cm D♭ E♭ Em F Fm G Gm A♭ Am Bm",     "offsets": [0, 2, 3.9, -15.6, -13.7, -11.7, -9.8, 11.7, 13.7, 15.6, 17.6, -2],                      "root": 0, "pure": 0, "globalOffset": 0 },
             { "id": "w46",      "name": "C Cm D Dm E♭ Em F♯m G Gm A♭ B♭ Bm",    "offsets": [0, 2, 3.9, 5.9, -13.7, -11.7, -9.8, -7.8, 13.7, 15.6, 17.6, 19.6],                      "root": 0, "pure": 0, "globalOffset": 0 },
             { "id": "w47",      "name": "C D E♭m E Em F♯ F♯m G G♯m B♭m B Bm",   "offsets": [0, 2, 3.9, 5.9, -13.7, -11.7, -9.8, -7.8, -27.4, -25.4, -23.5, -21.5],                  "root": 0, "pure": 0, "globalOffset": 0 },
-            
+
             { "id": "separatorLine", "name": qsTr("Arabic modal systems") },
             { "id": "a01",      "name": "Melodic 1♯ 2♭",                        "offsets": [0, 2, 3.9, 5.9, 7.8, 9.8, -9.8, -7.8, -7.8, -5.9, -3.9, -2],          "root": 0, "pure": 0, "globalOffset": 0 },
             { "id": "a02",      "name": "Harmonic 1♯ 2♭",                       "offsets": [0, 2, 3.9, -15.6, -13.7, -11.7, -9.8, 11.7, 13.7, 15.6, 17.6, -2],    "root": 0, "pure": 0, "globalOffset": 0 },
@@ -122,7 +122,7 @@ MuseScore {
             { "id": "a22",      "name": "Rakb",                                 "offsets": [0, 2, 3.9, -15.6, -13.7, -33.2, 58.9, 11.7, 13.7, 43.3, -3.9, -2],    "root": 0, "pure": 0, "globalOffset": 0 },
             { "id": "a23",      "name": "Sikah Baladi",                         "offsets": [0, 2, 3.9, 5.9, -35.2, -33.2, -9.8, 39.4, 41.4, -25.4, -3.9, -2],     "root": 0, "pure": 0, "globalOffset": 0 },
             { "id": "a24",      "name": "Iraq (Cadence)",                       "offsets": [0, 2, 3.9, 5.9, -56.7, -33.2, -31.3, -7.8, 13.7, -5.9, -23.5, -2],    "root": 0, "pure": 0, "globalOffset": 0 },
-            
+
             { "id": "separatorLine", "name": qsTr("Custom tunings") },
             { "id": "c01",      "name": qsTr("Custom 1"),   "offsets": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "root": 0,  "pure": 0, "globalOffset": 0 },
             { "id": "c02",      "name": qsTr("Custom 2"),   "offsets": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "root": 0,  "pure": 0, "globalOffset": 0 },
@@ -256,6 +256,7 @@ MuseScore {
                     var note = chord.notes[j]
                     var text = newElement(Element.TEXT) // This adds the text to the note: Better for grace notes and easier to remove
                     text.text = note.tuning.toString()
+                    text.subStyle = Tid.STAFF // inherit staff text behaviour
                     text.fontSize *= curScore.style.value("smallNoteMag")
                                      // * (chord.noteType != NoteType.NORMAL ? curScore.style.value("graceNoteMag") : 1)
                     if (above) {
@@ -562,7 +563,7 @@ MuseScore {
                         spacing: 8
                         MU.FlatButton {
                             id: saveButton
-                            text: qsTranslate("PrefsDialogBase", "Save") 
+                            text: qsTranslate("PrefsDialogBase", "Save")
                             Layout.preferredWidth: 100
                             enabled: root.saveIsAvailable
                             onClicked: {
