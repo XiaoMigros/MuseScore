@@ -41,6 +41,9 @@ MTrack::MTrack(const MTrack& other)
     , isDivisionInTps(other.isDivisionInTps)
     , hadInitialNotes(other.hadInitialNotes)
     , volumes(other.volumes)
+    , pans(other.pans)
+    , reverbs(other.reverbs)
+    , choruses(other.choruses)
     , chords(other.chords)
 {
     updateTupletsFromChords();
@@ -58,6 +61,9 @@ MTrack& MTrack::operator=(MTrack other)
     std::swap(isDivisionInTps, other.isDivisionInTps);
     std::swap(hadInitialNotes, other.hadInitialNotes);
     std::swap(volumes, other.volumes);
+    std::swap(pans, other.pans);
+    std::swap(reverbs, other.reverbs);
+    std::swap(choruses, other.choruses);
     std::swap(chords, other.chords);
     updateTupletsFromChords();
 

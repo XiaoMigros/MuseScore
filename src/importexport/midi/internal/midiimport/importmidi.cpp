@@ -757,6 +757,12 @@ std::multimap<int, MTrack> createMTrackList(TimeSigMap* sigmap, const MidiFile* 
                                 .value_or(GM1Program::AcousticGrandPiano);
             } else if (e.type() == ME_CONTROLLER && e.controller() == CTRL_VOLUME) {
                 track.volumes.insert({ tick, e.value() });
+            } else if (e.type() == ME_CONTROLLER && e.controller() == CTRL_PANPOT) {
+                track.pans.insert({ tick, e.value() });
+            } else if (e.type() == ME_CONTROLLER && e.controller() == CTRL_REVERB_SEND) {
+                track.reverbs.insert({ tick, e.value() });
+            } else if (e.type() == ME_CONTROLLER && e.controller() == CTRL_CHORUS_SEND) {
+                track.choruses.insert({ tick, e.value() });
             }
         }
         if (hasNotes) {
