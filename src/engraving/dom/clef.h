@@ -20,21 +20,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_CLEF_H
-#define MU_ENGRAVING_CLEF_H
-
-/**
- \file
- Definition of classes Clef
-*/
+#pragma once
 
 #include "engravingitem.h"
 
 namespace mu::engraving {
 class Factory;
 class Segment;
-
-static const int NO_CLEF = -1000;
 
 //---------------------------------------------------------
 //   ClefTypeList
@@ -134,6 +126,11 @@ public:
     bool setProperty(Pid propertyId, const PropertyValue&) override;
     PropertyValue propertyDefault(Pid id) const override;
 
+    virtual bool allowTimeAnchor() const override;
+    bool isMovable() const override { return allowTimeAnchor(); }
+    void startDrag(EditData& ed) override;
+    RectF drag(EditData& ed) override;
+
     EngravingItem* nextSegmentElement() override;
     EngravingItem* prevSegmentElement() override;
     String accessibleInfo() const override;
@@ -177,4 +174,3 @@ private:
     ClefTypeList m_clefTypes = ClefType::INVALID;
 };
 } // namespace mu::engraving
-#endif

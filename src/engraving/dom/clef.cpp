@@ -34,6 +34,7 @@
 #include "../types/typesconv.h"
 
 #include "ambitus.h"
+#include "anchors.h"
 #include "factory.h"
 #include "measure.h"
 #include "score.h"
@@ -378,6 +379,24 @@ void Clef::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps)
 bool Clef::isMidMeasureClef() const
 {
     return segment() && segment()->rtick().isNotZero();
+}
+
+bool Clef::allowTimeAnchor() const
+{
+    return segment() && !m_isHeader;
+}
+
+void Clef::startDrag(EditData&)
+{
+}
+
+RectF Clef::drag(EditData& ed)
+{
+    const RectF result(canvasBoundingRect());
+
+    MoveElementAnchors::moveElementAnchorsOnDrag(this, ed);
+
+    return canvasBoundingRect().united(result);
 }
 
 void Clef::manageExclusionFromParts(bool exclude)
