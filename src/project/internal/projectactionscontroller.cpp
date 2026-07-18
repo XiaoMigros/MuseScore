@@ -1072,16 +1072,6 @@ bool ProjectActionsController::saveProjectToCloud(CloudProjectInfo info, SaveMod
             }
         }
     }
-
-    if (isCloudAvailable) {
-        RetVal<bool> need = needGenerateAudio(isPublic);
-        if (!need.ret) {
-            return false;
-        }
-
-        generateAudio = need.val;
-    }
-
     // TODO(cloud): is this correct for all save modes?
     project->setCloudInfo(info);
 
@@ -1108,11 +1098,28 @@ bool ProjectActionsController::saveProjectToCloud(CloudProjectInfo info, SaveMod
     }
 
     AudioFile audio;
+    if (isCloudAvailable) {
+        if (!info.customAudioPath.isEmpty()) {
+            audio.format = "mp3";
+            audio.device = new QFile(info.customAudioPath);
+            audio.device->seek(0);
+            if (!audio.isValid()) {
+                return false;
+            }
+        } else {
+            RetVal<bool> need = needGenerateAudio(isPublic);
+            if (!need.ret) {
+                return false;
+            }
 
-    if (generateAudio) {
-        audio = exportMp3(project->masterNotation()->notation());
-        if (!audio.isValid()) {
-            return false;
+            generateAudio = need.val;
+
+            if (generateAudio) {
+                audio = exportMp3(project->masterNotation()->notation());
+                if (!audio.isValid()) {
+                    return false;
+                }
+            }
         }
     }
 

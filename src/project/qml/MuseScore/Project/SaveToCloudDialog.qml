@@ -36,6 +36,7 @@ StyledDialogView {
     property string existingScoreOrAudioUrl
     property bool replaceExisting: true
     property string cloudCode: ""
+    property string customAudioPath: ""
 
     contentWidth: contentItem.implicitWidth
     contentHeight: contentItem.implicitHeight
@@ -229,6 +230,34 @@ StyledDialogView {
 
                         onToggled: {
                             root.replaceExisting = modelData.value
+                        }
+                    }
+                }
+                
+                ColumnLayout {
+                    spacing: 8
+                    
+                    StyledTextLabel {
+                        text: qsTrc("project/save", "Upload custom audio")
+                        Layout.fillWidth: true
+                        horizontalAlignment: Text.AlignLeft
+                    }
+                
+                    FilePicker {
+                        id: styleFilePicker
+                        Layout.fillWidth: true
+
+                        dialogTitle: qsTrc("project/save", "Upload custom audio")
+                        filter: [qstrc("project/save", "MP3 file") + " (*.mp3)"]
+                        //dir: root.fileDirectory
+
+                        //path: root.styleFileImportPath
+
+                        navigation: optionsNavPanel
+
+                        onPathEdited: function(newPath) {
+                            root.customAudioPath = newPath
+                            path = newPath
                         }
                     }
                 }
