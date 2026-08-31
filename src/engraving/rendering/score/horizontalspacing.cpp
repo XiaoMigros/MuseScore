@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 #include <cfloat>
 
 #include "horizontalspacing.h"
+#include "chordbracketlayout.h"
 #include "parenthesislayout.h"
 
 #include "dom/barline.h"
@@ -31,6 +32,7 @@
 #include "dom/engravingitem.h"
 #include "dom/glissando.h"
 #include "dom/lyrics.h"
+#include "dom/measure.h"
 #include "dom/note.h"
 #include "dom/rest.h"
 #include "dom/score.h"
@@ -543,8 +545,8 @@ void HorizontalSpacing::checkLyricsAgainstRightMargin(std::vector<SegmentPositio
 
 double HorizontalSpacing::spaceLyricsAgainstBarlines(Segment* firstSeg, Segment* secondSeg, const HorizontalSpacingContext& ctx)
 {
-    if (!(firstSeg->isType(SegmentType::ChordRest) && secondSeg->isType(SegmentType::BarLineType))
-        && !(firstSeg->isType(SegmentType::BarLineType) && secondSeg->isType(SegmentType::ChordRest))) {
+    if (!(firstSeg->isType(SegmentType::ChordRest) && secondSeg->isType(SegmentType::BarLineTypes))
+        && !(firstSeg->isType(SegmentType::BarLineTypes) && secondSeg->isType(SegmentType::ChordRest))) {
         return 0.0;
     }
 
@@ -588,7 +590,7 @@ double HorizontalSpacing::spaceLyricsAgainstBarlines(Segment* firstSeg, Segment*
                 staff_idx_t lyricsStaffIdx = lyrics->staffIdx();
                 if ((lyricsStaffIdx == staffIdx && lyrics->placeBelow()) || (lyricsStaffIdx == nextStaff && lyrics->placeAbove())) {
                     Shape lyricsShape = lyrics->shape().translate(lyrics->pos());
-                    double minDist = crSegIsBefore ? lyricsShape.right() + barlineShape.left() : lyricsShape.left() + barlineShape.right();
+                    double minDist = crSegIsBefore ? lyricsShape.right() - barlineShape.left() : barlineShape.right() - lyricsShape.left();
                     const double padding = 0.3 * lyrics->fontMetrics().xHeight();
                     minDist += padding;
                     w = std::max(w, minDist);
@@ -1142,7 +1144,7 @@ void HorizontalSpacing::setPositionsAndWidths(const std::vector<SegmentPosition>
         Measure* nextSegMeasure = nextSeg->measure();
 
         bool leadingNonCRException = ((nextSeg->isKeySigType() || nextSeg->isTimeSigType()
-                                       || nextSeg->isClefType()) && !curSeg->isType(SegmentType::BarLineType));
+                                       || nextSeg->isClefType()) && !curSeg->isType(SegmentType::BarLineTypes));
         bool computeWidthByDifferenceFromNext = curSegMeasure == nextSegMeasure || nextSeg->isStartRepeatBarLineType()
                                                 || leadingNonCRException;
 
@@ -1296,7 +1298,7 @@ double HorizontalSpacing::shapeSpatium(const Shape& s)
 
 double HorizontalSpacing::minHorizontalDistance(const Segment* f, const Segment* ns, double squeezeFactor)
 {
-    if (f->segmentType() & SegmentType::BarLineType) {
+    if (f->segmentType() & SegmentType::BarLineTypes) {
         if (ns->isStartRepeatBarLineType()) {
             if (f->isBeginBarLineType()) {
                 return 0.0;
@@ -1335,6 +1337,13 @@ double HorizontalSpacing::minHorizontalDistance(const Segment* f, const Segment*
             // first chordrest of a staff should clear the widest header for any staff
             // so make sure segment is as wide as it needs to be
             d = std::max(d, f->staffShape(staffIdx).right());
+        }
+
+        // Multi-staff ChordBrackets are stored on their owner chords
+        // and are therefore not fully represented in every visually spanned staff Shape.
+        // Add the missing bracket collisions before combining the per-staff minimum distances.
+        if (f->isChordRestType() || ns->isChordRestType()) {
+            ChordBracketLayout::updateHorizontalSpacing(f, ns, staffIdx, squeezeFactor, d);
         }
 
         if (f->isChordRestType() && ns->isChordRestType()) {
@@ -1609,8 +1618,9 @@ void HorizontalSpacing::computeLyricsPadding(const Lyrics* lyrics1, const Engrav
 void HorizontalSpacing::computeChordBracketPadding(const EngravingItem* item1, const ChordBracket* chordBracket, double& padding)
 {
     const Chord* chord = chordBracket->chord();
-    if (chord && chord == item1->findAncestor(ElementType::CHORD)) {
-        // Padding a right-handed chord bracket to its own chord: use the same padding values as the left-handed case
+    const Chord* itemChord = toChord(item1->findAncestor(ElementType::CHORD));
+    if (chord && itemChord && chord->segment() == itemChord->segment() && chord->part() == itemChord->part()) {
+        // Padding a right-handed chord bracket to chords in the same Segment and part: use the same padding values as the left-handed case
         padding = item1->score()->paddingTable().at(ElementType::CHORD_BRACKET).at(item1->type());
     }
 }
@@ -1735,7 +1745,7 @@ KerningType HorizontalSpacing::computeNoteKerningType(const Note* note, const En
         return KerningType::KERN_UNTIL_RIGHT_EDGE;
     }
 
-    EngravingItem* nextParent = item2->parentItem(true);
+    EngravingObject* nextParent = item2->ownershipParent();
     if (nextParent && nextParent->isNote() && toNote(nextParent)->isTrillCueNote()) {
         return KerningType::NON_KERNING;
     }
@@ -1770,16 +1780,16 @@ KerningType HorizontalSpacing::computeNoteKerningType(const Note* note, const En
 
 KerningType HorizontalSpacing::computeStemSlashKerningType(const StemSlash* stemSlash, const EngravingItem* item2)
 {
-    if (!stemSlash->chord() || !stemSlash->chord()->beam() || !item2->parentItem()) {
+    if (!stemSlash->chord() || !stemSlash->chord()->beam() || !item2->ownershipParent()) {
         return KerningType::KERNING;
     }
 
-    EngravingItem* nextParent = item2->parentItem();
+    EngravingObject* nextParent = item2->ownershipParent();
     Chord* nextChord = nullptr;
     if (nextParent->isChord()) {
         nextChord = toChord(nextParent);
     } else if (nextParent->isNote()) {
-        nextChord = toChord(nextParent->parentItem());
+        nextChord = toChord(nextParent->ownershipParent());
     }
     if (!nextChord) {
         return KerningType::KERNING;

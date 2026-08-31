@@ -1,5 +1,6 @@
 #include "gpconverter.h"
 
+#include "engraving/dom/pitchspelling.h"
 #include "translation.h"
 
 #include "gpdommodel.h"
@@ -7,7 +8,8 @@
 #include "engraving/dom/arpeggio.h"
 #include "engraving/dom/bend.h"
 #include "engraving/dom/box.h"
-#include "engraving/dom/bracketItem.h"
+#include "engraving/dom/bracketitem.h"
+#include "engraving/editing/editstaffbrackets.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/chordline.h"
 #include "engraving/dom/clef.h"
@@ -199,7 +201,7 @@ static ContiniousElementsBuilder::ImportType hairpinToImportType(GPBeat::Hairpin
 
 static void setPitchByOttavaType(mu::engraving::Note* note, mu::engraving::OttavaType type)
 {
-    note->setPitch(clampPitch(note->pitch() - ottavaDefault[int(type)].shift, true));
+    note->setPitch(clampPitchOctaved(note->pitch() - ottavaDefault[int(type)].shift));
 }
 
 static std::unordered_map<uint64_t, mu::engraving::StringData> stringDatas;
@@ -268,6 +270,7 @@ void GPConverter::convertGP()
     clearDefectedSpanner();
     fixPercussion();
     addCapos();
+    utils::addPlayCountTexts(_score);
 }
 
 void GPConverter::fixPercussion()
@@ -308,7 +311,7 @@ void GPConverter::fillTuplet()
     Tuplet* tuplet = m_nextTupletInfo.tuplet;
     ChordRest* firstCr = m_nextTupletInfo.elements.front();
     tuplet->setTrack(firstCr->track());
-    tuplet->setParent(firstCr->measure());
+    tuplet->setOwnershipParent(firstCr->measure());
     tuplet->setTick(firstCr->tick());
     tuplet->setBaseLen(Fraction(1, m_nextTupletInfo.lowestBase));
     tuplet->setTicks(m_nextTupletInfo.duration);
@@ -343,7 +346,7 @@ void GPConverter::convert(const std::vector<std::unique_ptr<GPMasterBar> >& mast
 
     addTempoMap();
     addInstrumentChanges();
-    m_guitarBendImporter->applyBendsToChords();
+    m_guitarBendImporter->addElementsToScore();
 
     addFermatas();
     addContinuousSlideHammerOn();
@@ -664,6 +667,7 @@ void GPConverter::convertNotes(const std::vector<std::shared_ptr<GPNote> >& note
     if (cr->isChord()) {
         Chord* ch = toChord(cr);
         ch->sortNotes();
+        mu::iex::guitarpro::utils::createGhostNoteParenGroups(ch);
     }
 }
 
@@ -1008,12 +1012,12 @@ void GPConverter::setUpGPScore(const GPScore* gpscore)
 
     MeasureBase* m = nullptr;
     if (!_score->measures()->first()) {
-        m = Factory::createTitleVBox(_score->dummy()->system());
+        m = Factory::createTitleVBox(_score);
         _score->measures()->append(m);
     } else {
         m = _score->measures()->first();
         if (!m->isVBox()) {
-            MeasureBase* mb = Factory::createTitleVBox(_score->dummy()->system());
+            MeasureBase* mb = Factory::createTitleVBox(_score);
             _score->addMeasure(mb, m);
             m = mb;
         }
@@ -1089,7 +1093,8 @@ void GPConverter::setUpTrack(const std::unique_ptr<GPTrack>& tR)
     }
 
     if (tR->staffCount() > 1) {
-        part->staff(0)->addBracket(mu::engraving::Factory::createBracketItem(_score->dummy(), BracketType::BRACE, 2));
+        EditStaffBrackets::addBracket(_score, part->staff(0)->idx(),
+                                      mu::engraving::Factory::createBracketItem(_score->dummy(), BracketType::BRACE, 2));
         part->staff(0)->setBarLineSpan(true);
     }
 
@@ -1267,7 +1272,15 @@ void GPConverter::addContinuousSlideHammerOn()
             }
 
             if (nextCr->isChord() && !toChord(nextCr)->graceNotes().empty()) {
-                nextCr = toChord(nextCr)->graceNotes().front();
+                Chord* firstGrace = toChord(nextCr)->graceNotes().front();
+                bool isDiveGrace = false;
+                if (!firstGrace->notes().empty()) {
+                    Note* gn = firstGrace->notes().front();
+                    isDiveGrace = gn->ghost() || gn->diveFor() || gn->diveBack();
+                }
+                if (!isDiveGrace) {
+                    nextCr = firstGrace;
+                }
             }
         }
 
@@ -1305,6 +1318,10 @@ void GPConverter::addContinuousSlideHammerOn()
             GuitarBend* bend = bendNote->bendFor();
 
             while (bend) {
+                if (bend->isDive()) {
+                    break;
+                }
+
                 bendNote = bend->endNote();
                 IF_ASSERT_FAILED(bendNote) {
                     LOGE() << "glissando start note may be incorrect";
@@ -1331,13 +1348,12 @@ void GPConverter::addContinuousSlideHammerOn()
         /// Layout info
         if (slide.second == SlideHammerOn::LegatoSlide || slide.second == SlideHammerOn::Slide) {
             Glissando* gl = mu::engraving::Factory::createGlissando(_score->dummy());
-            gl->setAnchor(Spanner::Anchor::NOTE);
             gl->setStartElement(startNote);
             gl->setTrack(track);
             gl->setTick(startTick);
             gl->setTick2(endNote->chord()->tick());
             gl->setEndElement(endNote);
-            gl->setParent(startNote);
+            gl->setOwnershipParent(startNote);
             gl->setText(u"");
             gl->setGlissandoType(GlissandoType::STRAIGHT);
             gl->setGlissandoShift(slide.second == SlideHammerOn::Slide);
@@ -1488,7 +1504,6 @@ void GPConverter::addTempoMap()
             tt->setXmlText(tempoText);
             tt->setTrack(0);
             segment->add(tt);
-            _score->setTempo(tick, tt->tempo());
 
             if (_lastGradualTempoChange) {
                 _lastGradualTempoChange->setTick2(tick);
@@ -1689,7 +1704,7 @@ void GPConverter::addClef(const GPBar* bar, int curTrack)
 Measure* GPConverter::addMeasure(const GPMasterBar* mB)
 {
     Fraction tick = _score->measures()->last() ? _score->measures()->last()->endTick() : Fraction(0, 1);
-    Measure* measure = Factory::createMeasure(_score->dummy()->system());
+    Measure* measure = Factory::createMeasure(_score);
     measure->setTick(tick);
     GPMasterBar::TimeSig sig = mB->timeSig();
     auto scoreTimeSig = Fraction(sig.numerator, sig.denominator);
@@ -1996,6 +2011,63 @@ void GPConverter::collectHammerOn(const GPNote* gpnote, Note* note)
     }
 }
 
+static mu::engraving::PitchValues gpBendCurveToPitchValues(const GPNote::Bend& b)
+{
+    using namespace mu::engraving;
+
+    auto gpTimeToMuTime = [] (float time) {
+        return time * PitchValue::MAX_TIME / 100;
+    };
+
+    //! NOTE: In GPX format, -1 means "not set". Normalize to sensible defaults.
+    const float originOffset = std::max(0.f, b.originOffset);
+    const float destOffset = std::max(0.f, b.destinationOffset);
+    const bool hasMiddleValue = (b.middleValue != -1) && !(b.middleOffset1 == 12 && b.middleOffset2 == 12);
+
+    PitchValues pitchValues;
+
+    pitchValues.push_back(PitchValue(gpTimeToMuTime(originOffset), b.originValue));
+    PitchValue lastPoint = pitchValues.back();
+
+    if (hasMiddleValue) {
+        if (PitchValue value(gpTimeToMuTime(b.middleOffset1), b.middleValue);
+            b.middleOffset1 >= 0 && b.middleOffset1 < destOffset && value != lastPoint) {
+            pitchValues.push_back(std::move(value));
+        }
+
+        if (PitchValue value(gpTimeToMuTime(b.middleOffset2), b.middleValue);
+            b.middleOffset2 >= 0 && b.middleOffset2 != b.middleOffset1
+            && b.middleOffset2 < destOffset
+            && value != lastPoint) {
+            pitchValues.push_back(std::move(value));
+        }
+
+        if (b.middleOffset1 == -1 && b.middleOffset2 == -1 && b.middleValue != -1) {
+            //!@NOTE It seems when middle point is places exactly in the middle
+            //!of bend  GP6 stores this value equal -1
+            if (destOffset > 50) {
+                pitchValues.push_back(PitchValue(gpTimeToMuTime(50), b.middleValue));
+            }
+        }
+    }
+
+    if (b.destinationOffset <= 0) {
+        if (hasMiddleValue) {
+            PitchValue fixGpxValue = PitchValue(gpTimeToMuTime(50), b.middleValue);
+            if (b.middleValue > b.destinationValue && pitchValues.back() != fixGpxValue) {
+                pitchValues.push_back(fixGpxValue);
+            }
+        }
+        pitchValues.push_back(PitchValue(gpTimeToMuTime(100), b.destinationValue)); //! In .gpx this value might be exist
+    } else {
+        if (PitchValue value(gpTimeToMuTime(destOffset), b.destinationValue); value != pitchValues.back()) {
+            pitchValues.push_back(std::move(value));
+        }
+    }
+
+    return pitchValues;
+}
+
 void GPConverter::addBend(const GPNote* gpnote, Note* note)
 {
     if (!gpnote->bend() || gpnote->bend()->isEmpty()) {
@@ -2004,55 +2076,7 @@ void GPConverter::addBend(const GPNote* gpnote, Note* note)
 
     using namespace mu::engraving;
 
-    auto gpTimeToMuTime = [] (float time) {
-        return time * PitchValue::MAX_TIME / 100;
-    };
-
-    const GPNote::Bend* gpBend = gpnote->bend();
-
-    bool bendHasMiddleValue = true;
-    if (gpBend->middleOffset1 == 12 && gpBend->middleOffset2 == 12) {
-        bendHasMiddleValue = false;
-    }
-
-    PitchValues pitchValues;
-
-    pitchValues.push_back(PitchValue(gpTimeToMuTime(gpBend->originOffset), gpBend->originValue));
-    PitchValue lastPoint = pitchValues.back();
-
-    if (bendHasMiddleValue) {
-        if (PitchValue value(gpTimeToMuTime(gpBend->middleOffset1), gpBend->middleValue);
-            gpBend->middleOffset1 >= 0 && gpBend->middleOffset1 < gpBend->destinationOffset && value != lastPoint) {
-            pitchValues.push_back(std::move(value));
-        }
-
-        if (PitchValue value(gpTimeToMuTime(gpBend->middleOffset2), gpBend->middleValue);
-            gpBend->middleOffset2 >= 0 && gpBend->middleOffset2 != gpBend->middleOffset1
-            && gpBend->middleOffset2 < gpBend->destinationOffset
-            && value != lastPoint) {
-            pitchValues.push_back(std::move(value));
-        }
-
-        if (gpBend->middleOffset1 == -1 && gpBend->middleOffset2 == -1 && gpBend->middleValue != -1) {
-            //!@NOTE It seems when middle point is places exactly in the middle
-            //!of bend  GP6 stores this value equal -1
-            if (gpBend->destinationOffset > 50) {
-                pitchValues.push_back(PitchValue(gpTimeToMuTime(50), gpBend->middleValue));
-            }
-        }
-    }
-
-    if (gpBend->destinationOffset <= 0) {
-        PitchValue fixGpxValue = PitchValue(gpTimeToMuTime(50), gpBend->middleValue);
-        if (gpBend->middleValue > gpBend->destinationValue && pitchValues.back() != fixGpxValue) {
-            pitchValues.push_back(fixGpxValue);
-        }
-        pitchValues.push_back(PitchValue(gpTimeToMuTime(100), gpBend->destinationValue)); //! In .gpx this value might be exist
-    } else {
-        if (PitchValue value(gpTimeToMuTime(gpBend->destinationOffset), gpBend->destinationValue); value != lastPoint) {
-            pitchValues.push_back(std::move(value));
-        }
-    }
+    PitchValues pitchValues = gpBendCurveToPitchValues(*gpnote->bend());
 
     if (pitchValues.size() < 2) {
         return;
@@ -2351,8 +2375,27 @@ void GPConverter::addPalmMute(const GPBeat* gpbeat, ChordRest* cr)
 
 void GPConverter::addDive(const GPBeat* beat, ChordRest* cr)
 {
-    m_continiousElementsBuilder->buildContiniousElement(cr, ElementType::WHAMMY_BAR, ContiniousElementsBuilder::ImportType::WHAMMY_BAR,
-                                                        beat->dive());
+    if (!beat->hasWhammy() || !cr->isChord()) {
+        return;
+    }
+
+    //! GPX reuses the same GPBeat pointer for multiple beat positions — treat as hold.
+    const track_idx_t track = cr->track();
+    PitchValues pitchValues;
+    if (m_lastWhammyBeat[track] == beat && beat->whammy().destinationValue != 0) {
+        const float holdValue = beat->whammy().destinationValue;
+        pitchValues.push_back(PitchValue(0, holdValue));
+        pitchValues.push_back(PitchValue(PitchValue::MAX_TIME, holdValue));
+    } else {
+        pitchValues = gpBendCurveToPitchValues(beat->whammy());
+    }
+    m_lastWhammyBeat[track] = beat;
+
+    if (pitchValues.size() < 2) {
+        return;
+    }
+
+    m_guitarBendImporter->collectDive(toChord(cr), pitchValues);
 }
 
 void GPConverter::addPickScrape(const GPBeat* beat, ChordRest* cr)
@@ -2421,7 +2464,7 @@ void GPConverter::addFretDiagram(const GPBeat* gpnote, ChordRest* cr, const Cont
     if (asHarmony) {
         Harmony* h = Factory::createHarmony(cr->segment());
         h->setTrack(cr->track());
-        h->setParent(cr->segment());
+        h->setOwnershipParent(cr->segment());
         h->setHarmonyType(HarmonyType::STANDARD);
         h->setHarmony(diagram.name); // F#dim7
         h->setPlainText(h->harmonyName());
@@ -2538,7 +2581,7 @@ void GPConverter::addTimer(const GPBeat* beat, ChordRest* cr)
     st->setPlainText(String::number(minutes)
                      + u':'
                      + (seconds < 10 ? u'0' + String::number(seconds) : String::number(seconds)));
-    st->setParent(cr->segment());
+    st->setOwnershipParent(cr->segment());
     st->setTrack(cr->track());
     cr->segment()->add(st);
 }
@@ -3010,7 +3053,7 @@ void GPConverter::addTuning()
             StringTunings* tun = Factory::createStringTunings(seg);
             tun->setStringData(sd);
             tun->setTrack(staff2track(s->idx()));
-            tun->setParent(seg);
+            tun->setOwnershipParent(seg);
             seg->add(tun);
         }
     }

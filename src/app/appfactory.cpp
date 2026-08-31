@@ -15,6 +15,8 @@
 #endif
 
 #include "framework/actions/actionsmodule.h"
+#include "framework/rcommand/rcommandmodule.h"
+#include "framework/rcontrol/rcontrolmodule.h"
 
 #ifdef MUSE_MODULE_AUDIO
 #include "framework/audio/main/audiomodule.h"
@@ -48,6 +50,12 @@
 #include "framework/learn/learnmodule.h"
 #else
 #include "framework/stubs/learn/learnmodule.h"
+#endif
+
+#ifdef MUSE_MODULE_MEDIA
+#include "framework/media/mediamodule.h"
+#else
+#include "framework/stubs/media/mediastubmodule.h"
 #endif
 
 #ifdef MUSE_MODULE_MIDI
@@ -88,6 +96,10 @@
 #include "framework/shortcuts/shortcutsmodule.h"
 #else
 #include "framework/stubs/shortcuts/shortcutsstubmodule.h"
+#endif
+
+#ifdef MUSE_MODULE_TOAST
+#include "framework/toast/toastmodule.h"
 #endif
 
 #ifdef MUSE_MODULE_TOURS
@@ -190,6 +202,9 @@
 #else
 #include "stubs/importexport/musicxml/musicxmlmodule.h"
 #endif
+#ifdef MUE_BUILD_IMPEXP_FINALE_MODULE
+#include "importexport/finale/finalemodule.h"
+#endif
 #ifdef MUE_BUILD_IMPEXP_OVE_MODULE
 #include "importexport/ove/ovemodule.h"
 #else
@@ -220,7 +235,7 @@
 #include "importexport/lyricsexport/lyricsexportmodule.h"
 #endif
 
-#include "inspector/inspectormodule.h"
+#include "propertiespanel/propertiespanelmodule.h"
 
 #ifdef MUE_BUILD_INSTRUMENTSSCENE_MODULE
 #include "instrumentsscene/instrumentsscenemodule.h"
@@ -305,6 +320,8 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const std::shared_ptr<
     // framework
     app->addModule(new muse::accessibility::AccessibilityModule());
     app->addModule(new muse::actions::ActionsModule());
+    app->addModule(new muse::rcommand::RCommandModule());
+    app->addModule(new muse::rcontrol::RControlModule());
     app->addModule(new muse::audio::AudioModule());
 #ifdef MUSE_MODULE_AUDIOPLUGINS
     app->addModule(new muse::audioplugins::AudioPluginsModule());
@@ -342,8 +359,12 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const std::shared_ptr<
 #ifdef MUSE_MODULE_DOCKWINDOW
     app->addModule(new muse::dock::DockModule());
 #endif
+#ifdef MUSE_MODULE_TOAST
+    app->addModule(new muse::toast::ToastModule());
+#endif
     app->addModule(new muse::tours::ToursModule());
     app->addModule(new muse::vst::VSTModule());
+    app->addModule(new muse::media::MediaModule());
 
 // modules
 #ifdef MUE_BUILD_APPSHELL_MODULE
@@ -384,6 +405,9 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const std::shared_ptr<
 #endif
     app->addModule(new mu::iex::musicxml::MusicXmlModule());
     app->addModule(new mu::iex::ove::OveModule());
+#ifdef MUE_BUILD_IMPEXP_FINALE_MODULE
+    app->addModule(new mu::iex::finale::FinaleModule());
+#endif
 #ifdef MUE_BUILD_IMPEXP_AUDIOEXPORT_MODULE
     app->addModule(new mu::iex::audioexport::AudioExportModule());
 #endif
@@ -404,7 +428,7 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const std::shared_ptr<
     app->addModule(new mu::iex::lrcexport::LyricsExportModule());
 #endif
 
-    app->addModule(new mu::inspector::InspectorModule());
+    app->addModule(new mu::propertiespanel::PropertiesPanelModule());
     app->addModule(new mu::instrumentsscene::InstrumentsSceneModule());
     app->addModule(new muse::extensions::ExtensionsModule());
     app->addModule(new muse::languages::LanguagesModule());
@@ -445,6 +469,8 @@ static void addConsoleModules(std::shared_ptr<MuseScoreConsoleApp> app)
 
     // framework
     app->addModule(new muse::actions::ActionsModule());
+    app->addModule(new muse::rcommand::RCommandModule());
+    app->addModule(new muse::rcontrol::RControlModule());
     app->addModule(new muse::audio::AudioModule());
 #ifdef MUSE_MODULE_AUDIOPLUGINS
     app->addModule(new muse::audioplugins::AudioPluginsModule());
@@ -506,6 +532,9 @@ static void addConsoleModules(std::shared_ptr<MuseScoreConsoleApp> app)
 #endif
     app->addModule(new mu::iex::musicxml::MusicXmlModule());
     app->addModule(new mu::iex::ove::OveModule());
+#ifdef MUE_BUILD_IMPEXP_FINALE_MODULE
+    app->addModule(new mu::iex::finale::FinaleModule());
+#endif
 #ifdef MUE_BUILD_IMPEXP_AUDIOEXPORT_MODULE
     app->addModule(new mu::iex::audioexport::AudioExportModule());
 #endif

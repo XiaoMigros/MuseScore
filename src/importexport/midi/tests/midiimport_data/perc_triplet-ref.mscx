@@ -21,8 +21,9 @@
     <metaTag name="workNumber"></metaTag>
     <metaTag name="workTitle"></metaTag>
     <Part id="1">
+      <eid>C_C</eid>
       <Staff>
-        <eid>C_C</eid>
+        <eid>D_D</eid>
         <StaffType group="percussion">
           <name>perc5Line</name>
           <keysig>0</keysig>
@@ -310,25 +311,19 @@
       </Part>
     <Staff id="1">
       <Measure>
-        <eid>D_D</eid>
+        <eid>E_E</eid>
         <voice>
           <TimeSig>
-            <eid>E_E</eid>
+            <eid>F_F</eid>
             <sigN>4</sigN>
             <sigD>4</sigD>
             </TimeSig>
-          <Chord>
-            <eid>F_F</eid>
-            <durationType>quarter</durationType>
-            <StemDirection>up</StemDirection>
-            <Note>
-              <eid>G_G</eid>
-              <pitch>51</pitch>
-              <tpc>11</tpc>
-              <head>cross</head>
-              <velocity>127</velocity>
-              </Note>
-            </Chord>
+          <Tempo>
+            <tempo>1.666667</tempo>
+            <eid>G_G</eid>
+            <visible>0</visible>
+            <text><sym>metNoteQuarterUp</sym> = 100</text>
+            </Tempo>
           <Chord>
             <eid>H_H</eid>
             <durationType>quarter</durationType>
@@ -341,8 +336,20 @@
               <velocity>127</velocity>
               </Note>
             </Chord>
-          <Tuplet>
+          <Chord>
             <eid>J_J</eid>
+            <durationType>quarter</durationType>
+            <StemDirection>up</StemDirection>
+            <Note>
+              <eid>K_K</eid>
+              <pitch>51</pitch>
+              <tpc>11</tpc>
+              <head>cross</head>
+              <velocity>127</velocity>
+              </Note>
+            </Chord>
+          <Tuplet>
+            <eid>L_L</eid>
             <normalNotes>2</normalNotes>
             <actualNotes>3</actualNotes>
             <baseNote>eighth</baseNote>
@@ -352,20 +359,8 @@
               </Number>
             </Tuplet>
           <Chord>
-            <eid>K_K</eid>
-            <durationType>quarter</durationType>
-            <StemDirection>up</StemDirection>
-            <Note>
-              <eid>L_L</eid>
-              <pitch>51</pitch>
-              <tpc>11</tpc>
-              <head>cross</head>
-              <velocity>127</velocity>
-              </Note>
-            </Chord>
-          <Chord>
             <eid>M_M</eid>
-            <durationType>eighth</durationType>
+            <durationType>quarter</durationType>
             <StemDirection>up</StemDirection>
             <Note>
               <eid>N_N</eid>
@@ -375,13 +370,25 @@
               <velocity>127</velocity>
               </Note>
             </Chord>
-          <endTuplet/>
           <Chord>
             <eid>O_O</eid>
-            <durationType>quarter</durationType>
+            <durationType>eighth</durationType>
             <StemDirection>up</StemDirection>
             <Note>
               <eid>P_P</eid>
+              <pitch>51</pitch>
+              <tpc>11</tpc>
+              <head>cross</head>
+              <velocity>127</velocity>
+              </Note>
+            </Chord>
+          <endTuplet/>
+          <Chord>
+            <eid>Q_Q</eid>
+            <durationType>quarter</durationType>
+            <StemDirection>up</StemDirection>
+            <Note>
+              <eid>R_R</eid>
               <pitch>51</pitch>
               <tpc>11</tpc>
               <head>cross</head>

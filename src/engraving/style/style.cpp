@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -187,6 +187,9 @@ bool MStyle::readProperties(XmlReader& e)
             case P_TYPE::ORIENTATION:
                 set(idx, TConv::fromXml(e.readAsciiText(), Orientation::HORIZONTAL));
                 break;
+            case P_TYPE::SHARED_LABEL_ORIENTATION:
+                set(idx, TConv::fromXml(e.readAsciiText(), SharedLabelOrientation::HORIZONTAL));
+                break;
             case P_TYPE::HOOK_TYPE:
                 set(idx, HookType(e.readText().toInt()));
                 break;
@@ -246,6 +249,9 @@ bool MStyle::readProperties(XmlReader& e)
                 break;
             case P_TYPE::INSTRUMENT_NAMES_FORMAT:
                 set(idx, TConv::fromXml(e.readAsciiText(), InstrumentNamesFormat::NAME_IN_TRANSP_NUM));
+                break;
+            case P_TYPE::AUTO_ON_OFF:
+                set(idx, TConv::fromXml(e.readAsciiText(), AutoOnOff::AUTO));
                 break;
             default:
                 ASSERT_X(u"unhandled type " + String::number(int(type)));
@@ -331,6 +337,83 @@ bool MStyle::readTextStyleValCompat(XmlReader& e)
 
     set(sid, int(newFontStyle));
     return true;
+}
+
+void MStyle::applyCompatStyleVals(int mscVersion)
+{
+    if (mscVersion < 500) {
+        set(Sid::windsNameByGroup, false);
+        set(Sid::vocalsNameByGroup, false);
+        set(Sid::maskSlurs, false);
+        set(Sid::maskTies, false);
+
+        set(Sid::dashBarWidth, value(Sid::barWidth));
+    }
+
+    if (mscVersion < 470) {
+        set(Sid::dividerLeftAlignToSystemBarline, false);
+        set(Sid::dividerRightAlignToSystemBarline, false);
+
+        // Musical symbol size
+        compat::CompatUtils::setMusicSymbolSize470(*this);
+
+        // Make sure new position styles are initially the same as align values
+        // Exclude text styles which had align & position separated in 4.6
+        compat::CompatUtils::setPositionStylesFromAlign(this, { Sid::chordSymbolAAlign, Sid::chordSymbolBAlign, Sid::romanNumeralAlign,
+                                                                Sid::nashvilleNumberAlign, Sid::repeatLeftAlign, Sid::repeatRightAlign });
+
+        if (value(Sid::chordStyle).value<ChordStylePreset>() == ChordStylePreset::JAZZ) {
+            set(Sid::harmonyParenUseSmuflSym, true);
+        }
+    }
+
+    if (mscVersion < 460) {
+        bool verticalChordAlign = value(Sid::maxChordShiftAbove).value<Spatium>() != 0.0_sp
+                                  || value(Sid::maxChordShiftBelow).value<Spatium>() != 0.0_sp
+                                  || value(Sid::maxFretShiftAbove).value<Spatium>() != 0.0_sp
+                                  || value(Sid::maxFretShiftBelow).value<Spatium>() != 0.0_sp;
+        set(Sid::verticallyAlignChordSymbols, verticalChordAlign);
+        // Make sure new position styles are initially the same as align values
+        compat::CompatUtils::setPositionStylesFromAlign(this);
+
+        if (value(Sid::measureNumberPosition).value<AlignH>() == AlignH::HCENTER) {
+            set(Sid::measureNumberHPlacement, AlignH::HCENTER);
+        }
+
+        if (value(Sid::pedalPlacement).value<PlacementV>() == PlacementV::BELOW
+            && value(Sid::pedalHookHeight).value<Spatium>().val() < 0) {
+            set(Sid::pedalHookHeight, -value(Sid::pedalHookHeight).value<Spatium>());
+        }
+        if (value(Sid::ottavaHookBelow).value<Spatium>().val() < 0) {
+            set(Sid::ottavaHookBelow, -value(Sid::ottavaHookBelow).value<Spatium>());
+        }
+        set(Sid::repeatPlayCountShow, false);
+
+        set(Sid::harmonyHarmonyDistance, value(Sid::minHarmonyDistance));
+    }
+
+    if (mscVersion == 450) {
+        // 450 spacing was a bit narrower
+        set(Sid::spacingDensity, 1.30);
+    }
+
+    if (mscVersion < 450) {
+        // Didn't exist before 4.5. Default to false for compatibility.
+        set(Sid::scaleRythmicSpacingForSmallNotes, false);
+        set(Sid::maskBarlinesForText, false);
+        set(Sid::showCourtesiesRepeats, false);
+        set(Sid::showCourtesiesOtherJumps, false);
+        set(Sid::showCourtesiesAfterCancellingRepeats, false);
+        set(Sid::showCourtesiesAfterCancellingOtherJumps, false);
+        set(Sid::changesBeforeBarlineRepeats, false);
+        set(Sid::changesBeforeBarlineOtherJumps, false);
+    }
+
+    if (mscVersion < 420 && !MScore::testMode) {
+        // This style didn't exist before version 4.2. For files older than 4.2, defaults
+        // to INSIDE for compatibility. For files 4.2 and newer, defaults to OUTSIDE.
+        set(Sid::tiePlacementChord, TiePlacement::INSIDE);
+    }
 }
 
 bool MStyle::read(IODevice* device, bool ign)
@@ -645,75 +728,7 @@ void MStyle::read(XmlReader& e, compat::ReadChordListHook* readChordListHook, in
         }
     }
 
-    if (mscVersion < 500) {
-        set(Sid::windsNameByGroup, false);
-        set(Sid::vocalsNameByGroup, false);
-    }
-
-    if (mscVersion < 470) {
-        set(Sid::dividerLeftAlignToSystemBarline, false);
-        set(Sid::dividerRightAlignToSystemBarline, false);
-
-        // Musical symbol size
-        compat::CompatUtils::setMusicSymbolSize470(*this);
-
-        // Make sure new position styles are initially the same as align values
-        // Exclude text styles which had align & position separated in 4.6
-        compat::CompatUtils::setPositionStylesFromAlign(this, { Sid::chordSymbolAAlign, Sid::chordSymbolBAlign, Sid::romanNumeralAlign,
-                                                                Sid::nashvilleNumberAlign, Sid::repeatLeftAlign, Sid::repeatRightAlign });
-
-        if (value(Sid::chordStyle).value<ChordStylePreset>() == ChordStylePreset::JAZZ) {
-            set(Sid::harmonyParenUseSmuflSym, true);
-        }
-    }
-
-    if (mscVersion < 460) {
-        bool verticalChordAlign = value(Sid::maxChordShiftAbove).value<Spatium>() != 0.0_sp
-                                  || value(Sid::maxChordShiftBelow).value<Spatium>() != 0.0_sp
-                                  || value(Sid::maxFretShiftAbove).value<Spatium>() != 0.0_sp
-                                  || value(Sid::maxFretShiftBelow).value<Spatium>() != 0.0_sp;
-        set(Sid::verticallyAlignChordSymbols, verticalChordAlign);
-        // Make sure new position styles are initially the same as align values
-        compat::CompatUtils::setPositionStylesFromAlign(this);
-
-        if (value(Sid::measureNumberPosition).value<AlignH>() == AlignH::HCENTER) {
-            set(Sid::measureNumberHPlacement, AlignH::HCENTER);
-        }
-
-        if (value(Sid::pedalPlacement).value<PlacementV>() == PlacementV::BELOW
-            && value(Sid::pedalHookHeight).value<Spatium>().val() < 0) {
-            set(Sid::pedalHookHeight, -value(Sid::pedalHookHeight).value<Spatium>());
-        }
-        if (value(Sid::ottavaHookBelow).value<Spatium>().val() < 0) {
-            set(Sid::ottavaHookBelow, -value(Sid::ottavaHookBelow).value<Spatium>());
-        }
-        set(Sid::repeatPlayCountShow, false);
-
-        set(Sid::harmonyHarmonyDistance, value(Sid::minHarmonyDistance));
-    }
-
-    if (mscVersion == 450) {
-        // 450 spacing was a bit narrower
-        set(Sid::spacingDensity, 1.30);
-    }
-
-    if (mscVersion < 450) {
-        // Didn't exist before 4.5. Default to false for compatibility.
-        set(Sid::scaleRythmicSpacingForSmallNotes, false);
-        set(Sid::maskBarlinesForText, false);
-        set(Sid::showCourtesiesRepeats, false);
-        set(Sid::showCourtesiesOtherJumps, false);
-        set(Sid::showCourtesiesAfterCancellingRepeats, false);
-        set(Sid::showCourtesiesAfterCancellingOtherJumps, false);
-        set(Sid::changesBeforeBarlineRepeats, false);
-        set(Sid::changesBeforeBarlineOtherJumps, false);
-    }
-
-    if (mscVersion < 420 && !MScore::testMode) {
-        // This style didn't exist before version 4.2. For files older than 4.2, defaults
-        // to INSIDE for compatibility. For files 4.2 and newer, defaults to OUTSIDE.
-        set(Sid::tiePlacementChord, TiePlacement::INSIDE);
-    }
+    applyCompatStyleVals(mscVersion);
 
     if (readChordListHook) {
         readChordListHook->validate();
@@ -749,6 +764,8 @@ void MStyle::save(XmlWriter& xml, bool optimize)
             xml.tag(st.xmlName, int(value(idx).value<DirectionV>()));
         } else if (P_TYPE::ORIENTATION == type) {
             xml.tag(st.xmlName, TConv::toXml(value(idx).value<Orientation>()));
+        } else if (P_TYPE::SHARED_LABEL_ORIENTATION == type) {
+            xml.tag(st.xmlName, TConv::toXml(value(idx).value<SharedLabelOrientation>()));
         } else if (P_TYPE::ALIGN == type) {
             Align a = value(idx).value<Align>();
             // Don't write if it's the default value
@@ -790,6 +807,8 @@ void MStyle::save(XmlWriter& xml, bool optimize)
             xml.tag(st.xmlName, TConv::toXml(value(idx).value<InstrumentNamesAlign>()));
         } else if (P_TYPE::INSTRUMENT_NAMES_FORMAT == type) {
             xml.tag(st.xmlName, TConv::toXml(value(idx).value<InstrumentNamesFormat>()));
+        } else if (P_TYPE::AUTO_ON_OFF == type) {
+            xml.tag(st.xmlName, TConv::toXml(value(idx).value<AutoOnOff>()));
         } else {
             PropertyValue val = value(idx);
             //! NOTE for compatibility

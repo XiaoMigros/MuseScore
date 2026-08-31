@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -156,6 +156,7 @@ std::vector<int> TConv::fromXml(const String& tag, const std::vector<int>& def)
 String TConv::toXml(const std::vector<string_idx_t>& v)
 {
     std::vector<int> _v;
+    _v.reserve(v.size());
     for (string_idx_t string : v) {
         _v.push_back(static_cast<int>(string));
     }
@@ -166,12 +167,14 @@ String TConv::toXml(const std::vector<string_idx_t>& v)
 std::vector<string_idx_t> TConv::fromXml(const String& tag, const std::vector<string_idx_t>& def)
 {
     std::vector<int> _def;
+    _def.reserve(def.size());
     for (string_idx_t string : def) {
         _def.push_back(static_cast<int>(string));
     }
 
     std::vector<string_idx_t> v;
     std::vector<int> _v = fromXml(tag, _def);
+    v.reserve(_v.size());
 
     for (int string : _v) {
         v.push_back(static_cast<string_idx_t>(string));
@@ -190,6 +193,9 @@ static const std::array ELEMENT_TYPES {
     Item{ ElementType::PART, "Part",
           TranslatableString("engraving", "part(s)", nullptr, 1),
           TranslatableString("engraving", "Part(s)", nullptr, 1) },
+    Item{ ElementType::SHARED_PART, "SharedPart",
+          TranslatableString("engraving", "shared part(s)", nullptr, 1),
+          TranslatableString("engraving", "Shared part(s)", nullptr, 1) },
     Item{ ElementType::STAFF, "Staff",
           TranslatableString("engraving", "staff/staves", nullptr, 1),
           TranslatableString("engraving", "Staff/Staves", nullptr, 1) },
@@ -340,6 +346,9 @@ static const std::array ELEMENT_TYPES {
     Item{ ElementType::STAFF_TEXT, "StaffText",
           TranslatableString("engraving", "staff text(s)", nullptr, 1),
           TranslatableString("engraving", "Staff text(s)", nullptr, 1) },
+    Item{ ElementType::STAVE_SHARING_LABEL, "StaveSharingLabel",
+          TranslatableString("engraving", "stave sharing label(s)", nullptr, 1),
+          TranslatableString("engraving", "Stave sharing label(s)", nullptr, 1) },
     Item{ ElementType::SYSTEM_TEXT, "SystemText",
           TranslatableString("engraving", "system text(s)", nullptr, 1),
           TranslatableString("engraving", "System text(s)", nullptr, 1) },
@@ -487,6 +496,9 @@ static const std::array ELEMENT_TYPES {
     Item{ ElementType::PAGE, "Page",
           TranslatableString("engraving", "page(s)", nullptr, 1),
           TranslatableString("engraving", "Page(s)", nullptr, 1) },
+    Item{ ElementType::PAGE_LOCK_INDICATOR, "pageLockIndicator",
+          TranslatableString("engraving", "page lock(s)", nullptr, 1),
+          TranslatableString("engraving", "Page lock(s)", nullptr, 1) },
     Item{ ElementType::PARENTHESIS, "Parenthesis",
           TranslatableString("engraving", "parenthesis", nullptr, 1),
           TranslatableString("engraving", "Parenthesis", nullptr, 1) },
@@ -1089,6 +1101,27 @@ Orientation TConv::fromXml(const AsciiStringView& tag, Orientation def)
     return findTypeByXmlTag<Orientation>(ORIENTATION, tag, def);
 }
 
+static const std::array<Item<SharedLabelOrientation>, 3> SHARED_LABEL_ORIENTATION = { {
+    { SharedLabelOrientation::VERTICAL,    "vertical",     muse::TranslatableString("engraving", "Vertical") },
+    { SharedLabelOrientation::HORIZONTAL,  "horizontal",   muse::TranslatableString("engraving", "Horizontal") },
+    { SharedLabelOrientation::VOICE,       "voice",        muse::TranslatableString("engraving", "Voice") },
+} };
+
+String TConv::translatedUserName(SharedLabelOrientation v)
+{
+    return findCapitalizedUserNameByType(SHARED_LABEL_ORIENTATION, v).translated();
+}
+
+AsciiStringView TConv::toXml(SharedLabelOrientation v)
+{
+    return findXmlTagByType<SharedLabelOrientation>(SHARED_LABEL_ORIENTATION, v);
+}
+
+SharedLabelOrientation TConv::fromXml(const AsciiStringView& tag, SharedLabelOrientation def)
+{
+    return findTypeByXmlTag<SharedLabelOrientation>(SHARED_LABEL_ORIENTATION, tag, def);
+}
+
 static const std::array<Item<NoteHeadType>, 5> NOTEHEAD_TYPES = { {
     { NoteHeadType::HEAD_AUTO,      "auto",    muse::TranslatableString("engraving", "Auto") },
     { NoteHeadType::HEAD_WHOLE,     "whole",   muse::TranslatableString("engraving/noteheadtype", "Whole") },
@@ -1117,7 +1150,9 @@ static const std::vector<Item<NoteHeadScheme> > NOTEHEAD_SCHEMES = {
     { NoteHeadScheme::HEAD_AUTO,                "auto",              muse::TranslatableString("engraving", "Auto") },
     { NoteHeadScheme::HEAD_NORMAL,              "normal",            muse::TranslatableString("engraving/noteheadscheme", "Normal") },
     { NoteHeadScheme::HEAD_PITCHNAME,           "name-pitch",        muse::TranslatableString("engraving/noteheadscheme", "Pitch names") },
+    { NoteHeadScheme::HEAD_PITCHNAME_NO_ACCIDENTALS, "name-pitch-no-acc", muse::TranslatableString("engraving/noteheadscheme", "Pitch names, no accidentals") },
     { NoteHeadScheme::HEAD_PITCHNAME_GERMAN,    "name-pitch-german", muse::TranslatableString("engraving/noteheadscheme", "German pitch names") },
+    { NoteHeadScheme::HEAD_PITCHNAME_GERMAN_NO_ACCIDENTALS, "name-pitch-german-no-acc", muse::TranslatableString("engraving/noteheadscheme", "German pitch names, no accidentals") },
     { NoteHeadScheme::HEAD_SOLFEGE,             "solfege-movable",   muse::TranslatableString("engraving/noteheadscheme", "Solf\u00e8ge movable Do") },  // &egrave;
     { NoteHeadScheme::HEAD_SOLFEGE_FIXED,       "solfege-fixed",     muse::TranslatableString("engraving/noteheadscheme", "Solf\u00e8ge fixed Do") },    // &egrave;
     { NoteHeadScheme::HEAD_SHAPE_NOTE_4,        "shape-4",           muse::TranslatableString("engraving/noteheadscheme", "4-shape (Walker)") },
@@ -1727,6 +1762,7 @@ static const std::vector<Item<TextStyleType> > TEXTSTYLE_TYPES = {
     { TextStyleType::SYSTEM,            "system",               muse::TranslatableString("engraving", "System") },
 
     { TextStyleType::STAFF,             "staff",                muse::TranslatableString("engraving", "Staff") },
+    { TextStyleType::STAVE_SHARING,     "staff",                muse::TranslatableString("engraving", "Stave sharing label") },
     { TextStyleType::EXPRESSION,        "expression",           muse::TranslatableString("engraving", "Expression") },
     { TextStyleType::DYNAMICS,          "dynamics",             muse::TranslatableString("engraving", "Dynamics") },
     { TextStyleType::HAIRPIN,           "hairpin",              muse::TranslatableString("engraving", "Hairpin") },
@@ -1900,7 +1936,7 @@ static const std::vector<Item<ChangeMethod> > CHANGE_METHODS = {
     { ChangeMethod::EXPONENTIAL,      "exponential" },
 };
 
-static float easingFactor(const float x, const ChangeMethod method)
+static double easingFactor(const double x, const ChangeMethod method)
 {
     switch (method) {
     case ChangeMethod::NORMAL:
@@ -1911,19 +1947,19 @@ static float easingFactor(const float x, const ChangeMethod method)
         return std::sqrt(1 - std::pow(x - 1, 2));
     case ChangeMethod::EASE_IN_OUT:
         if (x < 0.5) {
-            return (1.f - std::sqrt(1 - std::pow(2 * x, 2))) / 2;
+            return (1.0 - std::sqrt(1 - std::pow(2 * x, 2))) / 2;
         } else {
-            return (std::sqrt(1.f - std::pow(-2 * x + 2, 2)) + 1) / 2;
+            return (std::sqrt(1.0 - std::pow(-2 * x + 2, 2)) + 1) / 2;
         }
     case ChangeMethod::EXPONENTIAL:
-        if (muse::RealIsEqual(x, 1.f)) {
+        if (muse::RealIsEqual(x, 1.0)) {
             return x;
         } else {
-            return 1.f - std::pow(2, -10 * x);
+            return 1.0 - std::pow(2, -10 * x);
         }
     }
 
-    return 1.f;
+    return 1.0;
 }
 
 template<typename T>
@@ -1936,10 +1972,10 @@ static std::map<int /*tickPosition*/, T> buildEasedValueCurve(const int ticksDur
 
     std::map<int, T> result;
 
-    float durationStep = static_cast<float>(ticksDuration) / static_cast<float>(stepsCount);
+    double durationStep = static_cast<double>(ticksDuration) / static_cast<double>(stepsCount);
 
     for (int i = 0; i <= stepsCount; ++i) {
-        result.emplace(i * durationStep, easingFactor(i / static_cast<float>(stepsCount), method) * amplitude);
+        result.emplace(i * durationStep, easingFactor(static_cast<double>(i) / static_cast<double>(stepsCount), method) * amplitude);
     }
 
     return result;
@@ -2039,6 +2075,44 @@ AccidentalRole TConv::fromXml(const AsciiStringView& tag, AccidentalRole def)
     bool ok = false;
     int r = tag.toInt(&ok);
     return ok ? static_cast<AccidentalRole>(r) : def;
+}
+
+static const std::vector<Item<GuitarBendType> > GUITAR_BEND_TYPES = {
+    { GuitarBendType::BEND,            "bend" },
+    { GuitarBendType::PRE_BEND,        "pre-bend" },
+    { GuitarBendType::GRACE_NOTE_BEND, "grace-note-bend" },
+    { GuitarBendType::SLIGHT_BEND,     "slight-bend" },
+    { GuitarBendType::DIVE,            "dive" },
+    { GuitarBendType::PRE_DIVE,        "pre-dive" },
+    { GuitarBendType::DIP,             "dip" },
+    { GuitarBendType::SCOOP,           "scoop" },
+};
+
+AsciiStringView TConv::toXml(GuitarBendType v)
+{
+    return findXmlTagByType(GUITAR_BEND_TYPES, v);
+}
+
+GuitarBendType TConv::fromXml(const AsciiStringView& tag, GuitarBendType def)
+{
+    return findTypeByXmlTag(GUITAR_BEND_TYPES, tag, def);
+}
+
+static const std::vector<Item<NoteCaseType> > NOTE_CASE_TYPES = {
+    { NoteCaseType::AUTO,    "auto" },
+    { NoteCaseType::CAPITAL, "capital" },
+    { NoteCaseType::LOWER,   "lower" },
+    { NoteCaseType::UPPER,   "upper" },
+};
+
+AsciiStringView TConv::toXml(NoteCaseType v)
+{
+    return findXmlTagByType(NOTE_CASE_TYPES, v);
+}
+
+NoteCaseType TConv::fromXml(const AsciiStringView& tag, NoteCaseType def)
+{
+    return findTypeByXmlTag(NOTE_CASE_TYPES, tag, def);
 }
 
 String TConv::toXml(BeatsPerSecond v, int precision)
@@ -2466,17 +2540,21 @@ BarLineType TConv::fromXml(const AsciiStringView& tag, BarLineType def)
     return def;
 }
 
-static const std::array<Item<TremoloType>, 10> TREMOLO_TYPES = { {
+static const std::array<Item<TremoloType>, 14> TREMOLO_TYPES = { {
     { TremoloType::INVALID_TREMOLO, "" },
     { TremoloType::R8,              "r8",       muse::TranslatableString("engraving/tremolotype", "Eighth through stem") },
     { TremoloType::R16,             "r16",      muse::TranslatableString("engraving/tremolotype", "16th through stem") },
     { TremoloType::R32,             "r32",      muse::TranslatableString("engraving/tremolotype", "32nd through stem") },
     { TremoloType::R64,             "r64",      muse::TranslatableString("engraving/tremolotype", "64th through stem") },
+    { TremoloType::R128,            "r128",     muse::TranslatableString("engraving/tremolotype", "128th through stem") },
+    { TremoloType::R256,            "r256",     muse::TranslatableString("engraving/tremolotype", "256th through stem") },
     { TremoloType::BUZZ_ROLL,       "buzzroll", muse::TranslatableString("engraving/tremolotype", "Buzz roll") },
     { TremoloType::C8,              "c8",       muse::TranslatableString("engraving/tremolotype", "Eighth between notes") },
     { TremoloType::C16,             "c16",      muse::TranslatableString("engraving/tremolotype", "16th between notes") },
     { TremoloType::C32,             "c32",      muse::TranslatableString("engraving/tremolotype", "32nd between notes") },
-    { TremoloType::C64,             "c64",      muse::TranslatableString("engraving/tremolotype", "64th between notes") }
+    { TremoloType::C64,             "c64",      muse::TranslatableString("engraving/tremolotype", "64th between notes") },
+    { TremoloType::C128,            "c128",     muse::TranslatableString("engraving/tremolotype", "128th between notes") },
+    { TremoloType::C256,            "c256",     muse::TranslatableString("engraving/tremolotype", "256th between notes") }
 } };
 
 const muse::TranslatableString& TConv::userName(TremoloType v)
@@ -3163,6 +3241,56 @@ AsciiStringView TConv::toXml(StaffGroup v)
 StaffGroup TConv::fromXml(const AsciiStringView& tag, StaffGroup def)
 {
     return findTypeByXmlTag<StaffGroup>(STAFFGROUP_TYPES, tag, def);
+}
+
+static const std::array<Item<StaffTypes>, 27> STAFFTYPES_ITEMS = { {
+    { StaffTypes::STANDARD,      "stdNormal",      muse::TranslatableString("engraving/stafftypes", "Standard") },
+    { StaffTypes::PERC_1LINE,    "perc1Line",      muse::TranslatableString("engraving/stafftypes", "Perc. 1 line") },
+    { StaffTypes::PERC_2LINE,    "perc2Line",      muse::TranslatableString("engraving/stafftypes", "Perc. 2 lines") },
+    { StaffTypes::PERC_3LINE,    "perc3Line",      muse::TranslatableString("engraving/stafftypes", "Perc. 3 lines") },
+    { StaffTypes::PERC_5LINE,    "perc5Line",      muse::TranslatableString("engraving/stafftypes", "Perc. 5 lines") },
+    { StaffTypes::TAB_6SIMPLE,   "tab6StrSimple",  muse::TranslatableString("engraving/stafftypes", "Tab. 6-str. simple") },
+    { StaffTypes::TAB_6COMMON,   "tab6StrCommon",  muse::TranslatableString("engraving/stafftypes", "Tab. 6-str. common") },
+    { StaffTypes::TAB_6FULL,     "tab6StrFull",    muse::TranslatableString("engraving/stafftypes", "Tab. 6-str. full") },
+    { StaffTypes::TAB_4SIMPLE,   "tab4StrSimple",  muse::TranslatableString("engraving/stafftypes", "Tab. 4-str. simple") },
+    { StaffTypes::TAB_4COMMON,   "tab4StrCommon",  muse::TranslatableString("engraving/stafftypes", "Tab. 4-str. common") },
+    { StaffTypes::TAB_4FULL,     "tab4StrFull",    muse::TranslatableString("engraving/stafftypes", "Tab. 4-str. full") },
+    { StaffTypes::TAB_5SIMPLE,   "tab5StrSimple",  muse::TranslatableString("engraving/stafftypes", "Tab. 5-str. simple") },
+    { StaffTypes::TAB_5COMMON,   "tab5StrCommon",  muse::TranslatableString("engraving/stafftypes", "Tab. 5-str. common") },
+    { StaffTypes::TAB_5FULL,     "tab5StrFull",    muse::TranslatableString("engraving/stafftypes", "Tab. 5-str. full") },
+    { StaffTypes::TAB_UKULELE,   "tabUkulele",     muse::TranslatableString("engraving/stafftypes", "Tab. ukulele") },
+    { StaffTypes::TAB_BALALAJKA, "tabBalajka",     muse::TranslatableString("engraving/stafftypes", "Tab. balalaika") },
+    { StaffTypes::TAB_DULCIMER,  "tabDulcimer",    muse::TranslatableString("engraving/stafftypes", "Tab. dulcimer") },
+    { StaffTypes::TAB_ITALIAN,   "tab6StrItalian", muse::TranslatableString("engraving/stafftypes", "Tab. 6-str. Italian") },
+    { StaffTypes::TAB_FRENCH,    "tab6StrFrench",  muse::TranslatableString("engraving/stafftypes", "Tab. 6-str. French") },
+    { StaffTypes::TAB_7COMMON,   "tab7StrCommon",  muse::TranslatableString("engraving/stafftypes", "Tab. 7-str. common") },
+    { StaffTypes::TAB_8COMMON,   "tab8StrCommon",  muse::TranslatableString("engraving/stafftypes", "Tab. 8-str. common") },
+    { StaffTypes::TAB_9COMMON,   "tab9StrCommon",  muse::TranslatableString("engraving/stafftypes", "Tab. 9-str. common") },
+    { StaffTypes::TAB_10COMMON,  "tab10StrCommon", muse::TranslatableString("engraving/stafftypes", "Tab. 10-str. common") },
+    { StaffTypes::TAB_7SIMPLE,   "tab7StrSimple",  muse::TranslatableString("engraving/stafftypes", "Tab. 7-str. simple") },
+    { StaffTypes::TAB_8SIMPLE,   "tab8StrSimple",  muse::TranslatableString("engraving/stafftypes", "Tab. 8-str. simple") },
+    { StaffTypes::TAB_9SIMPLE,   "tab9StrSimple",  muse::TranslatableString("engraving/stafftypes", "Tab. 9-str. simple") },
+    { StaffTypes::TAB_10SIMPLE,  "tab10StrSimple", muse::TranslatableString("engraving/stafftypes", "Tab. 10-str. simple") },
+} };
+
+const TranslatableString& TConv::userName(StaffTypes v)
+{
+    return findCapitalizedUserNameByType(STAFFTYPES_ITEMS, v);
+}
+
+String TConv::translatedUserName(StaffTypes v)
+{
+    return findCapitalizedUserNameByType(STAFFTYPES_ITEMS, v).translated();
+}
+
+AsciiStringView TConv::toXml(StaffTypes v)
+{
+    return findXmlTagByType<StaffTypes>(STAFFTYPES_ITEMS, v);
+}
+
+StaffTypes TConv::fromXml(const AsciiStringView& tag, StaffTypes def)
+{
+    return findTypeByXmlTag<StaffTypes>(STAFFTYPES_ITEMS, tag, def);
 }
 
 const std::array<Item<TrillType>, 4> TRILL_TYPES = { {

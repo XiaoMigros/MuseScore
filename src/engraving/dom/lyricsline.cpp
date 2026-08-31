@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,11 +22,12 @@
 
 #include "lyrics.h"
 
+#include "../editing/navigation.h"
+
 #include "chord.h"
 #include "chordrest.h"
 #include "factory.h"
 #include "measure.h"
-#include "navigate.h"
 #include "note.h"
 #include "score.h"
 #include "segment.h"
@@ -49,9 +50,7 @@ LyricsLine::LyricsLine(EngravingItem* parent)
 {
     setDiagonal(false);
     initElementStyle(&lyricsLineElementStyle);
-    setAnchor(Spanner::Anchor::SEGMENT);
     m_nextLyrics = 0;
-    setGenerated(true);             // no need to save it, as it can be re-generated
 }
 
 LyricsLine::LyricsLine(const ElementType& type, EngravingItem* parent, ElementFlags f)
@@ -59,9 +58,7 @@ LyricsLine::LyricsLine(const ElementType& type, EngravingItem* parent, ElementFl
 {
     setDiagonal(false);
     initElementStyle(&lyricsLineElementStyle);
-    setAnchor(Spanner::Anchor::SEGMENT);
     m_nextLyrics = 0;
-    setGenerated(true);             // no need to save it, as it can be re-generated
 }
 
 LyricsLine::LyricsLine(const LyricsLine& g)
@@ -74,9 +71,9 @@ LyricsLine::LyricsLine(const LyricsLine& g)
 //   createLineSegment
 //---------------------------------------------------------
 
-LineSegment* LyricsLine::createLineSegment(System* parent)
+LineSegment* LyricsLine::createLineSegment()
 {
-    LyricsLineSegment* seg = new LyricsLineSegment(this, parent);
+    LyricsLineSegment* seg = new LyricsLineSegment(this);
     seg->setTrack(track());
     seg->setColor(color());
     return seg;
@@ -105,10 +102,10 @@ bool LyricsLine::setProperty(Pid propertyId, const engraving::PropertyValue& v)
     case Pid::SPANNER_TICKS:
     {
         // if parent lyrics has a melisma, change its length too
-        if (explicitParent() && explicitParent()->isLyrics()
+        if (ownershipParent() && ownershipParent()->isLyrics()
             && isEndMelisma()) {
-            Fraction newTicks   = toLyrics(explicitParent())->ticks() + v.value<Fraction>() - ticks();
-            explicitParent()->undoChangeProperty(Pid::LYRIC_TICKS, newTicks);
+            Fraction newTicks   = toLyrics(ownershipParent())->ticks() + v.value<Fraction>() - ticks();
+            ownershipParent()->undoChangeProperty(Pid::LYRIC_TICKS, newTicks);
         }
         setTicks(v.value<Fraction>());
     }
@@ -166,16 +163,14 @@ void LyricsLineSegment::rebaseAnchors(EditData&, Grip)
     return;
 }
 
-LyricsLineSegment::LyricsLineSegment(LyricsLine* sp, System* parent)
-    : LineSegment(ElementType::LYRICSLINE_SEGMENT, sp, parent, ElementFlag::ON_STAFF)
+LyricsLineSegment::LyricsLineSegment(LyricsLine* sp)
+    : LineSegment(ElementType::LYRICSLINE_SEGMENT, sp, ElementFlag::ON_STAFF)
 {
-    setGenerated(true);
 }
 
-LyricsLineSegment::LyricsLineSegment(const ElementType& type, LyricsLine* sp, System* parent, ElementFlags f)
-    : LineSegment(type, sp, parent, f)
+LyricsLineSegment::LyricsLineSegment(const ElementType& type, LyricsLine* sp, ElementFlags f)
+    : LineSegment(type, sp, f)
 {
-    setGenerated(true);
 }
 
 double LyricsLineSegment::baseLineShift() const
@@ -239,9 +234,9 @@ PartialLyricsLine::PartialLyricsLine(const PartialLyricsLine& other)
     m_isEndMelisma = other.m_isEndMelisma;
 }
 
-LineSegment* PartialLyricsLine::createLineSegment(System* parent)
+LineSegment* PartialLyricsLine::createLineSegment()
 {
-    PartialLyricsLineSegment* seg = new PartialLyricsLineSegment(this, parent);
+    PartialLyricsLineSegment* seg = new PartialLyricsLineSegment(this);
     seg->setTrack(track());
     seg->setColor(color());
     return seg;
@@ -292,6 +287,31 @@ Sid PartialLyricsLine::getPropertyStyle(Pid propertyId) const
     }
 }
 
+void PartialLyricsLine::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps)
+{
+    if (id == Pid::VERSE && verse() != v.toInt()) {
+        ChordRest* endCR = endElement()
+                           && endElement()->isChordRest() ? toChordRest(endElement()) : nullptr;
+        Lyrics* endLyrics = nullptr;
+        if (endCR) {
+            for (Lyrics* lyr : endCR->lyrics()) {
+                if (lyr->verse() == verse()) {
+                    endLyrics = lyr;
+                    break;
+                }
+            }
+        }
+
+        LyricsLine::undoChangeProperty(id, v, ps);
+        if (endLyrics && endLyrics->verse() != v.toInt()) {
+            endLyrics->undoChangeProperty(id, v, ps);
+        }
+        return;
+    }
+
+    LyricsLine::undoChangeProperty(id, v, ps);
+}
+
 void PartialLyricsLine::doComputeEndElement()
 {
     LyricsLine::doComputeEndElement();
@@ -310,8 +330,8 @@ static const ElementStyle partialLyricsLineSegmentElementStyle {
     { Sid::lyricsMinTopDistance, Pid::MIN_DISTANCE },
 };
 
-PartialLyricsLineSegment::PartialLyricsLineSegment(PartialLyricsLine* line, System* parent)
-    : LyricsLineSegment(ElementType::PARTIAL_LYRICSLINE_SEGMENT, line, parent, ElementFlag::ON_STAFF)
+PartialLyricsLineSegment::PartialLyricsLineSegment(PartialLyricsLine* line)
+    : LyricsLineSegment(ElementType::PARTIAL_LYRICSLINE_SEGMENT, line, ElementFlag::ON_STAFF)
 {
     setGenerated(false);
     initElementStyle(&partialLyricsLineSegmentElementStyle);
@@ -357,7 +377,7 @@ Lyrics* PartialLyricsLine::findLyricsInPreviousRepeatSeg() const
     const std::vector<Measure*> measures = findPreviousRepeatMeasures(findStartMeasure());
 
     for (const Measure* measure : measures) {
-        Lyrics* prev = lastLyricsInMeasure(measure->last(SegmentType::ChordRest), staffIdx(), verse(), placement());
+        Lyrics* prev = Navigation::lastLyricsInMeasure(measure->last(SegmentType::ChordRest), staffIdx(), verse(), placement());
 
         if (!prev) {
             continue;

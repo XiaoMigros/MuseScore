@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,6 +33,7 @@
 #include "../dom/note.h"
 #include "../dom/page.h"
 #include "../dom/part.h"
+#include "../dom/repeatlist.h"
 #include "../dom/score.h"
 #include "../dom/segment.h"
 #include "../dom/spanner.h"
@@ -84,8 +85,12 @@ void InsertRemoveMeasures::insertMeasures()
     std::vector<KeySig*> keys;
     Segment* fs = nullptr;
     Segment* ls = nullptr;
+    std::vector<RepeatSegmentInfo> oldSegments;
     if (fm->isMeasure()) {
-        score->setPlaylistDirty();
+        // Snapshot before the structural edit below invalidates it
+        oldSegments = score->repeatSegmentInfoList(/*expandRepeats*/ true);
+
+        score->invalidateRepeatList();
         fs = toMeasure(fm)->first();
         ls = toMeasure(lm)->last();
         for (Segment* s = fs; s && s != ls; s = s->next1()) {
@@ -109,8 +114,8 @@ void InsertRemoveMeasures::insertMeasures()
     score->measures()->insert(fm, lm);
 
     if (fm->isMeasure()) {
-        score->setUpTempoMap();
-        score->insertTime(fm->tick(), lm->endTick() - fm->tick());
+        score->updateTicksAndTimeSigMap();
+        score->insertTime(fm->tick(), lm->endTick() - fm->tick(), oldSegments);
 
         // move ownership of Instrument back to part
         for (Segment* s = fs; s && s != ls; s = s->next1()) {
@@ -214,6 +219,12 @@ void InsertRemoveMeasures::removeMeasures()
     Fraction tick1 = fm->tick();
     Fraction tick2 = lm->endTick();
 
+    // Snapshot before the structural edit below invalidates it
+    std::vector<RepeatSegmentInfo> oldSegments;
+    if (fm->isMeasure()) {
+        oldSegments = score->repeatSegmentInfoList(/*expandRepeats*/ true);
+    }
+
     if (fm->isMeasure() && lm->isMeasure()) {
         // remove beams from chordrests in affected area, they will be rebuilt later but we need
         // to avoid situations where notes from deleted measures remain in beams
@@ -293,8 +304,8 @@ void InsertRemoveMeasures::removeMeasures()
     score->measures()->remove(fm, lm);
 
     if (fm->isMeasure()) {
-        score->setUpTempoMap();
-        score->setPlaylistDirty();
+        score->updateTicksAndTimeSigMap();
+        score->invalidateRepeatList();
 
         // check if there is a clef at the end of last measure
         // remove clef from staff cleflist
@@ -315,7 +326,7 @@ void InsertRemoveMeasures::removeMeasures()
         // remember clefs at the end of previous measure
         const auto clefs = getCourtesyClefs(toMeasure(fm));
 
-        score->insertTime(tick1, -(tick2 - tick1));
+        score->insertTime(tick1, -(tick2 - tick1), oldSegments);
 
         // Restore clefs that were backed up. Events for them could be lost
         // as a result of the recent insertTime() call.
@@ -339,10 +350,17 @@ void InsertRemoveMeasures::removeMeasures()
             if (page) {
                 // erase system from page
                 muse::remove(page->systems(), s);
-                // erase system from score
-                muse::remove(score->systems(), s);
-                // finally delete system
-                score->deleteLater(s);
+                s->setPage(nullptr);
+            }
+            // erase system from score
+            muse::remove(score->systems(), s);
+            // finally delete system
+            s->deleteLater();
+
+            if (page && page->systems().empty()) {
+                // if page is empty, delete it as well
+                muse::remove(score->pages(), page);
+                page->deleteLater();
             }
         }
     }
@@ -360,7 +378,7 @@ ChangeMeasureLen::ChangeMeasureLen(Measure* m, Fraction l)
     len         = l;
 }
 
-void ChangeMeasureLen::flip(EditData*)
+void ChangeMeasureLen::flip()
 {
     Fraction oLen = measure->ticks();
 
@@ -377,7 +395,8 @@ void ChangeMeasureLen::flip(EditData*)
         measure->remove(s);
     }
     measure->setTicks(len);
-    measure->score()->setUpTempoMap();
+    measure->score()->updateTicksAndTimeSigMap();
+    measure->score()->invalidateRepeatList();
     len = oLen;
 }
 
@@ -385,7 +404,7 @@ void ChangeMeasureLen::flip(EditData*)
 //   ChangeMMRest
 //---------------------------------------------------------
 
-void ChangeMMRest::flip(EditData*)
+void ChangeMMRest::flip()
 {
     Measure* mmr = m->mmRest();
     m->setMMRest(mmrest);
@@ -396,9 +415,27 @@ void ChangeMMRest::flip(EditData*)
 //   ChangeMeasureRepeatCount
 //---------------------------------------------------------
 
-void ChangeMeasureRepeatCount::flip(EditData*)
+void ChangeMeasureRepeatCount::flip()
 {
     int oldCount = m->measureRepeatCount(staffIdx);
     m->setMeasureRepeatCount(count, staffIdx);
     count = oldCount;
+}
+
+void ChangeMMRestNext::flip()
+{
+    assert(m_mmrest->isMMRest());
+    MeasureBase* oldNext = m_mmrest->next();
+
+    m_mmrest->setNext(m_next);
+    m_next = oldNext;
+}
+
+void ChangeMMRestPrev::flip()
+{
+    assert(m_mmrest->isMMRest());
+    MeasureBase* oldPrev = m_mmrest->prev();
+
+    m_mmrest->setPrev(m_prev);
+    m_prev = oldPrev;
 }

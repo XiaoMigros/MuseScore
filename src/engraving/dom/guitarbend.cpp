@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,16 +20,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "../iengravingconfiguration.h" // IWYU pragma: keep
+
 #include "../editing/editdata.h"
 #include "../editing/elementeditdata.h"
 #include "../editing/editnote.h"
+#include "../editing/navigation.h"
+#include "../editing/noteinput.h"
+#include "../editing/transaction/transaction.h"
 #include "../editing/transpose.h"
 
 #include "accidental.h"
 #include "actionicon.h"
 #include "chord.h"
 #include "guitarbend.h"
-#include "navigate.h"
 #include "note.h"
 #include "part.h"
 #include "rest.h"
@@ -47,7 +51,6 @@ namespace mu::engraving {
 GuitarBend::GuitarBend(EngravingItem* parent)
     : SLine(ElementType::GUITAR_BEND, parent, ElementFlag::MOVABLE)
 {
-    setAnchor(Anchor::NOTE);
 }
 
 GuitarBend::GuitarBend(const GuitarBend& g)
@@ -64,9 +67,9 @@ GuitarBend::~GuitarBend()
     }
 }
 
-LineSegment* GuitarBend::createLineSegment(System* parent)
+LineSegment* GuitarBend::createLineSegment()
 {
-    GuitarBendSegment* seg = new GuitarBendSegment(this, parent);
+    GuitarBendSegment* seg = new GuitarBendSegment(this);
     seg->setTrack(track());
     seg->setColor(lineColor());
     return seg;
@@ -291,9 +294,9 @@ Note* GuitarBend::createEndNote(Note* startNote, GuitarBendType bendType)
         endSegment = score->setNoteRest(endSegment, track, noteVal, duration);
         Chord* endChord = endSegment ? toChord(endSegment->element(track)) : nullptr;
         endNote = endChord ? endChord->upNote() : nullptr;
-    } else { // isChord
+    } else if (item->isChord()) {
         Chord* chord = toChord(item);
-        endNote = score->addNote(chord, noteVal);
+        endNote = NoteInput::addNote(score->transactionManager()->currentOrDummyTransaction(), score, chord, noteVal);
     }
 
     if (endNote) {
@@ -411,8 +414,6 @@ bool GuitarBend::setProperty(Pid propertyId, const PropertyValue& v)
 PropertyValue GuitarBend::propertyDefault(Pid id) const
 {
     switch (id) {
-    case Pid::ANCHOR:
-        return static_cast<int>(Anchor::NOTE);
     case Pid::DIRECTION:
         return DirectionV::AUTO;
     case Pid::BEND_SHOW_HOLD_LINE:
@@ -636,12 +637,12 @@ GuitarBend* GuitarBend::findPrecedingBend() const
     }
 
     if (bendType() == GuitarBendType::PRE_DIVE || bendType() == GuitarBendType::PRE_BEND) {
-        ChordRest* prevCR = prevChordRest(startN->chord());
+        ChordRest* prevCR = Navigation::prevChordRest(startN->chord());
         if (prevCR && prevCR->isRest() && isDive()) {
             WhammyBar* whammyBar = findOverlappingWhammyBar(prevCR->tick(), tick2());
             if (whammyBar) {
                 while (prevCR && prevCR->isRest() && prevCR->tick() > whammyBar->tick()) {
-                    prevCR = prevChordRest(prevCR);
+                    prevCR = Navigation::prevChordRest(prevCR);
                 }
             }
         }
@@ -684,12 +685,12 @@ GuitarBend* GuitarBend::findFollowingPreBendOrDive() const
         endN = endN->tieFor()->endNote();
     }
 
-    ChordRest* nextCR = nextChordRest(endN->chord());
+    ChordRest* nextCR = Navigation::nextChordRest(endN->chord());
     if (isDive() && nextCR && nextCR->isRest()) {
         WhammyBar* whammyBar = findOverlappingWhammyBar(tick(), nextCR->endTick());
         if (whammyBar) {
             while (nextCR && nextCR->isRest() && nextCR->tick() < whammyBar->tick2()) {
-                nextCR = nextChordRest(nextCR);
+                nextCR = Navigation::nextChordRest(nextCR);
             }
         }
     }
@@ -816,7 +817,6 @@ void GuitarBend::updateHoldLine()
         m_holdLine = new GuitarBendHold(this);
     }
 
-    m_holdLine->setAnchor(Spanner::Anchor::NOTE);
     m_holdLine->setStartElement(startOfHold);
     m_holdLine->setEndElement(endOfHold);
     m_holdLine->setTick(startOfHold->tick());
@@ -824,7 +824,7 @@ void GuitarBend::updateHoldLine()
     m_holdLine->setTrack(track());
     m_holdLine->setTrack2(track());
     m_holdLine->setGenerated(true);
-    m_holdLine->setParent(this);
+    m_holdLine->setOwnershipParent(this);
 }
 
 double GuitarBend::lineWidth() const
@@ -844,11 +844,11 @@ double GuitarBend::lineWidth() const
  *              GuitarBendSegment
  * **************************************/
 
-GuitarBendSegment::GuitarBendSegment(GuitarBend* sp, System* parent)
-    : LineSegment(ElementType::GUITAR_BEND_SEGMENT, sp, parent, ElementFlag::MOVABLE)
+GuitarBendSegment::GuitarBendSegment(GuitarBend* sp)
+    : LineSegment(ElementType::GUITAR_BEND_SEGMENT, sp, ElementFlag::MOVABLE)
 {
     m_text = new GuitarBendText(this);
-    m_text->setParent(this);
+    m_text->setOwnershipParent(this);
     setFlag(ElementFlag::ON_STAFF, true);
 }
 
@@ -857,7 +857,7 @@ GuitarBendSegment::GuitarBendSegment(const GuitarBendSegment& s)
 {
     m_vertexPointOff = s.m_vertexPointOff;
     m_text = new GuitarBendText(this);
-    m_text->setParent(this);
+    m_text->setOwnershipParent(this);
 }
 
 GuitarBendSegment::~GuitarBendSegment()
@@ -1107,7 +1107,6 @@ void GuitarBend::setTargetTimeFactor(float f)
 GuitarBendHold::GuitarBendHold(GuitarBend* parent)
     : SLine(ElementType::GUITAR_BEND_HOLD, parent, ElementFlag::MOVABLE)
 {
-    resetProperty(Pid::ANCHOR);
     resetProperty(Pid::LINE_STYLE);
 }
 
@@ -1116,9 +1115,9 @@ GuitarBendHold::GuitarBendHold(const GuitarBendHold& h)
 {
 }
 
-LineSegment* GuitarBendHold::createLineSegment(System* parent)
+LineSegment* GuitarBendHold::createLineSegment()
 {
-    GuitarBendHoldSegment* seg = new GuitarBendHoldSegment(this, parent);
+    GuitarBendHoldSegment* seg = new GuitarBendHoldSegment(this);
     seg->setTrack(track());
     seg->setColor(lineColor());
     return seg;
@@ -1127,8 +1126,6 @@ LineSegment* GuitarBendHold::createLineSegment(System* parent)
 PropertyValue GuitarBendHold::propertyDefault(Pid id) const
 {
     switch (id) {
-    case Pid::ANCHOR:
-        return static_cast<int>(Anchor::NOTE);
     case Pid::LINE_STYLE:
         return LineType::DASHED;
     default:
@@ -1159,8 +1156,8 @@ double GuitarBendHold::lineWidth() const
  *         GuitarBendHoldSegment
  * **************************************/
 
-GuitarBendHoldSegment::GuitarBendHoldSegment(GuitarBendHold* sp, System* parent)
-    : LineSegment(ElementType::GUITAR_BEND_HOLD_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+GuitarBendHoldSegment::GuitarBendHoldSegment(GuitarBendHold* sp)
+    : LineSegment(ElementType::GUITAR_BEND_HOLD_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
     setFlag(ElementFlag::ON_STAFF, true);
 }

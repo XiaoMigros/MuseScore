@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -44,7 +44,6 @@
 #include "dom/ambitus.h"
 #include "dom/arpeggio.h"
 #include "dom/articulation.h"
-#include "dom/audio.h"
 #include "dom/barline.h"
 #include "dom/beam.h"
 #include "dom/bend.h"
@@ -101,8 +100,9 @@
 #include "dom/tuplet.h"
 #include "dom/utils.h"
 #include "dom/volta.h"
-#include "editing/undo.h"
-#include "editing/transpose.h"
+
+#include "../../editing/editstaffbrackets.h"
+#include "../../editing/transpose.h"
 
 #include "../compat/readchordlisthook.h"
 #include "../compat/readstyle.h"
@@ -271,13 +271,13 @@ void Read206::readTextStyle206(MStyle* style, XmlReader& e, ReadContext& ctx, st
         } else if (tag == "sizeIsSpatiumDependent" || tag == "spatiumSizeDependent") {
             sizeIsSpatiumDependent = e.readInt();
         } else if (tag == "frameWidth") {   // obsolete
-            frameType = FrameType::SQUARE;
+            frameType = FrameType::RECTANGLE;
             /*frameWidthMM =*/ e.readDouble();
         } else if (tag == "frameWidthS") {
-            frameType = FrameType::SQUARE;
+            frameType = FrameType::RECTANGLE;
             frameWidth = Spatium(e.readDouble());
         } else if (tag == "frame") {
-            frameType = e.readInt() ? FrameType::SQUARE : FrameType::NO_FRAME;
+            frameType = e.readInt() ? FrameType::RECTANGLE : FrameType::NO_FRAME;
         } else if (tag == "paddingWidth") {          // obsolete
             /*paddingWidthMM =*/
             e.readDouble();
@@ -840,11 +840,11 @@ static void readStaff(Staff* staff, XmlReader& e, ReadContext& ctx)
         } else if (tag == "bracket") {
             int col = e.intAttribute("col", -1);
             if (col == -1) {
-                col = static_cast<int>(staff->brackets().size());
+                col = static_cast<int>(ctx.score()->brackets(staff->idx()).size());
             }
-            staff->setBracketType(col, BracketType(e.intAttribute("type", -1)));
-            staff->setBracketSpan(col, e.intAttribute("span", 0));
-            staff->setBracketVisible(col, static_cast<bool>(e.intAttribute("visible", 1)));
+            EditStaffBrackets::setBracketType(ctx.score(), staff->idx(), col, BracketType(e.intAttribute("type", -1)));
+            EditStaffBrackets::setBracketSpan(ctx.score(), staff->idx(), col, e.intAttribute("span", 0));
+            EditStaffBrackets::setBracketVisible(ctx.score(), staff->idx(), col, static_cast<bool>(e.intAttribute("visible", 1)));
             e.readNext();
         } else if (tag == "barLineSpan") {
             staff->setBarLineFrom(e.intAttribute("from", 0));
@@ -1048,7 +1048,7 @@ static void adjustPlacement(EngravingItem* e)
     // most offsets will be recorded as relative to top staff line
     // exceptions are styled offsets on elements with default placement below
     double normalize;
-    if (defaultPlacement == PlacementV::BELOW && ee->propertyFlags(Pid::OFFSET) == PropertyFlags::STYLED) {
+    if (defaultPlacement == PlacementV::BELOW && ee->offset().isNull()) {
         normalize = staffHeight;
     } else {
         normalize = 0.0;
@@ -1073,7 +1073,7 @@ static void adjustPlacement(EngravingItem* e)
         for (auto a : spanner->spannerSegments()) {
             // spanner segments share the placement setting of the spanner
             // just adjust offset
-            if (defaultPlacement == PlacementV::BELOW && a->propertyFlags(Pid::OFFSET) == PropertyFlags::STYLED) {
+            if (defaultPlacement == PlacementV::BELOW && a->offset().isNull()) {
                 normalize = staffHeight;
             } else {
                 normalize = 0.0;
@@ -1129,7 +1129,7 @@ bool Read206::readNoteProperties206(Note* note, XmlReader& e, ReadContext& ctx)
         note->add(a);
     } else if (tag == "Tie") {
         Tie* tie = Factory::createTie(note);
-        tie->setParent(note);
+        tie->setOwnershipParent(note);
         tie->setTrack(note->track());
         readTie206(e, ctx, tie);
         tie->setStartNote(note);
@@ -1178,10 +1178,10 @@ bool Read206::readNoteProperties206(Note* note, XmlReader& e, ReadContext& ctx)
         read400::TRead::read(s, e, ctx);
         if (s->sym() == SymId::noteheadParenthesisLeft) {
             note->setParenthesesMode(note->rightParen() ? ParenthesesMode::BOTH : ParenthesesMode::LEFT);
-            ctx.score()->deleteLater(s);
+            s->deleteLater();
         } else if (s->sym() == SymId::noteheadParenthesisRight) {
             note->setParenthesesMode(note->leftParen() ? ParenthesesMode::BOTH : ParenthesesMode::RIGHT);
-            ctx.score()->deleteLater(s);
+            s->deleteLater();
         } else {
             note->add(s);
         }
@@ -1227,8 +1227,8 @@ bool Read206::readNoteProperties206(Note* note, XmlReader& e, ReadContext& ctx)
                 note->setTieBack(toTie(sp));
             } else {
                 bool isNoteAnchoredTextLine = sp->isNoteLine() && toNoteLine(sp)->enforceMinLength();
-                if ((sp->isGlissando() || isNoteAnchoredTextLine) && note->explicitParent() && note->explicitParent()->isChord()) {
-                    toChord(note->explicitParent())->setEndsNoteAnchoredLine(true);
+                if ((sp->isGlissando() || isNoteAnchoredTextLine) && note->ownershipParent() && note->ownershipParent()->isChord()) {
+                    toChord(note->ownershipParent())->setEndsNoteAnchoredLine(true);
                 }
                 note->addSpannerBack(sp);
             }
@@ -1247,7 +1247,6 @@ bool Read206::readNoteProperties206(Note* note, XmlReader& e, ReadContext& ctx)
                               // because the glissando is not properly cloned into the linked staves
                 staff && (!ctx.pasteMode() || !staff->links() || staff->links()->empty())) {
                 Spanner* placeholder = new TextLine(ctx.dummy());
-                placeholder->setAnchor(Spanner::Anchor::NOTE);
                 placeholder->setEndElement(note);
                 placeholder->setTrack2(note->track());
                 placeholder->setTick(Fraction(0, 1));
@@ -1264,7 +1263,6 @@ bool Read206::readNoteProperties206(Note* note, XmlReader& e, ReadContext& ctx)
         Spanner* placeholder = ctx.findSpanner(id);
         if (placeholder && placeholder->endElement()) {
             // if it is, fill end data from place-holder
-            sp->setAnchor(Spanner::Anchor::NOTE);                 // make sure we can set a Note as end element
             sp->setEndElement(placeholder->endElement());
             sp->setTrack2(placeholder->track2());
             sp->setTick(ctx.tick());                                // make sure tick2 will be correct
@@ -1285,11 +1283,10 @@ bool Read206::readNoteProperties206(Note* note, XmlReader& e, ReadContext& ctx)
             ctx.removeSpanner(sp);          // read() added the element to the XMLReader: remove it
             delete sp;
         } else {
-            sp->setAnchor(Spanner::Anchor::NOTE);
             sp->setStartElement(note);
             sp->setTick(ctx.tick());
             note->addSpannerFor(sp);
-            sp->setParent(note);
+            sp->setOwnershipParent(note);
             adjustPlacement(sp);
         }
     } else if (tag == "offset") {
@@ -1378,7 +1375,7 @@ static bool readTextProperties206(XmlReader& e, ReadContext& ctx, TextBase* t)
     } else if (tag == "foregroundColor") { // same as "color" ?
         e.skipCurrentElement();
     } else if (tag == "frame") {
-        t->setFrameType(e.readBool() ? FrameType::SQUARE : FrameType::NO_FRAME);
+        t->setFrameType(e.readBool() ? FrameType::RECTANGLE : FrameType::NO_FRAME);
         t->setPropertyFlags(Pid::FRAME_TYPE, PropertyFlags::UNSTYLED);
     } else if (tag == "frameRound") {
         read400::TRead::readProperty(t, e, ctx, Pid::FRAME_ROUND);
@@ -1387,7 +1384,7 @@ static bool readTextProperties206(XmlReader& e, ReadContext& ctx, TextBase* t)
             t->setFrameType(FrameType::CIRCLE);
         } else {
             if (t->circle()) {
-                t->setFrameType(FrameType::SQUARE);
+                t->setFrameType(FrameType::RECTANGLE);
             }
         }
         t->setPropertyFlags(Pid::FRAME_TYPE, PropertyFlags::UNSTYLED);
@@ -1509,6 +1506,7 @@ static void readText206(XmlReader& e, ReadContext& ctx, TextBase* t, EngravingIt
             tctx.reader().unknown();
         }
     }
+    CompatUtils::migrateOffsetPre302(t, ctx.mscVersion());
 }
 
 //---------------------------------------------------------
@@ -1537,6 +1535,8 @@ static void readTempoText(TempoText* t, XmlReader& e, ReadContext& ctx)
         t->setXmlText(t->xmlText().replace(u"<sym>unicode", u"<sym>met"));
     }
 
+    CompatUtils::migrateOffsetPre302(t, ctx.mscVersion());
+
     t->resetProperty(Pid::MUSIC_SYMBOL_SIZE);
 }
 
@@ -1561,6 +1561,8 @@ static void readMarker(Marker* m, XmlReader& e, ReadContext& ctx)
         }
     }
     m->setMarkerType(mt);
+
+    CompatUtils::migrateOffsetPre302(m, ctx.mscVersion());
 }
 
 //---------------------------------------------------------
@@ -1589,6 +1591,7 @@ static void readDynamic(Dynamic* d, XmlReader& e, ReadContext& ctx)
     if (d->xmlText().contains(u"<sym>") && !d->xmlText().contains(u"<font")) {
         d->setAlign(Align(AlignH::HCENTER, AlignV::BASELINE));
     }
+    CompatUtils::migrateOffsetPre302(d, ctx.mscVersion());
 }
 
 //---------------------------------------------------------
@@ -1601,7 +1604,7 @@ static void readTuplet206(Tuplet* tuplet, XmlReader& e, ReadContext& ctx)
         const AsciiStringView tag(e.name());
         if (tag == "Number") {
             Text* _number = Factory::createText(tuplet);
-            _number->setParent(tuplet);
+            _number->setOwnershipParent(tuplet);
             _number->setComposition(true);
             tuplet->setNumber(_number);
             // _number reads property defaults from parent tuplet as "composition" is set:
@@ -1641,7 +1644,7 @@ static void readLyrics(Lyrics* lyrics, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Number") {
             _verseNumber = Factory::createText(lyrics);
             readText206(e, ctx, _verseNumber, lyrics);
-            _verseNumber->setParent(lyrics);
+            _verseNumber->setOwnershipParent(lyrics);
         } else if (tag == "style") {
             e.readText();          // ignore style
         } else if (!read400::TRead::readProperties(lyrics, e, ctx)) {
@@ -1658,7 +1661,8 @@ static void readLyrics(Lyrics* lyrics, XmlReader& e, ReadContext& ctx)
         delete _verseNumber;
     }
     lyrics->setAutoplace(true);
-    if (!lyrics->isStyled(Pid::OFFSET) && !ctx.pasteMode()) {
+
+    if (!lyrics->offset().isNull() && !ctx.pasteMode()) {
         // fix offset for pre-3.1 scores
         // 2.x and earlier: y offset was relative to staff; x offset was relative to center of notehead
         lyrics->rxoffset() -= lyrics->symWidth(SymId::noteheadBlack) * 0.5;
@@ -1668,6 +1672,7 @@ static void readLyrics(Lyrics* lyrics, XmlReader& e, ReadContext& ctx)
         lyrics->setPlacement(PlacementV::ABOVE);
         adjustPlacement(lyrics);
     }
+    CompatUtils::migrateOffsetPre302(lyrics, ctx.mscVersion());
 }
 
 bool Read206::readDurationProperties206(XmlReader& e, ReadContext& ctx, DurationElement* de)
@@ -1710,7 +1715,7 @@ bool Read206::readTupletProperties206(XmlReader& e, ReadContext& ctx, Tuplet* de
         Text* _number = Factory::createText(de);
         de->setNumber(_number);
         _number->setComposition(true);
-        _number->setParent(de);
+        _number->setOwnershipParent(de);
 //            _number->setSubStyleId(SubStyleId::TUPLET);
 //            initSubStyle(SubStyleId::TUPLET);   // hack: initialize number
         for (auto p : { Pid::FONT_FACE, Pid::FONT_SIZE, Pid::FONT_STYLE, Pid::ALIGN }) {
@@ -1961,7 +1966,7 @@ bool Read206::readChordProperties206(XmlReader& e, ReadContext& ctx, Chord* ch)
         Arpeggio* arpeggio = Factory::createArpeggio(ch);
         arpeggio->setTrack(ch->track());
         read400::TRead::read(arpeggio, e, ctx);
-        arpeggio->setParent(ch);
+        arpeggio->setOwnershipParent(ch);
         ch->add(arpeggio);
     }
     // old glissando format, chord-to-chord, attached to its final chord
@@ -1975,7 +1980,6 @@ bool Read206::readChordProperties206(XmlReader& e, ReadContext& ctx, Chord* ch)
         Note* finalNote = ch->upNote();
         Glissando* gliss = Factory::createGlissando(ctx.dummy());
         read400::TRead::read(gliss, e, ctx);
-        gliss->setAnchor(Spanner::Anchor::NOTE);
         gliss->setStartElement(nullptr);
         gliss->setEndElement(nullptr);
         // in TAB, use straight line with no text
@@ -1989,11 +1993,11 @@ bool Read206::readChordProperties206(XmlReader& e, ReadContext& ctx, Chord* ch)
         tcompat.parent = ch;
         read400::TRead::read(tcompat, e, ctx);
         if (tcompat.two) {
-            tcompat.two->setParent(ch);
+            tcompat.two->setOwnershipParent(ch);
             tcompat.two->setDurationType(ch->durationType());
             ch->setTremoloTwoChord(tcompat.two, false);
         } else if (tcompat.single) {
-            tcompat.single->setParent(ch);
+            tcompat.single->setOwnershipParent(ch);
             tcompat.single->setDurationType(ch->durationType());
             ch->setTremoloSingleChord(tcompat.single);
         } else {
@@ -2109,7 +2113,7 @@ static void readChord(Chord* chord, XmlReader& e, ReadContext& ctx)
             Note* note = Factory::createNote(chord);
             // the note needs to know the properties of the track it belongs to
             note->setTrack(chord->track());
-            note->setParent(chord);
+            note->setOwnershipParent(chord);
             readNote206(note, e, ctx);
             chord->add(note);
         } else if (tag == "Stem") {
@@ -2213,13 +2217,9 @@ static void readVolta206(XmlReader& e, ReadContext& ctx, Volta* volta)
             e.unknown();
         }
     }
-    if (volta->anchor() != Volta::VOLTA_ANCHOR) {
-        // Volta strictly assumes that its anchor is measure, so don't let old scores override this.
-        LOGW("Correcting volta anchor type from %d to %d", int(volta->anchor()), int(Volta::VOLTA_ANCHOR));
-        volta->setAnchor(Volta::VOLTA_ANCHOR);
-    }
     CompatUtils::resetHookHeightSign(volta);
     adjustPlacement(volta);
+    CompatUtils::migrateOffsetPre302(volta, ctx.mscVersion());
 }
 
 //---------------------------------------------------------
@@ -2266,6 +2266,7 @@ static void readPedal(XmlReader& e, ReadContext& ctx, Pedal* pedal)
 
     CompatUtils::resetHookHeightSign(pedal);
     adjustPlacement(pedal);
+    CompatUtils::migrateOffsetPre302(pedal, ctx.mscVersion());
 }
 
 //---------------------------------------------------------
@@ -2301,6 +2302,7 @@ static void readOttava(XmlReader& e, ReadContext& ctx, Ottava* ottava)
     ottava->styleChanged();
     CompatUtils::resetHookHeightSign(ottava);
     adjustPlacement(ottava);
+    CompatUtils::migrateOffsetPre302(ottava, ctx.mscVersion());
 }
 
 void Read206::readHairpin206(XmlReader& e, ReadContext& ctx, Hairpin* h)
@@ -2344,6 +2346,7 @@ void Read206::readHairpin206(XmlReader& e, ReadContext& ctx, Hairpin* h)
     }
     CompatUtils::resetHookHeightSign(h);
     adjustPlacement(h);
+    CompatUtils::migrateOffsetPre302(h, ctx.mscVersion());
 }
 
 void Read206::readTrill206(XmlReader& e, ReadContext& ctx, Trill* t)
@@ -2355,7 +2358,7 @@ void Read206::readTrill206(XmlReader& e, ReadContext& ctx, Trill* t)
         } else if (tag == "Accidental") {
             Accidental* _accidental = Factory::createAccidental(t);
             readAccidental206(_accidental, e, ctx);
-            _accidental->setParent(t);
+            _accidental->setOwnershipParent(t);
             t->setAccidental(_accidental);
             if (t->ornament()) {
                 t->ornament()->setTrillOldCompatAccidental(_accidental);
@@ -2369,6 +2372,7 @@ void Read206::readTrill206(XmlReader& e, ReadContext& ctx, Trill* t)
         }
     }
     adjustPlacement(t);
+    CompatUtils::migrateOffsetPre302(t, ctx.mscVersion());
 }
 
 void Read206::readTextLine206(XmlReader& e, ReadContext& ctx, TextLineBase* tlb)
@@ -2380,6 +2384,7 @@ void Read206::readTextLine206(XmlReader& e, ReadContext& ctx, TextLineBase* tlb)
     }
     CompatUtils::resetHookHeightSign(tlb);
     adjustPlacement(tlb);
+    CompatUtils::migrateOffsetPre302(tlb, ctx.mscVersion());
 }
 
 //---------------------------------------------------------
@@ -2572,9 +2577,9 @@ static bool readSlurTieProperties(XmlReader& e, ReadContext& ctx, SlurTie* st)
     } else if (tag == "lineType") {
         st->setStyleType(static_cast<SlurStyleType>(e.readInt()));
     } else if (tag == "SlurSegment") {
-        SlurTieSegment* s = st->newSlurTieSegment(ctx.dummy()->system());
-        read400::TRead::read(s, e, ctx);
+        SlurTieSegment* s = st->newSlurTieSegment();
         st->add(s);
+        read400::TRead::read(s, e, ctx);
     } else if (!TRead::readItemProperties(st, e, ctx)) {
         return false;
     }
@@ -2749,7 +2754,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             segment = m->getSegment(SegmentType::ChordRest, ctx.tick());
             Chord* chord = Factory::createChord(segment);
             chord->setTrack(ctx.track());
-            chord->setParent(segment);
+            chord->setOwnershipParent(segment);
             readChord(chord, e, ctx);
             if (chord->noteType() != NoteType::NORMAL) {
                 graceNotes.push_back(chord);
@@ -2769,7 +2774,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             if (m->isMMRest()) {
                 segment = m->getSegment(SegmentType::ChordRest, ctx.tick());
                 MMRest* mmr = Factory::createMMRest(segment);
-                mmr->setParent(segment);
+                mmr->setOwnershipParent(segment);
                 mmr->setTrack(ctx.track());
                 read400::TRead::read(mmr, e, ctx);
                 mmr->setTicks(m->ticks());
@@ -2782,7 +2787,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
                 rest->setDurationType(DurationType::V_MEASURE);
                 rest->setTicks(m->timesig() / timeStretch);
                 rest->setTrack(ctx.track());
-                rest->setParent(segment);
+                rest->setOwnershipParent(segment);
                 readRest(rest, e, ctx);
                 segment->add(rest);
 
@@ -3001,9 +3006,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             bool courtesySig = (curTick == m->endTick());
             segment = m->getSegment(courtesySig ? SegmentType::KeySigAnnounce : SegmentType::KeySig, curTick);
             segment->add(ks);
-            if (!courtesySig) {
-                staff->setKey(curTick, ks->keySigEvent());
-            }
+            staff->setKey(curTick, ks->keySigEvent());
         } else if (tag == "Text" || tag == "StaffText") {
             // MuseScore 3 has different types for system text and
             // staff text while MuseScore 2 didn't.
@@ -3025,6 +3028,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
                     tctx.reader().unknown();
                 }
             }
+            CompatUtils::migrateOffsetPre302(t, ctx.mscVersion());
             if (t->empty()) {
                 if (t->links()) {
                     if (t->links()->size() == 1) {
@@ -3067,6 +3071,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             if (el->staff() && (el->isHarmony() || el->isFretDiagram() || el->isInstrumentChange())) {
                 adjustPlacement(el);
             }
+            CompatUtils::migrateOffsetPre302(el, ctx.mscVersion());
 
             segment->add(el);
         } else if (tag == "Tempo") {
@@ -3121,7 +3126,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             Tuplet* tuplet = Factory::createTuplet(m);
             tuplet->setTrack(ctx.track());
             tuplet->setTick(ctx.tick());
-            tuplet->setParent(m);
+            tuplet->setOwnershipParent(m);
             readTuplet206(tuplet, e, ctx);
             ctx.addTuplet(tupletId, tuplet);
         } else if (tag == "startRepeat") {
@@ -3152,10 +3157,9 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             m->setStaffStemless(staffIdx, e.readInt());
         } else if (tag == "Beam") {
             int beamId = e.attribute("id").toInt();
-            Beam* beam = Factory::createBeam(ctx.dummy()->system());
+            Beam* beam = Factory::createBeam(ctx.score());
             beam->setTrack(ctx.track());
             read400::TRead::read(beam, e, ctx);
-            beam->resetExplicitParent();
             ctx.addBeam(beamId, beam);
         } else if (tag == "Segment") {
             if (segment) {
@@ -3167,7 +3171,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             MeasureNumber* noText = new MeasureNumber(m);
             readText206(e, ctx, noText, m);
             noText->setTrack(ctx.track());
-            noText->setParent(m);
+            noText->setOwnershipParent(m);
             m->setMeasureNumber(noText->staffIdx(), noText);
         } else if (tag == "SystemDivider") {
             SystemDivider* sd = new SystemDivider(ctx.dummy()->system());
@@ -3177,7 +3181,7 @@ static void readMeasure206(Measure* m, int staffIdx, XmlReader& e, ReadContext& 
             segment = m->getSegment(SegmentType::Ambitus, ctx.tick());
             Ambitus* range = Factory::createAmbitus(segment);
             readAmbitus(range, e, ctx);
-            range->setParent(segment);                // a parent segment is needed for setTrack() to work
+            range->setOwnershipParent(segment);                // a parent segment is needed for setTrack() to work
             range->setTrack(trackZeroVoice(ctx.track()));
             segment->add(range);
         } else if (tag == "multiMeasureRest") {
@@ -3208,11 +3212,11 @@ static void readBox(Box* b, XmlReader& e, ReadContext& ctx)
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (tag == "HBox") {
-            HBox* hb = Factory::createHBox(b->score()->dummy()->system());
+            HBox* hb = Factory::createHBox(b->score());
             read400::TRead::read(hb, e, ctx);
             b->add(hb);
         } else if (tag == "VBox") {
-            VBox* vb = Factory::createVBox(b->score()->dummy()->system());
+            VBox* vb = Factory::createVBox(b->score());
             read400::TRead::read(vb, e, ctx);
             b->add(vb);
         } else if (tag == "Text") {
@@ -3259,7 +3263,7 @@ static void readStaffContent206(Score* score, XmlReader& e, ReadContext& ctx)
                 readMeasureLast = true;
 
                 Measure* measure = nullptr;
-                measure = Factory::createMeasure(score->dummy()->system());
+                measure = Factory::createMeasure(score);
                 measure->setTick(ctx.tick());
                 //
                 // inherit timesig from previous measure
@@ -3320,7 +3324,7 @@ static void readStaffContent206(Score* score, XmlReader& e, ReadContext& ctx)
             if (tag == "Measure") {
                 if (measure == 0) {
                     LOGD("Score::readStaff(): missing measure!");
-                    measure = Factory::createMeasure(score->dummy()->system());
+                    measure = Factory::createMeasure(score);
                     measure->setTick(ctx.tick());
                     score->measures()->append(measure);
                 }
@@ -3435,12 +3439,11 @@ bool Read206::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Omr") {
             e.skipCurrentElement();
         } else if (tag == "Audio") {
-            score->setAudio(new Audio);
-            read400::TRead::read(score->audio(), e, ctx);
+            e.skipCurrentElement();
         } else if (tag == "showOmr") {
             e.skipCurrentElement();
         } else if (tag == "playMode") {
-            score->setPlayMode(PlayMode(e.readInt()));
+            e.skipCurrentElement();
         } else if (tag == "LayerTag") {
             e.skipCurrentElement();
         } else if (tag == "Layer") {
@@ -3567,11 +3570,21 @@ bool Read206::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
         return false;
     }
 
-    score->connectTies();
-
     score->setFileDivision(Constants::DIVISION);
 
-    score->setUpTempoMap();
+    score->updateTicksAndTimeSigMap();
+    if (score->isMaster()) {
+        // While reading the score, some elements might use `score->repeatList()` (which is incorrect
+        // anyway, because the repeatList will be incomplete because the score is incomplete, but some
+        // elements still do it).
+        // `score->repeatList()` calls `_repeatList->update()`; the repeat list then thinks that it is
+        // up-to-date from that point. But we weren't finished reading the score, so the score will still
+        // change. We need to tell the repeat list about that, so that it will be updated next time
+        // someone uses it.
+        static_cast<MasterScore*>(score)->invalidateRepeatList();
+    }
+    score->connectTies();
+    score->undoRemoveStaleTieJumpPoints(false);
 
     for (Part* p : score->parts()) {
         p->updateHarmonyChannels(false);
@@ -3640,7 +3653,7 @@ Ret Read206::readScoreFile(Score* score, XmlReader& e, ReadInOutData* out)
     read114::Read114::setBarLineSpanToStaves(score, ctx);
 
     // set local overrides to bar lines
-    constexpr auto st = SegmentType::BarLineType;
+    constexpr auto st = SegmentType::BarLineTypes;
     const size_t numStaves = score->nstaves();
     for (Segment* s = score->firstSegment(st); s; s = s->next1(st)) {
         // optional local bar line span override of this segment

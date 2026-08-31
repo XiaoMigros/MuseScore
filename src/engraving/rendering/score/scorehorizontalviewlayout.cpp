@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,6 +28,7 @@
 #include "dom/score.h"
 #include "dom/masterscore.h"
 #include "dom/system.h"
+#include "dom/systemlockindicator.h"
 #include "dom/spanner.h"
 #include "dom/page.h"
 #include "dom/durationelement.h"
@@ -48,9 +49,11 @@
 #include "beamlayout.h"
 #include "tupletlayout.h"
 #include "chordlayout.h"
+#include "chordbracketlayout.h"
 #include "arpeggiolayout.h"
 #include "measurelayout.h"
 #include "horizontalspacing.h"
+#include "masklayout.h"
 #include "tremololayout.h"
 #include "slurtielayout.h"
 #include "systemheaderlayout.h"
@@ -119,7 +122,7 @@ void ScoreHorizontalViewLayout::resetSystems(LayoutContext& ctx, bool layoutAll)
     if (layoutAll) {
         for (System* s : mutDom.systems()) {
             for (SpannerSegment* ss : s->spannerSegments()) {
-                ss->resetExplicitParent();
+                ss->setSystem(nullptr);
             }
         }
         muse::DeleteAll(mutDom.systems());
@@ -132,15 +135,15 @@ void ScoreHorizontalViewLayout::resetSystems(LayoutContext& ctx, bool layoutAll)
         }
 
         for (MeasureBase* mb = ctx.mutDom().first(); mb; mb = mb->next()) {
-            mb->resetExplicitParent();
+            mb->setSystem(nullptr);
         }
 
-        page = Factory::createPage(ctx.mutDom().rootItem());
+        page = Factory::createPage(ctx.mutDom().score());
         ctx.mutDom().pages().push_back(page);
         page->mutldata()->setBbox(0.0, 0.0, ctx.conf().loWidth(), ctx.conf().loHeight());
         page->setPageNumber(0);
 
-        System* system = Factory::createSystem(page);
+        System* system = Factory::createSystem(page->score());
         ctx.mutDom().systems().push_back(system);
         page->appendSystem(system);
         system->adjustStavesNumber(ctx.dom().nstaves());
@@ -211,6 +214,16 @@ void ScoreHorizontalViewLayout::layoutLinear(LayoutContext& ctx)
                             }
                         }
                         ArpeggioLayout::layoutArpeggio2(c->arpeggio(), ctx);
+                        for (EngravingItem* element : c->el()) {
+                            if (element->isChordBracket()) {
+                                ChordBracket* bracket = toChordBracket(element);
+                                if (c->onTabStaff()) {
+                                    TLayout::layoutItem(bracket, ctx);
+                                } else {
+                                    ChordBracketLayout::updateVerticalGeometry(bracket, ctx);
+                                }
+                            }
+                        }
                         ChordLayout::layoutSpanners(c, ctx);
                         if (c->tremoloSingleChord()) {
                             TremoloLayout::layout(c->tremoloSingleChord(), ctx);
@@ -250,6 +263,7 @@ void ScoreHorizontalViewLayout::layoutLinear(LayoutContext& ctx)
     system->setPos(lm, tm);
     ctx.mutState().page()->setWidth(lm + system->width() + rm);
     ctx.mutState().page()->setHeight(tm + system->height() + bm);
+    MaskLayout::computeMasks(ctx, ctx.mutState().page());
     ctx.mutState().page()->invalidateBspTree();
 }
 
@@ -257,13 +271,14 @@ void ScoreHorizontalViewLayout::layoutSystemLockIndicators(System* system)
 {
     // TODO: layout StaffVisibilityIndicator here
 
-    system->deleteLockIndicators();
+    system->deleteSystemLockIndicators();
 
-    std::vector<const SystemLock*> systemLocks = system->score()->systemLocks()->allLocks();
-    for (const SystemLock* lock : systemLocks) {
+    std::vector<const RangeLock*> systemLocks = system->score()->systemLocks()->allLocks();
+    for (const RangeLock* lock : systemLocks) {
         SystemLockIndicator* lockIndicator = Factory::createSystemLockIndicator(system, lock);
-        lockIndicator->setParent(system);
-        system->addLockIndicator(lockIndicator);
+        lockIndicator->setTrack(0);
+        lockIndicator->setOwnershipParent(system);
+        system->addSystemLockIndicator(lockIndicator);
         TLayout::layoutIndicatorIcon(lockIndicator, lockIndicator->mutldata());
     }
 }
@@ -272,6 +287,7 @@ void ScoreHorizontalViewLayout::layoutSystemLockIndicators(System* system)
 void ScoreHorizontalViewLayout::collectLinearSystem(LayoutContext& ctx)
 {
     std::vector<int> visibleParts;
+    visibleParts.reserve(ctx.dom().parts().size());
     for (size_t partIdx = 0; partIdx < ctx.dom().parts().size(); partIdx++) {
         if (ctx.dom().parts().at(partIdx)->show()) {
             visibleParts.push_back(static_cast<int>(partIdx));
@@ -279,7 +295,7 @@ void ScoreHorizontalViewLayout::collectLinearSystem(LayoutContext& ctx)
     }
 
     System* system = ctx.mutDom().systems().front();
-    SystemHeaderLayout::setInstrumentNames(system, ctx, /* longNames */ true);
+    SystemHeaderLayout::setInstrumentNames(system, ctx);
 
     double targetSystemWidth = ctx.dom().nmeasures() * ctx.conf().styleAbsolute(Sid::minMeasureWidth);
     system->setWidth(targetSystemWidth);
@@ -298,20 +314,22 @@ void ScoreHorizontalViewLayout::collectLinearSystem(LayoutContext& ctx)
 
     while (ctx.state().curMeasure()) {
         if (ctx.state().curMeasure()->isVBoxBase()) {
-            ctx.mutState().curMeasure()->resetExplicitParent();
+            ctx.mutState().curMeasure()->setSystem(nullptr);
             MeasureLayout::getNextMeasure(ctx);
+            MeasureLayout::layoutMeasure(ctx.mutState().curMeasure(), ctx);
             continue;
         }
         system->appendMeasure(ctx.mutState().curMeasure());
+        MeasureLayout::layoutMeasure(ctx.mutState().curMeasure(), ctx);
         bool createHeader = ctx.state().prevMeasure() && ctx.state().prevMeasure()->isHBox()
                             && toHBox(ctx.state().prevMeasure())->createSystemHeader();
         if (ctx.state().curMeasure()->isMeasure()) {
             Measure* m = toMeasure(ctx.mutState().curMeasure());
             if (m->mmRest()) {
-                m->mmRest()->resetExplicitParent();
+                m->mmRest()->setSystem(nullptr);
             }
             if (firstMeasureInScore) {
-                SystemLayout::layoutSystem(system, ctx, curSystemWidth, true);
+                SystemLayout::layoutSystem(system, ctx, curSystemWidth);
                 if (m->repeatStart()) {
                     Segment* s = m->findSegmentR(SegmentType::StartRepeatBarLine, Fraction(0, 1));
                     if (!s->enabled()) {
@@ -451,7 +469,9 @@ std::pair<double, double> ScoreHorizontalViewLayout::computeCellWidth(const Segm
     Fraction quantum = calculateQuantumCell(s->measure(), visibleParts);
 
     auto calculateWidth = [quantum, sc = s->score()->masterScore()](ChordRest* cr) {
-        return sc->widthOfSegmentCell()
+        //! width of a segment cell, in spatiums per quantum unit
+        static constexpr double WIDTH_OF_SEGMENT_CELL = 3;
+        return WIDTH_OF_SEGMENT_CELL
                * sc->style().spatium()
                * cr->globalTicks().numerator() / cr->globalTicks().denominator()
                * quantum.denominator() / quantum.numerator();
@@ -510,7 +530,7 @@ std::pair<double, double> ScoreHorizontalViewLayout::computeCellWidth(const Segm
 
     Segment* nextSeg = s->nextActive();
     if (!nextSeg) {
-        nextSeg = s->next(SegmentType::BarLineType);
+        nextSeg = s->next(SegmentType::BarLineTypes);
     }
 
     if (nextSeg) {

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 
 #include "measurebase.h"
 
+#include "box.h"
 #include "factory.h"
 #include "layoutbreak.h"
 #include "measure.h"
@@ -39,9 +40,30 @@ using namespace mu::engraving;
 //   MeasureBase
 //---------------------------------------------------------
 
-MeasureBase::MeasureBase(const ElementType& type, System* system)
-    : EngravingItem(type, system)
+MeasureBase::MeasureBase(const ElementType& type, Score* parent)
+    : EngravingItem(type, parent)
 {
+    // Owned by its score right away; a system only places it later
+    setOwnershipParent(parent);
+}
+
+void MeasureBase::setOwnershipParent(Score* score)
+{
+    EngravingItem::setOwnershipParent(score);
+}
+
+void MeasureBase::setOwnershipParent(Box* box)
+{
+    EngravingItem::setOwnershipParent(box);
+}
+
+EngravingItem* MeasureBase::layoutParent() const
+{
+    if (m_system) {
+        return m_system;
+    }
+    // e.g. a horizontal frame nested inside a vertical frame is placed within its parent frame
+    return EngravingItem::layoutParent();
 }
 
 MeasureBase::MeasureBase(const MeasureBase& m)
@@ -100,14 +122,13 @@ MeasureBase::~MeasureBase()
 
 System* MeasureBase::prevNonVBoxSystem() const
 {
-    bool mmRests = score()->style().styleB(Sid::createMultiMeasureRests);
     System* curSystem = system();
     IF_ASSERT_FAILED(curSystem) {
         return nullptr;
     }
 
     System* prevSystem = curSystem;
-    for (const MeasureBase* mb = this; mb && prevSystem == curSystem; mb = mmRests ? mb->prevMM() : mb->prev()) {
+    for (const MeasureBase* mb = this; mb && prevSystem == curSystem; mb = mb->prevMM()) {
         if (mb->isMeasure() || mb->isHBox()) {
             prevSystem = mb->system();
         } else {
@@ -120,14 +141,13 @@ System* MeasureBase::prevNonVBoxSystem() const
 
 System* MeasureBase::nextNonVBoxSystem() const
 {
-    bool mmRests = score()->style().styleB(Sid::createMultiMeasureRests);
     System* curSystem = system();
     IF_ASSERT_FAILED(curSystem) {
         return nullptr;
     }
 
     System* nextSystem = curSystem;
-    for (const MeasureBase* mb = this; mb && nextSystem == curSystem; mb = mmRests ? mb->nextMM() : mb->next()) {
+    for (const MeasureBase* mb = this; mb && nextSystem == curSystem; mb = mb->nextMM()) {
         if (mb->isMeasure() || mb->isHBox()) {
             nextSystem = mb->system();
         } else {
@@ -138,6 +158,41 @@ System* MeasureBase::nextNonVBoxSystem() const
     return nextSystem != curSystem ? nextSystem : nullptr;
 }
 
+Page* MeasureBase::page() const
+{
+    return system() ? system()->page() : nullptr;
+}
+
+Page* MeasureBase::prevPage() const
+{
+    Page* curPage = page();
+    IF_ASSERT_FAILED(curPage) {
+        return nullptr;
+    }
+
+    Page* prevPage = curPage;
+    for (const MeasureBase* mb = this; mb && prevPage == curPage; mb = mb->prevMM()) {
+        prevPage = mb->system()->page();
+    }
+
+    return prevPage != curPage ? prevPage : nullptr;
+}
+
+Page* MeasureBase::nextPage() const
+{
+    Page* curPage = page();
+    IF_ASSERT_FAILED(curPage) {
+        return nullptr;
+    }
+
+    Page* nextPage = curPage;
+    for (const MeasureBase* mb = this; mb && nextPage == curPage; mb = mb->nextMM()) {
+        nextPage = mb->system()->page();
+    }
+
+    return nextPage != curPage ? nextPage : nullptr;
+}
+
 //---------------------------------------------------------
 //   add
 ///   Add new EngravingItem \a el to MeasureBase
@@ -145,8 +200,8 @@ System* MeasureBase::nextNonVBoxSystem() const
 
 void MeasureBase::add(EngravingItem* e)
 {
-    if (e->explicitParent() != this) {
-        e->setParent(this);
+    if (e->ownershipParent() != this) {
+        e->setOwnershipParent(this);
     }
 
     if (e->isLayoutBreak()) {
@@ -205,7 +260,6 @@ void MeasureBase::remove(EngravingItem* el)
             break;
         case LayoutBreakType::SECTION:
             setSectionBreak(false);
-            score()->setPause(endTick(), 0);
             if (lb->startWithMeasureOne()) {
                 triggerLayoutToEnd();
             }
@@ -317,9 +371,9 @@ double MeasureBase::pause() const
 MeasureBase* MeasureBase::top() const
 {
     const MeasureBase* mb = this;
-    while (mb->explicitParent()) {
-        if (mb->explicitParent()->isMeasureBase()) {
-            mb = toMeasureBase(mb->explicitParent());
+    while (mb->ownershipParent()) {
+        if (mb->ownershipParent()->isMeasureBase()) {
+            mb = toMeasureBase(mb->ownershipParent());
         } else {
             break;
         }
@@ -473,7 +527,7 @@ void MeasureBase::undoSetBreak(bool v, LayoutBreakType type)
         LayoutBreak* lb = Factory::createLayoutBreak(mb);
         lb->setLayoutBreakType(type);
         lb->setTrack(0);
-        lb->setParent(mb);
+        lb->setOwnershipParent(mb);
         score()->undoAddElement(lb);
     }
     cleanupLayoutBreaks(true);
@@ -638,20 +692,37 @@ bool MeasureBase::isBefore(const MeasureBase* other) const
     return false;
 }
 
-const SystemLock* MeasureBase::systemLock() const
+const RangeLock* MeasureBase::systemLock() const
 {
     return score()->systemLocks()->lockContaining(this);
 }
 
 bool MeasureBase::isStartOfSystemLock() const
 {
-    const SystemLock* lock = score()->systemLocks()->lockStartingAt(this);
+    const RangeLock* lock = score()->systemLocks()->lockStartingAt(this);
     return lock != nullptr;
 }
 
 bool MeasureBase::isEndOfSystemLock() const
 {
-    const SystemLock* lock = systemLock();
+    const RangeLock* lock = systemLock();
+    return lock && lock->endMB() == this;
+}
+
+const RangeLock* MeasureBase::pageLock() const
+{
+    return score()->pageLocks()->lockContaining(this);
+}
+
+bool MeasureBase::isStartOfPageLock() const
+{
+    const RangeLock* lock = score()->pageLocks()->lockStartingAt(this);
+    return lock != nullptr;
+}
+
+bool MeasureBase::isEndOfPageLock() const
+{
+    const RangeLock* lock = pageLock();
     return lock && lock->endMB() == this;
 }
 
@@ -839,10 +910,10 @@ void MeasureBaseList::change(MeasureBase* ob, MeasureBase* nb)
         m_first = nb;
     }
     if (nb->isBox()) {
-        nb->setParent(ob->system());
+        nb->setSystem(ob->system());
     }
     for (EngravingItem* e : nb->el()) {
-        e->setParent(nb);
+        e->setOwnershipParent(nb);
     }
 }
 
@@ -900,6 +971,20 @@ Measure* MeasureBaseList::measureByTick(int tick) const
     }
 
     return nullptr;
+}
+
+MeasureBase* MeasureBaseList::firstMeasureBaseAtTick(int tick) const
+{
+    if (empty() || tick > m_last->endTick().ticks()) {
+        return nullptr;
+    }
+
+    auto it = m_tickIndex.upper_bound(tick);
+
+    if (it != m_tickIndex.begin()) {
+        --it;
+    }
+    return it->second;
 }
 
 std::vector<MeasureBase*> MeasureBaseList::measureBasesAtTick(int tick) const

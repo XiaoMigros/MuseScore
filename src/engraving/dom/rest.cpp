@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,10 +28,14 @@
 #include "containers.h"
 #include "translation.h"
 
+#include "iengravingconfiguration.h"
+
 #include "../editing/addremoveelement.h"
 #include "../editing/editchord.h"
+#include "../editing/editmeasurerepeat.h"
+#include "../editing/noteinput.h"
+#include "../editing/transaction/transaction.h"
 
-#include "actionicon.h"
 #include "articulation.h"
 #include "chord.h"
 #include "deadslapped.h"
@@ -43,7 +47,6 @@
 #include "segment.h"
 #include "staff.h"
 #include "stafftype.h"
-#include "parenthesis.h"
 
 #include "log.h"
 
@@ -191,7 +194,7 @@ bool Rest::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* Rest::drop(EditData& data)
+EngravingItem* Rest::drop(Transaction& tx, EditData& data)
 {
     EngravingItem* e = data.dropElement;
     switch (e->type()) {
@@ -216,9 +219,9 @@ EngravingItem* Rest::drop(EditData& data)
         if (!d.isZero()) {
             Segment* seg = score()->setNoteRest(segment(), track(), nval, d, dir);
             if (seg) {
-                ChordRest* cr = toChordRest(seg->element(track()));
+                const ChordRest* cr = toChordRest(seg->element(track()));
                 if (cr) {
-                    score()->nextInputPos(cr, false);
+                    NoteInput::nextInputPos(tx, score(), cr, false);
                 }
             }
         }
@@ -229,13 +232,13 @@ EngravingItem* Rest::drop(EditData& data)
         int numMeasures = toMeasureRepeat(e)->numMeasures();
         delete e;
         if (durationType().type() == DurationType::V_MEASURE) {
-            score()->cmdAddMeasureRepeat(measure(), numMeasures, staffIdx());
+            EditMeasureRepeat::addMeasureRepeat(tx, score(), measure(), numMeasures, staffIdx());
         }
         break;
     }
 
     default:
-        return ChordRest::drop(data);
+        return ChordRest::drop(tx, data);
     }
     return 0;
 }
@@ -307,7 +310,7 @@ void Rest::checkDots()
     int n = dots() - int(m_dots.size());
     for (int i = 0; i < n; ++i) {
         NoteDot* dot = Factory::createNoteDot(this);
-        dot->setParent(this);
+        dot->setOwnershipParent(this);
         dot->setVisible(visible());
         score()->undoAddElement(dot);
     }
@@ -532,8 +535,8 @@ String Rest::screenReaderInfo() const
 
 void Rest::add(EngravingItem* e)
 {
-    if (e->explicitParent() != this) {
-        e->setParent(this);
+    if (e->ownershipParent() != this) {
+        e->setOwnershipParent(this);
     }
     e->setTrack(track());
 

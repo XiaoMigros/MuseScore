@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,7 +27,6 @@
 #include "dom/text.h"
 #include "draw/fontmetrics.h"
 
-#include "editing/editfretboarddiagram.h"
 #include "tlayout.h"
 
 using namespace mu::engraving;
@@ -62,8 +61,8 @@ void BoxLayout::layoutBaseBox(const Box* item, Box::LayoutData* ldata, const Lay
 
 void BoxLayout::layoutHBox(const HBox* item, HBox::LayoutData* ldata, const LayoutContext& ctx)
 {
-    if (item->explicitParent() && item->explicitParent()->isVBox()) {
-        const VBox* parentVBox = toVBox(item->explicitParent());
+    if (item->ownershipParent() && item->ownershipParent()->isVBox()) {
+        const VBox* parentVBox = toVBox(item->ownershipParent());
 
         LD_CONDITION(parentVBox->ldata()->isSetBbox());
 
@@ -244,9 +243,13 @@ void BoxLayout::layoutFBox(const FBox* item, FBox::LayoutData* ldata, const Layo
     const double columnGap = item->columnGap().val() * spatium;
 
     //! The height of each row is determined by the height of the tallest cell in that row
+    const size_t numRows = chordsPerRow > 0 ? (totalDiagrams + chordsPerRow - 1) / chordsPerRow : 0;
     std::vector<double> rowHeights;
+    rowHeights.reserve(numRows);
     std::vector<double> harmonyHeights;
+    harmonyHeights.reserve(numRows);
     std::vector<double> harmonyBaselines;
+    harmonyBaselines.reserve(numRows);
     for (size_t i = 0; i < totalDiagrams; i += chordsPerRow) {
         size_t itemsInRow = std::min(chordsPerRow, totalDiagrams - i);
         double maxRowHeight = 0.0;

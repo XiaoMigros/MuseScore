@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,6 +29,7 @@
 
 namespace mu::engraving {
 class TDuration;
+class Transaction;
 
 struct RestVerticalClearance {
 public:
@@ -73,7 +74,7 @@ public:
 
     Rest* clone() const override { return new Rest(*this, false); }
     EngravingItem* linkedClone() override { return new Rest(*this, true); }
-    Measure* measure() const override { return explicitParent() ? toMeasure(explicitParent()->explicitParent()) : 0; }
+    Measure* measure() const override { return ownershipParent() ? toMeasure(ownershipParent()->ownershipParent()) : 0; }
     double mag() const override;
     double intrinsicMag() const override;
 
@@ -81,7 +82,7 @@ public:
     void setTrack(track_idx_t val) override;
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
     bool isGap() const { return m_gap; }
     virtual void setGap(bool v) { m_gap = v; }

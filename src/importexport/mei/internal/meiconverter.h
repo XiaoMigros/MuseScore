@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,8 +31,6 @@
 #include "engraving/dom/tremolotwochord.h"
 #include "engraving/dom/tremolosinglechord.h"
 #include "engraving/dom/volta.h"
-
-#include "engraving/iengravingfontsprovider.h"
 
 #include "thirdparty/libmei/cmn.h"
 #include "thirdparty/libmei/cmnornaments.h"
@@ -91,8 +89,8 @@ enum ElisionType {
 class Convert
 {
     // The fallback font is used to convert smufl codes (char32_t) to engraving::SymId
-    static inline muse::GlobalInject<engraving::IEngravingFontsProvider> engravingFonts;
-    static inline muse::GlobalInject<engraving::IEngravingConfiguration> engravingConfiguration;
+    static muse::GlobalInject<engraving::IEngravingFontsProvider> engravingFonts;
+    static muse::GlobalInject<engraving::IEngravingConfiguration> engravingConfiguration;
 public:
 
     /**

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -37,8 +37,8 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
-VibratoSegment::VibratoSegment(Vibrato* sp, System* parent)
-    : LineSegment(ElementType::VIBRATO_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+VibratoSegment::VibratoSegment(Vibrato* sp)
+    : LineSegment(ElementType::VIBRATO_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
 }
 
@@ -106,7 +106,6 @@ EngravingObject* VibratoSegment::propertyDelegate(Pid pid) const
 
 static const ElementStyle vibratoStyle {
     { Sid::vibratoPlacement,      Pid::PLACEMENT },
-    { Sid::vibratoPosAbove,       Pid::OFFSET },
 };
 
 //---------------------------------------------------------
@@ -125,7 +124,6 @@ Vibrato::~Vibrato()
 }
 
 static const ElementStyle vibratoSegmentStyle {
-    { Sid::vibratoPosAbove,       Pid::OFFSET },
     { Sid::vibratoMinDistance,    Pid::MIN_DISTANCE },
 };
 
@@ -133,9 +131,9 @@ static const ElementStyle vibratoSegmentStyle {
 //   createLineSegment
 //---------------------------------------------------------
 
-LineSegment* Vibrato::createLineSegment(System* parent)
+LineSegment* Vibrato::createLineSegment()
 {
-    VibratoSegment* seg = new VibratoSegment(this, parent);
+    VibratoSegment* seg = new VibratoSegment(this);
     seg->setTrack(track());
     seg->setColor(lineColor());
     seg->initElementStyle(&vibratoSegmentStyle);
@@ -163,26 +161,6 @@ String Vibrato::vibratoTypeUserName() const
 muse::TranslatableString Vibrato::subtypeUserName() const
 {
     return TConv::userName(vibratoType());
-}
-
-//---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid VibratoSegment::getPropertyStyle(Pid pid) const
-{
-    if (pid == Pid::OFFSET) {
-        return spanner()->placeAbove() ? Sid::vibratoPosAbove : Sid::vibratoPosBelow;
-    }
-    return LineSegment::getPropertyStyle(pid);
-}
-
-Sid Vibrato::getPropertyStyle(Pid pid) const
-{
-    if (pid == Pid::OFFSET) {
-        return placeAbove() ? Sid::vibratoPosAbove : Sid::vibratoPosBelow;
-    }
-    return SLine::getPropertyStyle(pid);
 }
 
 //---------------------------------------------------------

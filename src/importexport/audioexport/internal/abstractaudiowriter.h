@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -56,7 +56,8 @@ public:
     void abort() override;
 
 protected:
-    muse::Ret doWriteAndWait(notation::INotationPtr notation, muse::io::IODevice& dstDevice, const muse::audio::SoundTrackFormat& format);
+    muse::Ret doWriteAndWait(notation::INotationPtr notation, muse::io::IODevice& dstDevice, const muse::audio::SoundTrackFormat& format,
+                             const Options& options = Options());
 
 private:
     void doWrite(muse::io::IODevice& dstDevice, const muse::audio::SoundTrackFormat& format);
@@ -67,6 +68,8 @@ private:
     muse::Progress m_progress;
     bool m_isCompleted = false;
     muse::Ret m_writeRet;
+
+    notation::INotationPtr m_notationForRestore;
 };
 }
 

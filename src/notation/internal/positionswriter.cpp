@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,6 +33,9 @@
 #include "engraving/dom/system.h"
 
 #include "engraving/types/types.h"
+
+#include "inotation.h"
+#include "inotationelements.h" // IWYU pragma: keep
 
 #include "log.h"
 
@@ -79,7 +82,7 @@ static void writeMeasureEvents(XmlStreamWriter& writer, Measure* m, int offset, 
          s = s->next(mu::engraving::SegmentType::ChordRest)) {
         int tick = s->tick().ticks() + offset;
         int id = segments[(void*)s];
-        int time = lrint(m->score()->repeatList().utick2utime(tick) * 1000);
+        int time = lrint(m->score()->utick2utime(tick) * 1000);
 
         writeEventPosition(writer, std::to_string(id), time);
     }
@@ -235,9 +238,7 @@ void PositionsWriter::writeEventsPositions(XmlStreamWriter& writer, const mu::en
 
     writer.startElement(EVENTS_TAG);
 
-    score->masterScore()->setExpandRepeats(true);
-
-    for (const mu::engraving::RepeatSegment* repeatSegment : score->repeatList()) {
+    for (const mu::engraving::RepeatSegment* repeatSegment : score->expandedRepeatList()) {
         int startTick = repeatSegment->tick;
         int endTick = repeatSegment->endTick();
         int tickOffset = repeatSegment->utick - repeatSegment->tick;
@@ -247,7 +248,7 @@ void PositionsWriter::writeEventsPositions(XmlStreamWriter& writer, const mu::en
             } else {
                 int tick = measure->tick().ticks() + tickOffset;
                 int id = elementIds[(void*)measure];
-                int time = std::lrint(measure->score()->repeatList().utick2utime(tick) * 1000);
+                int time = std::lrint(measure->score()->utick2utime(tick) * 1000);
 
                 writeEventPosition(writer, std::to_string(id), time);
             }

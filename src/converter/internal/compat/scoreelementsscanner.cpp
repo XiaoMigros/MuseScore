@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -71,7 +71,7 @@ static bool itemAccepted(const EngravingItem* item)
 
 static bool isChordArticulation(const EngravingItem* item)
 {
-    const EngravingItem* parent = item->parentItem();
+    const EngravingObject* parent = item->ownershipParent();
     if (!parent || !parent->isChord()) {
         return false;
     }
@@ -157,7 +157,7 @@ static void addElementInfoIfNeed(ScannerData* scannerData, EngravingItem* item)
         }
         info.duration = durationInfo(chord->durationType());
     } else if (isChordArticulation(item)) {
-        Chord* chord = toChord(item->parentItem());
+        Chord* chord = toChord(item->ownershipParent());
         scannerData->chords.insert(chord);
         info.name = item->translatedSubtypeUserName();
         info.notes = chordToNotes(chord);

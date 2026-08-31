@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -2154,7 +2154,7 @@ QString Braille::brailleGraceNoteMarking(Chord* chord)
     // TODO: doubling the grace note sign where there are more than 4 grace notes.
     //       the book is not very clear how this doubling is done and how the user
     //       understands where do grace notes end.
-    if (!chord->isGrace() || !chord->explicitParent()->isChord()) {
+    if (!chord->isGrace() || !chord->ownershipParent()->isChord()) {
         return QString();
     }
 
@@ -2402,8 +2402,10 @@ QString Braille::brailleMeasure(Measure* measure, int staffCount)
             resetOctave(staffCount);
 
             // Undo filling the missing beats with rests, so we don't have an altered score.
+/* see FIXME above
             m_score->undoRedo(true, nullptr);
             m_score->undoRedo(true, nullptr);
+*/
             m_score->deselectAll();
         }
     }
@@ -2821,10 +2823,14 @@ QString Braille::brailleTremolo(Chord* chord)
     case TremoloType::R16: return BRAILLE_TREMOLO_16THS;
     case TremoloType::R32: return BRAILLE_TREMOLO_32NDS;
     case TremoloType::R64: return BRAILLE_TREMOLO_64THS;
+    case TremoloType::R128: return BRAILLE_TREMOLO_128THS;
+    case TremoloType::R256: return QString(); // unsupported in braille
     case TremoloType::C8:  return BRAILLE_TREMOLO_8THS_ALT;
     case TremoloType::C16: return BRAILLE_TREMOLO_16THS_ALT;
     case TremoloType::C32: return BRAILLE_TREMOLO_32NDS_ALT;
     case TremoloType::C64: return BRAILLE_TREMOLO_64THS_ALT;
+    case TremoloType::C128: return BRAILLE_TREMOLO_128THS_ALT;
+    case TremoloType::C256: return QString(); // unsupported in braille
     case TremoloType::BUZZ_ROLL: return QString();     //TODO
     case TremoloType::INVALID_TREMOLO: return QString();
     }
@@ -2835,6 +2841,11 @@ QString Braille::brailleTuplet(Tuplet* tuplet, DurationElement* el)
 {
     if (tuplet == nullptr || *tuplet->elements().begin() != el) {
         return QString();
+    }
+
+    if (tuplet->ratio().numerator() == 3) {
+        // Special handling for triplets.
+        return QString("2"); // '⠆' (dots 2-3)
     }
 
     return QString("_") + QString::number(tuplet->ratio().numerator()) + QString("'");

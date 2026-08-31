@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,8 +24,8 @@
 
 #include <QCoreApplication>
 
-#include "async/async.h"
 #include "translation.h"
+#include "types/version.h"
 
 #include "muse_framework_config.h"
 
@@ -135,12 +135,7 @@ void StartupScenario::registerAudioPlugins()
     //! which leads to automatic exit from the application.
     //! (Thanks to the splashscreen, but this is not an obvious detail)
     qApp->setQuitLockEnabled(false);
-
-    Ret ret = registerAudioPluginsScenario()->updatePluginsRegistry();
-    if (!ret) {
-        LOGE() << ret.toString();
-    }
-
+    registerAudioPluginsScenario()->updatePluginsRegistry();
     qApp->setQuitLockEnabled(true);
 }
 

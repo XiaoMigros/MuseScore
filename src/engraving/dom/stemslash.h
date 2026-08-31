@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -40,11 +40,11 @@ class StemSlash final : public EngravingItem
 
 public:
 
-    double mag() const override { return parentItem()->mag(); }
+    double mag() const override { return layoutParent()->mag(); }
 
     StemSlash* clone() const override { return new StemSlash(*this); }
 
-    Chord* chord() const { return (Chord*)explicitParent(); }
+    Chord* chord() const { return (Chord*)ownershipParent(); }
 
     struct LayoutData : public EngravingItem::LayoutData {
         LineF line;

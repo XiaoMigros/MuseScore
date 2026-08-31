@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,7 +36,12 @@
 #include "dom/text.h"
 #include "editing/editpart.h"
 #include "editing/editsystemlocks.h"
+#include "editing/transaction/transaction.h"
 #include "types/typesconv.h"
+
+#include "notation/inotation.h"
+#include "notation/inotationinteraction.h" // IWYU pragma: keep
+#include "notation/inotationundostack.h"
 
 // api
 #include "apistructs.h"
@@ -75,7 +80,7 @@ void Score::addText(const QString& type, const QString& txt)
     }
 
     mu::engraving::Text* text = mu::engraving::Factory::createText(mb, tid);
-    text->setParent(mb);
+    text->setOwnershipParent(mb);
     text->setXmlText(txt);
     score()->undoAddElement(text);
 }
@@ -555,6 +560,11 @@ QQmlListProperty<System> Score::systems() const
     return wrapContainerProperty<System>(this, score()->systems());
 }
 
+QQmlListProperty<EngravingItem> Score::brackets(int staffIdx)
+{
+    return wrapContainerProperty<EngravingItem>(this, score()->brackets(static_cast<staff_idx_t>(staffIdx)));
+}
+
 bool Score::hasLyrics() const
 {
     return score()->hasLyrics();
@@ -628,12 +638,14 @@ void Score::doLayout(Fraction* startTick, Fraction* endTick)
 
 void Score::addRemoveSystemLocks(int interval, bool lock)
 {
-    EditSystemLocks::addRemoveSystemLocks(score(), interval, lock);
+    Transaction& tx = score()->transactionManager()->currentOrDummyTransaction();
+    EditSystemLocks::addRemoveSystemLocks(tx, score(), interval, lock);
 }
 
 void Score::makeIntoSystem(apiv1::MeasureBase* first, apiv1::MeasureBase* last)
 {
-    EditSystemLocks::makeIntoSystem(score(), first->measureBase(), last->measureBase());
+    Transaction& tx = score()->transactionManager()->currentOrDummyTransaction();
+    EditSystemLocks::makeIntoSystem(tx, score(), first->measureBase(), last->measureBase());
 }
 
 void Score::showElementInScore(apiv1::EngravingItem* wrappedElement, int staffIdx)

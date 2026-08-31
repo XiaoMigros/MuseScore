@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,32 +22,35 @@
 #include "read400.h"
 
 #include "../editing/mscoreview.h"
+#include "../editing/noteinput.h"
+#include "../editing/paste.h"
+#include "../editing/transaction/transaction.h"
 #include "../editing/transpose.h"
 
-#include "dom/audio.h"
+#include "dom/beam.h"
+#include "dom/breath.h"
+#include "dom/chord.h"
+#include "dom/dynamic.h"
 #include "dom/excerpt.h"
 #include "dom/factory.h"
+#include "dom/figuredbass.h"
+#include "dom/fret.h"
+#include "dom/hairpin.h"
+#include "dom/harmony.h"
+#include "dom/lyrics.h"
 #include "dom/masterscore.h"
+#include "dom/measure.h"
+#include "dom/measurerepeat.h"
+#include "dom/note.h"
 #include "dom/part.h"
 #include "dom/score.h"
 #include "dom/spanner.h"
 #include "dom/staff.h"
-#include "dom/text.h"
-#include "dom/tuplet.h"
-#include "dom/chord.h"
-#include "dom/beam.h"
-#include "dom/lyrics.h"
-#include "dom/note.h"
-#include "dom/measurerepeat.h"
 #include "dom/staff.h"
-#include "dom/harmony.h"
+#include "dom/text.h"
 #include "dom/tie.h"
-#include "dom/breath.h"
-#include "dom/fret.h"
-#include "dom/dynamic.h"
-#include "dom/hairpin.h"
-#include "dom/figuredbass.h"
 #include "dom/tremolotwochord.h"
+#include "dom/tuplet.h"
 
 #include "engravingerrors.h"
 
@@ -130,12 +133,11 @@ bool Read400::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Omr") {
             e.skipCurrentElement();
         } else if (tag == "Audio") {
-            score->m_audio = new Audio;
-            TRead::read(score->m_audio, e, ctx);
+            e.skipCurrentElement();
         } else if (tag == "showOmr") {
             e.skipCurrentElement();
         } else if (tag == "playMode") {
-            score->m_playMode = PlayMode(e.readInt());
+            e.skipCurrentElement();
         } else if (tag == "LayerTag") {
             e.skipCurrentElement();
         } else if (tag == "Layer") {
@@ -257,7 +259,7 @@ bool Read400::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
 
             ctx.setScore(curScore);
 
-            s->linkMeasures(m);
+            Excerpt::linkMeasures(s, m);
             ex->setTracksMapping(ctx.tracks());
             m->addExcerpt(ex);
         } else if (tag == "name") {
@@ -293,8 +295,6 @@ bool Read400::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
         return false;
     }
 
-    score->connectTies();
-
     score->m_fileDivision = Constants::DIVISION;
 
     // Make sure every instrument has an instrumentId set.
@@ -304,9 +304,21 @@ bool Read400::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
         }
     }
 
-    score->setUpTempoMap();
+    score->updateTicksAndTimeSigMap();
+    if (score->isMaster()) {
+        // While reading the score, some elements might use `score->repeatList()` (which is incorrect
+        // anyway, because the repeatList will be incomplete because the score is incomplete, but some
+        // elements still do it).
+        // `score->repeatList()` calls `_repeatList->update()`; the repeat list then thinks that it is
+        // up-to-date from that point. But we weren't finished reading the score, so the score will still
+        // change. We need to tell the repeat list about that, so that it will be updated next time
+        // someone uses it.
+        static_cast<MasterScore*>(score)->invalidateRepeatList();
+    }
+    score->connectTies();
+    score->undoRemoveStaleTieJumpPoints(false);
 
-    for (Part* p : score->m_parts) {
+    for (Part* p : score->parts()) {
         p->updateHarmonyChannels(false);
     }
 
@@ -323,11 +335,42 @@ bool Read400::readScoreTag(Score* score, XmlReader& e, ReadContext& ctx)
     return true;
 }
 
+bool Read400::preparePasteDurationElement(Score* score, const Fraction& tick, const Fraction& ticks, const track_idx_t track)
+{
+    Measure* destinationMeasure = score->undoGetMeasure(tick);
+    IF_ASSERT_FAILED(destinationMeasure) {
+        return false;
+    }
+
+    Segment* pasteDestinationSeg = destinationMeasure->undoGetSegment(SegmentType::ChordRest, tick);
+    IF_ASSERT_FAILED(pasteDestinationSeg) {
+        return false;
+    }
+
+    // First make a gap for as long as we need...
+    IF_ASSERT_FAILED(score->makeGapVoice(pasteDestinationSeg, track, ticks, tick, /*deleteAnnotations*/ false)) {
+        return false;
+    }
+
+    // And shorten any segments that overlap with our destination...
+    if (Segment* leftSeg = score->tick2leftSegment(tick)) {
+        ChordRest* prevCr = leftSeg->nextChordRest(track, /*backwards*/ true, /*stopAtMeasureBoundary*/ true);
+        if (prevCr && prevCr->endTick() > tick) {
+            NoteInput::truncateChordRest(
+                score->transactionManager()->currentOrDummyTransaction(), score, prevCr, tick, /*fillWithRest*/ false);
+        }
+    }
+
+    return true;
+}
+
 bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fraction scale)
 {
     assert(dst->isChordRestType());
 
     Score* score = dst->score();
+    Transaction& tx = score->transactionManager()->currentOrDummyTransaction();
+
     ReadContext ctx(score);
     ctx.setPasteMode(true);
 
@@ -421,22 +464,6 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                     ctx.setTransposeChromatic(static_cast<int8_t>(e.readInt()));
                 } else if (tag == "transposeDiatonic") {
                     ctx.setTransposeDiatonic(static_cast<int8_t>(e.readInt()));
-                } else if (tag == "voiceOffset") {
-                    Fraction voiceOffset[VOICES];
-                    std::fill(voiceOffset, voiceOffset + VOICES, Fraction(1, 0));
-                    while (e.readNextStartElement()) {
-                        if (e.name() != "voice") {
-                            e.unknown();
-                        }
-                        voice_idx_t voiceId = static_cast<voice_idx_t>(e.intAttribute("id", -1));
-                        assert(voiceId < VOICES);
-                        voiceOffset[voiceId] = Fraction::fromTicks(e.readInt());
-                    }
-                    if (!score->makeGap1(dstTick, dstStaffIdx, tickLen, voiceOffset)) {
-                        LOGD() << "cannot make gap in staff " << dstStaffIdx << " at tick " << dstTick.ticks();
-                        done = true;             // break main loop, cannot make gap
-                        break;
-                    }
                 } else if (tag == "location") {
                     Location loc = Location::relative();
                     TRead::read(&loc, e, ctx);
@@ -457,7 +484,7 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                         tuplet->setTicks(ticksScaled);
                         tuplet->setBaseLen(tuplet->baseLen().fraction() * scale);
                     }
-                    tuplet->setParent(measure);
+                    tuplet->setOwnershipParent(measure);
                     tuplet->setTick(tick);
                     tuplet->setTuplet(oldTuplet);
                     if (tuplet->rtick() + tuplet->actualTicks() > measure->ticks()) {
@@ -467,6 +494,12 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                         }
                         MScore::setError(MsError::TUPLET_CROSSES_BAR);
                         return false;
+                    }
+                    if (!tuplet->tuplet()) {
+                        IF_ASSERT_FAILED(preparePasteDurationElement(score, tick, tuplet->actualTicksAt(tick), tuplet->track())) {
+                            e.skipCurrentElement();
+                            continue;
+                        }
                     }
                     if (oldTuplet) {
                         tuplet->readAddTuplet(oldTuplet);
@@ -601,7 +634,13 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                                 cr->setDurationType(newLength);
                             }
                         }
-                        score->pasteChordRest(cr, tick);
+                        if (!cr->tuplet()) {
+                            IF_ASSERT_FAILED(preparePasteDurationElement(score, tick, cr->actualTicksAt(tick), cr->track())) {
+                                e.skipCurrentElement();
+                                continue;
+                            }
+                        }
+                        Paste::pasteChordRest(tx, score, cr, tick);
                     }
                 } else if (tag == "Spanner") {
                     TRead::readSpanner(e, ctx, score, ctx.track());
@@ -620,7 +659,7 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                     Interval interval = staffDest->transpose(tick);
                     if (!ctx.style().styleB(Sid::concertPitch) && !interval.isZero()) {
                         interval.flip();
-                        Transpose::undoTransposeHarmony(score, harmony, interval);
+                        Transpose::undoTransposeHarmony(tx, harmony, interval);
                     }
 
                     // remove pre-existing chords on this track
@@ -630,7 +669,7 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                             score->undoRemoveElement(el);
                         }
                     }
-                    harmony->setParent(seg);
+                    harmony->setOwnershipParent(seg);
                     score->undoAddElement(harmony);
                     pastedHarmony.push_back(harmony);
                 } else if (tag == "Dynamic"
@@ -660,7 +699,7 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                     Fraction tick = doScale ? (ctx.tick() - dstTick) * scale + dstTick : ctx.tick();
                     Measure* m = score->tick2measure(tick);
                     Segment* seg = m->undoGetSegment(SegmentType::ChordRest, tick);
-                    el->setParent(seg);
+                    el->setOwnershipParent(seg);
 
                     // be sure to paste the element in the destination track;
                     // setting track needs to be repeated, as it might have been overwritten by el->read()
@@ -677,7 +716,7 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                     Clef* clef = Factory::createClef(segment);
                     TRead::read(clef, e, ctx);
                     clef->setTrack(ctx.track());
-                    clef->setParent(segment);
+                    clef->setOwnershipParent(segment);
                     score->undoChangeElement(segment->element(ctx.track()), clef);
                 } else if (tag == "Breath") {
                     Fraction tick = doScale ? (ctx.tick() - dstTick) * scale + dstTick : ctx.tick();
@@ -690,13 +729,12 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                     breath->setTrack(ctx.track());
                     breath->setPlacement(breath->track() & 1 ? PlacementV::BELOW : PlacementV::ABOVE);
                     TRead::read(breath, e, ctx);
-                    breath->setParent(segment);
+                    breath->setOwnershipParent(segment);
                     score->undoChangeElement(segment->element(ctx.track()), breath);
                 } else if (tag == "Beam") {
-                    Beam* beam = Factory::createBeam(score->dummy()->system());
+                    Beam* beam = Factory::createBeam(score);
                     beam->setTrack(ctx.track());
                     TRead::read(beam, e, ctx);
-                    beam->resetExplicitParent();
                     if (startingBeam) {
                         LOGD("The read beam was not used");
                         delete startingBeam;
@@ -740,8 +778,8 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
                 if (sp->staffIdx() < dstStaff || sp->staffIdx() >= dstStaff + staves) {
                     continue;
                 }
-                // CHORD and NOTE spanners are normally handled already
-                if (sp->anchor() == Spanner::Anchor::CHORD || sp->anchor() == Spanner::Anchor::NOTE) {
+                // CHORDREST and NOTE spanners are normally handled already
+                if (sp->anchor() == Spanner::Anchor::CHORDREST || sp->anchor() == Spanner::Anchor::NOTE) {
                     continue;
                 }
                 // skip if present originally
@@ -825,6 +863,8 @@ bool Read400::pasteStaff(XmlReader& e, Segment* dst, staff_idx_t dstStaff, Fract
 void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
 {
     Score* score = dst->score();
+    Transaction& tx = score->transactionManager()->currentOrDummyTransaction();
+
     ReadContext ctx(score);
     ctx.setPasteMode(true);
 
@@ -898,16 +938,16 @@ void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
                         Interval interval = staffDest->transpose(destTick);
                         if (!ctx.style().styleB(Sid::concertPitch) && !interval.isZero()) {
                             interval.flip();
-                            Transpose::undoTransposeHarmony(score, el, interval);
+                            Transpose::undoTransposeHarmony(tx, el, interval);
                         }
-                        el->setParent(harmSegm);
+                        el->setOwnershipParent(harmSegm);
                         score->undoAddElement(el);
                     } else {
                         FretDiagram* el = Factory::createFretDiagram(harmSegm);
                         el->setTrack(trackZeroVoice(destTrack));
                         TRead::read(el, e, ctx);
                         el->setTrack(trackZeroVoice(destTrack));
-                        el->setParent(harmSegm);
+                        el->setOwnershipParent(harmSegm);
                         score->undoAddElement(el);
                     }
                 } else if (tag == "Dynamic") {
@@ -920,7 +960,7 @@ void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
                     d->setTrack(destTrack);
                     TRead::read(d, e, ctx);
                     d->setTrack(destTrack);
-                    d->setParent(destCR->segment());
+                    d->setOwnershipParent(destCR->segment());
                     score->undoAddElement(d);
                 } else if (tag == "HairPin") {
                     if (destTrack >= maxTrack) {
@@ -960,7 +1000,7 @@ void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
                         Articulation* el = Factory::createArticulation(cr);
                         TRead::read(el, e, ctx);
                         el->setTrack(destTrack);
-                        el->setParent(cr);
+                        el->setOwnershipParent(cr);
                         if (!el->isFermata() && cr->isRest()) {
                             delete el;
                         } else {
@@ -970,7 +1010,7 @@ void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
                         EngravingItem* el = Factory::createItemByName(tag, score->dummy());
                         TRead::readItem(el, e, ctx);
                         el->setTrack(destTrack);
-                        el->setParent(currSegm);
+                        el->setOwnershipParent(currSegm);
                         if (el->isSticking() && cr->isRest()) {
                             delete el;
                         } else {
@@ -1055,7 +1095,7 @@ void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
                         if (oldFB) {
                             score->undoRemoveElement(oldFB);
                         }
-                        el->setParent(currSegm);
+                        el->setOwnershipParent(currSegm);
                         el->setTicks(ticks);
                         score->undoAddElement(el);
                     } else if (tag == "Lyrics") {
@@ -1082,7 +1122,7 @@ void Read400::pasteSymbols(XmlReader& e, ChordRest* dst)
                         el->setTrack(destTrack);
                         TRead::read(el, e, ctx);
                         el->setTrack(destTrack);
-                        el->setParent(cr);
+                        el->setOwnershipParent(cr);
                         score->undoAddElement(el);
                     } else {
                         LOGD("PasteSymbols: element %s not handled", tag.ascii());

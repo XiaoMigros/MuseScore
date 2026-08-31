@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -245,7 +245,8 @@ int MuseScoreConsoleApp::processConverter(const MuseScoreCmdOptions::ConverterTa
         ret = converter()->exportScoreElements(task.inputFile, task.outputFile, openParams);
     } break;
     case ConvertType::ExportScoreVideo: {
-        ret = converter()->exportScoreVideo(task.inputFile, task.outputFile, openParams);
+        bool withAudio = !task.params[MuseScoreCmdOptions::ParamKey::NoAudio].toBool();
+        ret = converter()->exportScoreVideo(task.inputFile, task.outputFile, openParams, withAudio);
     } break;
     case ConvertType::SourceUpdate: {
         std::string scoreSource = task.params[MuseScoreCmdOptions::ParamKey::ScoreSource].toString().toStdString();
@@ -322,8 +323,8 @@ int MuseScoreConsoleApp::processAudioPluginRegistration(const MuseScoreCmdOption
 
     muse::ContextInject<audioplugins::IRegisterAudioPluginsScenario> registerAudioPluginsScenario = { ctx };
 
-    if (task.failedPlugin) {
-        ret = registerAudioPluginsScenario()->registerFailedPlugin(task.pluginPath, task.failCode);
+    if (!task.outputFile.empty()) {
+        ret = registerAudioPluginsScenario()->validatePlugin(task.pluginPath, task.outputFile);
     } else {
         ret = registerAudioPluginsScenario()->registerPlugin(task.pluginPath);
     }

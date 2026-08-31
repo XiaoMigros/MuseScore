@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -395,11 +395,6 @@ public:
     static void readItemEID(EngravingObject* item, XmlReader& xml);
     static void readItemLink(EngravingItem* item, XmlReader& xml, ReadContext& ctx);
 
-    static String readLegacyStaffName(XmlReader& xml);
-
-    static void readStaffLabel(StaffLabel& item, XmlReader& xml);
-    static void readInstrumentLabel(InstrumentLabel& item, XmlReader& xml);
-
 private:
     static bool readProperties(Box* b, XmlReader& xml, ReadContext& ctx);
     static bool readProperties(HBox* b, XmlReader& xml, ReadContext& ctx);
@@ -414,10 +409,5 @@ private:
     static String lineBreakFromTag(const String& str);
 
     static void readNoteParenGroup(Chord* ch, XmlReader& e, ReadContext& ctx);
-
-    static bool readProperties(StaffLabel& item, XmlReader& xml);
-    static bool readProperties(InstrumentLabel& item, XmlReader& xml);
-
-    static void read(BracketItem* b, XmlReader& xml, ReadContext& ctx);
 };
 }

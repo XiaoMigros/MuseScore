@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,7 +33,7 @@ using namespace mu::engraving;
 //   MoveTremolo
 //---------------------------------------------------------
 
-void MoveTremolo::redo(EditData*)
+void MoveTremolo::redo()
 {
     // Find new tremolo chords
     Measure* m1 = score->tick2measure(chord1Tick);
@@ -77,7 +77,7 @@ void MoveTremolo::redo(EditData*)
     c1->setTremoloTwoChord(trem);
     c2->setTremoloTwoChord(trem);
     trem->setChords(c1, c2);
-    trem->setParent(c1);
+    trem->setOwnershipParent(c1);
 
     // Tremolo would cross barline, so remove it
     if (m1 != m2) {
@@ -90,7 +90,7 @@ void MoveTremolo::redo(EditData*)
     }
 }
 
-void MoveTremolo::undo(EditData*)
+void MoveTremolo::undo()
 {
     // Move tremolo to old position
     trem->chord1()->setTremoloTwoChord(nullptr);
@@ -98,5 +98,5 @@ void MoveTremolo::undo(EditData*)
     oldC1->setTremoloTwoChord(trem);
     oldC2->setTremoloTwoChord(trem);
     trem->setChords(oldC1, oldC2);
-    trem->setParent(oldC1);
+    trem->setOwnershipParent(oldC1);
 }

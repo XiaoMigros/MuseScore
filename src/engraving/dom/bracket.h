@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,11 +23,12 @@
 #pragma once
 
 #include "engravingitem.h"
-#include "bracketItem.h"
+#include "bracketitem.h"
 
 namespace mu::engraving {
 class Factory;
 class System;
+class Transaction;
 enum class BracketType : signed char;
 
 //---------------------------------------------------------
@@ -65,7 +66,7 @@ public:
     size_t span() const { return m_bi->bracketSpan(); }
     double magx() const { return m_magx; }
 
-    System* system() const { return (System*)explicitParent(); }
+    System* system() const { return (System*)ownershipParent(); }
 
     Measure* measure() const { return m_measure; }
     void setMeasure(Measure* measure) { m_measure = measure; }
@@ -84,7 +85,7 @@ public:
     Color color() const override { return m_bi->color(); }
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;

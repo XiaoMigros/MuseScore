@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 
 #include "chordlist.h"
 
+#include "global/containers.h"
 #include "global/io/buffer.h"
 #include "global/io/file.h"
 #include "global/io/fileinfo.h"
@@ -1590,8 +1591,8 @@ double ChordList::position(const StringList& names, bool stackModifiers, bool su
             const double base = stackHeight / 2;                            // Baseline of bottom modifier in the stack
             yAdj += base - modifierIdx * modifierHeight * (1 + LINE_SPACING);
         }
-        Char c = name.isEmpty() ? name.at(0) : u'0';
-        if (c.isDigit() || c.isPunct()) {
+
+        if (!name.isEmpty()) {
             yAdj += m_madjust;
         }
         return yAdj;
@@ -2283,6 +2284,11 @@ const ChordDescription* ChordList::description(int id) const
         return nullptr;
     }
     return &it->second;
+}
+
+ChordSymbol ChordList::symbol(const String& s) const
+{
+    return muse::value(m_symbols, s);
 }
 
 ChordToken ChordList::token(const String& s, ChordTokenClass type) const

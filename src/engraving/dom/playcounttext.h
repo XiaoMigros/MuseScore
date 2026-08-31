@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,7 +33,7 @@ class PlayCountText final : public TextBase
 public:
     PlayCountText* clone() const override { return new PlayCountText(*this); }
 
-    Segment* segment() const { return toSegment(parent()); }
+    Segment* segment() const { return toSegment(ownershipParent()); }
     BarLine* barline() const;
 
     bool isEditable() const override { return true; }

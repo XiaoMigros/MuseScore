@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,6 +29,7 @@
 namespace mu::engraving {
 class Factory;
 class Note;
+class Transaction;
 enum class AccidentalVal : signed char;
 
 // NOTE: keep this in sync with accList array in accidentals.cpp
@@ -237,7 +238,7 @@ public:
 
     Accidental* clone() const override { return new Accidental(*this); }
 
-    Note* note() const { return (explicitParent() && explicitParent()->isNote()) ? toNote(explicitParent()) : 0; }
+    Note* note() const;
 
     TranslatableString subtypeUserName() const override;
     void setSubtype(const AsciiStringView& s);
@@ -259,7 +260,7 @@ public:
     SymId symId() const;
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
     bool isEditable() const override { return true; }
     void startEdit(EditData&) override { setGenerated(false); }

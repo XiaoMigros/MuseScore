@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "exportprojectscenario.h"
 
 #include "global/io/fileinfo.h"
@@ -27,6 +28,16 @@
 #include "translation.h"
 #include "defer.h"
 #include "log.h"
+
+#include "engraving/dom/score.h"
+
+#include "notation/iexcerptnotation.h" // IWYU pragma: keep
+#include "notation/imasternotation.h"
+#include "notation/inotation.h"
+#include "notation/inotationelements.h" // IWYU pragma: keep
+#include "notation/inotationpainting.h" // IWYU pragma: keep
+
+#include "inotationproject.h"
 
 using namespace muse;
 using namespace muse::io;
@@ -48,7 +59,7 @@ std::vector<INotationWriter::UnitType> ExportProjectScenario::supportedUnitTypes
 }
 
 RetVal<muse::io::path_t> ExportProjectScenario::askExportPath(const INotationPtrList& notations, const ExportType& exportType,
-                                                              INotationWriter::UnitType unitType, muse::io::path_t defaultPath) const
+                                                              INotationWriter::UnitType unitType, muse::io::path_t defaultDirPath) const
 {
     INotationProjectPtr project = context()->currentProject();
 
@@ -84,8 +95,12 @@ RetVal<muse::io::path_t> ExportProjectScenario::askExportPath(const INotationPtr
         }
     }
 
-    if (defaultPath == "") {
+    muse::io::path_t defaultPath;
+    if (defaultDirPath == "") {
         defaultPath = configuration()->defaultSavingFilePath(project, filenameAddition, exportType.suffixes.front().toStdString());
+    } else {
+        defaultPath = defaultDirPath.appendingComponent(io::filename(project->path(), false) + filenameAddition)
+                      .appendingSuffix(exportType.suffixes.front().toStdString());
     }
 
     RetVal<muse::io::path_t> exportPath;
@@ -435,8 +450,18 @@ Ret ExportProjectScenario::doExportLoop(const muse::io::path_t& scorePath, std::
         if (!ret) {
             if (ret.code() == static_cast<int>(Ret::Code::Cancel)) {
                 const bool isFileMode = fileSystem()->exists(scorePath);
-                if (isFileMode) {
-                    fileSystem()->remove(scorePath);
+                if (!isFileMode) {
+                    return ret;
+                }
+
+                // On Windows, remove() may fail immediately after close()
+                // because the file lock has not been released yet
+                for (int i = 0; i < 10; ++i) {
+                    if (fileSystem()->remove(scorePath)) {
+                        return ret;
+                    }
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
 
                 return ret;

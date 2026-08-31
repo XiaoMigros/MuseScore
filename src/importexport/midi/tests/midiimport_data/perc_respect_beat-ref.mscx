@@ -21,8 +21,9 @@
     <metaTag name="workNumber"></metaTag>
     <metaTag name="workTitle"></metaTag>
     <Part id="1">
+      <eid>C_C</eid>
       <Staff>
-        <eid>C_C</eid>
+        <eid>D_D</eid>
         <StaffType group="percussion">
           <name>perc5Line</name>
           <keysig>0</keysig>
@@ -310,25 +311,19 @@
       </Part>
     <Staff id="1">
       <Measure>
-        <eid>D_D</eid>
+        <eid>E_E</eid>
         <voice>
           <TimeSig>
-            <eid>E_E</eid>
+            <eid>F_F</eid>
             <sigN>4</sigN>
             <sigD>4</sigD>
             </TimeSig>
-          <Chord>
-            <eid>F_F</eid>
-            <durationType>quarter</durationType>
-            <StemDirection>up</StemDirection>
-            <Note>
-              <eid>G_G</eid>
-              <pitch>51</pitch>
-              <tpc>11</tpc>
-              <head>cross</head>
-              <velocity>127</velocity>
-              </Note>
-            </Chord>
+          <Tempo>
+            <tempo>1.666667</tempo>
+            <eid>G_G</eid>
+            <visible>0</visible>
+            <text><sym>metNoteQuarterUp</sym> = 100</text>
+            </Tempo>
           <Chord>
             <eid>H_H</eid>
             <durationType>quarter</durationType>
@@ -353,8 +348,20 @@
               <velocity>127</velocity>
               </Note>
             </Chord>
-          <Rest>
+          <Chord>
             <eid>L_L</eid>
+            <durationType>quarter</durationType>
+            <StemDirection>up</StemDirection>
+            <Note>
+              <eid>M_M</eid>
+              <pitch>51</pitch>
+              <tpc>11</tpc>
+              <head>cross</head>
+              <velocity>127</velocity>
+              </Note>
+            </Chord>
+          <Rest>
+            <eid>N_N</eid>
             <durationType>quarter</durationType>
             </Rest>
           </voice>

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -39,13 +39,13 @@ public:
     Hook(Chord* parent = 0);
 
     Hook* clone() const override { return new Hook(*this); }
-    double mag() const override { return parentItem()->mag(); }
+    double mag() const override { return layoutParent()->mag(); }
     EngravingItem* elementBase() const override;
 
     void setHookType(int v);
     int hookType() const { return m_hookType; }
 
-    Chord* chord() const { return toChord(explicitParent()); }
+    Chord* chord() const { return toChord(ownershipParent()); }
     PointF smuflAnchor() const;
 
     //! @p index: the number of flags (positive: upwards, negative: downwards)

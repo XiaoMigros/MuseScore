@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,14 +21,17 @@
  */
 
 #include "harmonylayout.h"
-#include "rendering/score/parenthesislayout.h"
-#include "tlayout.h"
-#include "textlayout.h"
 
+#include "draw/fontmetrics.h"
+
+#include "dom/factory.h"
 #include "dom/fret.h"
 #include "dom/harmony.h"
-#include "draw/fontmetrics.h"
-#include "dom/factory.h"
+#include "dom/staff.h"
+
+#include "parenthesislayout.h"
+#include "textlayout.h"
+#include "tlayout.h"
 
 using namespace muse::draw;
 using namespace mu::engraving;
@@ -37,7 +40,7 @@ using namespace mu::engraving::rendering::score;
 void HarmonyLayout::layoutHarmony(Harmony* item, Harmony::LayoutData* ldata,
                                   const LayoutContext& ctx)
 {
-    if (!item->explicitParent()) {
+    if (!item->ownershipParent()) {
         ldata->setPos(0.0, 0.0);
         const_cast<Harmony*>(item)->setOffset(0.0, 0.0);
     }
@@ -77,8 +80,8 @@ void HarmonyLayout::layoutHarmony(Harmony* item, Harmony::LayoutData* ldata,
 PointF HarmonyLayout::calculateBoundingRect(const Harmony* item, Harmony::LayoutData* ldata, const LayoutContext& ctx)
 {
     const double ypos = (item->placeBelow() && item->staff()) ? item->staff()->staffHeight(item->tick()) : 0.0;
-    const FretDiagram* fd = (item->explicitParent() && item->explicitParent()->isFretDiagram())
-                            ? toFretDiagram(item->explicitParent())
+    const FretDiagram* fd = (item->ownershipParent() && item->ownershipParent()->isFretDiagram())
+                            ? toFretDiagram(item->ownershipParent())
                             : nullptr;
     const bool alignToFretDiagram = fd && fd->visible();
 
@@ -196,7 +199,14 @@ PointF HarmonyLayout::calculateBoundingRect(const Harmony* item, Harmony::Layout
         newPosX -= fd->pos().x();
     }
 
-    return PointF(newPosX, newPosY);
+    PointF newPos = PointF(newPosX, newPosY);
+
+    if (!alignToFretDiagram) {
+        PointF defaultPos = item->defaultPos();
+        newPos += defaultPos;
+    }
+
+    return newPos;
 }
 
 void HarmonyLayout::layoutModifierParentheses(const Harmony* item, const LayoutContext& ctx)
@@ -849,7 +859,7 @@ void HarmonyLayout::renderActionScale(const RenderActionScalePtr& a, HarmonyRend
 void HarmonyLayout::renderActionParen(Harmony* item, const RenderActionParenPtr& a, HarmonyRenderCtx& harmonyCtx)
 {
     Parenthesis* p = Factory::createParenthesis(item);
-    p->setParent(item);
+    p->setOwnershipParent(item);
     p->setDirection(a->direction());
     p->setColor(item->color());
     p->setFollowParentColor(true);

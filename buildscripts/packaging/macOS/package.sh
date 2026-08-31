@@ -6,12 +6,18 @@ trap 'echo Package failed; exit 1' ERR
 APP_NAME="MuseScore Studio"
 VOL_NAME="MuseScore-Studio"
 DO_SIGN=false
+APPLE_TEAM_ID=""
+APPLE_USERNAME=""
+APPLE_PASSWORD=""
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --app-name) APP_NAME="$2"; shift ;;
         --vol-name) VOL_NAME="$2"; shift ;;
         --sign) DO_SIGN=true ;;
+        --team-id) APPLE_TEAM_ID="$2"; shift ;;
+        --user) APPLE_USERNAME="$2"; shift ;;
+        --password) APPLE_PASSWORD="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -35,6 +41,7 @@ fi
 macdeployqt ${APP_PATH} \
     -verbose=2 \
     -qmldir=. \
+    -executable="${APP_PATH}/Contents/PlugIns/MuseScoreQuickLookPreviewExtension.appex/Contents/MacOS/MuseScoreQuickLookPreviewExtension" \
     $sign_args
 
 echo "otool -L post-macdeployqt"
@@ -61,6 +68,13 @@ if $DO_SIGN; then
         -s "Developer ID Application: MuseScore" \
         "${APP_PATH}/Contents/PlugIns/MuseScoreQuickLookPreviewExtension.appex"
 
+    # Sign the bundled dylibs that are loaded at runtime and therefore
+    # invisible to macdeployqt's dependency walk (e.g. libsndfile, vorbis)
+    echo "Sign bundled dylibs"
+    find "${APP_PATH}/Contents/Frameworks" -maxdepth 1 -type f -name "*.dylib" \
+        -exec codesign --force --options runtime --timestamp \
+        -s "Developer ID Application: MuseScore" {} +
+
     # Re-sign main app after removing dSYM files and renaming qml folder
     echo "Re-sign main app"
     codesign --force \
@@ -74,6 +88,21 @@ if $DO_SIGN; then
 
     echo "spctl"
     spctl --assess --type execute -vvv "${APP_PATH}"
+
+    # Notarize and staple the .app before sealing the DMG
+    if [ -n "$APPLE_USERNAME" ] && [ -n "$APPLE_PASSWORD" ]; then
+        APP_ZIP="applebuild/app-notarization.zip"
+        rm -f "$APP_ZIP"
+        ditto -c -k --keepParent "${APP_PATH}" "$APP_ZIP"
+        xcrun notarytool submit "$APP_ZIP" \
+            --apple-id "$APPLE_USERNAME" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_PASSWORD" \
+            --wait
+        xcrun stapler staple "${APP_PATH}"
+        xcrun stapler validate "${APP_PATH}"
+        rm -f "$APP_ZIP"
+    fi
 else
     echo "Skipping code signing"
 fi
@@ -161,6 +190,15 @@ done
 
 # Convert the disk image to read-only
 hdiutil convert "applebuild/${DMG_NAME}" -format UDBZ -o "applebuild/${COMPRESSED_DMG_NAME}"
+
+if $DO_SIGN; then
+    echo "Codesign DMG"
+    codesign --timestamp \
+        -s "Developer ID Application: MuseScore" \
+        "applebuild/${COMPRESSED_DMG_NAME}"
+
+    codesign --verify --verbose=2 "applebuild/${COMPRESSED_DMG_NAME}"
+fi
 
 shasum -a 256 "applebuild/${COMPRESSED_DMG_NAME}"
 

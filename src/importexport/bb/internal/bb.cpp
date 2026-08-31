@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -47,6 +47,7 @@
 #include "engraving/dom/text.h"
 #include "engraving/dom/tie.h"
 #include "engraving/dom/utils.h"
+#include "engraving/editing/editenharmonicspelling.h"
 #include "engraving/editing/transpose.h"
 #include "engraving/engravingerrors.h"
 
@@ -425,7 +426,7 @@ Err importBB(MasterScore* score, const QString& name)
     //---------------------------------------------------
 
     for (int i = 0; i < bb.measures(); ++i) {
-        Measure* measure  = Factory::createMeasure(score->dummy()->system());
+        Measure* measure  = Factory::createMeasure(score);
         Fraction tick = Fraction::fromTicks(score->sigmap()->bar2tick(i, 0));
         measure->setTick(tick);
         Fraction ts = score->sigmap()->timesig(tick.ticks()).timesig();
@@ -476,7 +477,7 @@ Err importBB(MasterScore* score, const QString& name)
         }
     }
 
-    score->spell();
+    EditEnharmonicSpelling::spell(score);
 
     //---------------------------------------------------
     //    create title
@@ -487,7 +488,7 @@ Err importBB(MasterScore* score, const QString& name)
     text->setPlainText(String::fromUtf8(bb.title()));
 
     if (!measureB->isVBox()) {
-        measureB = Factory::createTitleVBox(score->dummy()->system());
+        measureB = Factory::createTitleVBox(score);
         measureB->setNext(score->first());
         score->measures()->append(measureB);
     }
@@ -576,7 +577,7 @@ Err importBB(MasterScore* score, const QString& name)
         keysig->setKey(cKey, key);
         sks->add(keysig);
     }
-    score->setUpTempoMap();
+    score->updateTicksAndTimeSigMap();
     return engraving::Err::NoError;
 }
 
@@ -797,6 +798,18 @@ void BBFile::convertTrack(Score* score, BBTrack* track, int staffIdx)
             }
         }
     }
+}
+
+//---------------------------------------------------------
+//   quantizeLen
+//---------------------------------------------------------
+
+int quantizeLen(int len, int raster)
+{
+    if (raster == 0) {
+        return len;
+    }
+    return int(((float)len / raster) + 0.5) * raster;   //round to the closest multiple of raster
 }
 
 //---------------------------------------------------------

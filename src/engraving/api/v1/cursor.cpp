@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -32,6 +32,7 @@
 #include "engraving/dom/note.h"
 #include "engraving/dom/repeatlist.h"
 #include "engraving/dom/stafftext.h"
+#include "engraving/dom/tempotimeline.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/page.h"
 #include "engraving/dom/score.h"
@@ -39,6 +40,10 @@
 #include "engraving/dom/segment.h"
 #include "engraving/dom/timesig.h"
 #include "engraving/dom/tuplet.h"
+
+#include "engraving/editing/edittimesig.h"
+#include "engraving/editing/noteinput.h"
+#include "engraving/editing/transaction/transaction.h"
 
 using namespace mu::engraving::apiv1;
 
@@ -288,7 +293,7 @@ void Cursor::add(EngravingItem* wrapped)
     wrapped->setOwnership(Ownership::SCORE);
     s->setScore(m_score);
     s->setTrack(m_track);
-    s->setParent(_segment);
+    s->setOwnershipParent(_segment);
 
     if (s->isChordRest()) {
         s->score()->undoAddCR(toChordRest(s), _segment->measure(), _segment->tick());
@@ -297,14 +302,15 @@ void Cursor::add(EngravingItem* wrapped)
     switch (s->type()) {
     case ElementType::KEYSIG: {
         mu::engraving::Segment* ns = _segment->measure()->undoGetSegment(SegmentType::KeySig, _segment->tick());
-        s->setParent(ns);
+        s->setOwnershipParent(ns);
         m_score->undoAddElement(s);
         break;
     }
     case ElementType::TIMESIG: {
         mu::engraving::Measure* m = _segment->measure();
         mu::engraving::Fraction tick = m->tick();
-        m_score->cmdAddTimeSig(m, m_track, toTimeSig(s), false);
+        mu::engraving::Transaction& tx = m_score->transactionManager()->currentOrDummyTransaction();
+        mu::engraving::EditTimeSig::addTimeSig(tx, m_score, m, m_track, toTimeSig(s), false);
         m = m_score->tick2measure(tick);
         _segment = m->first(m_filter);
         nextInTrack();
@@ -325,7 +331,7 @@ void Cursor::add(EngravingItem* wrapped)
     case ElementType::HBOX:
     case ElementType::STAFFTYPE_CHANGE: {
         mu::engraving::Measure* m = _segment->measure();
-        s->setParent(m);
+        s->setOwnershipParent(m);
         m_score->undoAddElement(s);
         break;
     }
@@ -352,7 +358,7 @@ void Cursor::add(EngravingItem* wrapped)
     case ElementType::LYRICS: {
         mu::engraving::EngravingItem* curElement = currentElement();
         if (curElement->isChordRest()) {
-            s->setParent(curElement);
+            s->setOwnershipParent(curElement);
             m_score->undoAddElement(s);
         }
         break;
@@ -362,7 +368,7 @@ void Cursor::add(EngravingItem* wrapped)
     case ElementType::SYMBOL: {
         mu::engraving::EngravingItem* curElement = currentElement();
         if (curElement->isRest()) {
-            s->setParent(curElement);
+            s->setOwnershipParent(curElement);
             m_score->undoAddElement(s);
         }
         [[fallthrough]];
@@ -401,7 +407,7 @@ void Cursor::add(EngravingItem* wrapped)
             }
         }
         mu::engraving::Segment* destSeg = measure->undoGetSegmentR(st, rt);
-        clef->setParent(destSeg);
+        clef->setOwnershipParent(destSeg);
         clef->setTrack(m_track);
         clef->setIsHeader(st == SegmentType::HeaderClef);
         m_score->undoAddElement(clef);
@@ -417,7 +423,7 @@ void Cursor::add(EngravingItem* wrapped)
                 continue;
             }
             parent = m->undoGetSegmentR(SegmentType::Ambitus, mu::engraving::Fraction(0, 1));
-            s->setParent(parent);
+            s->setOwnershipParent(parent);
             s->setTrack(m_track);
             m_score->undoAddElement(s);
             break;
@@ -456,7 +462,7 @@ void Cursor::addNote(int pitch, bool addToChord)
         setDuration(1, 4);
     }
     NoteVal nval(pitch);
-    m_score->addPitch(nval, addToChord, is.get());
+    NoteInput::addPitch(m_score->transactionManager()->currentOrDummyTransaction(), m_score, nval, addToChord, is.get());
 }
 
 //---------------------------------------------------------
@@ -557,7 +563,7 @@ void Cursor::addTuplet(Fraction* ratio, Fraction* duration)
     m_score->changeCRlen(cr, fDuration);
 
     mu::engraving::Tuplet* tuplet = new mu::engraving::Tuplet(tupletMeasure);
-    tuplet->setParent(tupletMeasure);
+    tuplet->setOwnershipParent(tupletMeasure);
     tuplet->setTrack(track());
     tuplet->setTick(tupletTick);
     tuplet->setRatio(fRatio);
@@ -622,7 +628,7 @@ Fraction* Cursor::qmlFraction() const
 
 double Cursor::time(bool includeRepeats)
 {
-    return m_score->utick2utime(includeRepeats ? utick() : tick()) * 1000;
+    return m_score->tempoTimeline(includeRepeats).utick2utime(includeRepeats ? utick() : tick()) * 1000;
 }
 
 //---------------------------------------------------------

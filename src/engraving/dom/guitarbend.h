@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -65,7 +65,9 @@ public:
 
     GuitarBend* clone() const override { return new GuitarBend(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    LineSegment* createLineSegment() override;
+
+    Anchor anchor() const override { return Anchor::NOTE; }
 
     bool allowTimeAnchor() const override { return false; }
 
@@ -157,6 +159,9 @@ public:
     };
     DECLARE_LAYOUTDATA_METHODS(GuitarBend)
 
+protected:
+    bool isInSpannerMap() const override { return false; }
+
 private:
     GuitarBendType m_bendType = GuitarBendType::BEND;
     GuitarBendHold* m_holdLine = nullptr;
@@ -175,7 +180,7 @@ class GuitarBendSegment final : public LineSegment
     DECLARE_CLASSOF(ElementType::GUITAR_BEND_SEGMENT)
 
 public:
-    GuitarBendSegment(GuitarBend* sp, System* parent);
+    GuitarBendSegment(GuitarBend* sp);
     GuitarBendSegment(const GuitarBendSegment&);
     ~GuitarBendSegment() override;
 
@@ -251,7 +256,9 @@ public:
 
     GuitarBendHold* clone() const override { return new GuitarBendHold(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::NOTE; }
+
+    LineSegment* createLineSegment() override;
 
     PropertyValue propertyDefault(Pid id) const override;
 
@@ -260,9 +267,12 @@ public:
     Note* startNote() const;
     Note* endNote() const;
 
-    GuitarBend* guitarBend() const { return toGuitarBend(explicitParent()); }
+    GuitarBend* guitarBend() const { return toGuitarBend(ownershipParent()); }
 
     double lineWidth() const;
+
+protected:
+    bool isInSpannerMap() const override { return false; }
 };
 
 class GuitarBendHoldSegment final : public LineSegment
@@ -271,7 +281,7 @@ class GuitarBendHoldSegment final : public LineSegment
     DECLARE_CLASSOF(ElementType::GUITAR_BEND_HOLD_SEGMENT)
 
 public:
-    GuitarBendHoldSegment(GuitarBendHold* sp, System* parent);
+    GuitarBendHoldSegment(GuitarBendHold* sp);
 
     GuitarBendHold* guitarBendHold() const { return toGuitarBendHold(spanner()); }
 

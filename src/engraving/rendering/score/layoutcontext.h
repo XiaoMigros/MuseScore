@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_ENGRAVING_LAYOUTCONTEXT_DEV_H
-#define MU_ENGRAVING_LAYOUTCONTEXT_DEV_H
+
+#pragma once
 
 #include <vector>
 #include <set>
@@ -55,7 +55,6 @@
 
 namespace mu::engraving {
 class EngravingItem;
-class RootItem;
 class MeasureBase;
 class Part;
 class Page;
@@ -63,14 +62,15 @@ class Score;
 class Spanner;
 class SpannerMap;
 class System;
-class SystemLocks;
+class RangeLocks;
 class Staff;
 class Measure;
 class ChordRest;
 class Segment;
+class BracketItem;
 struct PaddingTable;
 
-class UndoCommand;
+class UndoableCommand;
 class EditData;
 
 class Selection;
@@ -149,6 +149,7 @@ public:
     // Const access
     const std::vector<Part*>& parts() const;
     size_t visiblePartCount() const;
+    std::vector<Part*> visibleParts() const;
 
     size_t npages() const;
     const std::vector<Page*>& pages() const;
@@ -177,9 +178,12 @@ public:
 
     const ChordRest* findCR(Fraction tick, track_idx_t track) const;
 
-    const SystemLocks* systemLocks() const;
+    const RangeLocks* systemLocks() const;
+    const RangeLocks* pageLocks() const;
 
     const PaddingTable& paddingTable() const;
+
+    const std::vector<BracketItem*>& brackets(staff_idx_t staffIdx) const;
 
     // Mutable access
     std::vector<Page*>& pages();
@@ -195,24 +199,23 @@ public:
     ChordRest* findCR(Fraction tick, track_idx_t track);
 
     // Create/Remove
-    RootItem* rootItem() const;
+    const Score* score() const;
+    Score* score();
     compat::DummyElement* dummyParent() const;
     void doUndoAddElement(EngravingItem*);
     void undoAddElement(EngravingItem* item, bool addToLinkedStaves = true, bool ctrlModifier = false);
     void doUndoRemoveElement(EngravingItem* item);
     void undoRemoveElement(EngravingItem* item);
-    void undo(UndoCommand* cmd, EditData* ed = nullptr) const;
+    void undo(UndoableCommand* cmd) const;
     void addElement(EngravingItem* item);
     void removeElement(EngravingItem* item);
-    void updateSystemLocksOnCreateMMRest(Measure* first, Measure* last);
+    void updateLocksOnCreateMMRest(Measure* first, Measure* last);
+    void undoChangeParent(EngravingItem* element, EngravingItem* parent, staff_idx_t staff, bool changeLinksParents = true);
 
     void addUnmanagedSpanner(Spanner* s);
     const std::set<Spanner*>& unmanagedSpanners() const;
 
 private:
-    const Score* score() const;
-    Score* score();
-
     IGetScoreInternal* m_getScore = nullptr;
 };
 
@@ -245,6 +248,8 @@ public:
     int measureNumber() const { return m_measureNumber; }
 
     bool rangeDone() const { return m_rangeDone; }
+
+    bool mustRecomputeHeadersFooters() const { return m_mustRecomputeHeadersFooters; }
 
     double totalBracketsWidth() const { return m_totalBracketsWidth; }
 
@@ -279,9 +284,9 @@ public:
     void setPageOldMeasure(MeasureBase* m) { m_pageOldMeasure = m; }
     void setMeasureNumber(int n) { m_measureNumber = n; }
 
-    std::set<Spanner*>& processedSpanners() { return m_processedSpanners; }
-
     void setRangeDone(bool val) { m_rangeDone = val; }
+
+    void setMustRecomputeHeadersFooters(bool val) { m_mustRecomputeHeadersFooters = val; }
 
     void setTotalBracketsWidth(double val) { m_totalBracketsWidth = val; }
 
@@ -310,9 +315,9 @@ private:
     MeasureBase* m_pageOldMeasure = nullptr;
     int m_measureNumber = 0;
 
-    std::set<Spanner*> m_processedSpanners;
-
     bool m_rangeDone = false;
+
+    bool m_mustRecomputeHeadersFooters = false; // we may need to re-compute headers/footers after laying out all pages if they contained a page count
 
     // cache
     double m_totalBracketsWidth = -1.0;
@@ -415,5 +420,3 @@ private:
     LayoutState m_state;
 };
 }
-
-#endif // MU_ENGRAVING_LAYOUTCONTEXT_DEV_H

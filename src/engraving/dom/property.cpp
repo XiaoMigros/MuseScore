@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -255,7 +255,6 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::USER_STRETCH,                        P_TYPE::REAL,                      PropertyGroup::NONE,       false, "stretch",                         QT_TRANSLATE_NOOP("engraving/propertyName", "stretch") },
     { Pid::MEASURE_NUMBER_OFFSET,               P_TYPE::INT,                       PropertyGroup::APPEARANCE, true,  "noOffset",                        QT_TRANSLATE_NOOP("engraving/propertyName", "measure number offset") },
     { Pid::EXCLUDE_FROM_NUMBERING,              P_TYPE::BOOL,                      PropertyGroup::APPEARANCE, true,  "irregular",                       QT_TRANSLATE_NOOP("engraving/propertyName", "exclude from numbering") },
-    { Pid::ANCHOR,                              P_TYPE::INT,                       PropertyGroup::APPEARANCE, false, "anchor",                          QT_TRANSLATE_NOOP("engraving/propertyName", "anchor") },
     { Pid::SLUR_UOFF1,                          P_TYPE::POINT,                     PropertyGroup::POSITION,   false, "o1",                              QT_TRANSLATE_NOOP("engraving/propertyName", "start offset") },
     { Pid::SLUR_UOFF2,                          P_TYPE::POINT,                     PropertyGroup::POSITION,   false, "o2",                              QT_TRANSLATE_NOOP("engraving/propertyName", "left shoulder offset") },
     { Pid::SLUR_UOFF3,                          P_TYPE::POINT,                     PropertyGroup::POSITION,   false, "o3",                              QT_TRANSLATE_NOOP("engraving/propertyName", "right shoulder offset") },
@@ -486,6 +485,7 @@ static constexpr PropertyMetaData propertyList[] = {
 
     { Pid::TIE_PLACEMENT,                       P_TYPE::TIE_PLACEMENT,             PropertyGroup::APPEARANCE, true,  "tiePlacement",                    QT_TRANSLATE_NOOP("engraving/propertyName", "tie placement") },
     { Pid::MIN_LENGTH,                          P_TYPE::SPATIUM,                   PropertyGroup::APPEARANCE, true,  "minLength",                       QT_TRANSLATE_NOOP("engraving/propertyName", "minimum length") },
+    { Pid::MASK_SLURTIE,                        P_TYPE::AUTO_ON_OFF,               PropertyGroup::APPEARANCE, true,  "maskSlurTie",                     QT_TRANSLATE_NOOP("engraving/propertyName", "mask slur/tie") },
     { Pid::PARTIAL_SPANNER_DIRECTION,           P_TYPE::PARTIAL_SPANNER_DIRECTION, PropertyGroup::NONE,       true,  "partialSpannerDirection",         QT_TRANSLATE_NOOP("engraving/propertyName", "partial spanner direction") },
 
     { Pid::POSITION_LINKED_TO_MASTER,           P_TYPE::BOOL,                      PropertyGroup::NONE,       false, "positionLinkedToMaster",          QT_TRANSLATE_NOOP("engraving/propertyName", "position linked to main score") },
@@ -516,6 +516,8 @@ static constexpr PropertyMetaData propertyList[] = {
     { Pid::STAFF_HIDE_SYSTEM_BARLINE,           P_TYPE::BOOL,                      PropertyGroup::APPEARANCE, false, "",                                QT_TRANSLATE_NOOP("engraving/propertyName", "hide system barline") },
     { Pid::STAFF_MERGE_MATCHING_RESTS,          P_TYPE::INT,                       PropertyGroup::APPEARANCE, false, "",                                QT_TRANSLATE_NOOP("engraving/propertyName", "merge matching rests") },
     { Pid::STAFF_REFLECT_TRANSPOSITION,         P_TYPE::BOOL,                      PropertyGroup::APPEARANCE, false, "",                                QT_TRANSLATE_NOOP("engraving/propertyName", "reflect transposition") },
+
+    { Pid::SHARED_PART_ENABLED,                 P_TYPE::BOOL,                      PropertyGroup::NONE,       false, "sharedPartEnabled",               QT_TRANSLATE_NOOP("engraving/propertyName", "shared part enabled") },
 
     { Pid::END,                                 P_TYPE::INT,                       PropertyGroup::NONE,       false, "++end++",                         nullptr }
 };

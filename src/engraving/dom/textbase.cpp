@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,11 +23,12 @@
 #include <cmath>
 #include <stack>
 
-#include "dom/harppedaldiagram.h"
 #include "draw/fontmetrics.h"
 
-#include "engraving/rendering/score/textlayout.h"
 #include "iengravingfont.h"
+
+#include "rendering/score/textlayout.h"
+#include "rendering/iscorerenderer.h"
 
 #include "style/textstyle.h"
 
@@ -42,9 +43,8 @@
 #endif
 
 #include "anchors.h"
-#include "barline.h"
 #include "box.h"
-#include "dynamic.h"
+#include "harppedaldiagram.h"
 #include "instrumentname.h"
 #include "measure.h"
 #include "mscore.h"
@@ -52,7 +52,6 @@
 #include "score.h"
 
 #include "../editing/textedit.h"
-#include "../editing/undo.h"
 
 #include "log.h"
 
@@ -465,14 +464,14 @@ void TextCursor::setFormat(FormatId id, FormatValue val)
 {
     if (!hasSelection()) {
         if (!editing()) {
-            m_text->selectAll(this);
+            m_text->selectAll();
         } else if (format()->formatValue(id) == val) {
             return;
         }
     }
     format()->setFormatValue(id, val);
-    changeSelectionFormat(id, val);
     if (hasSelection()) {
+        changeSelectionFormat(id, val);
         text()->setTextInvalid();
     }
     if (!editing()) {
@@ -886,7 +885,7 @@ Font TextFragment::font(const TextBase* t) const
             family = String::fromStdString(fontName);
             fontType = Font::Type::MusicSymbol;
 
-            m = MUSICAL_SYMBOLS_DEFAULT_FONT_SIZE;
+            m = StyleDef::DEFAULT_SMUFL_POINT_SIZE();
             m *= t->getProperty(Pid::MUSICAL_SYMBOLS_SCALE).toDouble();
             if (t->sizeIsSpatiumDependent()) {
                 m *= t->spatiumScaling();
@@ -896,10 +895,6 @@ Font TextFragment::font(const TextBase* t) const
                 std::string fontName2 = engravingFonts()->fontByName(t->style().styleSt(Sid::dynamicsFont).toStdString())->family();
                 family = String::fromStdString(fontName2);
             }
-
-            // We use a default font size of 10pt for historical reasons,
-            // but SMuFL standard is 20pt so multiply x2 here.
-            m *= 2;
 
             m *= t->mag();
         } else if (t->hasSymbolSize()) {
@@ -1873,9 +1868,9 @@ void TextBase::layoutFrame(LayoutData* ldata) const
         ldata->frame = ldata->bbox();
     }
 
-    if (square()) {
-        // make sure width >= height
-        if (ldata->frame.height() > ldata->frame.width()) {
+    if (rectangle()) {
+        // make sure width >= height, if only one row (basically: make square for single characters)
+        if (ldata->frame.height() > ldata->frame.width() && ldata->rows() == 1) {
             double w = ldata->frame.height() - ldata->frame.width();
             ldata->frame.adjust(-w * .5, 0.0, w * .5, 0.0);
         }
@@ -2155,27 +2150,27 @@ void TextBase::genText()
 //   selectAll
 //---------------------------------------------------------
 
-void TextBase::selectAll(TextCursor* cursor)
+void TextBase::selectAll()
 {
     const LayoutData* ldata = this->ldata();
     if (!ldata || ldata->blocks.empty()) {
         return;
     }
 
-    cursor->setSelectColumn(0);
-    cursor->setSelectLine(0);
-    cursor->setRow(ldata->rows() - 1);
-    cursor->setColumn(cursor->curLine().columns());
+    cursor()->setSelectColumn(0);
+    cursor()->setSelectLine(0);
+    cursor()->setRow(ldata->rows() - 1);
+    cursor()->setColumn(cursor()->curLine().columns());
 }
 
-void TextBase::select(EditData& editData, SelectTextType type)
+void TextBase::select(SelectTextType type)
 {
     switch (type) {
     case SelectTextType::Word:
-        cursorFromEditData(editData)->selectWord();
+        cursor()->selectWord();
         break;
     case SelectTextType::All:
-        selectAll(cursorFromEditData(editData));
+        selectAll();
         break;
     }
 }
@@ -2186,8 +2181,8 @@ void TextBase::select(EditData& editData, SelectTextType type)
 
 RectF TextBase::pageRectangle() const
 {
-    if (explicitParent() && (explicitParent()->isHBox() || explicitParent()->isVBox() || explicitParent()->isTBox())) {
-        Box* box = toBox(explicitParent());
+    if (ownershipParent() && (ownershipParent()->isHBox() || ownershipParent()->isVBox() || ownershipParent()->isTBox())) {
+        Box* box = toBox(ownershipParent());
         RectF r = box->pageBoundingRect();
         double x = r.x() + box->leftMargin() * DPMM;
         double y = r.y() + box->topMargin() * DPMM;
@@ -2199,8 +2194,8 @@ RectF TextBase::pageRectangle() const
 
         return RectF(x, y, w, h);
     }
-    if (explicitParent() && explicitParent()->isPage()) {
-        Page* box  = toPage(explicitParent());
+    if (ownershipParent() && ownershipParent()->isPage()) {
+        Page* box  = toPage(ownershipParent());
         RectF r = box->pageBoundingRect();
         double x = r.x() + box->lm();
         double y = r.y() + box->tm();
@@ -2217,9 +2212,7 @@ RectF TextBase::pageRectangle() const
 
 void TextBase::dragTo(EditData& ed)
 {
-    TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
-    TextCursor* cursor = ted->cursor();
-    cursor->set(ed.pos, TextCursor::MoveMode::KeepAnchor);
+    cursor()->set(ed.pos, TextCursor::MoveMode::KeepAnchor);
     score()->setUpdateAll();
     score()->update();
 }
@@ -2248,8 +2241,7 @@ std::vector<LineF> TextBase::dragAnchorLines() const
 bool TextBase::mousePress(EditData& ed)
 {
     bool shift = ed.modifiers & ShiftModifier;
-    TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
-    if (!ted->cursor()->set(ed.startMove, shift ? TextCursor::MoveMode::KeepAnchor : TextCursor::MoveMode::MoveAnchor)) {
+    if (!cursor()->set(ed.startMove, shift ? TextCursor::MoveMode::KeepAnchor : TextCursor::MoveMode::MoveAnchor)) {
         return false;
     }
 
@@ -2280,6 +2272,7 @@ void TextBase::setXmlText(const String& s)
 {
     m_text = s;
     m_textInvalid = false;
+    mutldata()->blocks.clear();
     mutldata()->layoutInvalid = true;
 }
 
@@ -2601,7 +2594,7 @@ bool TextBase::isPropertyLinkedToMaster(Pid id) const
 
 bool TextBase::isUnlinkedFromMaster() const
 {
-    EngravingItem* parent = parentItem();
+    EngravingItem* parent = ownershipParentItem();
     if (parent && parent->isUnlinkedFromMaster()) {
         return true;
     }
@@ -2771,7 +2764,7 @@ PropertyValue TextBase::propertyDefault(Pid id) const
     }
 
     if (composition()) {
-        PropertyValue v = explicitParent()->propertyDefault(id);
+        PropertyValue v = ownershipParent()->propertyDefault(id);
         if (v.isValid()) {
             return v;
         }
@@ -2834,41 +2827,19 @@ int TextBase::getPropertyFlagsIdx(Pid id) const
 //   offsetSid
 //---------------------------------------------------------
 
-Sid TextBase::offsetSid() const
+Sid TextBase::defaultPosSid() const
 {
-    TextStyleType defaultTid = propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>();
-    if (textStyleType() != defaultTid) {
-        return Sid::NOSTYLE;
+    const OffsetSids offsets = textStyle(textStyleType())->offsetSids;
+    return placeAbove() ? offsets.above : offsets.below;
+}
+
+PointF TextBase::defaultPos() const
+{
+    if (parent()->isTextLineBaseSegment()) {
+        return PointF();
     }
-    bool above = placeAbove();
-    switch (textStyleType()) {
-    case TextStyleType::DYNAMICS:
-        return above ? Sid::dynamicsPosAbove : Sid::dynamicsPosBelow;
-    case TextStyleType::EXPRESSION:
-        return above ? Sid::expressionPosAbove : Sid::expressionPosBelow;
-    case TextStyleType::LYRICS_ODD:
-    case TextStyleType::LYRICS_EVEN:
-        return above ? Sid::lyricsPosAbove : Sid::lyricsPosBelow;
-    case TextStyleType::REHEARSAL_MARK:
-        return above ? Sid::rehearsalMarkPosAbove : Sid::rehearsalMarkPosBelow;
-    case TextStyleType::STAFF:
-        return above ? Sid::staffTextPosAbove : Sid::staffTextPosBelow;
-    case TextStyleType::STICKING:
-        return above ? Sid::stickingPosAbove : Sid::stickingPosBelow;
-    case TextStyleType::SYSTEM:
-        return above ? Sid::systemTextPosAbove : Sid::systemTextPosBelow;
-    case TextStyleType::TEMPO:
-        return above ? Sid::tempoPosAbove : Sid::tempoPosBelow;
-    case TextStyleType::MEASURE_NUMBER:
-        return above ? Sid::measureNumberPosAbove : Sid::measureNumberPosBelow;
-    case TextStyleType::MEASURE_NUMBER_ALTERNATE:
-        return above ? Sid::measureNumberAlternatePosAbove : Sid::measureNumberAlternatePosBelow;
-    case TextStyleType::MMREST_RANGE:
-        return above ? Sid::mmRestRangePosAbove : Sid::mmRestRangePosBelow;
-    default:
-        break;
-    }
-    return Sid::NOSTYLE;
+
+    return EngravingItem::defaultPos();
 }
 
 //---------------------------------------------------------
@@ -2986,12 +2957,6 @@ void TextBase::notifyAboutTextRemoved(int startPosition, int endPosition, const 
 
 Sid TextBase::getPropertyStyle(Pid id) const
 {
-    if (id == Pid::OFFSET) {
-        Sid sid = offsetSid();
-        if (sid != Sid::NOSTYLE) {
-            return sid;
-        }
-    }
     for (const StyledProperty& p : *m_elementStyle) {
         if (p.pid == id) {
             return p.sid;
@@ -3140,11 +3105,10 @@ void TextBase::endDrag(EditData& ed)
 void TextBase::editCut(EditData& ed)
 {
     TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
-    TextCursor* cursor = ted->cursor();
-    String s = cursor->selectedText(true);
+    String s = cursor()->selectedText(true);
 
     if (!s.isEmpty()) {
-        ted->selectedText = cursor->selectedText(true);
+        ted->selectedText = cursor()->selectedText(true);
         ed.curGrip = Grip::START;
         ed.key     = Key_Delete;
         ed.s       = String();
@@ -3162,9 +3126,8 @@ void TextBase::editCopy(EditData& ed)
     // store selection as rich and plain text
     //
     TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
-    TextCursor* cursor = ted->cursor();
-    ted->selectedText = cursor->selectedText(true);
-    ted->selectedPlainText = cursor->selectedText(false);
+    ted->selectedText = cursor()->selectedText(true);
+    ted->selectedPlainText = cursor()->selectedText(false);
 }
 
 bool TextBase::nudge(const EditData& ed)
@@ -3190,17 +3153,6 @@ bool TextBase::nudge(const EditData& ed)
     }
     undoChangeProperty(Pid::OFFSET, offset() + addOffset, PropertyFlags::UNSTYLED);
     return true;
-}
-
-//---------------------------------------------------------
-//   cursor
-//---------------------------------------------------------
-
-TextCursor* TextBase::cursorFromEditData(const EditData& ed)
-{
-    TextEditData* ted = static_cast<TextEditData*>(ed.getData(this).get());
-    assert(ted);
-    return ted->cursor();
 }
 
 //---------------------------------------------------------
@@ -3436,6 +3388,15 @@ void TextBase::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags 
         default:
             break;
         }
+    }
+
+    for (EngravingItem* originItem : originItems()) {
+        // This is a shared item: propagate to all origin items
+        score()->undo(new ChangeTextProperties(toTextBase(originItem)->cursor(), id, v, ps));
+    }
+    if (EngravingItem* sharedEl = sharedItem(); sharedEl && sharedEl->originItems().front() == this) {
+        // This is the first origin item of the shared item: propagate to shared item
+        score()->undo(new ChangeTextProperties(toTextBase(sharedEl)->cursor(), id, v, ps));
     }
 }
 

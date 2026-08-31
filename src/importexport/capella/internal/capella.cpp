@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -60,6 +60,8 @@
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/utils.h"
 #include "engraving/dom/volta.h"
+
+#include "engraving/editing/editstaffbrackets.h"
 #include "engraving/editing/transpose.h"
 
 #include "engraving/engravingerrors.h"
@@ -450,7 +452,7 @@ static bool findChordRests(BasicDrawObj const* const o, Score* score, const int 
             if (nobj->type() == CapellaNoteObjectType::REST) {
                 RestObj* ro = static_cast<RestObj*>(nobj);
                 if (ro->fullMeasures) {
-                    Measure* m  = score->getCreateMeasure(tick2);
+                    Measure* m  = score->undoGetMeasure(tick2);
                     Fraction ft = m->ticks();
                     ticks       = ft * ro->fullMeasures;
                 }
@@ -559,7 +561,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
         case CapellaNoteObjectType::REST:
         {
             CAPELLA_TRACE("     <Rest>");
-            Measure* m = score->getCreateMeasure(tick);
+            Measure* m = score->undoGetMeasure(tick);
             RestObj* o = static_cast<RestObj*>(no);
             Fraction ticks  = o->ticks();
             if (o->invisible && ticks.isZero()) {             // get rid of placeholders
@@ -580,7 +582,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
                     tuplet->setBaseLen(d);
                     tuplet->setTrack(track);
                     tuplet->setTick(tick);
-                    tuplet->setParent(m);
+                    tuplet->setOwnershipParent(m);
                     Fraction nn = ((o->tupletTicks.isZero()) ? (ticks * tupletNotesSpanned) : o->tupletTicks) / f;
                     tuplet->setTicks(nn);
                 }
@@ -593,7 +595,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
                 ticks = ft * o->fullMeasures;
                 if (!o->invisible) {
                     for (unsigned i = 0; i < o->fullMeasures; ++i) {
-                        Measure* m1 = score->getCreateMeasure(tick + (ft * i));
+                        Measure* m1 = score->undoGetMeasure(tick + (ft * i));
                         Segment* s = m1->getSegment(SegmentType::ChordRest, tick + (ft * i));
                         Rest* rest = Factory::createRest(s);
                         rest->setDurationType(TDuration(DurationType::V_MEASURE));
@@ -654,7 +656,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
             }
             TDuration d;
             d.setVal(ticks.ticks());
-            Measure* m = score->getCreateMeasure(tick);
+            Measure* m = score->undoGetMeasure(tick);
 
             bool isgracenote = (!(o->invisible) && (ticks.isZero()));
             if (o->tupletDenominator) {
@@ -670,7 +672,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
                     tuplet->setBaseLen(d);
                     tuplet->setTrack(track);
                     tuplet->setTick(tick);
-                    tuplet->setParent(m);
+                    tuplet->setOwnershipParent(m);
                     Fraction nn = ((o->tupletTicks.isZero()) ? (ticks * tupletNotesSpanned) : o->tupletTicks) / f;
                     tuplet->setTicks(nn);
                 }
@@ -859,7 +861,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
             pclef = nclef;
             // staff(staffIdx)->setClef(tick, nclef);
             Segment* s;
-            Measure* m = score->getCreateMeasure(tick);
+            Measure* m = score->undoGetMeasure(tick);
             if (tick == m->tick()) {
                 s = m->getSegment(SegmentType::HeaderClef, tick);
             } else {
@@ -892,7 +894,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
             okey.setKey(tKey);
             if (!(key == okey)) {
                 score->staff(staffIdx)->setKey(tick, okey);
-                Measure* m = score->getCreateMeasure(tick);
+                Measure* m = score->undoGetMeasure(tick);
                 Segment* s = m->getSegment(SegmentType::KeySig, tick);
                 KeySig* ks = Factory::createKeySig(s);
                 ks->setTrack(staffIdx * VOICES);
@@ -916,7 +918,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
             }
 
             // do not add timesig again
-            Measure* m = score->getCreateMeasure(tick);
+            Measure* m = score->undoGetMeasure(tick);
             Segment* s = m->findSegment(SegmentType::TimeSig, tick);
             if (s) {
                 EngravingItem* e = s->element(trackZeroVoice(track));
@@ -942,7 +944,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
             CAPELLA_TRACE("     <Barline>");
             Measure* pm = 0;             // the previous measure (the one terminated by this barline)
             if (tick > Fraction(0, 1)) {
-                pm = score->getCreateMeasure(tick - Fraction::fromTicks(1));
+                pm = score->undoGetMeasure(tick - Fraction::fromTicks(1));
             }
             if (pm) {
                 Fraction ticks = tick - pm->tick();
@@ -960,7 +962,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
 
             if (st & BarLineType::START_REPEAT || st & BarLineType::END_START_REPEAT) {
                 Measure* nm = 0;               // the next measure (the one started by this barline)
-                nm = score->getCreateMeasure(tick);
+                nm = score->undoGetMeasure(tick);
                 if (nm) {
                     nm->setRepeatStart(true);
                 }
@@ -1040,12 +1042,12 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
                 s->setXmlText(ss);
 
                 if (!measure->isVBox()) {
-                    MeasureBase* mb = Factory::createVBox(score->dummy()->system());
+                    MeasureBase* mb = Factory::createVBox(score);
                     mb->setTick(Fraction(0, 1));
                     score->addMeasure(mb, measure);
                     measure = mb;
                 }
-                s->setParent(measure);
+                s->setOwnershipParent(measure);
                 measure->add(s);
             }
             break;
@@ -1119,7 +1121,6 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
                         hp->setTick2(cr2->tick());
                         hp->setTrack(track);
                         hp->setTrack2(track);
-                        hp->setAnchor(Spanner::Anchor::SEGMENT);
                         score->addSpanner(hp);
                     }
                 }
@@ -1137,7 +1138,7 @@ static Fraction readCapVoice(Score* score, CapVoice* cvoice, int staffIdx, const
         if (no->type() == CapellaNoteObjectType::REST) {
             RestObj* o = static_cast<RestObj*>(no);
             if (o->fullMeasures) {
-                Measure* m  = score->getCreateMeasure(tick);
+                Measure* m  = score->undoGetMeasure(tick);
                 Fraction ft = m->ticks();
                 ticks       = ft * o->fullMeasures;
             }
@@ -1285,8 +1286,8 @@ void convertCapella(Score* score, Capella* cap, bool capxMode)
             LOGD("bad bracket 'from' value");
             continue;
         }
-        staff->setBracketType(0, cb.curly ? BracketType::BRACE : BracketType::NORMAL);
-        staff->setBracketSpan(0, cb.to - cb.from + 1);
+        EditStaffBrackets::setBracketType(score, staff->idx(), 0, cb.curly ? BracketType::BRACE : BracketType::NORMAL);
+        EditStaffBrackets::setBracketSpan(score, staff->idx(), 0, cb.to - cb.from + 1);
     }
     MeasureBase* measure = nullptr;
     for (BasicDrawObj* o : cap->backgroundChord->objects) {
@@ -1307,7 +1308,7 @@ void convertCapella(Score* score, Capella* cap, bool capxMode)
             }
 
             if (!measure) {
-                measure = Factory::createTitleVBox(score->dummy()->system());
+                measure = Factory::createTitleVBox(score);
                 score->addMeasure(measure, score->measures()->first());
             }
 
@@ -1338,7 +1339,7 @@ void convertCapella(Score* score, Capella* cap, bool capxMode)
         if (mbl->size() && mbl->first()->isVBox()) {
             mb = static_cast<VBox*>(mbl->first());
         } else {
-            VBox* vb = Factory::createTitleVBox(score->dummy()->system());
+            VBox* vb = Factory::createTitleVBox(score);
             score->addMeasure(vb, mb);
             mb = vb;
         }
@@ -1420,8 +1421,8 @@ void convertCapella(Score* score, Capella* cap, bool capxMode)
     }
     // score->connectSlurs();
     score->connectTies();
-    score->setUpTempoMap();
-    score->setPlaylistDirty();
+    score->updateTicksAndTimeSigMap();
+    score->invalidateRepeatList();
     score->setLayoutAll();
 }
 

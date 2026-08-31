@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -43,7 +43,13 @@
 #include "engraving/dom/system.h"
 #include "engraving/dom/text.h"
 #include "engraving/dom/utils.h"
-#include "engraving/editing/undo.h"
+#include "engraving/editing/transaction/undostack.h"
+
+#include "notation/imasternotation.h"
+#include "notation/inotation.h"
+#include "notation/inotationinteraction.h"
+#include "notation/inotationparts.h"
+#include "notation/inotationselection.h"
 
 #include "log.h"
 
@@ -152,7 +158,6 @@ void EditStaff::setStaff(Staff* s, const Fraction& tick)
     }
 
     m_instrument = *it->second;
-    m_orgInstrument = m_instrument;
 
     m_instrumentKey.instrumentId = m_instrument.id();
     m_instrumentKey.partId = part->id();
@@ -364,7 +369,7 @@ void EditStaff::apply()
     size_t index = m_staff->score()->undoStack()->currentIndex();
     applyStaffProperties();
     applyPartProperties();
-    m_staff->score()->undoStack()->mergeCommands(index);
+    m_staff->score()->undoStack()->mergeTransactions(index);
 }
 
 void EditStaff::minPitchAClicked()
@@ -542,7 +547,7 @@ void EditStaff::initStaff()
     } else if (element->isMeasure()) {
         tick = mu::engraving::toMeasure(element)->tick();
     } else if (element->isInstrumentName()) {
-        const mu::engraving::System* system = mu::engraving::toSystem(mu::engraving::toInstrumentName(element)->explicitParent());
+        const mu::engraving::System* system = mu::engraving::toSystem(mu::engraving::toInstrumentName(element)->ownershipParent());
         const Measure* measure = system ? system->firstMeasure() : nullptr;
         staff = element->staff();
 
@@ -662,8 +667,7 @@ void EditStaff::applyPartProperties()
         interval.flip();
     }
 
-    Instrument prevInstrument = m_instrument;
-
+    Instrument prevInstrument = instrument();
     m_instrument.setTranspose(interval);
     m_instrument.setMinPitchA(m_minPitchA);
     m_instrument.setMaxPitchA(m_maxPitchA);
@@ -700,8 +704,11 @@ void EditStaff::applyPartProperties()
     size_t staffIdxInPart = muse::indexOf(part->staves(), m_orgStaff);
     DO_ASSERT(staffIdxInPart != muse::nidx);
 
+    bool instrumentChanged = false;
+
     if (m_instrument.id() != prevInstrument.id()) {
         masterNotationParts()->replaceInstrument(m_instrumentKey, m_instrument);
+        instrumentChanged = true;
     } else if (m_instrument != prevInstrument) {
         bool groupNameChanged = name.useCustomGroupName() != prevInstrument.instrumentLabel().useCustomGroupName()
                                 || name.customNameLongGroup() != prevInstrument.instrumentLabel().customNameLongGroup()
@@ -712,16 +719,21 @@ void EditStaff::applyPartProperties()
                                                            name.customNameShortGroup());
         }
         notationParts()->replaceInstrument(m_instrumentKey, m_instrument);
+        instrumentChanged = true;
     }
 
     SharpFlat newSharpFlat = SharpFlat(preferSharpFlat->currentIndex());
     if ((iList->currentIndex() == 0) || (iList->currentIndex() == 25)) {
         // instrument becomes non/octave-transposing, preferSharpFlat isn't useful anymore
-        newSharpFlat = SharpFlat::NONE;
+        newSharpFlat = SharpFlat::AUTO;
     }
 
     if (part->preferSharpFlat() != newSharpFlat) {
         notationParts()->setPartSharpFlat(m_instrumentKey.partId, newSharpFlat);
+    }
+
+    if (instrumentChanged) {
+        m_instrumentKey.instrumentId = m_instrument.id();
     }
 }
 

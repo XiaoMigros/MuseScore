@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,7 +24,7 @@
 
 #include "types/typesconv.h"
 
-#include "bracketItem.h"
+#include "bracketitem.h"
 #include "measure.h"
 #include "score.h"
 #include "staff.h"
@@ -169,7 +169,7 @@ void Bracket::endDragGrip(EditData&)
     if (staffIdx1 + 1 >= n) {
         staffIdx2 = staffIdx1;
     } else {
-        double ay  = parentItem()->pagePos().y();
+        double ay  = layoutParent()->pagePos().y();
         System* s = system();
         double y   = s->staff(staffIdx1)->y() + ay;
         double h1  = staff()->staffHeight();
@@ -203,7 +203,7 @@ bool Bracket::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* Bracket::drop(EditData& data)
+EngravingItem* Bracket::drop(Transaction&, EditData& data)
 {
     EngravingItem* e = data.dropElement;
     Bracket* b = 0;

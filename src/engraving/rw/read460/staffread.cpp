@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -46,7 +46,7 @@ void StaffRead::readStaff(Score* score, XmlReader& e, ReadContext& ctx)
             const AsciiStringView tag(e.name());
 
             if (tag == "Measure") {
-                Measure* measure = Factory::createMeasure(ctx.dummy()->system());
+                Measure* measure = Factory::createMeasure(ctx.score());
                 measure->setTick(ctx.tick());
                 ctx.setCurrentMeasureIndex(measureIdx++);
                 //
@@ -103,7 +103,7 @@ void StaffRead::readStaff(Score* score, XmlReader& e, ReadContext& ctx)
             if (tag == "Measure") {
                 if (measure == 0) {
                     LOGD("Score::readStaff(): missing measure!");
-                    measure = Factory::createMeasure(ctx.dummy()->system());
+                    measure = Factory::createMeasure(ctx.score());
                     measure->setTick(ctx.tick());
                     score->measures()->append(measure);
                 }

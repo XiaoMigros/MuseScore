@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -63,16 +63,8 @@ static const ElementStyle noteLineStyle {
     { Sid::dummyMusicalSymbolsScale,           Pid::END_TEXT_MUSICAL_SYMBOLS_SCALE },
 };
 
-Sid NoteLineSegment::getPropertyStyle(Pid pid) const
-{
-    if (pid == Pid::OFFSET) {
-        return Sid::NOSTYLE;
-    }
-    return TextLineBaseSegment::getPropertyStyle(pid);
-}
-
-NoteLineSegment::NoteLineSegment(Spanner* sp, System* parent)
-    : TextLineBaseSegment(ElementType::NOTELINE_SEGMENT, sp, parent, ElementFlag::MOVABLE)
+NoteLineSegment::NoteLineSegment(NoteLine* sp)
+    : TextLineBaseSegment(ElementType::NOTELINE_SEGMENT, sp, ElementFlag::MOVABLE)
 {
     m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
     m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
@@ -87,23 +79,12 @@ EngravingObject* NoteLineSegment::propertyDelegate(Pid pid) const
     return TextLineBaseSegment::propertyDelegate(pid);
 }
 
-Sid NoteLine::getPropertyStyle(Pid pid) const
-{
-    switch (pid) {
-    case Pid::OFFSET:
-        return Sid::NOSTYLE;
-    default:
-        break;
-    }
-    return TextLineBase::getPropertyStyle(pid);
-}
-
 NoteLine::NoteLine(EngravingItem* parent)
     : TextLineBase(ElementType::NOTELINE, parent, ElementFlag::MOVABLE)
 {
     initElementStyle(&noteLineStyle);
 
-    static const std::array<Pid, 19> propertiesToInitialise {
+    static const std::array<Pid, 18> propertiesToInitialise {
         Pid::BEGIN_TEXT,
         Pid::CONTINUE_TEXT,
         Pid::END_TEXT,
@@ -121,8 +102,7 @@ NoteLine::NoteLine(EngravingItem* parent)
         Pid::DIAGONAL,
         Pid::NOTELINE_PLACEMENT,
         Pid::GAP_BETWEEN_TEXT_AND_LINE,
-        Pid::SYSTEM_FLAG,
-        Pid::ANCHOR
+        Pid::SYSTEM_FLAG
     };
 
     for (const Pid& pid : propertiesToInitialise) {
@@ -135,9 +115,9 @@ NoteLine::NoteLine(const NoteLine& nl)
 {
 }
 
-LineSegment* NoteLine::createLineSegment(System* parent)
+LineSegment* NoteLine::createLineSegment()
 {
-    NoteLineSegment* seg = new NoteLineSegment(this, parent);
+    NoteLineSegment* seg = new NoteLineSegment(this);
     seg->setTrack(track());
     return seg;
 }
@@ -171,15 +151,10 @@ PropertyValue NoteLine::propertyDefault(Pid propertyId) const
         return true;
     case Pid::NOTELINE_PLACEMENT:
         return NoteLineEndPlacement::OFFSET_ENDS;
-    case Pid::OFFSET:
-        return PointF();
     case Pid::GAP_BETWEEN_TEXT_AND_LINE:
         return 0.5_sp;
     case Pid::SYSTEM_FLAG:
         return false;
-    case Pid::ANCHOR:
-        return int(Spanner::Anchor::NOTE);
-
     case Pid::TEXT_STYLE:
         return TextStyleType::NOTELINE;
     default:
@@ -220,5 +195,10 @@ void NoteLine::reset()
 {
     undoResetProperty(Pid::NOTELINE_PLACEMENT);
     TextLineBase::reset();
+}
+
+Sid NoteLine::defaultPosSid() const
+{
+    return Sid::NOSTYLE;
 }
 } // namespace mu::engraving

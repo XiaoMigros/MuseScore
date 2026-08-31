@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -79,9 +79,9 @@ SymId LaissezVib::symId() const
     return up() ? SymId::articLaissezVibrerAbove : SymId::articLaissezVibrerBelow;
 }
 
-SlurTieSegment* LaissezVib::newSlurTieSegment(System* parent)
+SlurTieSegment* LaissezVib::newSlurTieSegment()
 {
-    LaissezVibSegment* seg =  new LaissezVibSegment(parent);
+    LaissezVibSegment* seg =  new LaissezVibSegment(this);
     seg->setTrack(track());
     return seg;
 }
@@ -97,8 +97,8 @@ void LaissezVib::setEndElement(EngravingItem* e)
     ASSERT_X("Laissez vibrer ties do not have an end note");
 }
 
-LaissezVibSegment::LaissezVibSegment(System* parent)
-    : TieSegment(ElementType::LAISSEZ_VIB_SEGMENT, parent)
+LaissezVibSegment::LaissezVibSegment(LaissezVib* sp)
+    : TieSegment(ElementType::LAISSEZ_VIB_SEGMENT, sp)
 {
 }
 

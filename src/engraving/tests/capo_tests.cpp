@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,12 +23,12 @@
 #include <gtest/gtest.h>
 
 #include "engraving/dom/masterscore.h"
+#include "engraving/dom/measure.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/note.h"
 
 #include "utils/scorerw.h"
-#include "utils/scorecomp.h"
 
 using namespace mu;
 using namespace mu::engraving;

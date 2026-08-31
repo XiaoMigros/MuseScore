@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -127,6 +127,7 @@ class Ornament;
 class Ottava;
 class OttavaSegment;
 class Page;
+class PageLockIndicator;
 class PalmMute;
 class PalmMuteSegment;
 class Parenthesis;
@@ -147,6 +148,7 @@ class RehearsalMark;
 class Rest;
 class Score;
 class Segment;
+class SharedPart;
 class SLine;
 class Slur;
 class SlurSegment;
@@ -159,6 +161,7 @@ class Staff;
 class StaffLines;
 class StaffState;
 class StaffText;
+class StaveSharingLabel;
 class StaffTextBase;
 class StaffTypeChange;
 class StaffVisibilityIndicator;
@@ -226,10 +229,15 @@ public:
     void setEID(EID id) const;
     EID assignNewEID() const;
 
+    //! The raw tree link, i.e. the inverse of children(): the ownership parent
+    //! if there is one, otherwise the dummy the object is parked on. Prefer
+    //! ownershipParent(), which reports "not attached to anything" as null.
     EngravingObject* parent() const;
-    void setParent(EngravingObject* p);
-    EngravingObject* explicitParent() const;
-    void resetExplicitParent();
+
+    void setOwnershipParent(EngravingObject* p);
+    //! The parent this object has explicitly been attached to via setOwnershipParent().
+    //! Null while the object is merely constructed with a context parent, or parked on the dummy.
+    EngravingObject* ownershipParent() const;
     void moveToDummy();
 
     const EngravingObjectList& children() const { return m_children; }
@@ -270,7 +278,7 @@ public:
 
     virtual void undoChangeProperty(Pid id, const PropertyValue&, PropertyFlags ps);
     void undoChangeProperty(Pid id, const PropertyValue&);
-    void undoResetProperty(Pid id);
+    virtual void undoResetProperty(Pid id);
 
     void undoPushProperty(Pid);
 
@@ -285,7 +293,6 @@ public:
     void setLinks(LinkedObjects* le);
 
 protected:
-    virtual void setParentInternal(EngravingObject* p);
     virtual int getPropertyFlagsIdx(Pid id) const;
 
     //! NOTE For compatibility reasons, hope, we will remove the need for this method.
@@ -436,10 +443,12 @@ public:
     CONVERT(FretDiagram,   FRET_DIAGRAM)
     CONVERT(HarpPedalDiagram, HARP_DIAGRAM)
     CONVERT(Page,          PAGE)
+    CONVERT(PageLockIndicator, PAGE_LOCK_INDICATOR)
     CONVERT(Text,          TEXT)
     CONVERT(MeasureNumber, MEASURE_NUMBER)
     CONVERT(MMRestRange,   MMREST_RANGE)
     CONVERT(StaffText,     STAFF_TEXT)
+    CONVERT(StaveSharingLabel, STAVE_SHARING_LABEL)
     CONVERT(SystemText,    SYSTEM_TEXT)
     CONVERT(SoundFlag,     SOUND_FLAG)
     CONVERT(PlayCountText, PLAY_COUNT_TEXT)
@@ -449,6 +458,7 @@ public:
     CONVERT(Score,         SCORE)
     CONVERT(Staff,         STAFF)
     CONVERT(Part,          PART)
+    CONVERT(SharedPart,    SHARED_PART)
     CONVERT(BagpipeEmbellishment, BAGPIPE_EMBELLISHMENT)
     CONVERT(Lasso,         LASSO)
     CONVERT(Sticking,      STICKING)
@@ -569,7 +579,8 @@ public:
 
     bool isStaffTextBase() const
     {
-        return isStaffText() || isSystemText() || isTripletFeel() || isPlayTechAnnotation() || isCapo() || isStringTunings();
+        return isStaffText() || isStaveSharingLabel() || isSystemText() || isTripletFeel() || isPlayTechAnnotation() || isCapo()
+               || isStringTunings();
     }
 
     bool isArticulationFamily() const
@@ -582,7 +593,7 @@ public:
         return isArticulationFamily() || isFermata();
     }
 
-    bool isIndicatorIcon() const { return isSystemLockIndicator() || isStaffVisibilityIndicator(); }
+    bool isIndicatorIcon() const { return isSystemLockIndicator() || isPageLockIndicator() || isStaffVisibilityIndicator(); }
 };
 
 //---------------------------------------------------
@@ -670,6 +681,7 @@ CONVERT(TripletFeel)
 CONVERT(Harmony)
 CONVERT(Jump)
 CONVERT(StaffText)
+CONVERT(StaveSharingLabel);
 CONVERT(StaffTextBase)
 CONVERT(TextBase)
 CONVERT(TextLineBase)
@@ -764,10 +776,12 @@ CONVERT(ChordLine)
 CONVERT(FretDiagram)
 CONVERT(HarpPedalDiagram)
 CONVERT(Page)
+CONVERT(PageLockIndicator)
 CONVERT(SystemText)
 CONVERT(BracketItem)
 CONVERT(Staff)
 CONVERT(Part)
+CONVERT(SharedPart)
 CONVERT(Lasso)
 CONVERT(BagpipeEmbellishment)
 CONVERT(Sticking)

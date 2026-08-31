@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -39,7 +39,9 @@
 #include "engraving/dom/hammeronpulloff.h"
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/hairpin.h"
+#include "engraving/dom/instrchange.h"
 #include "engraving/dom/ornament.h"
+#include "engraving/dom/measure.h"
 #include "engraving/dom/pedal.h"
 #include "engraving/dom/score.h"
 #include "engraving/dom/stafftext.h"
@@ -50,6 +52,7 @@
 #include "engraving/dom/whammybar.h"
 #include "engraving/types/symid.h"
 #include "engraving/types/typesconv.h"
+#include "engraving/dom/layoutbreak.h"
 
 #include "palette.h"
 #include "palettecell.h"
@@ -200,6 +203,14 @@ void PaletteCompat::migrateOldPaletteCellIfNeeded(PaletteCell* cell, Score* pale
     if (item->isActionIcon() && muse::contains(BOXES_ACTION_TYPES, toActionIcon(item)->actionType())) {
         cell->mag = COMPAT_FRAME_MAG;
     }
+
+    if (item->isInstrumentChange()) {
+        InstrumentChange* newInstrumentChange = Factory::createInstrumentChange(paletteScore->dummy()->segment());
+        newInstrumentChange->setXmlText(QT_TRANSLATE_NOOP("palette", "Change instr."));
+
+        cell->element.reset(newInstrumentChange);
+        return;
+    }
 }
 
 void PaletteCompat::addNewItemsIfNeeded(Palette& palette, Score* paletteScore)
@@ -225,7 +236,12 @@ void PaletteCompat::addNewItemsIfNeeded(Palette& palette, Score* paletteScore)
     }
 
     if (palette.type() == Palette::Type::Layout) {
-        addNewLayoutItems(palette);
+        addNewLayoutItems(palette, paletteScore);
+        return;
+    }
+
+    if (palette.type() == Palette::Type::Keyboard) {
+        addNewKeyboardItems(palette, paletteScore);
         return;
     }
 }
@@ -393,15 +409,8 @@ void PaletteCompat::addNewLineItems(Palette& linesPalette, Score* paletteScore)
     }
 
     if (!containsChordBrackets) {
-        std::array<QString, 3> names = { QT_TRANSLATE_NOOP("palette", "Chord bracket"),
-                                         QT_TRANSLATE_NOOP("palette", "Chord bracket (play with left hand)"),
-                                         QT_TRANSLATE_NOOP("palette", "Chord bracket (play with right hand)") };
-        for (int i = 0; i < 3; ++i) {
-            DirectionV hookPos = DirectionV(i);
-            auto c = Factory::makeChordBracket(paletteScore->dummy()->chord());
-            c->setProperty(Pid::BRACKET_HOOK_POS, hookPos);
-            linesPalette.insertElement(27 + i, c, names[i]);
-        }
+        int defaultPosition = std::min(27, linesPalette.cellsCount());
+        addChordBrackets(linesPalette, paletteScore, defaultPosition);
     }
 }
 
@@ -450,9 +459,11 @@ void PaletteCompat::addNewRepeatItems(Palette& repeatPalette, engraving::Score* 
     }
 }
 
-void PaletteCompat::addNewLayoutItems(Palette& layoutPalette)
+void PaletteCompat::addNewLayoutItems(Palette& layoutPalette, engraving::Score* paletteScore)
 {
     bool containsFFrame = false;
+    bool containsLock = false;
+    bool containsNoBreak = false;
     for (const PaletteCellPtr& cell : layoutPalette.cells()) {
         const ElementPtr element = cell->element;
         if (!element) {
@@ -462,11 +473,60 @@ void PaletteCompat::addNewLayoutItems(Palette& layoutPalette)
         if (element->isActionIcon() && toActionIcon(element.get())->actionType() == ActionIconType::FFRAME) {
             containsFFrame = true;
         }
+        if (element->isActionIcon() && toActionIcon(element.get())->actionType() == ActionIconType::PAGE_LOCK) {
+            containsLock = true;
+        }
+        if (element->isLayoutBreak() && toLayoutBreak(element.get())->layoutBreakType() == LayoutBreakType::NOBREAK) {
+            containsNoBreak = true;
+        }
     }
 
     if (!containsFFrame) {
         int defaultPosition = std::min(10, layoutPalette.cellsCount());
         layoutPalette.insertActionIcon(defaultPosition, ActionIconType::FFRAME, "insert-fretframe", COMPAT_FRAME_MAG);
+    }
+
+    if (!containsNoBreak) {
+        int defaultPosition = std::min(3, layoutPalette.cellsCount());
+        auto lb = Factory::makeLayoutBreak(paletteScore->dummy()->measure());
+        lb->setLayoutBreakType(LayoutBreakType::NOBREAK);
+        layoutPalette.insertElement(defaultPosition, lb, TConv::userName(LayoutBreakType::NOBREAK));
+    }
+
+    if (!containsLock) {
+        int defaultPosition = std::min(5, layoutPalette.cellsCount());
+        layoutPalette.insertActionIcon(defaultPosition, ActionIconType::PAGE_LOCK, "toggle-page-lock");
+    }
+}
+
+void PaletteCompat::addNewKeyboardItems(Palette& keyPalette, engraving::Score* paletteScore)
+{
+    bool containsChordBrackets = false;
+    for (const PaletteCellPtr& cell : keyPalette.cells()) {
+        if (cell->element && cell->element->isChordBracket()) {
+            containsChordBrackets = true;
+        }
+    }
+
+    if (!containsChordBrackets) {
+        addChordBrackets(keyPalette, paletteScore);
+    }
+}
+
+void PaletteCompat::addChordBrackets(Palette& palette, engraving::Score* paletteScore, size_t position)
+{
+    std::array<QString, 3> names = { QT_TRANSLATE_NOOP("palette", "Chord bracket"),
+                                     QT_TRANSLATE_NOOP("palette", "Chord bracket (play with left hand)"),
+                                     QT_TRANSLATE_NOOP("palette", "Chord bracket (play with right hand)") };
+    for (int i = 0; i < 3; ++i) {
+        DirectionV hookPos = DirectionV(i);
+        auto c = Factory::makeChordBracket(paletteScore->dummy()->chord());
+        c->setProperty(Pid::BRACKET_HOOK_POS, hookPos);
+        if (position != muse::nidx) {
+            palette.insertElement(position + i, c, names[i]);
+        } else {
+            palette.appendElement(c, names[i]);
+        }
     }
 }
 

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,13 +24,14 @@
 #include <QQmlParserStatus>
 #include <qqmlintegration.h>
 
-#include "notation/inotation.h"
+#include "rcommand/commandtypes.h"
 #include "uicomponents/qml/Muse/UiComponents/abstractmenumodel.h"
 
 #include "modularity/ioc.h"
+#include "rcommand/icommandsregister.h"
 #include "context/iglobalcontext.h"
-#include "playback/iplaybackcontroller.h"
 #include "ui/iuistate.h"
+#include "notationscene/inotationcommandscontroller.h"
 
 namespace mu::notation {
 class NoteInputBarModel : public muse::uicomponents::AbstractMenuModel, public QQmlParserStatus
@@ -41,9 +42,10 @@ class NoteInputBarModel : public muse::uicomponents::AbstractMenuModel, public Q
 
     Q_PROPERTY(bool isInputAllowed READ isInputAllowed NOTIFY isInputAllowedChanged)
 
+    muse::GlobalInject<muse::rcommand::ICommandsRegister> commandsRegister;
     muse::ContextInject<muse::ui::IUiState> uiState = { this };
     muse::ContextInject<context::IGlobalContext> context = { this };
-    muse::ContextInject<playback::IPlaybackController> playbackController = { this };
+    muse::ContextInject<INotationCommandsController> commandsController = { this };
 
 public:
     explicit NoteInputBarModel(QObject* parent = nullptr);
@@ -52,6 +54,17 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     bool isInputAllowed() const;
+
+    static const muse::ui::ToolConfig& defaultNoteInputConfig();
+
+    static const std::string CROSS_STAFF_BEAMING_SUBITEMS;
+    static const std::string TUPLET_SUBITEMS;
+
+    struct ServiceItemInfo {
+        muse::MnemonicString title;
+        muse::ui::IconCode::Code icon = muse::ui::IconCode::Code::NONE;
+    };
+    static ServiceItemInfo serviceItemInfo(const std::string& intent);
 
 signals:
     void isInputAllowedChanged();
@@ -65,30 +78,10 @@ private:
     void classBegin() override;
     void componentComplete() override {}
     void init();
-
-    void setNotation(const INotationPtr& notation);
-
     void load() override;
 
-    void updateItemStateChecked(muse::uicomponents::MenuItem& item, bool checked);
-    void updateItemsStateChecked(const muse::actions::ActionCode& actionCode, bool checked);
-
-    void updateState();
-    void updateNoteInputState();
-    void updateNoteInputModeState();
-    void updateNoteDotState();
-    void updateNoteDurationState();
-    void updateNoteAccidentalState();
-    void updateTieState();
-    void updateLvState();
-    void updateSlurState();
-    void updateVoicesState();
-    void updateArticulationsState();
-    void updateRestState();
-    void updateAddState();
-
-    muse::uicomponents::MenuItem* makeActionItem(const muse::ui::UiAction& action, const QString& section,
-                                                 const muse::uicomponents::MenuItemList& subitems = {});
+    muse::uicomponents::MenuItem* makeServiceItem(const std::string& intent, const QString& section);
+    muse::uicomponents::MenuItem* makeCommandItem(const muse::rcommand::Command& command, const QString& section);
     muse::uicomponents::MenuItem* makeAddItem(const QString& section);
 
     muse::uicomponents::MenuItemList makeCrossStaffBeamingItems();
@@ -98,26 +91,8 @@ private:
     muse::uicomponents::MenuItemList makeIntervalsItems();
     muse::uicomponents::MenuItemList makeMeasuresItems();
     muse::uicomponents::MenuItemList makeFramesItems();
-    muse::uicomponents::MenuItemList makeFramesAppendItems();
     muse::uicomponents::MenuItemList makeTextItems();
     muse::uicomponents::MenuItemList makeLinesItems();
     muse::uicomponents::MenuItemList makeChordAndFretboardDiagramsItems();
-
-    INotationNoteInputPtr noteInput() const;
-    INotationInteractionPtr interaction() const;
-    INotationSelectionPtr selection() const;
-    INotationUndoStackPtr undoStack() const;
-
-    int resolveCurrentVoiceIndex() const;
-    std::set<SymbolId> resolveCurrentArticulations() const;
-    bool resolveRestSelected() const;
-    DurationType resolveCurrentDurationType() const;
-
-    bool isNoteInputMode() const;
-    const NoteInputState& noteInputState() const;
-
-    const ChordRest* elementToChordRest(const EngravingItem* element) const;
-
-    INotationPtr m_notation = nullptr;
 };
 }

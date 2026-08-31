@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -71,7 +71,7 @@ static void addText(mu::engraving::VBox*& vbx, mu::engraving::Score* s, QString 
 {
     if (!strTxt.isEmpty()) {
         if (vbx == 0) {
-            vbx = new mu::engraving::VBox(s->dummy()->system());
+            vbx = new mu::engraving::VBox(s);
         }
         mu::engraving::Text* text = Factory::createText(vbx, stl);
         text->setPlainText(strTxt);
@@ -212,7 +212,7 @@ void MsScWriter::beginMeasure(const Bww::MeasureBeginFlags mbf)
     ++measureNumber;
 
     // create a new measure
-    currentMeasure  = Factory::createMeasure(score->dummy()->system());
+    currentMeasure  = Factory::createMeasure(score);
     currentMeasure->setTick(tick);
     currentMeasure->setTimesig(mu::engraving::Fraction(beats, beat));
     currentMeasure->setMeasureNumber(measureNumber);
@@ -503,7 +503,7 @@ void MsScWriter::doTriplet(mu::engraving::Chord* cr, StartStop triplet)
         tuplet = new mu::engraving::Tuplet(currentMeasure);
         tuplet->setTrack(0);
         tuplet->setRatio(mu::engraving::Fraction(3, 2));
-//            tuplet->setTick(tick);
+        tuplet->setTick(tick);
         currentMeasure->add(tuplet);
     } else if (triplet == StartStop::ST_STOP) {
         if (tuplet) {

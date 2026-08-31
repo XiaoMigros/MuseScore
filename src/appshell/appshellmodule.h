@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -47,7 +47,7 @@ private:
 };
 
 class AppShellState;
-class ApplicationActionController;
+class AppshellCommandsController;
 class ApplicationUiActions;
 class SessionsManager;
 class AppShellContext : public muse::modularity::IContextSetup
@@ -64,7 +64,7 @@ public:
 
 private:
     std::shared_ptr<AppShellState> m_appshellState;
-    std::shared_ptr<ApplicationActionController> m_applicationActionController;
+    std::shared_ptr<AppshellCommandsController> m_commandsController;
     std::shared_ptr<ApplicationUiActions> m_applicationUiActions;
     std::shared_ptr<SessionsManager> m_sessionsManager;
 };

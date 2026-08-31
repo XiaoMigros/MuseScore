@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,7 +38,7 @@ class HarmonicMarkSegment final : public TextLineBaseSegment
     DECLARE_CLASSOF(ElementType::HARMONIC_MARK_SEGMENT)
 
 public:
-    HarmonicMarkSegment(HarmonicMark* sp, System* parent);
+    HarmonicMarkSegment(HarmonicMark* sp);
 
     HarmonicMarkSegment* clone() const override { return new HarmonicMarkSegment(*this); }
 
@@ -61,11 +61,16 @@ public:
 
     HarmonicMark* clone() const override { return new HarmonicMark(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
+    LineSegment* createLineSegment() override;
 
     PropertyValue propertyDefault(Pid propertyId) const override;
     Sid getPropertyStyle(Pid) const override;
     bool setProperty(Pid propertyId, const PropertyValue& value) override;
+
+protected:
+    Sid defaultPosSid() const override;
 
 private:
 

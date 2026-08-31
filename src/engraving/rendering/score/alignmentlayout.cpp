@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -241,9 +241,9 @@ double AlignmentLayout::yOpticalCenter(const EngravingItem* item)
         curY += toFretDiagram(item)->ldata()->gridHeight;
         break;
     case ElementType::HARMONY: {
-        EngravingItem* parentItem = toHarmony(item)->parentItem();
-        if (parentItem && parentItem->isFretDiagram()) {
-            curY += parentItem->pos().y();
+        EngravingItem* parent = toHarmony(item)->layoutParent();
+        if (parent && parent->isFretDiagram()) {
+            curY += parent->pos().y();
         }
         break;
     }

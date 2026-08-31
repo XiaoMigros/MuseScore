@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "notationproject.h"
 
 #include <memory>
@@ -27,15 +28,23 @@
 #include <QDir>
 #include <QFile>
 
+#include "global/concurrency/concurrent.h"
 #include "global/io/buffer.h"
 #include "global/io/file.h"
 #include "global/io/ioretcodes.h"
 #include "global/io/devtools/allzerosbuffercorruptor.h"
 
 #include "engraving/compat/engravingcompat.h"
+#include "engraving/dom/excerpt.h"
 #include "engraving/dom/masterscore.h"
+#include "engraving/dom/measure.h"
+#include "engraving/dom/measurebase.h"
+#include "engraving/dom/page.h"
 #include "engraving/dom/repeatlist.h"
+#include "engraving/dom/system.h"
 #include "engraving/editing/editscoreproperties.h"
+#include "engraving/editing/editstyle.h"
+#include "engraving/editing/transaction/transaction.h"
 #include "engraving/engravingerrors.h"
 #include "engraving/engravingproject.h"
 #include "engraving/infrastructure/mscio.h"
@@ -43,13 +52,16 @@
 #include "engraving/rw/write/writecontext.h"
 
 #include "iprojectautosaver.h"
+#include "notation/iexcerptnotation.h" // IWYU pragma: keep
+#include "notation/inotationundostack.h" // IWYU pragma: keep
+#include "notation/inotationviewstate.h"
 #include "notation/internal/masternotation.h"
 #include "notation/notationerrors.h"
 #include "projectaudiosettings.h"
 #include "projectfileinfoprovider.h"
 #include "projecterrors.h"
-
-#include "global/concurrency/concurrent.h"
+#include "types/projectcreateoptions.h"
+#include "types/projectmeta.h"
 
 #include "defer.h"
 #include "log.h"
@@ -198,7 +210,8 @@ Ret NotationProject::doLoad(const muse::io::path_t& path, const OpenParams& open
     // Load style if present
     if (!openParams.stylePath.empty()) {
         muse::io::File styleFile(openParams.stylePath);
-        m_engravingProject->masterScore()->loadStyle(styleFile);
+        mu::engraving::MasterScore* ms = m_engravingProject->masterScore();
+        mu::engraving::EditStyle::loadStyle(ms->transactionManager()->currentOrDummyTransaction(), ms, styleFile);
     }
 
     mu::engraving::compat::EngravingCompat::doPreLayoutCompatIfNeeded(m_engravingProject->masterScore());
@@ -300,7 +313,7 @@ Ret NotationProject::doImport(const muse::io::path_t& path, const OpenParams& op
     // Load style if present
     if (!stylePath.empty()) {
         muse::io::File styleFile(stylePath);
-        score->loadStyle(styleFile);
+        mu::engraving::EditStyle::loadStyle(score->transactionManager()->currentOrDummyTransaction(), score, styleFile);
     }
 
     // Init ChordList
@@ -520,6 +533,18 @@ Ret NotationProject::save(const muse::io::path_t& path, SaveMode saveMode, bool 
             if (saveMode != SaveMode::SaveCopy) {
                 markAsSaved(savePath);
             }
+
+            // Re-compute headers and footers on save, to force timestamps update (if any)
+            bool timestampsUpdated = false;
+            for (Score* s : m_engravingProject->masterScore()->scoreList()) {
+                if (renderer()->scoreHasTimestampHeadersFooters(s)) {
+                    renderer()->layoutHeadersFooters(s);
+                    timestampsUpdated = true;
+                }
+            }
+            if (timestampsUpdated) {
+                globalContext()->currentNotation()->notationChanged().send(muse::RectF());
+            }
         }
     } break;
     case SaveMode::AutoSave: {
@@ -567,7 +592,10 @@ muse::Ret NotationProject::savePage(const muse::io::path_t& path, const size_t p
     range.startStaffIdx = 0;
     range.endStaffIdx = score->nstaves();
     range.startMeasure = systems.front()->first();
-    range.endMeasure = systems.back()->last();
+    // StaffWrite::writeStaff stops before reaching endMeasure, so use the measure after
+    // the last one we want, otherwise the page's last measure/frame is dropped
+    MeasureBase* lastMeasure = systems.back()->last();
+    range.endMeasure = lastMeasure ? lastMeasure->next() : nullptr;
 
     write::WriteContext ctx(score);
     ctx.setRange(range);
@@ -625,7 +653,8 @@ Ret NotationProject::writeToDevice(QIODevice* device)
 }
 
 Ret NotationProject::saveScore(const muse::io::path_t& path, const std::string& fileSuffix,
-                               bool generateBackup, bool createThumbnail, bool isAutosave)
+                               bool generateBackup, bool createThumbnail, bool isAutosave,
+                               const write::WriteContext* ctx)
 {
     if (!isMuseScoreFile(fileSuffix) && !fileSuffix.empty()) {
         return exportProject(path, fileSuffix);
@@ -633,11 +662,12 @@ Ret NotationProject::saveScore(const muse::io::path_t& path, const std::string& 
 
     MscIoMode ioMode = mscIoModeBySuffix(fileSuffix);
 
-    return doSave(path, ioMode, generateBackup, createThumbnail, isAutosave);
+    return doSave(path, ioMode, generateBackup, createThumbnail, isAutosave, ctx);
 }
 
 Ret NotationProject::doSave(const muse::io::path_t& path, engraving::MscIoMode ioMode,
-                            bool generateBackup, bool createThumbnail, bool isAutosave)
+                            bool generateBackup, bool createThumbnail, bool isAutosave,
+                            const write::WriteContext* ctx)
 {
     TRACEFUNC;
 
@@ -688,7 +718,7 @@ Ret NotationProject::doSave(const muse::io::path_t& path, engraving::MscIoMode i
         params.device = maybeOutBuf.get();
 
         MscWriter msczWriter(params);
-        Ret ret = writeProject(msczWriter, createThumbnail);
+        Ret ret = writeProject(msczWriter, createThumbnail, ctx);
         msczWriter.close();
 
         if (!ret) {
@@ -852,45 +882,13 @@ muse::Ret NotationProject::writeProject(const muse::io::path_t& path, const writ
         return make_ret(notation::Err::UnknownError);
     }
 
-    // Check writable
-    if (fileSystem()->exists(path) && !fileSystem()->isWritable(path)) {
-        LOGE() << "failed save, not writable path: " << path;
-        return make_ret(notation::Err::UnknownError);
-    }
-
-    // Write project
     std::string suffix = io::suffix(path);
-    MscWriter::Params params;
-    params.filePath = path;
-    params.mode = mscIoModeBySuffix(suffix);
-    IF_ASSERT_FAILED(params.mode != MscIoMode::Unknown) {
+
+    if (mscIoModeBySuffix(suffix) == MscIoMode::Unknown) {
         return make_ret(Ret::Code::InternalError);
     }
 
-    std::unique_ptr<Buffer> maybeOutBuf;
-    if (params.mode != MscIoMode::Dir) {
-        maybeOutBuf = std::make_unique<Buffer>();
-        params.device = maybeOutBuf.get();
-    }
-
-    MscWriter msczWriter(params);
-    Ret ret = writeProject(msczWriter, true, ctx);
-    if (!ret) {
-        return ret;
-    }
-
-    if (maybeOutBuf) {
-        ret = fileSystem()->writeFile(path, maybeOutBuf->data());
-        if (!ret) {
-            return ret;
-        }
-    }
-
-    QFile::setPermissions(path.toQString(),
-                          QFile::ReadOwner | QFile::WriteOwner | QFile::ReadUser | QFile::ReadGroup | QFile::ReadOther);
-
-    LOGI() << "success save file: " << path;
-    return ret;
+    return saveScore(path, suffix, false /*generateBackup*/, true /*createThumbnail*/, false /*isAutosave*/, ctx);
 }
 
 Ret NotationProject::writeProject(MscWriter& msczWriter, bool createThumbnail, const write::WriteContext* ctx)
@@ -1140,21 +1138,22 @@ void NotationProject::setNeedSave(bool needSave)
         m_hasNonUndoStackChanges = false;
     }
 
-    if (m_needSave == needSave) {
+    if (m_isNeedSave == needSave) {
         return;
     }
 
-    m_needSave = needSave;
-    m_needSaveNotification.notify();
+    m_isNeedSave = needSave;
+    m_needSaveChanged.notify();
 }
 
-ValNt<bool> NotationProject::needSave() const
+bool NotationProject::isNeedSave() const
 {
-    ValNt<bool> needSave;
-    needSave.val = m_needSave;
-    needSave.notification = m_needSaveNotification;
+    return m_isNeedSave;
+}
 
-    return needSave;
+muse::async::Notification NotationProject::needSaveChanged() const
+{
+    return m_needSaveChanged;
 }
 
 Ret NotationProject::canSave() const

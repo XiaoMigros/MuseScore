@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -37,10 +37,8 @@ class PedalSegment final : public TextLineBaseSegment
     OBJECT_ALLOCATOR(engraving, PedalSegment)
     DECLARE_CLASSOF(ElementType::PEDAL_SEGMENT)
 
-    Sid getPropertyStyle(Pid) const override;
-
 public:
-    PedalSegment(Pedal* sp, System* parent);
+    PedalSegment(Pedal* sp);
 
     PedalSegment* clone() const override { return new PedalSegment(*this); }
     Pedal* pedal() const { return toPedal(spanner()); }
@@ -60,6 +58,7 @@ class Pedal final : public TextLineBase
     Sid getPropertyStyle(Pid) const override;
 
 protected:
+    Sid defaultPosSid() const override;
     PointF linePos(Grip, System**) const override;
 
 public:
@@ -70,7 +69,9 @@ public:
 
     Pedal* clone() const override { return new Pedal(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
+    LineSegment* createLineSegment() override;
     PropertyValue propertyDefault(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue& v) override;
 

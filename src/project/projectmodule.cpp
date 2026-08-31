@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -37,7 +37,8 @@
 
 #include "internal/notationreadersregister.h"
 #include "internal/notationwritersregister.h"
-#include "internal/projectrwregister.h"
+#include "internal/projectcommandsregister.h"
+#include "internal/projectcommandsstate.h"
 
 #ifdef Q_OS_MAC
 #include "internal/platform/macos/macosrecentfilescontroller.h"
@@ -47,10 +48,9 @@
 #include "internal/recentfilescontroller.h"
 #endif
 
+#include "rcommand/icommandsstate.h"
 #include "ui/iuiactionsregister.h"
 #include "interactive/iinteractiveuriregister.h"
-#include "extensions/iextensionsexecpointsregister.h"
-#include "projectextensionpoints.h"
 
 using namespace mu::project;
 using namespace muse;
@@ -71,10 +71,8 @@ void ProjectModule::registerExports()
     globalIoc()->registerExport<IProjectCreator>(mname, new ProjectCreator());
     globalIoc()->registerExport<IMscMetaReader>(mname, new MscMetaReader());
 
-    //! TODO Should be replace INotationReaders/WritersRegister with IProjectRWRegister
     globalIoc()->registerExport<INotationReadersRegister>(mname, new NotationReadersRegister());
     globalIoc()->registerExport<INotationWritersRegister>(mname, new NotationWritersRegister());
-    globalIoc()->registerExport<IProjectRWRegister>(mname, new ProjectRWRegister());
 }
 
 void ProjectModule::resolveImports()
@@ -93,16 +91,9 @@ void ProjectModule::resolveImports()
         ir->registerQmlUri(Uri("musescore://project/audiogenerationsettings"), "MuseScore.Project", "AudioGenerationSettingsDialog");
     }
 
-    auto er = globalIoc()->resolve<muse::extensions::IExtensionsExecPointsRegister>(mname);
-    if (er) {
-        er->reg(mname, { EXEC_ONPOST_PROJECT_CREATED,
-                         TranslatableString::untranslatable("On post project created") });
-        er->reg(mname, { EXEC_ONPOST_PROJECT_OPENED,
-                         TranslatableString::untranslatable("On post project opened") });
-        er->reg(mname, { EXEC_ONPRE_PROJECT_SAVE,
-                         TranslatableString::untranslatable("On pre project save") });
-        er->reg(mname, { EXEC_ONPOST_PROJECT_SAVED,
-                         TranslatableString::untranslatable("On post project saved") });
+    auto cr = globalIoc()->resolve<muse::rcommand::ICommandsRegister>(mname);
+    if (cr) {
+        cr->reg(std::make_shared<ProjectCommandsRegister>());
     }
 }
 
@@ -134,6 +125,7 @@ void ProjectContext::registerExports()
     m_recentFilesController = std::make_shared<RecentFilesController>();
 #endif
 
+    ioc()->registerExport<IProjectCommandsController>(mname, m_actionsController);
     ioc()->registerExport<IProjectFilesController>(mname, m_actionsController);
     ioc()->registerExport<mi::IProjectProvider>(mname, m_actionsController);
     ioc()->registerExport<IOpenSaveProjectScenario>(mname, new OpenSaveProjectScenario(iocContext()));
@@ -147,6 +139,11 @@ void ProjectContext::registerExports()
 
 void ProjectContext::resolveImports()
 {
+    auto cs = ioc()->resolve<muse::rcommand::ICommandsState>(mname);
+    if (cs) {
+        cs->reg(std::make_shared<ProjectCommandsState>(iocContext()));
+    }
+
     auto ar = ioc()->resolve<muse::ui::IUiActionsRegister>(mname);
     if (ar) {
         ar->reg(std::make_shared<ProjectUiActions>(m_actionsController, iocContext()));

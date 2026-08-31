@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #if (defined (_MSCVER) || defined (_MSC_VER))
 #pragma warning(disable: 4459) // _t hides global declaration
 #endif
@@ -31,6 +32,9 @@
 #include "engraving/dom/segment.h"
 #include "engraving/dom/stafftext.h"
 #include "engraving/editing/textedit.h"
+#include "engraving/editing/transaction/transaction.h"
+#include "engraving/editing/transaction/undostack.h"
+#include "engraving/rendering/iscorerenderer.h"
 
 #include "utils/scorerw.h"
 #include "utils/scorecomp.h"
@@ -53,7 +57,7 @@ Dynamic* Engraving_TextBaseTests::addDynamic(MasterScore* score)
     ChordRest* chordRest = score->firstSegment(SegmentType::ChordRest)->nextChordRest(0);
     EditData ed;
     ed.dropElement = dynamic;
-    chordRest->drop(ed);
+    chordRest->drop(score->transactionManager()->currentOrDummyTransaction(), ed);
     return dynamic;
 }
 
@@ -71,7 +75,7 @@ TEST_F(Engraving_TextBaseTests, dynamicAddTextBefore)
     EditData ed;
     dynamic->startEdit(ed);
     score->startCmd(TranslatableString::untranslatable("Edit dynamic text (test)"));
-    score->undo(new InsertText(dynamic->cursor(), String(u"poco ")), &ed);
+    score->undo(new InsertText(dynamic->cursor(), String(u"poco ")));
     score->endCmd();
     dynamic->endEdit(ed);
     EXPECT_TRUE(ScoreComp::saveCompareScore(score, u"dynamicAddTextBefore.mscx", TEXTBASE_DATA_DIR + u"dynamicAddTextBefore-ref.mscx"));
@@ -100,7 +104,7 @@ TEST_F(Engraving_TextBaseTests, dynamicAddTextNoItalic)
     dynamic->startEdit(ed);
     score->startCmd(TranslatableString::untranslatable("Edit dynamic text (test)"));
     dynamic->setProperty(Pid::FONT_STYLE, PropertyValue::fromValue(0));
-    score->undo(new InsertText(dynamic->cursor(), String(u"moderately ")), &ed);
+    score->undo(new InsertText(dynamic->cursor(), String(u"moderately ")));
     score->endCmd();
     dynamic->endEdit(ed);
     EXPECT_TRUE(ScoreComp::saveCompareScore(score, u"dynamicAddTextNoItalic.mscx", TEXTBASE_DATA_DIR + u"dynamicAddTextNoItalic-ref.mscx"));
@@ -112,7 +116,7 @@ StaffText* Engraving_TextBaseTests::addStaffText(MasterScore* score)
     ChordRest* chordRest = score->firstSegment(SegmentType::ChordRest)->nextChordRest(0);
     EditData ed;
     ed.dropElement = staffText;
-    chordRest->drop(ed);
+    chordRest->drop(score->transactionManager()->currentOrDummyTransaction(), ed);
     return staffText;
 }
 
@@ -122,9 +126,9 @@ TEST_F(Engraving_TextBaseTests, getFontStyleProperty)
     StaffText* staffText = addStaffText(score);
     EditData ed;
     staffText->startEdit(ed);
-    score->undo(new InsertText(staffText->cursor(), String(u"normal ")), &ed);
+    score->undo(new InsertText(staffText->cursor(), String(u"normal ")));
     staffText->setProperty(Pid::FONT_STYLE, PropertyValue::fromValue(static_cast<int>(FontStyle::Bold)));
-    score->undo(new InsertText(staffText->cursor(), String(u"bold")), &ed);
+    score->undo(new InsertText(staffText->cursor(), String(u"bold")));
     staffText->cursor()->moveCursorToStart();
     EXPECT_EQ(staffText->getProperty(Pid::FONT_STYLE), PropertyValue::fromValue(0));
     staffText->cursor()->movePosition(TextCursor::MoveOperation::NextWord, TextCursor::MoveMode::KeepAnchor);
@@ -157,7 +161,7 @@ TEST_F(Engraving_TextBaseTests, undoChangeFontStyleProperty)
     EditData ed;
     score->undoStack()->undo(&ed);
     EXPECT_EQ(staffText->xmlText(), u"normal <b>bold</b> <u>underline</u> <i>italic</i>");
-    score->undoStack()->redo(&ed);
+    score->undoStack()->redo();
     EXPECT_EQ(staffText->xmlText(), u"<b>normal bold <u>underline</u> <i>italic</i></b>");
     score->startCmd(TranslatableString::untranslatable("Engraving text base tests"));
     staffText->undoChangeProperty(Pid::FONT_STYLE, PropertyValue::fromValue(
@@ -201,7 +205,7 @@ TEST_F(Engraving_TextBaseTests, undoChangeFontSizeEmptyLines)   // Testcase for 
     LOGD(" 2.: Text is now : %s", muPrintable(staffText->xmlText().replace(u"\n", u"\\n")));
     EXPECT_EQ(staffText->xmlText(), originalText);
 
-    score->undoStack()->redo(&ed);
+    score->undoStack()->redo();
     LOGD(" 3.: Text is now : %s", muPrintable(staffText->xmlText().replace(u"\n", u"\\n")));
     EXPECT_EQ(staffText->xmlText(), expectedText);
 }

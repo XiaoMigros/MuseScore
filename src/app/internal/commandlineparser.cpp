@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -156,6 +156,7 @@ void CommandLineParser::init()
     m_parser.addOption(QCommandLineOption("fps", "Frame per second [60, 30, 24]", "24"));
     m_parser.addOption(QCommandLineOption("ls", "Pause before playback in seconds (3.0)", "3.0"));
     m_parser.addOption(QCommandLineOption("ts", "Pause before end of video in seconds (3.0)", "3.0"));
+    m_parser.addOption(QCommandLineOption("no-audio", "Export video without audio"));
 #endif
 
     m_parser.addOption(QCommandLineOption("gp-linked", "create tabulature linked staves for guitar pro"));
@@ -181,7 +182,7 @@ void CommandLineParser::init()
     // Audio plugins
     m_parser.addOption(QCommandLineOption("register-audio-plugin",
                                           "Check an audio plugin for compatibility with the application and register it", "path"));
-    m_parser.addOption(QCommandLineOption("register-failed-audio-plugin", "Register an incompatible audio plugin", "path"));
+    m_parser.addOption(QCommandLineOption("register-audio-plugin-out", "Write audio plugin registration result to file", "path"));
 
     // Internal
     m_parser.addOption(internalCommandLineOption("score-display-name-override",
@@ -296,15 +297,7 @@ void CommandLineParser::parse(int argc, char** argv)
     if (m_parser.isSet("register-audio-plugin")) {
         m_options->runMode = IApplication::RunMode::AudioPluginRegistration;
         m_options->audioPluginRegistration.pluginPath = fromUserInputPath(m_parser.value("register-audio-plugin"));
-        m_options->audioPluginRegistration.failedPlugin = false;
-    }
-
-    if (m_parser.isSet("register-failed-audio-plugin")) {
-        QStringList args1 = m_parser.positionalArguments();
-        m_options->runMode = IApplication::RunMode::AudioPluginRegistration;
-        m_options->audioPluginRegistration.pluginPath = fromUserInputPath(m_parser.value("register-failed-audio-plugin"));
-        m_options->audioPluginRegistration.failedPlugin = true;
-        m_options->audioPluginRegistration.failCode = !args1.empty() ? args1[0].toInt() : -1;
+        m_options->audioPluginRegistration.outputFile = fromUserInputPath(m_parser.value("register-audio-plugin-out"));
     }
 
     // Converter mode
@@ -449,6 +442,10 @@ void CommandLineParser::parse(int argc, char** argv)
 
         if (m_parser.isSet("ts")) {
             m_options->exportVideo.trailingSec = doubleValue("ts");
+        }
+
+        if (m_parser.isSet("no-audio")) {
+            m_options->converterTask.params[MuseScoreCmdOptions::ParamKey::NoAudio] = true;
         }
     }
 #endif

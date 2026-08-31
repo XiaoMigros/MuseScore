@@ -4,7 +4,7 @@
 # MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore Limited
+# Copyright (C) 2021 MuseScore Limited and others
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -31,8 +31,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/arpeggio.h
     ${CMAKE_CURRENT_LIST_DIR}/articulation.cpp
     ${CMAKE_CURRENT_LIST_DIR}/articulation.h
-    ${CMAKE_CURRENT_LIST_DIR}/audio.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/audio.h
     ${CMAKE_CURRENT_LIST_DIR}/bagpembell.cpp
     ${CMAKE_CURRENT_LIST_DIR}/bagpembell.h
     ${CMAKE_CURRENT_LIST_DIR}/barline.cpp
@@ -47,8 +45,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/box.h
     ${CMAKE_CURRENT_LIST_DIR}/bracket.cpp
     ${CMAKE_CURRENT_LIST_DIR}/bracket.h
-    ${CMAKE_CURRENT_LIST_DIR}/bracketItem.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/bracketItem.h
+    ${CMAKE_CURRENT_LIST_DIR}/bracketitem.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/bracketitem.h
     ${CMAKE_CURRENT_LIST_DIR}/breath.cpp
     ${CMAKE_CURRENT_LIST_DIR}/breath.h
     ${CMAKE_CURRENT_LIST_DIR}/bsp.cpp
@@ -90,8 +88,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/expression.h
     ${CMAKE_CURRENT_LIST_DIR}/dynamichairpingroup.cpp
     ${CMAKE_CURRENT_LIST_DIR}/dynamichairpingroup.h
-    ${CMAKE_CURRENT_LIST_DIR}/easeInOut.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/easeInOut.h
     ${CMAKE_CURRENT_LIST_DIR}/elementgroup.cpp
     ${CMAKE_CURRENT_LIST_DIR}/elementgroup.h
     ${CMAKE_CURRENT_LIST_DIR}/elementmap.cpp
@@ -201,14 +197,11 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/mmrestrange.h
     ${CMAKE_CURRENT_LIST_DIR}/mscore.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mscore.h
-    ${CMAKE_CURRENT_LIST_DIR}/navigate.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/navigate.h
     ${CMAKE_CURRENT_LIST_DIR}/note.cpp
     ${CMAKE_CURRENT_LIST_DIR}/note.h
     ${CMAKE_CURRENT_LIST_DIR}/noteval.h
     ${CMAKE_CURRENT_LIST_DIR}/notedot.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notedot.h
-    ${CMAKE_CURRENT_LIST_DIR}/noteentry.cpp
     ${CMAKE_CURRENT_LIST_DIR}/noteevent.cpp
     ${CMAKE_CURRENT_LIST_DIR}/noteevent.h
     ${CMAKE_CURRENT_LIST_DIR}/noteline.cpp
@@ -220,6 +213,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ottava.h
     ${CMAKE_CURRENT_LIST_DIR}/page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/page.h
+    ${CMAKE_CURRENT_LIST_DIR}/pagelockindicator.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/pagelockindicator.h
     ${CMAKE_CURRENT_LIST_DIR}/parenthesis.cpp
     ${CMAKE_CURRENT_LIST_DIR}/parenthesis.h
     ${CMAKE_CURRENT_LIST_DIR}/partialtie.cpp
@@ -228,7 +223,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/palmmute.h
     ${CMAKE_CURRENT_LIST_DIR}/part.cpp
     ${CMAKE_CURRENT_LIST_DIR}/part.h
-    ${CMAKE_CURRENT_LIST_DIR}/paste.cpp
     ${CMAKE_CURRENT_LIST_DIR}/pedal.cpp
     ${CMAKE_CURRENT_LIST_DIR}/pedal.h
     ${CMAKE_CURRENT_LIST_DIR}/pickscrape.cpp
@@ -243,6 +237,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/property.h
     ${CMAKE_CURRENT_LIST_DIR}/range.cpp
     ${CMAKE_CURRENT_LIST_DIR}/range.h
+    ${CMAKE_CURRENT_LIST_DIR}/rangelock.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rangelock.h
     ${CMAKE_CURRENT_LIST_DIR}/rasgueado.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rasgueado.h
     ${CMAKE_CURRENT_LIST_DIR}/realizedharmony.cpp
@@ -257,7 +253,6 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rootitem.h
     ${CMAKE_CURRENT_LIST_DIR}/score.cpp
     ${CMAKE_CURRENT_LIST_DIR}/score.h
-    ${CMAKE_CURRENT_LIST_DIR}/scorefile.cpp
     ${CMAKE_CURRENT_LIST_DIR}/scoreorder.cpp
     ${CMAKE_CURRENT_LIST_DIR}/scoreorder.h
     ${CMAKE_CURRENT_LIST_DIR}/segment.cpp
@@ -270,6 +265,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/select.h
     ${CMAKE_CURRENT_LIST_DIR}/shadownote.cpp
     ${CMAKE_CURRENT_LIST_DIR}/shadownote.h
+    ${CMAKE_CURRENT_LIST_DIR}/sharedpart.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/sharedpart.h
     ${CMAKE_CURRENT_LIST_DIR}/sig.cpp
     ${CMAKE_CURRENT_LIST_DIR}/sig.h
     ${CMAKE_CURRENT_LIST_DIR}/slur.cpp
@@ -293,6 +290,8 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/stafftext.h
     ${CMAKE_CURRENT_LIST_DIR}/stafftextbase.cpp
     ${CMAKE_CURRENT_LIST_DIR}/stafftextbase.h
+    ${CMAKE_CURRENT_LIST_DIR}/stavesharinglabel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/stavesharinglabel.h
     ${CMAKE_CURRENT_LIST_DIR}/soundflag.cpp
     ${CMAKE_CURRENT_LIST_DIR}/soundflag.h
     ${CMAKE_CURRENT_LIST_DIR}/stafftype.cpp
@@ -319,20 +318,22 @@ set(DOM_SRC
     ${CMAKE_CURRENT_LIST_DIR}/symbol.h
     ${CMAKE_CURRENT_LIST_DIR}/synthesizerstate.cpp
     ${CMAKE_CURRENT_LIST_DIR}/synthesizerstate.h
-    ${CMAKE_CURRENT_LIST_DIR}/systemlock.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/systemlock.h
     ${CMAKE_CURRENT_LIST_DIR}/system.cpp
     ${CMAKE_CURRENT_LIST_DIR}/system.h
     ${CMAKE_CURRENT_LIST_DIR}/systemdivider.cpp
     ${CMAKE_CURRENT_LIST_DIR}/systemdivider.h
+    ${CMAKE_CURRENT_LIST_DIR}/systemlockindicator.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/systemlockindicator.h
     ${CMAKE_CURRENT_LIST_DIR}/systemtext.cpp
     ${CMAKE_CURRENT_LIST_DIR}/systemtext.h
+    ${CMAKE_CURRENT_LIST_DIR}/tabdurationsymbol.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/tabdurationsymbol.h
     ${CMAKE_CURRENT_LIST_DIR}/tapping.cpp
     ${CMAKE_CURRENT_LIST_DIR}/tapping.h
-    ${CMAKE_CURRENT_LIST_DIR}/tempo.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/tempo.h
     ${CMAKE_CURRENT_LIST_DIR}/tempotext.cpp
     ${CMAKE_CURRENT_LIST_DIR}/tempotext.h
+    ${CMAKE_CURRENT_LIST_DIR}/tempotimeline.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/tempotimeline.h
     ${CMAKE_CURRENT_LIST_DIR}/text.cpp
     ${CMAKE_CURRENT_LIST_DIR}/text.h
     ${CMAKE_CURRENT_LIST_DIR}/textbase.cpp

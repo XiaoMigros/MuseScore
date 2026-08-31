@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,7 +38,7 @@ class TieSegment : public SlurTieSegment
     DECLARE_CLASSOF(ElementType::TIE_SEGMENT)
 
 public:
-    TieSegment(System* parent);
+    TieSegment(Tie* sp);
     TieSegment(const TieSegment& s);
 
     TieSegment* clone() const override { return new TieSegment(*this); }
@@ -69,7 +69,7 @@ public:
     DECLARE_LAYOUTDATA_METHODS(TieSegment)
 
 protected:
-    TieSegment(const ElementType& type, System* parent);
+    TieSegment(const ElementType& type, Tie* sp);
     void changeAnchor(EditData&, EngravingItem*) override;
 
 private:
@@ -92,6 +92,8 @@ public:
     Tie(const Tie& t);
 
     Tie* clone() const override { return new Tie(*this); }
+
+    Anchor anchor() const override { return Anchor::NOTE; }
 
     virtual ~Tie() {}
 
@@ -117,7 +119,7 @@ public:
     TieSegment* segmentAt(int n) { return toTieSegment(Spanner::segmentAt(n)); }
     const TieSegment* segmentAt(int n) const { return toTieSegment(Spanner::segmentAt(n)); }
 
-    SlurTieSegment* newSlurTieSegment(System* parent) override { return new TieSegment(parent); }
+    SlurTieSegment* newSlurTieSegment() override { return new TieSegment(this); }
 
     double scalingFactor() const override;
 
@@ -142,6 +144,8 @@ public:
 
 protected:
     Tie(const ElementType& type, EngravingItem* parent = nullptr);
+
+    bool isInSpannerMap() const override { return false; }
 
     bool m_isInside = false;
     TiePlacement m_tiePlacement = TiePlacement::AUTO;

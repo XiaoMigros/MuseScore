@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,12 +19,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "stafftextpropertiesdialog.h"
 
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/score.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/stafftextbase.h"
+
+#include "notation/inotation.h"
+#include "notation/inotationinteraction.h"
+#include "notation/inotationundostack.h"
 
 #include "ui/view/widgetstatestore.h"
 
@@ -137,6 +142,8 @@ void StaffTextPropertiesDialog::saveValues()
             m_staffText->setSwingParameters(Constants::DIVISION / 4, swingBox->value());
             swingBox->setEnabled(true);
         }
+    } else {
+        m_staffText->setSwing(false);
     }
 
     INotationUndoStackPtr stack = undoStack();
@@ -152,7 +159,6 @@ void StaffTextPropertiesDialog::saveValues()
     score->undoChangeElement(m_originStaffText, nt);
     score->masterScore()->updateChannel();
     score->updateSwing();
-    score->setPlaylistDirty();
     stack->commitChanges();
 }
 

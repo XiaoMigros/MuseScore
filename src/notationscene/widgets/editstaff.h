@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,7 +25,6 @@
 #include "ui/view/widgetdialog.h"
 
 #include "ui_editstaff.h"
-#include "engraving/dom/stafftype.h"
 
 #include "global/async/asyncable.h"
 
@@ -97,7 +96,7 @@ private:
 
     void initStaff();
 
-    Staff* staff(int staffIndex) const;
+    engraving::Staff* staff(int staffIndex) const;
     Instrument instrument() const;
 
     std::vector<InstrumentKey> otherInstrumentsInSameGroup() const;
@@ -107,13 +106,12 @@ private:
 
     QString midiCodeToStr(int midiCode);
 
-    mu::engraving::Staff* m_staff = nullptr;
-    mu::engraving::Staff* m_orgStaff = nullptr;
+    engraving::Staff* m_staff = nullptr;
+    engraving::Staff* m_orgStaff = nullptr;
     Instrument m_instrument;
-    Instrument m_orgInstrument;
     InstrumentKey m_instrumentKey;
     int m_minPitchA, m_maxPitchA, m_minPitchP, m_maxPitchP;
-    mu::engraving::Fraction m_tick;
+    engraving::Fraction m_tick;
 
     EditStaffType* editStaffTypeDialog = nullptr;
 };

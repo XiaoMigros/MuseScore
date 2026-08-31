@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,7 +24,11 @@
 #include "io/buffer.h"
 
 #include "compat/writescorehook.h"
+#include "editing/editautomationpoints.h"
+#include "editing/editkeysig.h"
 #include "editing/editmeasures.h"
+#include "editing/transaction/transaction.h"
+#include "editing/transaction/undostack.h"
 #include "rw/mscloader.h"
 #include "rw/xmlreader.h"
 #include "rw/rwregister.h"
@@ -33,23 +37,21 @@
 
 #include "engravingproject.h"
 
-#include "automation/internal/automationcontroller.h"
+#include "automation/internal/scoreautomationcontroller.h"
 
 #include "barline.h"
 #include "excerpt.h"
 #include "factory.h"
-#include "box.h"
 #include "clef.h"
 #include "key.h"
 #include "keysig.h"
-#include "linkedobjects.h"
 #include "part.h"
 #include "repeatlist.h"
 #include "rest.h"
 #include "sig.h"
 #include "staff.h"
-#include "tempo.h"
 #include "timesig.h"
+#include "linkedobjects.h"
 
 #include "log.h"
 
@@ -65,10 +67,10 @@ MasterScore::MasterScore(const muse::modularity::ContextPtr& iocCtx, std::weak_p
     : Score(iocCtx)
 {
     m_project = project;
+    m_transactionManager = std::make_unique<TransactionManager>(this);
     m_undoStack   = new UndoStack();
-    m_tempomap    = new TempoMap;
     m_sigmap      = new TimeSigMap();
-    m_automationController = new AutomationController();
+    m_automationController = new ScoreAutomationController();
     m_expandedRepeatList  = new RepeatList(this);
     m_nonExpandedRepeatList = new RepeatList(this);
     setMasterScore(this);
@@ -110,20 +112,9 @@ MasterScore::~MasterScore()
     delete m_expandedRepeatList;
     delete m_nonExpandedRepeatList;
     delete m_sigmap;
-    delete m_tempomap;
     delete m_undoStack;
     delete m_automationController;
     muse::DeleteAll(m_excerpts);
-}
-
-//---------------------------------------------------------
-//   setTempomap
-//---------------------------------------------------------
-
-void MasterScore::setTempomap(TempoMap* tm)
-{
-    delete m_tempomap;
-    m_tempomap = tm;
 }
 
 //---------------------------------------------------------
@@ -145,18 +136,40 @@ String MasterScore::name() const
     return fileInfo()->displayName();
 }
 
-IAutomation* MasterScore::automation() const
+AutomationDataConstPtr MasterScore::automationData() const
 {
-    return m_automationController->automation();
+    return m_automationController->automationData();
+}
+
+void MasterScore::setAutomationData(AutomationDataPtr data)
+{
+    m_automationController->setAutomationData(std::move(data));
+}
+
+void MasterScore::editAutomationPoints(const AutomationCurveKey& key, AutomationPointEdits& edits, bool undoable)
+{
+    IF_ASSERT_FAILED(key.isValid() && !edits.empty()) {
+        return;
+    }
+
+    if (undoable) {
+        undo(new EditAutomationPoints(this, m_automationController, key, edits));
+    } else {
+        m_automationController->editPoints(key, edits);
+    }
+}
+
+void MasterScore::onTimeInserted(const Fraction& tick, const Fraction& len, const std::vector<RepeatSegmentInfo>& oldSegments)
+{
+    m_automationController->insertTime(tick, len, oldSegments);
 }
 
 //---------------------------------------------------------
-//   setPlaylistDirty
+//   invalidateRepeatLists
 //---------------------------------------------------------
 
-void MasterScore::setPlaylistDirty()
+void MasterScore::invalidateRepeatList()
 {
-    m_playlistDirty = true;
     m_expandedRepeatList->setScoreChanged();
     m_nonExpandedRepeatList->setScoreChanged();
 }
@@ -171,7 +184,7 @@ void MasterScore::setExpandRepeats(bool expand)
         return;
     }
     m_expandRepeats = expand;
-    setPlaylistDirty();
+    invalidateRepeatList();
 }
 
 //---------------------------------------------------------
@@ -181,8 +194,8 @@ void MasterScore::setExpandRepeats(bool expand)
 
 void MasterScore::updateRepeatListTempo()
 {
-    m_expandedRepeatList->updateTempo();
-    m_nonExpandedRepeatList->updateTempo();
+    m_expandedRepeatList->updateUticks();
+    m_nonExpandedRepeatList->updateUticks();
 }
 
 void MasterScore::updateRepeatList()
@@ -215,6 +228,36 @@ const RepeatList& MasterScore::repeatList(bool expandRepeats, bool updateTies) c
 
     m_nonExpandedRepeatList->update(false, updateTies);
     return *m_nonExpandedRepeatList;
+}
+
+const TempoTimeline& MasterScore::tempoTimeline() const
+{
+    return tempoTimeline(masterScore()->expandRepeats());
+}
+
+const TempoTimeline& MasterScore::tempoTimeline(bool expandRepeats) const
+{
+    m_automationController->ensureInitialized(const_cast<MasterScore*>(this));
+    return m_automationController->tempoTimeline(expandRepeats);
+}
+
+bool MasterScore::setTempoMultiplier(BeatsPerSecond val)
+{
+    IF_ASSERT_FAILED(val > BeatsPerSecond(0.0)) {
+        return false;
+    }
+
+    if (m_automationController->tempoTimeline().tempoMultiplier() == val) {
+        return false;
+    }
+
+    m_automationController->setTempoMultiplier(val);
+    return true;
+}
+
+void MasterScore::setTempoTimelineOverride(std::optional<TempoTimeline> timeline)
+{
+    m_automationController->setTempoTimelineOverride(std::move(timeline));
 }
 
 //---------------------------------------------------------
@@ -381,6 +424,11 @@ void MasterScore::initAutomation()
         return;
     }
     m_automationController->init(this);
+}
+
+void MasterScore::updateAutomation(const ScoreChanges& changes)
+{
+    m_automationController->update(changes);
 }
 
 //---------------------------------------------------------
@@ -550,7 +598,7 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
             }
         }
 
-        Measure* newMeasure = Factory::createMeasure(score->dummy()->system());
+        Measure* newMeasure = Factory::createMeasure(score);
         newMeasure->setTick(tick);
 
         if (actualBeforeMeasure) {
@@ -596,6 +644,10 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
             // if inserting before first measure, always preserve clefs and signatures
             // at the begining of the score (move them back)
 
+            if (measureInsert->hasMMRest() && score->style().value(Sid::createMultiMeasureRests).toBool()) {
+                measureInsert = measureInsert->mmRest();
+            }
+
             if (pm && !options.moveSignaturesClef && !isBeginning) {
                 Segment* ps = pm->findSegment(SegmentType::Clef, tick);
                 if (ps && ps->enabled()) {
@@ -604,6 +656,7 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
                         if (pc) {
                             previousClefList.push_back(toClef(pc));
                             doUndoRemoveElement(pc);
+                            pc->undoUnlink();
                             if (ps->empty()) {
                                 undoRemoveElement(ps);
                             }
@@ -658,13 +711,15 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
                             }
                             keySigList.push_back(ks);
                             // if instrument change on that place, set correct key signature for instrument change
+                            const TrackRange trackRange = e->part()->trackRange();
                             bool ic = s->next(SegmentType::ChordRest)->findAnnotation(ElementType::INSTRUMENT_CHANGE,
-                                                                                      e->part()->startTrack(),
-                                                                                      e->part()->endTrack() - 1);
+                                                                                      trackRange.startTrack,
+                                                                                      trackRange.endTrack - 1);
                             if (ic) {
                                 KeySigEvent ke = ks->keySigEvent();
                                 ke.setForInstrumentChange(true);
-                                undoChangeKeySig(ks->staff(), e->tick(), ke);
+                                EditKeySig::undoChangeKeySig(transactionManager()->currentOrDummyTransaction(), this, ks->staff(),
+                                                             e->tick(), ke);
                             } else {
                                 ee = e;
                             }
@@ -688,6 +743,7 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
                         }
                         if (ee) {
                             doUndoRemoveElement(ee);
+                            ee->undoUnlink();
                             if (s->empty() && s->isTimeSigType()) {
                                 undoRemoveElement(s);
                             }
@@ -732,7 +788,7 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
         for (TimeSig* ts : timeSigList) {
             TimeSig* nts = Factory::copyTimeSig(*ts);
             Segment* s   = newMeasure->undoGetSegmentR(SegmentType::TimeSig, Fraction(0, 1));
-            nts->setParent(s);
+            nts->setOwnershipParent(s);
             doUndoAddElement(nts);
         }
         for (KeySig* ks : keySigList) {
@@ -741,7 +797,7 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
             if (headerKeySig || newMeasure->tick().isZero()) {
                 s->setHeader(true);
             }
-            nks->setParent(s);
+            nks->setOwnershipParent(s);
             if (!nks->isAtonal()) {
                 nks->setKey(nks->concertKey());  // to set correct (transposing) key
             }
@@ -751,32 +807,32 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
             Clef* nClef = Factory::copyClef(*clef);
             Segment* s  = newMeasure->undoGetSegmentR(SegmentType::HeaderClef, Fraction(0, 1));
             s->setHeader(true);
-            nClef->setParent(s);
+            nClef->setOwnershipParent(s);
             doUndoAddElement(nClef);
         }
         for (Clef* clef : afterBarlineClefs) {
             Clef* nClef = Factory::copyClef(*clef);
             Segment* s  = newMeasure->undoGetSegmentR(SegmentType::Clef, Fraction(0, 1));
             s->setHeader(true);
-            nClef->setParent(s);
+            nClef->setOwnershipParent(s);
             doUndoAddElement(nClef);
         }
         for (Clef* clef : previousClefList) {
             Clef* nClef = Factory::copyClef(*clef);
             Segment* s  = newMeasure->undoGetSegmentR(SegmentType::Clef, newMeasure->ticks());
-            nClef->setParent(s);
+            nClef->setOwnershipParent(s);
             doUndoAddElement(nClef);
         }
         for (Clef* clef : specialCaseClefs) {
             Clef* nClef = Factory::copyClef(*clef);
             Segment* s  = newMeasure->undoGetSegmentR(SegmentType::Clef, newMeasure->ticks());
-            nClef->setParent(s);
+            nClef->setOwnershipParent(s);
             doUndoAddElement(nClef);
         }
         for (BarLine* barLine : previousBarLinesList) {
             BarLine* nBarLine = Factory::copyBarLine(*barLine);
             Segment* s = newMeasure->undoGetSegmentR(SegmentType::EndBarLine, newMeasure->ticks());
-            nBarLine->setParent(s);
+            nBarLine->setOwnershipParent(s);
             doUndoAddElement(nBarLine);
         }
     }

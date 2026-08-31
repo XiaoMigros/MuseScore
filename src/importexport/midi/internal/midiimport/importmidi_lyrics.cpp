@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -174,7 +174,7 @@ void addTitleToScore(Score* score, const QString& string, int textCounter)
     text->setPlainText(string.right(string.size() - int(TEXT_PREFIX.size())));
 
     if (!measure->isVBox()) {
-        measure = mu::engraving::Factory::createVBox(score->dummy()->system());
+        measure = mu::engraving::Factory::createVBox(score);
         measure->setTick(Fraction(0, 1));
         measure->setNext(score->first());
         score->measures()->add(measure);

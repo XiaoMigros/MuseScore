@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,6 +31,9 @@ public:
     NotationConfigurationStub() = default;
 
     QColor notationColor() const override;
+    void setNotationColor(const QColor& color) override;
+    muse::async::Notification notationColorChanged() const override;
+    void resetNotationColor() override;
 
     QColor backgroundColor() const override;
     void setBackgroundColor(const QColor& color)  override;
@@ -105,6 +108,10 @@ public:
     muse::async::Notification defaultZoomChanged() const override;
 
     QList<int> possibleZoomPercentageList() const override;
+
+    engraving::AutomationType currentAutomationType() const override;
+    void setCurrentAutomationType(engraving::AutomationType type) override;
+    muse::async::Notification currentAutomationTypeChanged() const override;
 
     qreal scalingFromZoomPercentage(int zoomPercentage) const override;
     int zoomPercentageFromScaling(qreal scaling) const override;

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2024 MuseScore Limited
+ * Copyright (C) 2024 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,7 +36,7 @@ public:
     Parenthesis(const Parenthesis& p);
 
     Parenthesis* clone() const override { return new Parenthesis(*this); }
-    Segment* segment() const { return explicitParent() && explicitParent()->isSegment() ? toSegment(explicitParent()) : nullptr; }
+    Segment* segment() const { return ownershipParent() && ownershipParent()->isSegment() ? toSegment(ownershipParent()) : nullptr; }
 
     PropertyValue getProperty(Pid) const override;
     bool setProperty(Pid, const PropertyValue&) override;

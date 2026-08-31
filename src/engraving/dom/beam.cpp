@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -56,11 +56,34 @@ static const ElementStyle beamStyle {
 //   Beam
 //---------------------------------------------------------
 
-Beam::Beam(System* parent)
-    : BeamBase(ElementType::BEAM, parent)
+Beam::Beam(Score* parent)
+    : BeamBase(ElementType::BEAM, parent->dummy())
 {
     initElementStyle(&beamStyle);
     resetProperty(Pid::BEAM_CROSS_STAFF_MOVE);
+}
+
+System* Beam::system() const
+{
+    if (m_elements.empty()) {
+        return nullptr;
+    }
+    Measure* measure = m_elements.front()->measure();
+    return measure ? measure->system() : nullptr;
+}
+
+EngravingItem* Beam::layoutParent() const
+{
+    return system();
+}
+
+EngravingItem* Beam::accessibleParentItem() const
+{
+    // The system a beam is drawn on does not own it and cannot list it, so in the
+    // accessibility tree the beam stays where it is parked: on the dummy.
+    EngravingObject* parent = this->parent();
+
+    return parent && parent->isEngravingItem() ? toEngravingItem(parent) : nullptr;
 }
 
 //---------------------------------------------------------
@@ -74,6 +97,7 @@ Beam::Beam(const Beam& b)
     m_growLeft           = b.m_growLeft;
     m_growRight           = b.m_growRight;
     m_beamDist        = b.m_beamDist;
+    m_fragments.reserve(b.m_fragments.size());
     for (const BeamFragment* f : b.m_fragments) {
         m_fragments.push_back(new BeamFragment(*f));
     }
@@ -490,7 +514,7 @@ bool Beam::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* Beam::drop(EditData& data)
+EngravingItem* Beam::drop(Transaction&, EditData& data)
 {
     if (!data.dropElement->isActionIcon()) {
         return nullptr;
@@ -842,6 +866,7 @@ Shape BeamSegment::shape() const
     double horizontalStep = beamHorizontalLength / subBoxesCount;
     double verticalStep = beamHeightDiff / subBoxesCount;
     std::vector<PointF> pointsOnBeamLine;
+    pointsOnBeamLine.reserve(subBoxesCount);
     pointsOnBeamLine.push_back(startPoint);
     for (int i = 0; i < subBoxesCount - 1; ++i) {
         PointF nextPoint = pointsOnBeamLine.back() + PointF(horizontalStep, verticalStep);

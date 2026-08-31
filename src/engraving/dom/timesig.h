@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,6 +28,7 @@
 
 namespace mu::engraving {
 class Segment;
+class Transaction;
 
 //---------------------------------------------------------
 //   TimeSigType
@@ -55,7 +56,7 @@ class TimeSig final : public EngravingItem
 
 public:
 
-    void setParent(Segment* parent);
+    void setOwnershipParent(Segment* parent);
 
     String ssig() const;
     void setSSig(const String&);
@@ -83,10 +84,10 @@ public:
     int denominatorStretch() const { return m_stretch.denominator(); }
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
-    Segment* segment() const { return (Segment*)explicitParent(); }
-    Measure* measure() const { return (Measure*)explicitParent()->explicitParent(); }
+    Segment* segment() const { return (Segment*)ownershipParent(); }
+    Measure* measure() const { return (Measure*)ownershipParent()->ownershipParent(); }
 
     bool showCourtesySig() const { return m_showCourtesySig; }
     void setShowCourtesySig(bool v) { m_showCourtesySig = v; }

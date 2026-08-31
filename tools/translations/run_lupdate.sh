@@ -5,7 +5,7 @@
 # MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore Limited
+# Copyright (C) 2021 MuseScore Limited and others
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -38,6 +38,7 @@ SRC_DIR=src
 TS_FILE=share/locale/musescore_${1:-en}.ts
 DEFAULT_LUPDATE_ARGS=(
     -recursive
+    -locations absolute
     -tr-function-alias translate+=trc
     -tr-function-alias translate+=mtrc
     -tr-function-alias translate+=qtrc

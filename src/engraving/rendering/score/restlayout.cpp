@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,8 @@
 #include "tlayout.h"
 
 #include "dom/beam.h"
+#include "dom/measure.h"
+#include "dom/staff.h"
 #include "dom/system.h"
 
 using namespace muse;
@@ -98,7 +100,7 @@ void RestLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const Lay
             } else {
                 item->tabDur()->setDuration(type, dots, stt);
             }
-            item->tabDur()->setParent(const_cast<Rest*>(item));
+            item->tabDur()->setOwnershipParent(const_cast<Rest*>(item));
 // needed?        _tabDur->setTrack(track());
             TLayout::layoutTabDurationSymbol(item->tabDur(), item->tabDur()->mutldata());
             ldata->setBbox(item->tabDur()->ldata()->bbox());
@@ -622,7 +624,7 @@ void RestLayout::checkFullMeasureRestCollisions(const System* system, LayoutCont
             measureShape.remove_if([] (const ShapeElement& shapeEl) {
                 const EngravingItem* shapeItem = shapeEl.item();
                 return shapeItem && ((shapeItem->isRest() && toRest(shapeItem)->isFullMeasureRest())
-                                     || shapeItem->isBarLine() || shapeItem->isAccidental());
+                                     || shapeItem->isBarLine() || shapeItem->isAccidental() || shapeItem->isFermata());
             });
 
             if (measureShape.size() == 0) {

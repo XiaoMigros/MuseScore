@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,12 +23,15 @@
 
 #include "../editing/editspanner.h"
 #include "../editing/mscoreview.h"
+#include "../editing/navigation.h"
+#include "../editing/transaction/transaction.h"
+#include "../rendering/iscorerenderer.h"
 
 #include "arpeggio.h"
 #include "beam.h"
 #include "chord.h"
+#include "masterscore.h"
 #include "measure.h"
-#include "navigate.h"
 #include "note.h"
 #include "part.h"
 #include "score.h"
@@ -45,8 +48,8 @@ using namespace mu::engraving;
 using namespace muse::draw;
 
 namespace mu::engraving {
-SlurSegment::SlurSegment(System* parent, ElementType type)
-    : SlurTieSegment(type, parent)
+SlurSegment::SlurSegment(Slur* sp, ElementType type)
+    : SlurTieSegment(type, sp)
 {
 }
 
@@ -161,9 +164,9 @@ bool SlurSegment::edit(EditData& ed)
                     sl->undoSetIncoming(false);
                 }
                 if (ctrlMod) {
-                    cr = score()->prevMeasure(cr, true);
+                    cr = Navigation::prevMeasure(score(), cr, true);
                 } else {
-                    cr = prevChordRest(e, options);
+                    cr = Navigation::prevChordRest(e, options);
                 }
             }
         }
@@ -187,19 +190,19 @@ bool SlurSegment::edit(EditData& ed)
                     sl->undoSetOutgoing(false);
                 }
                 if (ctrlMod) {
-                    cr = score()->nextMeasure(cr, false, true);
+                    cr = Navigation::nextMeasure(score(), cr, false, true);
                 } else {
-                    cr = nextChordRest(e, options);
+                    cr = Navigation::nextChordRest(e, options);
                 }
             }
         }
     } else if (ed.key == Key_Up) {
-        track_idx_t startTrack = e->part()->startTrack();
+        track_idx_t startTrack = e->part()->trackRange().startTrack;
         track_idx_t endTrack   = e->track();
         cr = searchCR(e->segment(), endTrack, startTrack);
     } else if (ed.key == Key_Down) {
         track_idx_t startTrack = e->track() + 1;
-        track_idx_t endTrack   = e->part()->endTrack();
+        track_idx_t endTrack   = e->part()->trackRange().endTrack;
         cr = searchCR(e->segment(), startTrack, endTrack);
     } else {
         return false;
@@ -222,6 +225,8 @@ bool SlurSegment::edit(EditData& ed)
 
 void SlurSegment::changeAnchor(EditData& ed, EngravingItem* element)
 {
+    Transaction& tx = masterScore()->transactionManager()->currentOrDummyTransaction();
+
     ChordRest* cr = element->isChordRest() ? toChordRest(element) : nullptr;
     ChordRest* scr = spanner()->startCR();
     ChordRest* ecr = spanner()->endCR();
@@ -232,7 +237,7 @@ void SlurSegment::changeAnchor(EditData& ed, EngravingItem* element)
     // save current start/end elements
     for (EngravingObject* e : spanner()->linkList()) {
         Spanner* sp = toSpanner(e);
-        score()->undoStack()->pushWithoutPerforming(new ChangeStartEndSpanner(sp, sp->startElement(), sp->endElement()));
+        tx.pushWithoutPerforming(new ChangeStartEndSpanner(sp, sp->startElement(), sp->endElement()));
     }
 
     if (ed.curGrip == Grip::START) {
@@ -378,7 +383,6 @@ Slur::Slur(const Slur& s)
 Slur::Slur(EngravingItem* parent, ElementType type)
     : SlurTie(type, parent)
 {
-    setAnchor(Anchor::CHORD);
 }
 
 double Slur::scalingFactor() const

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,6 +30,7 @@
 #include "engraving/dom/guitarbend.h"
 #include "engraving/dom/hairpin.h"
 #include "engraving/dom/harmony.h"
+#include "engraving/dom/measure.h"
 #include "engraving/dom/mmrestrange.h"
 #include "engraving/dom/ottava.h"
 #include "engraving/dom/part.h"
@@ -422,6 +423,7 @@ enum class ElementType {
     TAB_DURATION_SYMBOL   = int(mu::engraving::ElementType::TAB_DURATION_SYMBOL),
     FSYMBOL               = int(mu::engraving::ElementType::FSYMBOL),
     PAGE                  = int(mu::engraving::ElementType::PAGE),
+    PAGE_LOCK_INDICATOR   = int(mu::engraving::ElementType::PAGE_LOCK_INDICATOR),
     HAIRPIN               = int(mu::engraving::ElementType::HAIRPIN),
     OTTAVA                = int(mu::engraving::ElementType::OTTAVA),
     PEDAL                 = int(mu::engraving::ElementType::PEDAL),
@@ -721,9 +723,10 @@ enum class HDuration {
 Q_ENUM_NS(HDuration);
 
 enum class FrameType {
-    NO_FRAME = int(mu::engraving::FrameType::NO_FRAME),
-    SQUARE   = int(mu::engraving::FrameType::SQUARE),
-    CIRCLE   = int(mu::engraving::FrameType::CIRCLE),
+    NO_FRAME  = int(mu::engraving::FrameType::NO_FRAME),
+    RECTANGLE = int(mu::engraving::FrameType::RECTANGLE),
+    SQUARE    = int(mu::engraving::FrameType::RECTANGLE), /** deprecated alias */
+    CIRCLE    = int(mu::engraving::FrameType::CIRCLE),
 };
 Q_ENUM_NS(FrameType);
 
@@ -882,13 +885,13 @@ enum class SegmentType {
     //--
     All                        = int(mu::engraving::SegmentType::All),
     /// Alias for `BeginBarLine | StartRepeatBarLine | BarLine | EndBarLine`
-    BarLineType                = int(mu::engraving::SegmentType::BarLineType),
-    CourtesyTimeSigType        = int(mu::engraving::SegmentType::CourtesyTimeSigType),
-    CourtesyKeySigType         = int(mu::engraving::SegmentType::CourtesyKeySigType),
-    CourtesyClefType           = int(mu::engraving::SegmentType::CourtesyClefType),
-    TimeSigType                = int(mu::engraving::SegmentType::TimeSigType),
-    KeySigType                 = int(mu::engraving::SegmentType::KeySigType),
-    ClefType                   = int(mu::engraving::SegmentType::ClefType),
+    BarLineType                = int(mu::engraving::SegmentType::BarLineTypes),
+    CourtesyTimeSigType        = int(mu::engraving::SegmentType::CourtesyTimeSigTypes),
+    CourtesyKeySigType         = int(mu::engraving::SegmentType::CourtesyKeySigTypes),
+    CourtesyClefType           = int(mu::engraving::SegmentType::CourtesyClefTypes),
+    TimeSigType                = int(mu::engraving::SegmentType::TimeSigTypes),
+    KeySigType                 = int(mu::engraving::SegmentType::KeySigTypes),
+    ClefType                   = int(mu::engraving::SegmentType::ClefTypes),
     ///\}
 };
 Q_ENUM_NS(SegmentType);
@@ -1018,10 +1021,11 @@ enum class Syllabic {
 Q_ENUM_NS(Syllabic);
 
 enum class Anchor {
-    SEGMENT = int(mu::engraving::Spanner::Anchor::SEGMENT),
-    MEASURE = int(mu::engraving::Spanner::Anchor::MEASURE),
-    CHORD   = int(mu::engraving::Spanner::Anchor::CHORD),
-    NOTE    = int(mu::engraving::Spanner::Anchor::NOTE),
+    SEGMENT   = int(mu::engraving::Spanner::Anchor::SEGMENT),
+    MEASURE   = int(mu::engraving::Spanner::Anchor::MEASURE),
+    CHORD     = int(mu::engraving::Spanner::Anchor::CHORDREST), // Deprecated alias
+    CHORDREST = int(mu::engraving::Spanner::Anchor::CHORDREST),
+    NOTE      = int(mu::engraving::Spanner::Anchor::NOTE),
 };
 Q_ENUM_NS(Anchor);
 
@@ -1389,13 +1393,17 @@ enum class TremoloType {
     R16       = int(mu::engraving::TremoloType::R16),
     R32       = int(mu::engraving::TremoloType::R32),
     R64       = int(mu::engraving::TremoloType::R64),
+    R128      = int(mu::engraving::TremoloType::R128),
+    R256      = int(mu::engraving::TremoloType::R256),
     BUZZ_ROLL = int(mu::engraving::TremoloType::BUZZ_ROLL),
 
     /// two-chord tremolos
-    C8  = int(mu::engraving::TremoloType::C8),
-    C16 = int(mu::engraving::TremoloType::C16),
-    C32 = int(mu::engraving::TremoloType::C32),
-    C64 = int(mu::engraving::TremoloType::C64),
+    C8   = int(mu::engraving::TremoloType::C8),
+    C16  = int(mu::engraving::TremoloType::C16),
+    C32  = int(mu::engraving::TremoloType::C32),
+    C64  = int(mu::engraving::TremoloType::C64),
+    C128 = int(mu::engraving::TremoloType::C128),
+    C256 = int(mu::engraving::TremoloType::C256),
 };
 Q_ENUM_NS(TremoloType);
 

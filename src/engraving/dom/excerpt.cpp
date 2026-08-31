@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,7 @@
 #include "../editing/addremoveelement.h"
 #include "../editing/editexcerpt.h"
 #include "../editing/transpose.h"
+#include "../editing/transaction/transaction.h"
 #include "style/style.h"
 
 #include "barline.h"
@@ -350,6 +351,7 @@ void Excerpt::createExcerpt(Excerpt* excerpt)
 {
     MasterScore* masterScore = excerpt->masterScore();
     Score* score = excerpt->excerptScore();
+    Transaction& tx = masterScore->transactionManager()->currentOrDummyTransaction();
 
     std::vector<Part*>& parts = excerpt->parts();
     std::vector<staff_idx_t> srcStaves;
@@ -441,7 +443,7 @@ void Excerpt::createExcerpt(Excerpt* excerpt)
             if (score->lastSegment()) {
                 endTick = score->lastSegment()->tick();
             }
-            Transpose::transposeKeys(score, staffIdx, staffIdx + 1, Fraction(0, 1), endTick, flip);
+            Transpose::transposeKeys(tx, score, staffIdx, staffIdx + 1, Fraction(0, 1), endTick, flip);
 
             for (auto segment = score->firstSegmentMM(SegmentType::ChordRest); segment;
                  segment = segment->next1MM(SegmentType::ChordRest)) {
@@ -467,7 +469,7 @@ void Excerpt::createExcerpt(Excerpt* excerpt)
                         if (hh->staff() != h->staff()) {
                             continue;
                         }
-                        Transpose::undoTransposeHarmony(score, hh, interval);
+                        Transpose::undoTransposeHarmony(tx, hh, interval);
                     }
                 }
             }
@@ -481,7 +483,7 @@ void Excerpt::createExcerpt(Excerpt* excerpt)
     }
 
     // second layout of score
-    score->setPlaylistDirty();
+    score->invalidateRepeatList();
     masterScore->rebuildMidiMapping();
     masterScore->updateChannel();
     score->remapBracketsAndBarlines();
@@ -549,7 +551,7 @@ void MasterScore::initAndAddExcerpt(Excerpt* excerpt, bool fakeUndo)
 
     auto excerptCmd = new AddExcerpt(excerpt);
     if (fakeUndo) {
-        excerptCmd->redo(nullptr);
+        excerptCmd->redo();
     } else {
         excerpt->excerptScore()->undo(excerptCmd);
     }
@@ -740,7 +742,7 @@ static void cloneTuplets(ChordRest* ocr, ChordRest* ncr, Tuplet* ot, TupletMap& 
     const auto handleTuplet = [&](Tuplet* tuplet) {
         tuplet->clear();
         tuplet->setTrack(track);
-        tuplet->setParent(nm);
+        tuplet->setOwnershipParent(nm);
         tuplet->styleChanged();
         tuplet->scanElements([&](EngravingItem* newElement) { updateSpatium(ot, newElement); });
     };
@@ -773,12 +775,6 @@ static void cloneTuplets(ChordRest* ocr, ChordRest* ncr, Tuplet* ot, TupletMap& 
 
 static void processLinkedClone(EngravingItem* ne, Score* score, track_idx_t strack)
 {
-    // reset offset as most likely it will not fit
-    PropertyFlags f = ne->propertyFlags(Pid::OFFSET);
-    if (f == PropertyFlags::UNSTYLED) {
-        ne->setPropertyFlags(Pid::OFFSET, PropertyFlags::STYLED);
-        ne->resetProperty(Pid::OFFSET);
-    }
     ne->setTrack(strack == muse::nidx ? 0 : strack);
     ne->setScore(score);
 }
@@ -875,6 +871,19 @@ static void collectTieEndPoints(TieMap& tieMap)
     }
 }
 
+static void transposeHarmony(Harmony* harmony, const Staff* srcStaff, bool scoreConcertPitch)
+{
+    Interval interval = srcStaff->transpose(harmony->tick());
+    if (interval.isZero() && srcStaff->part()->instruments().size() == 1) {
+        return;
+    }
+
+    if (!scoreConcertPitch) {
+        interval.flip();
+    }
+    Transpose::doUndoTransposeHarmony(harmony, interval);
+}
+
 static MeasureBase* cloneMeasure(MeasureBase* mb, Score* score, const Score* oscore,
                                  const std::vector<staff_idx_t>& sourceStavesIndexes,
                                  const TracksMap& trackList, TieMap& tieMap)
@@ -882,23 +891,23 @@ static MeasureBase* cloneMeasure(MeasureBase* mb, Score* score, const Score* osc
     MeasureBase* nmb = nullptr;
 
     if (mb->isHBox()) {
-        nmb = Factory::createHBox(score->dummy()->system());
+        nmb = Factory::createHBox(score);
         nmb->setTick(mb->tick());
         nmb->setTicks(mb->ticks());
     } else if (mb->isVBox()) {
         if (toBox(mb)->isTitleFrame()) {
-            nmb = Factory::createTitleVBox(score->dummy()->system());
+            nmb = Factory::createTitleVBox(score);
         } else {
-            nmb = Factory::createVBox(score->dummy()->system());
+            nmb = Factory::createVBox(score);
         }
         nmb->setTick(mb->tick());
         nmb->setTicks(mb->ticks());
     } else if (mb->isFBox()) {
-        nmb = Factory::createFBox(score->dummy()->system());
+        nmb = Factory::createFBox(score);
         nmb->setTick(mb->tick());
         nmb->setTicks(mb->ticks());
     } else if (mb->isTBox()) {
-        nmb = Factory::createTBox(score->dummy()->system());
+        nmb = Factory::createTBox(score);
         nmb->setTick(mb->tick());
         nmb->setTicks(mb->ticks());
         Text* text = toTBox(mb)->text();
@@ -907,7 +916,7 @@ static MeasureBase* cloneMeasure(MeasureBase* mb, Score* score, const Score* osc
         nmb->add(ne);
     } else if (mb->isMeasure()) {
         const Measure* m  = toMeasure(mb);
-        Measure* nm = Factory::createMeasure(score->dummy()->system());
+        Measure* nm = Factory::createMeasure(score);
         nmb = nm;
         nm->setTick(m->tick());
         nm->setTicks(m->ticks());
@@ -1010,7 +1019,6 @@ static MeasureBase* cloneMeasure(MeasureBase* mb, Score* score, const Score* osc
                                 Beam* nb = ocr->beam()->clone();
                                 nb->clear();
                                 nb->setTrack(track);
-                                nb->setParent(nm->system());
                                 nb->setScore(score);
                                 nb->add(ncr);
                                 ncr->setBeam(nb);
@@ -1140,6 +1148,35 @@ static MeasureBase* cloneMeasure(MeasureBase* mb, Score* score, const Score* osc
     return nmb;
 }
 
+void Excerpt::cloneMMRests(Score* sourceScore, Score* dstScore, const std::vector<staff_idx_t>& sourceStavesIndexes,
+                           const TracksMap& trackList, TieMap& tieMap)
+{
+    // When MMRests are enabled in the main score and we are creating a new part or revealing a hidden stave within one, we must copy MMRests
+    // Elements are moved from underlying measures to MMRest measures. If we do not copy these MMRests, the elements attached to them will be lost
+    // It doesn't matter if the MMRest range is different in the part to the score. As long as the MMRest measure is present in the DOM, MMRestLayout will
+    // correct this, setting the appropriate length and moving the elements to the correct locations
+
+    for (Measure* srcM = sourceScore->firstMeasure(); srcM; srcM = srcM->nextMeasure()) {
+        if (!srcM->hasMMRest()) {
+            continue;
+        }
+
+        Measure* dstM = dstScore->tick2measure(srcM->tick());
+        if (!dstM) {
+            continue;
+        }
+
+        Measure* srcMMRest = srcM->mmRest();
+
+        Measure* dstMMRest = toMeasure(cloneMeasure(srcMMRest, dstScore, sourceScore, sourceStavesIndexes, trackList, tieMap));
+        dstMMRest->setMMRestCount(srcMMRest->mmRestCount());
+        dstMMRest->setPrev(dstM->prev());
+        dstMMRest->setNext(dstScore->tick2measure(srcMMRest->tick() + srcMMRest->ticks()));
+
+        dstM->setMMRest(dstMMRest);
+    }
+}
+
 void Excerpt::cloneStaves(Score* sourceScore, Score* dstScore, const std::vector<staff_idx_t>& sourceStavesIndexes,
                           const TracksMap& trackList)
 {
@@ -1153,7 +1190,7 @@ void Excerpt::cloneStaves(Score* sourceScore, Score* dstScore, const std::vector
                 if (MeasureBase* prevMB = measures->last()) {
                     EngravingItem* newSectionBreak = sectionBreak->linkedClone();
                     newSectionBreak->setScore(dstScore);
-                    newSectionBreak->setParent(prevMB);
+                    newSectionBreak->setOwnershipParent(prevMB);
                     dstScore->doUndoAddElement(newSectionBreak);
                 }
             }
@@ -1162,6 +1199,8 @@ void Excerpt::cloneStaves(Score* sourceScore, Score* dstScore, const std::vector
         MeasureBase* newMeasure = cloneMeasure(mb, dstScore, sourceScore, sourceStavesIndexes, trackList, tieMap);
         measures->append(newMeasure);
     }
+
+    cloneMMRests(sourceScore, dstScore, sourceStavesIndexes, trackList, tieMap);
 
     size_t n = sourceStavesIndexes.size();
     for (staff_idx_t dstStaffIdx = 0; dstStaffIdx < n; ++dstStaffIdx) {
@@ -1228,7 +1267,28 @@ void Excerpt::cloneMeasures(Score* oscore, Score* score)
         measures->append(newMeasure);
     }
 
+    cloneMMRests(oscore, score, {}, {}, tieMap);
+
     collectTieEndPoints(tieMap);
+}
+
+void Excerpt::linkMeasures(Score* excerptScore, Score* masterScore)
+{
+    MeasureBase* mbMaster = masterScore->first();
+    for (MeasureBase* mb = excerptScore->first(); mb; mb = mb->next()) {
+        if (!mb->isMeasure()) {
+            continue;
+        }
+        while (mbMaster && !mbMaster->isMeasure()) {
+            mbMaster = mbMaster->next();
+        }
+        if (!mbMaster) {
+            LOGD("Measures in MasterScore and Score are not in sync.");
+            break;
+        }
+        mb->linkTo(mbMaster);
+        mbMaster = mbMaster->next();
+    }
 }
 
 //! NOTE For staves in the same score
@@ -1273,7 +1333,7 @@ void Excerpt::cloneStaff(Staff* srcStaff, Staff* dstStaff, bool cloneSpanners)
                 }
                 if (ne) {
                     ne->setTrack(dstTrack);
-                    ne->setParent(seg);
+                    ne->setOwnershipParent(seg);
                     ne->setScore(score);
                     if (ne->isChordRest()) {
                         ChordRest* ncr = toChordRest(ne);
@@ -1342,7 +1402,7 @@ void Excerpt::cloneStaff(Staff* srcStaff, Staff* dstStaff, bool cloneSpanners)
                             // be created and linked on each staff.
                             EngravingItem* ne1 = e->linkedClone();
                             ne1->setTrack(dstTrack);
-                            ne1->setParent(seg);
+                            ne1->setOwnershipParent(seg);
                             ne1->setScore(score);
                             score->doUndoAddElement(ne1);
                             continue;
@@ -1350,7 +1410,7 @@ void Excerpt::cloneStaff(Staff* srcStaff, Staff* dstStaff, bool cloneSpanners)
                         default:
                             EngravingItem* ne1 = e->clone();
                             ne1->setTrack(dstTrack);
-                            ne1->setParent(seg);
+                            ne1->setOwnershipParent(seg);
                             ne1->setScore(score);
                             score->undoAddElement(ne1);
                         }
@@ -1426,6 +1486,8 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
     Score* oscore = srcStaff->score();
     Score* score  = dstStaff->score();
 
+    Transaction& tx = score->transactionManager()->currentOrDummyTransaction();
+
     Excerpt* oex = oscore->excerpt();
     Excerpt* ex  = score->excerpt();
     TracksMap otracks, tracks;
@@ -1488,6 +1550,10 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
 
     bool firstVoiceVisible = dstStaff->isVoiceVisible(0);
 
+    const bool oscoreConcertPitch = oscore->style().styleB(Sid::concertPitch);
+    const bool scoreConcertPitch = score->style().styleB(Sid::concertPitch);
+    const bool needsTransposition = oscoreConcertPitch != scoreConcertPitch;
+
     auto addElement = [score](EngravingItem* element) {
         score->undoAddElement(element, false /*addToLinkedStaves*/);
     };
@@ -1519,7 +1585,7 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                 continue;
             }
             EngravingItem* newEl = oldEl->linkedClone();
-            newEl->setParent(nm);
+            newEl->setOwnershipParent(nm);
             newEl->setStaffIdx(oldEl->systemFlag() ? 0 : dstStaffIdx);
             newEl->setScore(score);
             newEl->styleChanged();
@@ -1536,7 +1602,7 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                     if (!firstVoiceVisible) {
                         EngravingItem* ne = oef->linkedClone();
                         ne->setTrack(trackZeroVoice(dstTrack));
-                        ne->setParent(ns);
+                        ne->setOwnershipParent(ns);
                         ne->setScore(score);
                         ne->styleChanged();
                         ne->scanElements([&](EngravingItem* newElement) { updateSpatium(oef, newElement); });
@@ -1552,8 +1618,8 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                     EngravingItem* linkedElement = e->findLinkedInScore(score);
                     Segment* linkedParent = linkedElement ? toSegment(linkedElement->parent()) : nullptr;
                     bool alreadyCloned = linkedParent && (linkedParent == ns
-                                                          || (linkedParent->isType(Segment::CHORD_REST_OR_TIME_TICK_TYPE)
-                                                              && ns->isType(Segment::CHORD_REST_OR_TIME_TICK_TYPE)
+                                                          || (linkedParent->isType(SegmentType::Duration)
+                                                              && ns->isType(SegmentType::Duration)
                                                               && linkedParent->tick() == ns->tick()));
                     bool cloneAnnotation = !alreadyCloned && (e->elementAppliesToTrack(srcTrack) || systemObject);
 
@@ -1562,10 +1628,14 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                     }
                     EngravingItem* ne1 = e->linkedClone();
                     ne1->setTrack(dstTrack);
-                    ne1->setParent(ns);
+                    ne1->setOwnershipParent(ns);
                     ne1->setScore(score);
                     ne1->styleChanged();
                     addElement(ne1);
+
+                    if (e->isHarmony() && needsTransposition) {
+                        transposeHarmony(toHarmony(ne1), srcStaff, scoreConcertPitch);
+                    }
                 }
 
                 EngravingItem* oe = oseg->element(srcTrack);
@@ -1576,7 +1646,7 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                 oe->setGenerated(false);
                 EngravingItem* ne = oe->linkedClone();
                 ne->setTrack(dstTrack);
-                ne->setParent(ns);
+                ne->setOwnershipParent(ns);
                 ne->setScore(score);
                 ne->styleChanged();
                 ne->scanElements([&](EngravingItem* newElement) { updateSpatium(oe, newElement); });
@@ -1611,7 +1681,7 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                     if (bendBack && newStartNote) {
                         GuitarBend* newBend = toGuitarBend(bendBack->linkedClone());
                         newBend->setScore(score);
-                        newBend->setParent(newStartNote);
+                        newBend->setOwnershipParent(newStartNote);
                         newBend->setTrack(newStartNote->track());
                         newBend->setTrack2(nn->track());
                         newBend->setStartElement(newStartNote);
@@ -1624,7 +1694,7 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
                         // Because slight bends aren't detected as "bendBack"
                         GuitarBend* newBend = toGuitarBend(bendFor->linkedClone());
                         newBend->setScore(score);
-                        newBend->setParent(nn);
+                        newBend->setOwnershipParent(nn);
                         newBend->setTrack(nn->track());
                         newBend->setTrack2(nn->track());
                         newBend->setStartElement(nn);
@@ -1686,21 +1756,15 @@ void Excerpt::cloneStaff2(Staff* srcStaff, Staff* dstStaff, const Fraction& star
         cloneSpanner(s, score, dstTrack, dstTrack2);
     }
 
-    bool oscoreConcertPitch = oscore->style().styleB(Sid::concertPitch);
-    bool scoreConcertPitch = score->style().styleB(Sid::concertPitch);
-
-    if ((oscoreConcertPitch && !scoreConcertPitch)
-        || (!oscoreConcertPitch && scoreConcertPitch)) {
+    if (needsTransposition) {
         Interval interval = srcStaff->part()->instrument()->transpose();
-        if (interval.isZero() && srcStaff->part()->instruments().size() == 1) {
-            return;
-        }
+        if (!interval.isZero() || srcStaff->part()->instruments().size() != 1) {
+            if (!scoreConcertPitch) {
+                interval.flip();
+            }
 
-        if (!scoreConcertPitch) {
-            interval.flip();
+            Transpose::transposeKeys(tx, score, dstStaffIdx, dstStaffIdx + 1, startTick, endTick, !scoreConcertPitch);
         }
-
-        Transpose::transposeKeys(score, dstStaffIdx, dstStaffIdx + 1, startTick, endTick, !scoreConcertPitch);
     }
 
     collectTieEndPoints(tieMap);
@@ -1737,20 +1801,21 @@ void Excerpt::promoteGapRestsToRealRests(const Measure* measure, staff_idx_t sta
 std::vector<Excerpt*> Excerpt::createExcerptsFromParts(const std::vector<Part*>& parts, MasterScore* score)
 {
     StringList allExcerptLowerNames;
+    allExcerptLowerNames.reserve(score->excerpts().size() + parts.size());
     for (const Excerpt* e : score->excerpts()) {
         allExcerptLowerNames.push_back(e->name().toLower());
     }
 
     std::vector<Excerpt*> result;
+    result.reserve(parts.size());
 
     for (Part* part : parts) {
         Excerpt* excerpt = new Excerpt(score);
         excerpt->parts().push_back(part);
 
-        track_idx_t startTrack = part->startTrack();
-        track_idx_t endTrack = part->endTrack();
+        const TrackRange range = part->trackRange();
 
-        for (track_idx_t i = startTrack, j = 0; i < endTrack; ++i, ++j) {
+        for (track_idx_t i = range.startTrack, j = 0; i < range.endTrack; ++i, ++j) {
             excerpt->m_tracksMapping.insert({ i, j });
         }
 

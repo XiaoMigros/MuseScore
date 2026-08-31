@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -248,6 +248,12 @@ Accidental::Accidental(EngravingItem* parent)
 {
 }
 
+Note* Accidental::note() const
+{
+    EngravingObject* owner = ownershipParent();
+    return owner && owner->isNote() ? toNote(owner) : nullptr;
+}
+
 //---------------------------------------------------------
 //   subTypeUserName
 //---------------------------------------------------------
@@ -268,7 +274,8 @@ SymId Accidental::symId() const
 
 bool Accidental::parentNoteHasParentheses() const
 {
-    return explicitParent() && parentItem()->isNote() && toNote(parentItem())->parenthesisInfo();
+    const EngravingObject* owner = ownershipParent();
+    return owner && owner->isNote() && toNote(owner)->parenthesisInfo();
 }
 
 //---------------------------------------------------------
@@ -392,7 +399,7 @@ void Accidental::setAccidentalType(AccidentalType t)
 
 void Accidental::computeMag()
 {
-    double m = explicitParent() ? parentItem()->mag() : 1.0;
+    double m = layoutParent() ? layoutParent()->mag() : 1.0;
     if (isSmall()) {
         m *= style().styleD(Sid::smallNoteMag);
     }
@@ -444,7 +451,7 @@ bool Accidental::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* Accidental::drop(EditData& data)
+EngravingItem* Accidental::drop(Transaction&, EditData& data)
 {
     EngravingItem* e = data.dropElement;
     switch (e->type()) {

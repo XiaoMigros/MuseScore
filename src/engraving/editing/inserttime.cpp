@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,6 +24,7 @@
 
 #include <set>
 
+#include "../dom/repeatlist.h"
 #include "../dom/score.h"
 #include "../dom/spanner.h"
 
@@ -33,21 +34,21 @@ using namespace mu::engraving;
 //   InsertTime
 //---------------------------------------------------------
 
-void InsertTime::redo(EditData*)
+void InsertTime::redo()
 {
-    score->insertTime(tick, len);
+    score->insertTime(tick, len, score->repeatSegmentInfoList(/*expandRepeats*/ true));
 }
 
-void InsertTime::undo(EditData*)
+void InsertTime::undo()
 {
-    score->insertTime(tick, -len);
+    score->insertTime(tick, -len, score->repeatSegmentInfoList(/*expandRepeats*/ true));
 }
 
 //---------------------------------------------------------
 //   InsertTimeUnmanagedSpanner
 //---------------------------------------------------------
 
-void InsertTimeUnmanagedSpanner::flip(EditData*)
+void InsertTimeUnmanagedSpanner::flip()
 {
     for (Score* s : score->scoreList()) {
         std::set<Spanner*> spannersCopy = s->unmanagedSpanners();

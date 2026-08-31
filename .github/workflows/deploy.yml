@@ -5,7 +5,7 @@ on:
     inputs:
       platforms:
         description: 'Platforms to build:'
-        default: 'backend linux_arm32 linux_arm64 linux_x64 macos windows_x64 windows_portable'
+        default: 'backend linux_arm64 linux_x64 macos windows_x64 windows_portable'
         required: true
       release_type:
         description: 'Release type: alpha,beta,rc,stable, or any label with chars A-Za-z0-9._ for testing'
@@ -30,8 +30,9 @@ jobs:
       release_name: ${{ steps.make_tag_info.outputs.RELEASE_NAME }}
     steps:
     - name: Clone repo with history
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
+        submodules: recursive
         fetch-depth: 0 # entire history for all branches and tags
     - id: make_tag_info
       name: Make tag info
@@ -58,7 +59,7 @@ jobs:
   build:
     name: Build
     needs: plan
-    uses: ./.github/workflows/build_all.yml
+    uses: $/.github/workflows/build_all.yml
     secrets: inherit
     with:
       platforms: ${{ inputs.platforms }}
@@ -71,7 +72,7 @@ jobs:
     name: 'Update Home→Learn playlists'
     if: ${{ github.repository == 'musescore/MuseScore' }}
     needs: build
-    uses: ./.github/workflows/update_learn_playlists.yml
+    uses: $/.github/workflows/update_learn_playlists.yml
     secrets: inherit
     with:
       mode: ${{ inputs.create_tag && 'stable' || 'testing' }}
@@ -89,7 +90,9 @@ jobs:
       url: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.plan.outputs.tag_name }}
     steps:
     - name: Clone repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
+      with:
+        submodules: recursive
     - name: Download and extract artifacts
       uses: actions/download-artifact@v8
       with:
@@ -130,7 +133,7 @@ jobs:
       - plan # to access outputs
       - create_release
     if: ${{ github.repository == 'musescore/MuseScore' && ! failure() && ! cancelled() && needs.create_release.result == 'success' }}
-    uses: ./.github/workflows/update_release_info.yml
+    uses: $/.github/workflows/update_release_info.yml
     secrets: inherit
     with:
       mode: ${{ inputs.release_type == 'stable' && 'stable' || 'testing' }}

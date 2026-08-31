@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,7 +30,7 @@ enum class InstrumentNameType : char {
     LONG, SHORT
 };
 enum class InstrumentNameRole : char {
-    STAFF, PART, GROUP
+    STAFF, SHARED_STAFF, PART, GROUP
 };
 
 class System;
@@ -56,7 +56,7 @@ public:
     InstrumentNameRole instrumentNameRole() const { return m_instrumentNameRole; }
     void setInstrumentNameRole(InstrumentNameRole v) { m_instrumentNameRole = v; }
 
-    System* system() const { return toSystem(explicitParent()); }
+    System* system() const { return toSystem(ownershipParent()); }
 
     SysStaff* sysStaff() const { return m_sysStaff; }
     void setSysStaff(SysStaff* s) { m_sysStaff = s; }

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -63,8 +63,8 @@ static const ElementStyle rasgueadoStyle {
     { Sid::dummyMusicalSymbolsScale,             Pid::END_TEXT_MUSICAL_SYMBOLS_SCALE },
 };
 
-RasgueadoSegment::RasgueadoSegment(Rasgueado* sp, System* parent)
-    : TextLineBaseSegment(ElementType::RASGUEADO_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+RasgueadoSegment::RasgueadoSegment(Rasgueado* sp)
+    : TextLineBaseSegment(ElementType::RASGUEADO_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
     m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
     m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
@@ -96,9 +96,9 @@ static const ElementStyle rasgueadoSegmentStyle {
 //   createLineSegment
 //---------------------------------------------------------
 
-LineSegment* Rasgueado::createLineSegment(System* parent)
+LineSegment* Rasgueado::createLineSegment()
 {
-    RasgueadoSegment* wb = new RasgueadoSegment(this, parent);
+    RasgueadoSegment* wb = new RasgueadoSegment(this);
     wb->setTrack(track());
     wb->initElementStyle(&rasgueadoSegmentStyle);
     return wb;
@@ -192,5 +192,10 @@ Sid Rasgueado::getPropertyStyle(Pid id) const
         break;
     }
     return TextLineBase::getPropertyStyle(id);
+}
+
+Sid Rasgueado::defaultPosSid() const
+{
+    return placeAbove() ? Sid::letRingPosAbove : Sid::letRingPosBelow;
 }
 }

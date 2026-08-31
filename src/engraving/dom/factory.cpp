@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,7 @@
 #include "accidental.h"
 #include "actionicon.h"
 #include "ambitus.h"
+#include "anchors.h"
 #include "arpeggio.h"
 #include "articulation.h"
 #include "bagpembell.h"
@@ -36,10 +37,10 @@
 #include "box.h"
 #include "bracket.h"
 #include "breath.h"
+#include "capo.h"
 #include "chord.h"
 #include "chordbracket.h"
 #include "chordline.h"
-#include "capo.h"
 #include "deadslapped.h"
 #include "dynamic.h"
 #include "expression.h"
@@ -75,6 +76,7 @@
 #include "ornament.h"
 #include "ottava.h"
 #include "page.h"
+#include "pagelockindicator.h"
 #include "palmmute.h"
 #include "parenthesis.h"
 #include "partialtie.h"
@@ -88,6 +90,7 @@
 #include "score.h"
 #include "segment.h"
 #include "slur.h"
+#include "soundflag.h"
 #include "spacer.h"
 #include "staff.h"
 #include "stafflines.h"
@@ -95,26 +98,25 @@
 #include "stafftext.h"
 #include "stafftypechange.h"
 #include "staffvisibilityindicator.h"
+#include "stavesharinglabel.h"
 #include "stem.h"
 #include "stemslash.h"
 #include "sticking.h"
 #include "stringtunings.h"
 #include "system.h"
 #include "systemdivider.h"
-#include "systemlock.h"
+#include "systemlockindicator.h"
 #include "systemtext.h"
-#include "soundflag.h"
+#include "tabdurationsymbol.h"
 #include "tapping.h"
 #include "tempotext.h"
 #include "text.h"
 #include "textline.h"
 #include "tie.h"
 #include "timesig.h"
-#include "anchors.h"
-
-#include "tremolotwochord.h"
-#include "tremolosinglechord.h"
 #include "tremolobar.h"
+#include "tremolosinglechord.h"
+#include "tremolotwochord.h"
 #include "trill.h"
 #include "tripletfeel.h"
 #include "tuplet.h"
@@ -180,6 +182,7 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::MMREST_RANGE:      return new MMRestRange(parent->isMeasure() ? toMeasure(parent) : dummy->measure());
     case ElementType::INSTRUMENT_NAME:   return new InstrumentName(parent->isSystem() ? toSystem(parent) : dummy->system());
     case ElementType::STAFF_TEXT:        return new StaffText(parent->isSegment() ? toSegment(parent) : dummy->segment());
+    case ElementType::STAVE_SHARING_LABEL: return new StaveSharingLabel(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::PLAY_COUNT_TEXT:   return new PlayCountText(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::PLAYTECH_ANNOTATION: return new PlayTechAnnotation(parent->isSegment() ? toSegment(parent) : dummy->segment());
     case ElementType::CAPO:              return new Capo(parent->isSegment() ? toSegment(parent) : dummy->segment());
@@ -232,11 +235,11 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::TIE:               return new Tie(parent);
     case ElementType::TUPLET:            return new Tuplet(parent->isMeasure() ? toMeasure(parent) : dummy->measure());
     case ElementType::FINGERING:         return new Fingering(parent->isNote() ? toNote(parent) : dummy->note());
-    case ElementType::HBOX:              return new HBox(parent->isSystem() ? toSystem(parent) : dummy->system());
-    case ElementType::VBOX:              return new VBox(parent->isSystem() ? toSystem(parent) : dummy->system());
-    case ElementType::TBOX:              return new TBox(parent->isSystem() ? toSystem(parent) : dummy->system());
-    case ElementType::FBOX:              return new FBox(parent->isSystem() ? toSystem(parent) : dummy->system());
-    case ElementType::MEASURE:           return new Measure(parent->isSystem() ? toSystem(parent) : dummy->system());
+    case ElementType::HBOX:              return new HBox(parent->score());
+    case ElementType::VBOX:              return new VBox(parent->score());
+    case ElementType::TBOX:              return new TBox(parent->score());
+    case ElementType::FBOX:              return new FBox(parent->score());
+    case ElementType::MEASURE:           return new Measure(parent->score());
     case ElementType::TAB_DURATION_SYMBOL: return new TabDurationSymbol(parent->isChordRest() ? toChordRest(parent) : dummy->chord());
     case ElementType::IMAGE:             return new Image(parent);
     case ElementType::BAGPIPE_EMBELLISHMENT: return new BagpipeEmbellishment(parent);
@@ -291,6 +294,7 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::MAXTYPE:
     case ElementType::INVALID:
     case ElementType::PART:
+    case ElementType::SHARED_PART:
     case ElementType::STAFF:
     case ElementType::SCORE:
     case ElementType::BRACKET_ITEM:
@@ -299,6 +303,7 @@ EngravingItem* Factory::doCreateItem(ElementType type, EngravingItem* parent)
     case ElementType::FIGURED_BASS_ITEM:
     case ElementType::DUMMY:
     case ElementType::SYSTEM_LOCK_INDICATOR:
+    case ElementType::PAGE_LOCK_INDICATOR:
     case ElementType::HAMMER_ON_PULL_OFF_SEGMENT:
     case ElementType::HAMMER_ON_PULL_OFF_TEXT:
     case ElementType::TAPPING_HALF_SLUR:
@@ -368,8 +373,8 @@ CREATE_ITEM_IMPL(BarLine, Segment, isAccessibleEnabled)
 COPY_ITEM_IMPL(BarLine)
 MAKE_ITEM_IMPL(BarLine, Segment)
 
-CREATE_ITEM_IMPL(Beam, System, isAccessibleEnabled)
-MAKE_ITEM_IMPL(Beam, System)
+CREATE_ITEM_IMPL(Beam, Score, isAccessibleEnabled)
+MAKE_ITEM_IMPL(Beam, Score)
 
 CREATE_ITEM_IMPL(Bend, Note, isAccessibleEnabled)
 MAKE_ITEM_IMPL(Bend, Note)
@@ -383,9 +388,9 @@ BracketItem* Factory::createBracketItem(EngravingItem * parent)
     return bi;
 }
 
-BracketItem* Factory::createBracketItem(EngravingItem* parent, BracketType a, int b)
+BracketItem* Factory::createBracketItem(EngravingItem* parent, BracketType bracketType, size_t span)
 {
-    BracketItem* bi = new BracketItem(parent, a, b);
+    BracketItem* bi = new BracketItem(parent, bracketType, span);
     return bi;
 }
 
@@ -445,7 +450,7 @@ COPY_ITEM_IMPL(Lyrics)
 CREATE_ITEM_IMPL(LyricsLine, EngravingItem, isAccessibleEnabled)
 COPY_ITEM_IMPL(LyricsLine)
 
-CREATE_ITEM_IMPL(Measure, System, isAccessibleEnabled)
+CREATE_ITEM_IMPL(Measure, Score, isAccessibleEnabled)
 COPY_ITEM_IMPL(Measure)
 
 CREATE_ITEM_IMPL(MeasureRepeat, Segment, isAccessibleEnabled)
@@ -472,7 +477,16 @@ COPY_ITEM_IMPL(NoteDot)
 CREATE_ITEM_IMPL(NoteLine, Note, isAccessibleEnabled)
 MAKE_ITEM_IMPL(NoteLine, Note);
 
-CREATE_ITEM_IMPL(Page, RootItem, isAccessibleEnabled)
+CREATE_ITEM_IMPL(Page, Score, isAccessibleEnabled)
+
+PageLockIndicator* Factory::createPageLockIndicator(System * parent, const RangeLock * lock, bool isAccessibleEnabled)
+{
+    PageLockIndicator* pli = new PageLockIndicator(parent, lock);
+    pli->setAccessibleEnabled(isAccessibleEnabled);
+    return pli;
+}
+
+COPY_ITEM_IMPL(PageLockIndicator)
 
 CREATE_ITEM_IMPL(PartialTie, Note, isAccessibleEnabled)
 COPY_ITEM_IMPL(PartialTie)
@@ -537,6 +551,13 @@ StaffText* Factory::createStaffText(Segment * parent, TextStyleType textStyleTyp
     return staffText;
 }
 
+StaveSharingLabel* Factory::createStaveSharingLabel(Segment* parent, TextStyleType textStyleType, bool isAccessibleEnabled)
+{
+    StaveSharingLabel* staveSharingLabel = new StaveSharingLabel(parent, textStyleType);
+    staveSharingLabel->setAccessibleEnabled(isAccessibleEnabled);
+    return staveSharingLabel;
+}
+
 CREATE_ITEM_IMPL(SoundFlag, EngravingItem, isAccessibleEnabled)
 
 CREATE_ITEM_IMPL(Expression, Segment, isAccessibleEnabled)
@@ -549,7 +570,7 @@ COPY_ITEM_IMPL(Stem)
 CREATE_ITEM_IMPL(StemSlash, Chord, isAccessibleEnabled)
 COPY_ITEM_IMPL(StemSlash)
 
-CREATE_ITEM_IMPL(System, Page, isAccessibleEnabled)
+CREATE_ITEM_IMPL(System, Score, isAccessibleEnabled)
 
 SystemText* Factory::createSystemText(Segment * parent, TextStyleType textStyleType, ElementType type, bool isAccessibleEnabled)
 {
@@ -690,9 +711,9 @@ CREATE_ITEM_IMPL(Dynamic, Segment, isAccessibleEnabled)
 
 CREATE_ITEM_IMPL(MMRest, Segment, isAccessibleEnabled)
 
-CREATE_ITEM_IMPL(VBox, System, isAccessibleEnabled)
+CREATE_ITEM_IMPL(VBox, Score, isAccessibleEnabled)
 
-VBox* Factory::createTitleVBox(System * parent, bool isAccessibleEnabled)
+VBox* Factory::createTitleVBox(Score * parent, bool isAccessibleEnabled)
 {
     VBox* b = new VBox(parent);
     b->setAccessibleEnabled(isAccessibleEnabled);
@@ -702,16 +723,16 @@ VBox* Factory::createTitleVBox(System * parent, bool isAccessibleEnabled)
     return b;
 }
 
-CREATE_ITEM_IMPL(HBox, System, isAccessibleEnabled)
+CREATE_ITEM_IMPL(HBox, Score, isAccessibleEnabled)
 
-CREATE_ITEM_IMPL(TBox, System, isAccessibleEnabled)
+CREATE_ITEM_IMPL(TBox, Score, isAccessibleEnabled)
 
-CREATE_ITEM_IMPL(FBox, System, isAccessibleEnabled)
+CREATE_ITEM_IMPL(FBox, Score, isAccessibleEnabled)
 
 Image* Factory::createImage(EngravingItem * parent)
 {
     Image* image = new Image(parent);
-    image->setParent(parent);
+    image->setOwnershipParent(parent);
 
     return image;
 }
@@ -737,7 +758,7 @@ CREATE_ITEM_IMPL(TimeTickAnchor, Segment, isAccessibleEnabled)
 
 CREATE_ITEM_IMPL(StaffVisibilityIndicator, System, isAccessibleEnabled)
 
-SystemLockIndicator* Factory::createSystemLockIndicator(System * parent, const SystemLock * lock, bool isAccessibleEnabled)
+SystemLockIndicator* Factory::createSystemLockIndicator(System * parent, const RangeLock * lock, bool isAccessibleEnabled)
 {
     SystemLockIndicator* sli = new SystemLockIndicator(parent, lock);
     sli->setAccessibleEnabled(isAccessibleEnabled);

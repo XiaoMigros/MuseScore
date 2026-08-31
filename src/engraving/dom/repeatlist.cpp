@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,6 +23,7 @@
 #include "repeatlist.h"
 
 #include <list>
+#include <set>
 #include <utility> // std::pair
 
 #include "jump.h"
@@ -30,10 +31,10 @@
 #include "marker.h"
 #include "measure.h"
 #include "score.h"
-#include "tempo.h"
 #include "volta.h"
 
-#include "log.h"
+#include "global/realfn.h"
+#include "global/log.h"
 
 using namespace mu;
 
@@ -43,7 +44,7 @@ namespace mu::engraving {
 //---------------------------------------------------------
 
 RepeatSegment::RepeatSegment(int playbackCount)
-    : tick(0), utick(0), utime(0.0), timeOffset(0.0), pause(0.0), playbackCount(playbackCount)
+    : tick(0), utick(0), pause(0.0), playbackCount(playbackCount)
 {
 }
 
@@ -64,11 +65,11 @@ void RepeatSegment::addMeasures(Measure const* const m)
 {
     if (!m_measureList.empty()) {
         // Add up to the current measure, final measure is added outside of this condition
-        Measure const* lastMeasure = m_measureList.back()->nextMeasure();
+        Measure const* lastMeasure = m_measureList.back()->nextMeasureMM();
         if (lastMeasure && (lastMeasure->tick() < m->tick())) {     // Ensure provided reference is later than current last
-            while (lastMeasure != m) {
+            while (lastMeasure && lastMeasure != m) {
                 m_measureList.push_back(lastMeasure);
-                lastMeasure = lastMeasure->nextMeasure();
+                lastMeasure = lastMeasure->nextMeasureMM();
             }
         }
         //else { // Possibly clip compared to current last measure }
@@ -146,8 +147,6 @@ bool operator==(const RepeatSegment& lhs, const RepeatSegment& rhs)
     }
     return lhs.tick == rhs.tick
            && lhs.utick == rhs.utick
-           && muse::RealIsEqual(lhs.utime, rhs.utime)
-           && muse::RealIsEqual(lhs.timeOffset, rhs.timeOffset)
            && muse::RealIsEqual(lhs.pause, rhs.pause)
            && lhs.playbackCount == rhs.playbackCount;
 }
@@ -159,8 +158,7 @@ bool operator==(const RepeatSegment& lhs, const RepeatSegment& rhs)
 RepeatList::RepeatList(Score* s)
 {
     m_score = s;
-    m_idx1  = 0;
-    m_idx2  = 0;
+    m_utick2tickHint = 0;
 }
 
 //---------------------------------------------------------
@@ -196,6 +194,7 @@ void RepeatList::update(bool expand, bool updateTies)
     }
 
     std::vector<RepeatSegment> oldSegments;
+    oldSegments.reserve(size());
     for (RepeatSegment* rs : *this) {
         oldSegments.push_back(*rs);
     }
@@ -223,28 +222,13 @@ void RepeatList::update(bool expand, bool updateTies)
     }
 }
 
-//---------------------------------------------------------
-//   updateTempo
-//---------------------------------------------------------
-
-void RepeatList::updateTempo()
+void RepeatList::updateUticks()
 {
-    const TempoMap* tl = m_score->tempomap();
-    if (tl->empty()) {
-        return;
-    }
-
     int utick = 0;
-    double t  = 0;
 
     for (RepeatSegment* s : *this) {
-        s->utick      = utick;
-        s->utime      = t;
-        double ct      = tl->tick2time(s->tick);
-        s->timeOffset = t - ct;
-        int len       = s->len();
-        utick        += len;
-        t            += tl->tick2time(s->tick + len) - ct;
+        s->utick = utick;
+        utick += s->len();
     }
 }
 
@@ -261,10 +245,10 @@ int RepeatList::utick2tick(int tick) const
     if (tick < 0) {
         return 0;
     }
-    unsigned ii = (m_idx1 < n) && (tick >= at(m_idx1)->utick) ? m_idx1 : 0;
+    unsigned ii = (m_utick2tickHint < n) && (tick >= at(m_utick2tickHint)->utick) ? m_utick2tickHint : 0;
     for (unsigned i = ii; i < n; ++i) {
         if ((tick >= at(i)->utick) && ((i + 1 == n) || (tick < at(i + 1)->utick))) {
-            m_idx1 = i;
+            m_utick2tickHint = i;
             return tick - (at(i)->utick - at(i)->tick);
         }
     }
@@ -290,47 +274,6 @@ int RepeatList::tick2utick(int tick) const
     return back()->utick + (tick - back()->tick);
 }
 
-//---------------------------------------------------------
-//   utick2utime
-//---------------------------------------------------------
-
-double RepeatList::utick2utime(int tick) const
-{
-    size_t n = size();
-    unsigned ii = (m_idx1 < n) && (tick >= at(m_idx1)->utick) ? m_idx1 : 0;
-    for (unsigned i = ii; i < n; ++i) {
-        if ((tick >= at(i)->utick) && ((i + 1 == n) || (tick < at(i + 1)->utick))) {
-            int t     = tick - (at(i)->utick - at(i)->tick);
-            double tt = m_score->tempomap()->tick2time(t) + at(i)->timeOffset;
-            return tt;
-        }
-    }
-    return 0.0;
-}
-
-//---------------------------------------------------------
-//   utime2utick
-//---------------------------------------------------------
-
-int RepeatList::utime2utick(double secs) const
-{
-    size_t repeatSegmentsCount = size();
-    unsigned ii = (m_idx2 < repeatSegmentsCount) && (secs >= at(m_idx2)->utime) ? m_idx2 : 0;
-    for (unsigned i = ii; i < repeatSegmentsCount; ++i) {
-        if ((secs >= at(i)->utime) && ((i + 1 == repeatSegmentsCount) || (secs < at(i + 1)->utime))) {
-            m_idx2 = i;
-            return m_score->tempomap()->time2tick(secs - at(i)->timeOffset) + (at(i)->utick - at(i)->tick);
-        }
-    }
-
-    if (!empty()) {
-        ASSERT_X(String(u"time %1 not found in RepeatList").arg(secs));
-    }
-    // else: requesting from an empty map can be expected as a valid scenario
-
-    return 0;
-}
-
 ///
 /// \brief Lookup the RepeatSegment containing the given utick
 ///
@@ -346,6 +289,18 @@ std::vector<RepeatSegment*>::const_iterator RepeatList::findRepeatSegmentFromUTi
     return cend();
 }
 
+std::vector<RepeatSegmentInfo> RepeatList::segmentInfoList() const
+{
+    std::vector<RepeatSegmentInfo> result;
+    result.reserve(size());
+
+    for (const RepeatSegment* seg : *this) {
+        result.push_back({ seg->tick, seg->endTick(), seg->utick });
+    }
+
+    return result;
+}
+
 //---------------------------------------------------------
 //   flatten
 ///   Make this repeat list flat (don't expand repeats)
@@ -356,7 +311,7 @@ void RepeatList::flatten()
     muse::DeleteAll(*this);
     clear();
 
-    Measure* m = m_score->firstMeasure();
+    Measure* m = m_score->firstMeasureMM();
     if (!m) {
         return;
     }
@@ -364,7 +319,7 @@ void RepeatList::flatten()
     RepeatSegment* s = new RepeatSegment(1);
     do {
         s->addMeasure(m);
-        m = m->nextMeasure();
+        m = m->nextMeasureMM();
     } while (m);
     push_back(s);
 
@@ -436,7 +391,7 @@ void RepeatList::collectRepeatListElements()
 
     // Section breaks may occur on non-Measure frames, so must search list of all MeasureBases
     // unwinding itself will only use actual Measures
-    MeasureBase* mb = m_score->firstMeasure();
+    MeasureBase* mb = m_score->firstMeasureMM();
     // First measure of a section/score is always used as a reference REPEAT_START point
     // even if it doesn't have a start repeat
     startFromRepeatMeasure = new RepeatListElement(RepeatListElementType::REPEAT_START, mb, toMeasure(mb));
@@ -480,7 +435,7 @@ void RepeatList::collectRepeatListElements()
                 Volta* remainder = voltasToMerge.back()->clone();
                 if (volta->startMeasure() != remainder->startMeasure()) {
                     // First part is not empty
-                    voltasToMerge.back()->setEndElement(volta->startMeasure()->prevMeasure());
+                    voltasToMerge.back()->setEndElement(volta->startMeasure()->prevMeasureMM());
                     remainder->setStartElement(volta->startMeasure());
                     // Store it
                     preProcessedVoltas.push_back(voltasToMerge.back());
@@ -506,7 +461,7 @@ void RepeatList::collectRepeatListElements()
                 preProcessedVoltas.push_back(remainder);
                 if (volta->endMeasure() != remainder->endMeasure()) {
                     // volta extends past the end of remainder -> move its startpoint after remainder
-                    volta->setStartElement(remainder->endMeasure()->nextMeasure());
+                    volta->setStartElement(remainder->endMeasure()->nextMeasureMM());
                 } else {         // volta matched remainder endpoint, nothing left to merge from
                     preProcessedVoltas.splice(preProcessedVoltas.cend(), voltasToMerge);
                     delete volta;
@@ -521,17 +476,18 @@ void RepeatList::collectRepeatListElements()
     }
 
     volta = nullptr;
-    for (; mb; mb = mb->next()) {
+    for (; mb; mb = mb->nextMM()) {
         if (mb->isMeasure()) {
             Measure* m = toMeasure(mb);
             sectionEndMeasureBase = mb; // ending measure of section is the most recently encountered actual Measure
+            Measure* underlyingMeasure = m->isMMRest() ? m->mmRestFirst() : m;
 
             // Volta ?
-            if ((!preProcessedVoltas.empty()) && (preProcessedVoltas.front()->startMeasure() == m)) {
+            if ((!preProcessedVoltas.empty()) && (preProcessedVoltas.front()->startMeasure() == underlyingMeasure)) {
                 if (volta != nullptr) {
                     //if (volta->endMeasure()->tick() < m->tick()) {
                     // The previous volta was supposed to end before us (open volta case) -> insert the end
-                    sectionRLElements.push_back(new RepeatListElement(RepeatListElementType::VOLTA_END, volta, m->prevMeasure()));
+                    sectionRLElements.push_back(new RepeatListElement(RepeatListElementType::VOLTA_END, volta, m->prevMeasureMM()));
                     //volta = nullptr; // No need, replaced immediately further down
                     //      }
                     //else { // Overlapping voltas; this should not happen as preProcessedVoltas should've dealt with this already }
@@ -545,12 +501,12 @@ void RepeatList::collectRepeatListElements()
             // Start
             if (m->repeatStart()) {
                 if (volta != nullptr) {
-                    if (volta->startMeasure() != m) {
+                    if (volta->startMeasure() != underlyingMeasure) {
                         // Volta and Start repeat are not on the same measure
                         // assume the previous volta was supposed to end before us (open volta case) -> insert the end
                         // Warning: This might "break" a volta prematurely if its explicit notated end is later than this point
                         //          Consider splitting the volta or ignoring this repeat all together
-                        sectionRLElements.push_back(new RepeatListElement(RepeatListElementType::VOLTA_END, volta, m->prevMeasure()));
+                        sectionRLElements.push_back(new RepeatListElement(RepeatListElementType::VOLTA_END, volta, m->prevMeasureMM()));
                         volta = nullptr;
                     }
                     //else { // Volta and Start Repeat coincide on the same measure, see test::repeat56.mscx }
@@ -643,7 +599,7 @@ void RepeatList::collectRepeatListElements()
             }
         }
         // Section break (or end of score)
-        if (mb->sectionBreak() || !mb->nextMeasure()) {
+        if (mb->sectionBreak() || !mb->nextMeasureMM()) {
             if (sectionEndMeasureBase != nullptr) {
                 if (volta != nullptr) {
                     //if (volta->endMeasure()->tick() < mb->tick()) {
@@ -663,16 +619,13 @@ void RepeatList::collectRepeatListElements()
                 m_rlElements.push_back(sectionRLElements);
             }
             // prepare for new section
-            if (mb->nextMeasure()) {
+            if (Measure* nextMeas = mb->nextMeasureMM()) {
                 sectionRLElements = RepeatListElementList();
                 // First measure of a section/score is always used as a reference REPEAT_START point
                 // even if it doesn't have a start repeat
                 startFromRepeatMeasure
-                    = new RepeatListElement(RepeatListElementType::REPEAT_START, mb->nextMeasure(), toMeasure(mb->nextMeasure()));
+                    = new RepeatListElement(RepeatListElementType::REPEAT_START, nextMeas, toMeasure(nextMeas));
                 sectionRLElements.push_back(startFromRepeatMeasure);
-                // Loop will forward one measureBase, so return one now
-                // this logic aids in skipping multiple frames between sections
-                mb = mb->nextMeasure()->prev();
             } else {
                 // no more measures -> done
                 break;
@@ -839,7 +792,7 @@ void RepeatList::unwind()
     clear();
     m_jumpsTaken.clear();
 
-    if (!m_score->firstMeasure()) {
+    if (!m_score->firstMeasureMM()) {
         return;
     }
 
@@ -898,7 +851,7 @@ void RepeatList::unwind()
                     } while ((*repeatListElementIt)->repeatListElementType != RepeatListElementType::VOLTA_END);
                     activeVolta = nullptr;
                     // Start next rs on the following measure
-                    Measure const* const possibleNextMeasure = (*repeatListElementIt)->measure->nextMeasure();
+                    Measure const* const possibleNextMeasure = (*repeatListElementIt)->measure->nextMeasureMM();
                     if (possibleNextMeasure == nullptr) {
                         rs = nullptr;                   // end of score, but will still encounter section break, notify it
                     } else {
@@ -1111,7 +1064,7 @@ void RepeatList::unwind()
         }
     }
 
-    updateTempo();
+    updateUticks();
     m_expanded = true;
 }
 }

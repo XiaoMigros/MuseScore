@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MU_PROJECT_EXPORTPROJECTSCENARIO_H
-#define MU_PROJECT_EXPORTPROJECTSCENARIO_H
+
+#pragma once
 
 #include "modularity/ioc.h"
 
@@ -33,6 +33,7 @@
 #include "context/iglobalcontext.h"
 #include "io/ifilesystem.h"
 #include "async/asyncable.h"
+#include "notation/types/viewmode.h"
 
 namespace mu::project {
 class ExportProjectScenario : public IExportProjectScenario, public muse::async::Asyncable, public muse::Contextable
@@ -56,7 +57,7 @@ public:
 
     muse::RetVal<muse::io::path_t> askExportPath(const notation::INotationPtrList& notations, const ExportType& exportType,
                                                  INotationWriter::UnitType unitType = INotationWriter::UnitType::PER_PART,
-                                                 muse::io::path_t defaultPath = "") const override;
+                                                 muse::io::path_t defaultDirPath = "") const override;
 
     bool exportScores(notation::INotationPtrList notations, const muse::io::path_t destinationPath,
                       INotationWriter::UnitType unitType = INotationWriter::UnitType::PER_PART,
@@ -103,5 +104,3 @@ private:
     ExportInfo m_exportInfo;
 };
 }
-
-#endif // MU_PROJECT_EXPORTPROJECTSCENARIO_H

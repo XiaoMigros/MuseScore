@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,6 +25,7 @@
 #include "types/translatablestring.h"
 
 #include "chordrest.h"
+#include "measure.h"
 #include "score.h"
 #include "staff.h"
 #include "system.h"
@@ -32,10 +33,8 @@
 
 #include "log.h"
 
-using namespace mu;
 using namespace mu::engraving;
 
-namespace mu::engraving {
 //---------------------------------------------------------
 //   ottavaStyle
 //---------------------------------------------------------
@@ -71,7 +70,6 @@ static const ElementStyle ottavaStyle {
     { Sid::ottavaLineStyle,                    Pid::LINE_STYLE },
     { Sid::ottavaDashLineLen,                  Pid::DASH_LINE_LEN },
     { Sid::ottavaDashGapLen,                   Pid::DASH_GAP_LEN },
-    { Sid::ottavaPosAbove,                     Pid::OFFSET },
     { Sid::ottavaFontSpatiumDependent,         Pid::TEXT_SIZE_SPATIUM_DEPENDENT },
     { Sid::ottavaEndLineArrowHeight,           Pid::END_LINE_ARROW_HEIGHT },
     { Sid::ottavaEndLineArrowWidth,            Pid::END_LINE_ARROW_WIDTH },
@@ -83,8 +81,8 @@ static const ElementStyle ottavaStyle {
     { Sid::ottavaBeginFilledArrowWidth,        Pid::BEGIN_FILLED_ARROW_WIDTH },
 };
 
-OttavaSegment::OttavaSegment(Ottava* sp, System* parent)
-    : TextLineBaseSegment(ElementType::OTTAVA_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+OttavaSegment::OttavaSegment(Ottava* sp)
+    : TextLineBaseSegment(ElementType::OTTAVA_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
     m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
     m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
@@ -156,20 +154,6 @@ void Ottava::undoChangeProperty(Pid id, const PropertyValue& v, PropertyFlags ps
     }
 }
 
-//---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid OttavaSegment::getPropertyStyle(Pid pid) const
-{
-    switch (pid) {
-    case Pid::OFFSET:
-        return spanner()->placeAbove() ? Sid::ottavaPosAbove : Sid::ottavaPosBelow;
-    default:
-        return TextLineBaseSegment::getPropertyStyle(pid);
-    }
-}
-
 Sid Ottava::getPropertyStyle(Pid pid) const
 {
     static_assert(int(OttavaType::OTTAVA_22MB) - int(OttavaType::OTTAVA_8VA) == 5);
@@ -216,8 +200,6 @@ Sid Ottava::getPropertyStyle(Pid pid) const
 
     size_t idx = size_t(m_ottavaType) * 3 + (m_numbersOnly ? 0 : ss.size() / 2);
     switch (pid) {
-    case Pid::OFFSET:
-        return placeAbove() ? Sid::ottavaPosAbove : Sid::ottavaPosBelow;
     case Pid::PLACEMENT:
         return ss[idx];
     case Pid::BEGIN_TEXT:
@@ -281,13 +263,12 @@ int Ottava::pitchShift() const
 //---------------------------------------------------------
 
 static const ElementStyle ottavaSegmentStyle {
-    { Sid::ottavaPosAbove, Pid::OFFSET },
     { Sid::ottavaMinDistance, Pid::MIN_DISTANCE },
 };
 
-LineSegment* Ottava::createLineSegment(System* parent)
+LineSegment* Ottava::createLineSegment()
 {
-    OttavaSegment* os = new OttavaSegment(this, parent);
+    OttavaSegment* os = new OttavaSegment(this);
     os->setTrack(track());
     os->initElementStyle(&ottavaSegmentStyle);
     return os;
@@ -465,4 +446,8 @@ void Ottava::doComputeEndElement()
 {
     setEndElement(score()->findChordRestEndingBeforeTickInStaff(tick2(), track2staff(track())));
 }
+
+Sid Ottava::defaultPosSid() const
+{
+    return placeAbove() ? Sid::ottavaPosAbove : Sid::ottavaPosBelow;
 }

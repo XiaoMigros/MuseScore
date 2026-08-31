@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -113,8 +113,8 @@ QVariantList NoteInputPreferencesModel::noteInputMethods() const
     using Method = mu::notation::NoteInputMethod;
 
     std::vector<std::pair<muse::actions::ActionCode, Method > > noteInputActions {
-        { "note-input-by-note-name", Method::BY_NOTE_NAME },
-        { "note-input-by-duration", Method::BY_DURATION },
+        { "command://notation/toggle-note-input-by-note-name", Method::BY_NOTE_NAME },
+        { "command://notation/toggle-note-input-by-duration", Method::BY_DURATION },
     };
 
     QVariantList methods;

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -71,13 +71,13 @@ var testCase = {
         {name: "Play", func: function() {
             //Navigation.triggerControl("TopTool", "PlaybackToolBar", "Play")
             Score.firstElement()
-            api.dispatcher.dispatch("play")
+            api.dispatcher.dispatch("command://playback/play")
         }},
         {name: "Stop", func: function() {
             // wait interval + 5 sec
             api.testflow.sleep(5000)
             //Navigation.triggerControl("TopTool", "PlaybackToolBar", "Play")
-            api.dispatcher.dispatch("play")
+            api.dispatcher.dispatch("command://playback/pause")
         }},
         {name: "Save", func: function() {
             api.testflow.saveProject("TC1.1_CreateSimpleScore.mscz")

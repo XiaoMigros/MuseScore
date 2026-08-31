@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,7 @@
 
 namespace mu::engraving {
 class Factory;
+class Transaction;
 
 //---------------------------------------------------------
 //   @@ LayoutBreak
@@ -39,7 +40,7 @@ class LayoutBreak final : public EngravingItem
 
 public:
 
-    void setParent(MeasureBase* parent);
+    void setOwnershipParent(MeasureBase* parent);
 
     LayoutBreak* clone() const override { return new LayoutBreak(*this); }
     int subtype() const override { return static_cast<int>(m_layoutBreakType); }
@@ -49,9 +50,9 @@ public:
     LayoutBreakType layoutBreakType() const { return m_layoutBreakType; }
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
-    MeasureBase* measure() const { return (MeasureBase*)explicitParent(); }
+    MeasureBase* measure() const { return (MeasureBase*)ownershipParent(); }
     double pause() const { return m_pause; }
     void setPause(double v) { m_pause = v; }
     bool startWithLongNames() const { return m_startWithLongNames; }
@@ -77,9 +78,6 @@ public:
     char16_t iconCode() const;
 
     muse::draw::Font font() const;
-protected:
-    void added() override;
-    void removed() override;
 
 private:
 

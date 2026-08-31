@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -85,10 +85,9 @@ class OttavaSegment final : public TextLineBaseSegment
     DECLARE_CLASSOF(ElementType::OTTAVA_SEGMENT)
 
     void undoChangeProperty(Pid id, const PropertyValue&, PropertyFlags ps) override;
-    Sid getPropertyStyle(Pid) const override;
 
 public:
-    OttavaSegment(Ottava* sp, System* parent);
+    OttavaSegment(Ottava* sp);
 
     OttavaSegment* clone() const override { return new OttavaSegment(*this); }
     Ottava* ottava() const { return (Ottava*)spanner(); }
@@ -117,6 +116,8 @@ public:
 
     Ottava* clone() const override { return new Ottava(*this); }
 
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
     void setOttavaType(OttavaType val);
     OttavaType ottavaType() const { return m_ottavaType; }
 
@@ -128,7 +129,7 @@ public:
 
     void setPlacement(PlacementV);
 
-    LineSegment* createLineSegment(System* parent) override;
+    LineSegment* createLineSegment() override;
     int pitchShift() const;
 
     PropertyValue getProperty(Pid propertyId) const override;
@@ -142,6 +143,7 @@ public:
     bool allowTimeAnchor() const override { return false; }
 
 protected:
+    Sid defaultPosSid() const override;
     void doComputeEndElement() override;
 
 private:

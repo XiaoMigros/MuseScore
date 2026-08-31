@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,7 +21,9 @@
  */
 #include "dynamic.h"
 
+#include "../editing/edithairpin.h"
 #include "../editing/textedit.h"
+#include "../editing/transaction/transaction.h"
 #include "../types/typesconv.h"
 
 #include "dynamichairpingroup.h"
@@ -32,7 +34,6 @@
 #include "segment.h"
 #include "staff.h"
 #include "system.h"
-#include "tempo.h"
 
 #include "log.h"
 
@@ -171,13 +172,13 @@ void Dynamic::setChangeInVelocity(int val)
 //    the time over which the velocity change occurs
 //---------------------------------------------------------
 
-Fraction Dynamic::velocityChangeLength() const
+Fraction Dynamic::velocityChangeLength(BeatsPerSecond tempo) const
 {
     if (changeInVelocity() == 0) {
         return Fraction::fromTicks(0);
     }
 
-    double ratio = score()->tempomap()->multipliedTempo(segment()->tick().ticks()).val / Constants::DEFAULT_TEMPO.val;
+    double ratio = tempo.val / Constants::DEFAULT_TEMPO.val;
     double speedMult;
     switch (velChangeSpeed()) {
     case DynamicSpeed::SLOW:
@@ -306,12 +307,12 @@ bool Dynamic::acceptDrop(EditData& ed) const
     return droppedType == ElementType::DYNAMIC || droppedType == ElementType::EXPRESSION || droppedType == ElementType::HAIRPIN;
 }
 
-EngravingItem* Dynamic::drop(EditData& ed)
+EngravingItem* Dynamic::drop(Transaction& tx, EditData& ed)
 {
     EngravingItem* item = ed.dropElement;
 
     if (item->isHairpin()) {
-        score()->addHairpinToDynamic(toHairpin(item), this);
+        EditHairpin::addHairpinToDynamic(tx, score(), toHairpin(item), this);
         return item;
     }
 
@@ -326,7 +327,7 @@ EngravingItem* Dynamic::drop(EditData& ed)
 
     if (item->isExpression()) {
         item->setTrack(track());
-        item->setParent(segment());
+        item->setOwnershipParent(segment());
         toExpression(item)->setVoiceAssignment(voiceAssignment());
         score()->undoAddElement(item);
         return item;
@@ -415,7 +416,7 @@ void Dynamic::reset()
     undoResetProperty(Pid::CENTER_BETWEEN_STAVES);
     TextBase::reset();
     Expression* snappedExp = snappedExpression();
-    if (snappedExp && snappedExp->getProperty(Pid::OFFSET) != snappedExp->propertyDefault(Pid::OFFSET)) {
+    if (snappedExp && !snappedExp->offset().isNull()) {
         snappedExp->reset();
     }
 }

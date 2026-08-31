@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,32 +33,23 @@
 #include "chord.h"
 #include "clef.h"
 #include "factory.h"
+#include "measure.h"
 #include "ornament.h"
 #include "score.h"
 #include "system.h"
 
-#include "log.h"
-
-using namespace mu;
 using namespace mu::engraving;
 
-namespace mu::engraving {
 //---------------------------------------------------------
 //   trillStyle
 //---------------------------------------------------------
 
 static const ElementStyle trillStyle {
     { Sid::trillPlacement, Pid::PLACEMENT },
-    { Sid::trillPosAbove,  Pid::OFFSET },
 };
 
-TrillSegment::TrillSegment(Trill* sp, System* parent)
-    : LineSegment(ElementType::TRILL_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
-{
-}
-
-TrillSegment::TrillSegment(System* parent)
-    : LineSegment(ElementType::TRILL_SEGMENT, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+TrillSegment::TrillSegment(Trill* sp)
+    : LineSegment(ElementType::TRILL_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
 }
 
@@ -164,26 +155,6 @@ EngravingObject* TrillSegment::propertyDelegate(Pid pid) const
 }
 
 //---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid TrillSegment::getPropertyStyle(Pid pid) const
-{
-    if (pid == Pid::OFFSET) {
-        return spanner()->placeAbove() ? Sid::trillPosAbove : Sid::trillPosBelow;
-    }
-    return LineSegment::getPropertyStyle(pid);
-}
-
-Sid Trill::getPropertyStyle(Pid pid) const
-{
-    if (pid == Pid::OFFSET) {
-        return placeAbove() ? Sid::trillPosAbove : Sid::trillPosBelow;
-    }
-    return SLine::getPropertyStyle(pid);
-}
-
-//---------------------------------------------------------
 //   Trill
 //---------------------------------------------------------
 
@@ -254,11 +225,11 @@ void Trill::computeStartElement()
 {
     Spanner::computeStartElement();
     if (startElement() && startElement()->isChord() && m_ornament) {
-        m_ornament->setParent(startElement());
+        m_ornament->setOwnershipParent(startElement());
 
         Chord* cueChord = m_ornament->cueNoteChord();
         if (cueChord) {
-            cueChord->setParent(toChord(startElement())->segment());
+            cueChord->setOwnershipParent(toChord(startElement())->segment());
         }
     }
 }
@@ -355,13 +326,12 @@ void Trill::setTrillType(TrillType tt)
 //---------------------------------------------------------
 
 static const ElementStyle trillSegmentStyle {
-    { Sid::trillPosAbove, Pid::OFFSET },
     { Sid::trillMinDistance, Pid::MIN_DISTANCE },
 };
 
-LineSegment* Trill::createLineSegment(System* parent)
+LineSegment* Trill::createLineSegment()
 {
-    TrillSegment* seg = new TrillSegment(this, parent);
+    TrillSegment* seg = new TrillSegment(this);
     seg->setTrack(track());
     seg->setColor(lineColor());
     seg->initElementStyle(&trillSegmentStyle);
@@ -455,8 +425,12 @@ String Trill::accessibleInfo() const
     return String(u"%1: %2").arg(EngravingItem::accessibleInfo(), trillTypeUserName());
 }
 
+Sid Trill::defaultPosSid() const
+{
+    return placeAbove() ? Sid::trillPosAbove : Sid::trillPosBelow;
+}
+
 void Trill::doComputeEndElement()
 {
     setEndElement(score()->findChordRestEndingBeforeTickInStaffAndVoice(tick2(), track2staff(track2()), voice()));
-}
 }

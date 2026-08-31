@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -106,8 +106,8 @@ TappingHalfSlur::TappingHalfSlur(const TappingHalfSlur& other)
 {
 }
 
-TappingHalfSlurSegment::TappingHalfSlurSegment(System* parent)
-    : SlurSegment(parent, ElementType::TAPPING_HALF_SLUR_SEGMENT)
+TappingHalfSlurSegment::TappingHalfSlurSegment(TappingHalfSlur* sp)
+    : SlurSegment(sp, ElementType::TAPPING_HALF_SLUR_SEGMENT)
 {
 }
 
@@ -132,8 +132,8 @@ TappingText::TappingText(const TappingText& t)
 
 Color TappingText::curColor(const rendering::PaintOptions& opt) const
 {
-    if (parentItem()) {
-        return parentItem()->curColor(opt);
+    if (Tapping* t = tapping()) {
+        return t->curColor(opt);
     }
 
     return EngravingItem::curColor(opt);

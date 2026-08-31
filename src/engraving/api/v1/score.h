@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,6 +26,9 @@
 
 #include "modularity/ioc.h"
 #include "context/iglobalcontext.h"
+
+#include "engraving/dom/score.h"
+#include "engraving/dom/segment.h"
 
 // api
 #include "excerpt.h"
@@ -336,7 +339,7 @@ class Score : public apiv1::ScoreElement, public muse::Contextable
      * @q_property {Boolean}
      * @since 4.6
      */
-    Q_PROPERTY(bool markIrregularMeasures READ showSoundFlags WRITE setMarkIrregularMeasures)
+    Q_PROPERTY(bool markIrregularMeasures READ markIrregularMeasures WRITE setMarkIrregularMeasures)
 
     /** APIDOC
      * Whether instrument names are displayed
@@ -436,6 +439,14 @@ public:
     * @since 4.6
     */
     Q_INVOKABLE void makeIntoSystem(apiv1::MeasureBase* first, apiv1::MeasureBase* last);
+
+    /** APIDOC
+     * List of bracket items for staffIdx
+     * @method
+     * @param {Number} staffIdx Staff index
+     * @since 5.0
+    */
+    Q_INVOKABLE QQmlListProperty<EngravingItem> brackets(int staffIdx);
 
     QQmlListProperty<apiv1::Spanner> spanners();
 

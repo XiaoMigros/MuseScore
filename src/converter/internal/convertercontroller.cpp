@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,6 +33,15 @@
 
 #include "engraving/dom/masterscore.h"
 #include "engraving/infrastructure/mscio.h"
+
+#include "notation/iexcerptnotation.h" // IWYU pragma: keep
+#include "notation/imasternotation.h"
+#include "notation/inotation.h"
+#include "notation/inotationelements.h" // IWYU pragma: keep
+#include "notation/inotationinteraction.h"
+#include "notation/inotationselectionfilter.h" // IWYU pragma: keep
+
+#include "project/iprojectaudiosettings.h" // IWYU pragma: keep
 
 #include "convertercodes.h"
 #include "compat/backendapi.h"
@@ -181,13 +190,17 @@ Ret ConverterController::convertFile(const muse::io::path_t& in, const muse::io:
     }
 
     if (!copyright.text.isEmpty()) {
-        engraving::MStyle& style = notationProject->masterNotation()->masterScore()->style();
+        auto masterScore = notationProject->masterNotation()->masterScore();
+
+        engraving::MStyle& style = masterScore->style();
         String footerOdd = style.value(engraving::Sid::oddFooterC).value<String>();
         String footerEven = style.value(engraving::Sid::evenFooterC).value<String>();
         footerOdd += copyright.text;
         footerEven += copyright.text;
         style.set(engraving::Sid::oddFooterC, footerOdd);
         style.set(engraving::Sid::evenFooterC, footerEven);
+
+        masterScore->doLayout();
     }
 
     globalContext()->setCurrentProject(notationProject);
@@ -407,8 +420,11 @@ RetVal<ConverterController::BatchJob> ConverterController::parseBatchJob(const m
 Ret ConverterController::convertByExtension(INotationWriterPtr writer, INotationPtr notation, const muse::io::path_t& out,
                                             const muse::UriQuery& extensionUri)
 {
+    extensions::ExtensionUri uri = extensionUri.uri();
+    extensions::ExtensionActionCode actionCode = extensionUri.param("action", Val("main")).toString();
+
     //! NOTE First we do the extension, it can modify the notation (score)
-    Ret ret = extensionsProvider()->perform(extensionUri);
+    Ret ret = extensionsProvider()->perform(uri, actionCode);
     if (!ret) {
         return ret;
     }
@@ -490,12 +506,13 @@ muse::Ret ConverterController::convertPage(INotationWriterPtr writer, INotationP
     return make_ok();
 }
 
-Ret ConverterController::convertFullNotation(INotationWriterPtr writer, INotationPtr notation, const muse::io::path_t& out) const
+Ret ConverterController::convertFullNotation(INotationWriterPtr writer, INotationPtr notation, const muse::io::path_t& out,
+                                             const project::INotationWriter::Options& options) const
 {
     auto outBuf = Buffer::opened(IODevice::WriteOnly);
 
     outBuf.setMeta("file_path", out.toStdString());
-    Ret ret = writer->write(notation, outBuf);
+    Ret ret = writer->write(notation, outBuf, options);
     if (!ret) {
         LOGE() << "failed write, err: " << ret.toString() << ", path: " << out;
         return make_ret(Err::OutFileFailedWrite);
@@ -663,28 +680,28 @@ Ret ConverterController::exportScoreMedia(const muse::io::path_t& in, const muse
 {
     TRACEFUNC;
 
-    return BackendApi::exportScoreMedia(in, out, highlightConfigPath, openParams);
+    return BackendApi::exportScoreMedia(iocContext(), in, out, highlightConfigPath, openParams);
 }
 
 Ret ConverterController::exportScoreMeta(const muse::io::path_t& in, const muse::io::path_t& out, const OpenParams& openParams)
 {
     TRACEFUNC;
 
-    return BackendApi::exportScoreMeta(in, out, openParams);
+    return BackendApi::exportScoreMeta(iocContext(), in, out, openParams);
 }
 
 Ret ConverterController::exportScoreParts(const muse::io::path_t& in, const muse::io::path_t& out, const OpenParams& openParams)
 {
     TRACEFUNC;
 
-    return BackendApi::exportScoreParts(in, out, openParams);
+    return BackendApi::exportScoreParts(iocContext(), in, out, openParams);
 }
 
 Ret ConverterController::exportScorePartsPdfs(const muse::io::path_t& in, const muse::io::path_t& out, const OpenParams& openParams)
 {
     TRACEFUNC;
 
-    return BackendApi::exportScorePartsPdfs(in, out, openParams);
+    return BackendApi::exportScorePartsPdfs(iocContext(), in, out, openParams);
 }
 
 Ret ConverterController::exportScoreTranspose(const muse::io::path_t& in, const muse::io::path_t& out, const std::string& optionsJson,
@@ -692,7 +709,7 @@ Ret ConverterController::exportScoreTranspose(const muse::io::path_t& in, const 
 {
     TRACEFUNC;
 
-    return BackendApi::exportScoreTranspose(in, out, optionsJson, openParams);
+    return BackendApi::exportScoreTranspose(iocContext(), in, out, optionsJson, openParams);
 }
 
 Ret ConverterController::exportScoreElements(const muse::io::path_t& in, const muse::io::path_t& out,
@@ -700,10 +717,11 @@ Ret ConverterController::exportScoreElements(const muse::io::path_t& in, const m
 {
     TRACEFUNC;
 
-    return BackendApi::exportScoreElements(in, out, openParams);
+    return BackendApi::exportScoreElements(iocContext(), in, out, openParams);
 }
 
-Ret ConverterController::exportScoreVideo(const muse::io::path_t& in, const muse::io::path_t& out, const OpenParams& openParams)
+Ret ConverterController::exportScoreVideo(const muse::io::path_t& in, const muse::io::path_t& out, const OpenParams& openParams,
+                                          bool withAudio)
 {
     TRACEFUNC;
 
@@ -713,7 +731,7 @@ Ret ConverterController::exportScoreVideo(const muse::io::path_t& in, const muse
     }
 
     std::string suffix = io::suffix(out);
-    auto writer = projectRW()->writer(suffix);
+    auto writer = writers()->writer(suffix);
     if (!writer) {
         return make_ret(Err::ConvertTypeUnknown);
     }
@@ -724,18 +742,22 @@ Ret ConverterController::exportScoreVideo(const muse::io::path_t& in, const muse
         return make_ret(Err::InFileFailedLoad);
     }
 
-    ret = writer->write(notationProject, out);
-    if (!ret) {
-        LOGE() << "failed write, err: " << ret.toString() << ", path: " << out;
-        return make_ret(Err::OutFileFailedWrite);
-    }
+    globalContext()->setCurrentProject(notationProject);
 
-    return make_ret(Ret::Code::Ok);
+    DEFER {
+        globalContext()->setCurrentProject(nullptr);
+    };
+
+    const INotationWriter::Options options {
+        { INotationWriter::OptionKey::WITH_AUDIO, Val(withAudio) },
+    };
+
+    return convertFullNotation(writer, notationProject->masterNotation()->notation(), out, options);
 }
 
 Ret ConverterController::updateSource(const muse::io::path_t& in, const std::string& newSource, bool forceMode)
 {
     TRACEFUNC;
 
-    return BackendApi::updateSource(in, newSource, forceMode);
+    return BackendApi::updateSource(iocContext(), in, newSource, forceMode);
 }

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -69,7 +69,7 @@ class TimeTickAnchor : public EngravingItem
     friend class Factory;
 
 public:
-    Segment* segment() const { return toSegment(parentItem()); }
+    Segment* segment() const { return toSegment(ownershipParentItem()); }
 
     TimeTickAnchor* clone() const override { return new TimeTickAnchor(*this); }
 

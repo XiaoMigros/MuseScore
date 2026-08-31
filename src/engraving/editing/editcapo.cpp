@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,11 +21,13 @@
  */
 
 #include "editcapo.h"
-#include "dom/staff.h"
+
+#include "dom/measure.h"
 #include "dom/note.h"
-#include "dom/stringdata.h"
-#include "dom/score.h"
 #include "dom/part.h"
+#include "dom/score.h"
+#include "dom/staff.h"
+#include "dom/stringdata.h"
 
 namespace mu::engraving {
 // static

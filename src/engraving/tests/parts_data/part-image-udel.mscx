@@ -11,6 +11,8 @@
       <dividerRightAlignToSystemBarline>0</dividerRightAlignToSystemBarline>
       <scaleRythmicSpacingForSmallNotes>0</scaleRythmicSpacingForSmallNotes>
       <verticallyAlignChordSymbols>0</verticallyAlignChordSymbols>
+      <maskSlurs>0</maskSlurs>
+      <maskTies>0</maskTies>
       <changesBeforeBarlineRepeats>0</changesBeforeBarlineRepeats>
       <changesBeforeBarlineOtherJumps>0</changesBeforeBarlineOtherJumps>
       <showCourtesiesRepeats>0</showCourtesiesRepeats>
@@ -35,10 +37,11 @@
     <metaTag name="workNumber"></metaTag>
     <metaTag name="workTitle">testpart1</metaTag>
     <Part id="1">
+      <eid>YE_YE</eid>
       <Staff>
         <eid>C_C</eid>
         <StaffType group="pitched">
-          <name>Standard</name>
+          <name>stdNormal</name>
           </StaffType>
         </Staff>
       <Instrument id="alto">
@@ -74,10 +77,11 @@
         </Instrument>
       </Part>
     <Part id="2">
+      <eid>ZE_ZE</eid>
       <Staff>
         <eid>D_D</eid>
         <StaffType group="pitched">
-          <name>Standard</name>
+          <name>stdNormal</name>
           </StaffType>
         </Staff>
       <Instrument id="tenor">
@@ -150,7 +154,7 @@
               <Image>
                 <Image>
                   <eid>M_M</eid>
-                  <z>9399</z>
+                  <z>11399</z>
                   <path>71b2e9f575296b78c22ba721cd71f6e5.png</path>
                   <size w="32.12" h="32.16"/>
                   </Image>
@@ -838,6 +842,8 @@
         <vocalsNameByGroup>0</vocalsNameByGroup>
         <dividerLeftAlignToSystemBarline>0</dividerLeftAlignToSystemBarline>
         <dividerRightAlignToSystemBarline>0</dividerRightAlignToSystemBarline>
+        <maskSlurs>0</maskSlurs>
+        <maskTies>0</maskTies>
         <spatium>1.75</spatium>
         </Style>
       <showInvisible>1</showInvisible>
@@ -846,11 +852,12 @@
       <showMargins>0</showMargins>
       <metaTag name="partName">Alto</metaTag>
       <Part id="1">
+        <eid>aE_aE</eid>
         <Staff>
           <eid>7B_7B</eid>
           <linkedTo>C_C</linkedTo>
           <StaffType group="pitched">
-            <name>Standard</name>
+            <name>stdNormal</name>
             </StaffType>
           </Staff>
         <Instrument id="alto">
@@ -934,7 +941,7 @@
                 <Image>
                   <Image>
                     <eid>FC_FC</eid>
-                    <z>9399</z>
+                    <z>11399</z>
                     <path>71b2e9f575296b78c22ba721cd71f6e5.png</path>
                     <size w="32.3749" h="32.4152"/>
                     </Image>
@@ -1328,6 +1335,8 @@
         <vocalsNameByGroup>0</vocalsNameByGroup>
         <dividerLeftAlignToSystemBarline>0</dividerLeftAlignToSystemBarline>
         <dividerRightAlignToSystemBarline>0</dividerRightAlignToSystemBarline>
+        <maskSlurs>0</maskSlurs>
+        <maskTies>0</maskTies>
         <spatium>1.75</spatium>
         </Style>
       <showInvisible>1</showInvisible>
@@ -1336,11 +1345,12 @@
       <showMargins>0</showMargins>
       <metaTag name="partName">Tenor</metaTag>
       <Part id="2">
+        <eid>bE_bE</eid>
         <Staff>
           <eid>LD_LD</eid>
           <linkedTo>D_D</linkedTo>
           <StaffType group="pitched">
-            <name>Standard</name>
+            <name>stdNormal</name>
             </StaffType>
           </Staff>
         <Instrument id="tenor">

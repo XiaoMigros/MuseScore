@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -114,9 +114,9 @@ Tuplet::~Tuplet()
     delete m_number;
 }
 
-void Tuplet::setParent(Measure* parent)
+void Tuplet::setOwnershipParent(Measure* parent)
 {
-    EngravingItem::setParent(parent);
+    EngravingItem::setOwnershipParent(parent);
 }
 
 //---------------------------------------------------------

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -166,7 +166,7 @@ void TupletLayout::createNumber(Tuplet* item, LayoutContext& ctx)
         Text* number = Factory::createText(item, TextStyleType::TUPLET);
         number->setComposition(true);
         number->setTrack(item->track());
-        number->setParent(item);
+        number->setOwnershipParent(item);
         number->setVisible(item->visible());
         number->setColor(item->color());
         item->setNumber(number);
@@ -523,9 +523,9 @@ void TupletLayout::layoutBracket(Tuplet* item, const ChordRest* cr1, const Chord
         item->p2().rx() = shEl->translated(cr2->pagePos()).right() + noteRight;
     }
 
-    PointF mp(item->parentItem()->pagePos());
-    if (item->explicitParent()->isMeasure()) {
-        System* s = toMeasure(item->explicitParent())->system();
+    PointF mp(item->layoutParent()->pagePos());
+    if (item->layoutParent()->isMeasure()) {
+        System* s = toMeasure(item->layoutParent())->system();
         if (s) {
             SysStaff* tupletStaff = s->staff(item->vStaffIdx());
             mp.ry() += tupletStaff ? tupletStaff->y() : 0.0;

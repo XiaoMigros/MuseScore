@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,6 +29,7 @@
 #include "engraving/dom/staff.h"
 #include "engraving/dom/timesig.h"
 #include "engraving/dom/tuplet.h"
+#include "engraving/editing/transaction/transaction.h"
 
 #include "utils/scorerw.h"
 #include "utils/scorecomp.h"
@@ -82,7 +83,7 @@ bool Engraving_TupletTests::createTuplet(int n, ChordRest* cr)
     tuplet->setTrack(cr->track());
     tuplet->setTick(tick);
     Measure* measure = cr->measure();
-    tuplet->setParent(measure);
+    tuplet->setOwnershipParent(measure);
 
     if (ot) {
         tuplet->setTuplet(ot);
@@ -126,14 +127,14 @@ void Engraving_TupletTests::split(const char16_t* p1, const char16_t* p2)
     TimeSig* ts        = Factory::createTimeSig(score->dummy()->segment());
     ts->setSig(Fraction(3, 4), TimeSigType::NORMAL);
 
-    score->startCmd(TranslatableString::untranslatable("Engraving tuplet tests"));
-    EditData dd(0);
-    dd.dropElement = ts;
-    dd.modifiers = {};
-    dd.dragOffset = QPointF();
-    dd.track = 0;
-    m->drop(dd);
-    score->endCmd();
+    score->transactionManager()->transaction(TranslatableString::untranslatable("Engraving tuplet tests"), [&](Transaction& tx) {
+        EditData dd(0);
+        dd.dropElement = ts;
+        dd.modifiers = {};
+        dd.dragOffset = QPointF();
+        dd.track = 0;
+        m->drop(tx, dd);
+    });
 
     EXPECT_TRUE(ScoreComp::saveCompareScore(score, p1, TUPLET_DATA_DIR + p2));
     delete score;

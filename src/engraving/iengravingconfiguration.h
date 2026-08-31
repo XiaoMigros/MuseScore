@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -52,8 +52,19 @@ public:
     virtual bool canLayoutIcons() const = 0;
     virtual String iconsFontFamily() const = 0;
 
+    /* The default used for engraving items' actual color (saved and printed).
+     * Can be overridden by changing the color property or style. */
     virtual Color defaultColor() const = 0;
-    virtual Color scoreInversionColor() const = 0;
+
+    /* The color that will be used to display the engraving items that have the
+     * default color. Affects the appearance of the elements in the score editor,
+     * but it's not printed nor saved. */
+    virtual Color displayedDefaultColor(bool inverted) const = 0;
+    virtual void setDisplayedDefaultColor(Color color, bool inverted) = 0;
+    virtual muse::async::Channel</* inverted */ bool, Color> displayedDefaultColorChanged() const = 0;
+    virtual void resetDisplayedDefaultColors() = 0;
+
+    virtual Color indicatorIconInvertedSelectionColor() const = 0;
     virtual Color lassoColor() const = 0;
     virtual Color warningColor() const = 0;
     virtual Color warningSelectedColor() const = 0;
@@ -105,6 +116,7 @@ public:
         bool markEmptyStaffVisibilityOverrides = false;
         bool markCorruptedMeasures = true;
         bool showGapRests = false;
+        bool showOriginAndCombinedStaves = false;
 
         bool anyEnabled() const
         {
@@ -119,6 +131,7 @@ public:
                    || markEmptyStaffVisibilityOverrides
                    || markCorruptedMeasures
                    || showGapRests
+                   || showOriginAndCombinedStaves
             ;
         }
     };
@@ -126,9 +139,6 @@ public:
     virtual const DebuggingOptions& debuggingOptions() const = 0;
     virtual void setDebuggingOptions(const DebuggingOptions& options) = 0;
     virtual muse::async::Notification debuggingOptionsChanged() const = 0;
-
-    virtual bool doNotSaveEIDsForBackCompat() const = 0;
-    virtual void setDoNotSaveEIDsForBackCompat(bool doNotSave) = 0;
 
     virtual bool allowReadingImagesFromOutsideMscz() const = 0;
 
@@ -141,5 +151,6 @@ public:
     virtual bool specificSlursLayoutWorkaround() const = 0;
     virtual bool preferSameStringForTranspose() const = 0;
     virtual void setPreferSameStringForTranspose(bool preferSameString) = 0;
+    virtual bool keepDeadNotesUnchangedOnTranspose() const = 0;
 };
 }

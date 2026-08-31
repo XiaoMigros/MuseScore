@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,7 +38,7 @@ class RasgueadoSegment final : public TextLineBaseSegment
     DECLARE_CLASSOF(ElementType::RASGUEADO_SEGMENT)
 
 public:
-    RasgueadoSegment(Rasgueado* sp, System* parent);
+    RasgueadoSegment(Rasgueado* sp);
 
     RasgueadoSegment* clone() const override { return new RasgueadoSegment(*this); }
 
@@ -61,10 +61,15 @@ public:
 
     Rasgueado* clone() const override { return new Rasgueado(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
+    LineSegment* createLineSegment() override;
 
     PropertyValue propertyDefault(Pid propertyId) const override;
     Sid getPropertyStyle(Pid) const override;
+
+protected:
+    Sid defaultPosSid() const override;
 };
 } // namespace mu::engraving
 #endif

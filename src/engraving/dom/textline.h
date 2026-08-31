@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,7 +38,7 @@ class TextLineSegment final : public TextLineBaseSegment
     DECLARE_CLASSOF(ElementType::TEXTLINE_SEGMENT)
 
 public:
-    TextLineSegment(Spanner* sp, System* parent, bool system=false);
+    TextLineSegment(TextLine* sp, bool system=false);
 
     TextLineSegment* clone() const override { return new TextLineSegment(*this); }
 
@@ -47,10 +47,6 @@ public:
     virtual EngravingObject* propertyDelegate(Pid) const override;
 
     TextLine* textLine() const { return toTextLine(spanner()); }
-
-private:
-    Sid getTextLinePos(bool above) const;
-    Sid getPropertyStyle(Pid) const override;
 };
 
 //---------------------------------------------------------
@@ -62,9 +58,6 @@ class TextLine final : public TextLineBase
     OBJECT_ALLOCATOR(engraving, TextLine)
     DECLARE_CLASSOF(ElementType::TEXTLINE)
 
-    Sid getTextLinePos(bool above) const;
-    Sid getPropertyStyle(Pid) const override;
-
 public:
     TextLine(EngravingItem* parent, bool system=false);
     TextLine(const TextLine&);
@@ -74,15 +67,20 @@ public:
 
     TextLine* clone() const override { return new TextLine(*this); }
 
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
     void initStyle();
 
-    LineSegment* createLineSegment(System* parent) override;
+    LineSegment* createLineSegment() override;
 
     bool allowTimeAnchor() const override;
 
     PropertyValue propertyDefault(Pid) const override;
     bool setProperty(Pid id, const PropertyValue&) override;
     PropertyValue getProperty(Pid id) const override;
+
+protected:
+    Sid defaultPosSid() const override;
 };
 } // namespace mu::engraving
 #endif

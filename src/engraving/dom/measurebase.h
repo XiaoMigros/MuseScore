@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,11 +31,12 @@
 #include "engravingitem.h"
 
 namespace mu::engraving {
+class Box;
 class LayoutBreak;
 class Measure;
 class Score;
 class System;
-class SystemLock;
+class RangeLock;
 
 //---------------------------------------------------------
 //   Repeat
@@ -79,10 +80,22 @@ public:
 
     ~MeasureBase();
 
-    System* system() const { return toSystem(explicitParent()); }
+    //! The system this measure is currently laid out on; null if not placed.
+    System* system() const { return m_system; }
+    void setSystem(System* s) { m_system = s; }
+    EngravingItem* layoutParent() const override;
+
+    //! A measure or frame is owned by its score, or by the frame it is nested in.
+    //! A system merely places it; see setSystem(). These overloads hide
+    //! EngravingItem::setOwnershipParent, so that no other parent can be set by accident.
+    void setOwnershipParent(Score* score);
+    void setOwnershipParent(Box* box);
+
     System* prevNonVBoxSystem() const;
     System* nextNonVBoxSystem() const;
-    void setParent(System* s) { EngravingItem::setParent((EngravingObject*)(s)); }
+    Page* page() const;
+    Page* prevPage() const;
+    Page* nextPage() const;
 
     virtual void scanElements(std::function<void(EngravingItem*)> func) override;
 
@@ -160,12 +173,16 @@ public:
     bool isAfter(const MeasureBase* other) const { return !isBeforeOrEqual(other); }
     bool isAfterOrEqual(const MeasureBase* other) const { return !isBefore(other); }
 
-    const SystemLock* systemLock() const;
+    const RangeLock* systemLock() const;
     bool isStartOfSystemLock() const;
     bool isEndOfSystemLock() const;
 
+    const RangeLock* pageLock() const;
+    bool isStartOfPageLock() const;
+    bool isEndOfPageLock() const;
+
 protected:
-    MeasureBase(const ElementType& type, System* system = 0);
+    MeasureBase(const ElementType& type, Score* parent);
     MeasureBase(const MeasureBase&);
 
     Fraction m_len  { Fraction(0, 1) };    // actual length of measure
@@ -175,6 +192,8 @@ protected:
 private:
     MeasureBase* m_next = nullptr;
     MeasureBase* m_prev = nullptr;
+
+    System* m_system = nullptr;   // current layout placement; not owned, not copied
 
     Fraction m_tick = Fraction(0, 1);
 };
@@ -203,6 +222,7 @@ public:
     void updateTickIndex();
 
     Measure* measureByTick(int tick) const;
+    MeasureBase* firstMeasureBaseAtTick(int tick) const;
     std::vector<MeasureBase*> measureBasesAtTick(int tick) const;
 
 private:

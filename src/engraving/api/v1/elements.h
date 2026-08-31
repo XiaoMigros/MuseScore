@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,7 +29,7 @@
 #include "engraving/dom/arpeggio.h"
 #include "engraving/dom/barline.h"
 #include "engraving/dom/beam.h"
-#include "engraving/dom/bracketItem.h"
+#include "engraving/dom/bracketitem.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/fret.h"
 #include "engraving/dom/harmony.h"
@@ -53,8 +53,6 @@
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/tie.h"
 #include "engraving/dom/accidental.h"
-
-#include "engraving/editing/undo.h"
 
 #include "playevent.h"
 
@@ -1296,7 +1294,9 @@ class EngravingItem : public apiv1::ScoreElement
     QPointF pagePos() const { return PointF(element()->pagePos() / element()->spatium()).toQPointF(); }
     QPointF canvasPos() const { return PointF(element()->canvasPos() / element()->spatium()).toQPointF(); }
 
-    apiv1::EngravingItem* parent() const { return wrap(element()->parentItem()); }
+    //! \note Plugins have always seen the visual parent here (a measure reports
+    //!       its system, a spanner segment its system), so keep layoutParent().
+    apiv1::EngravingItem* parent() const { return wrap(element()->layoutParent()); }
     Staff* staff() { return wrap<Staff>(element()->staff()); }
 
     QRectF bbox() const;
@@ -2373,10 +2373,6 @@ class Staff : public ScoreElement
     /// \since MuseScore 4.6
     Q_PROPERTY(apiv1::Staff * primaryStaff READ primaryStaff)
 
-    /// List of bracket items for this staff.
-    /// \since MuseScore 4.6
-    Q_PROPERTY(QQmlListProperty<apiv1::EngravingItem> brackets READ brackets)
-
 public:
     /// \cond MS_INTERNAL
     Staff(mu::engraving::Staff* staff, Ownership own = Ownership::PLUGIN)
@@ -2389,7 +2385,6 @@ public:
     int idx() { return int(staff()->idx()); }
     bool show() { return staff()->show(); }
     Staff* primaryStaff() { return wrap<Staff>(staff()->primaryStaff()); }
-    QQmlListProperty<EngravingItem> brackets() { return wrapContainerProperty<EngravingItem>(this, staff()->brackets()); }
     /// \endcond
 
     /// The current clef type at a given tick in the score, one of
@@ -2565,10 +2560,6 @@ class Spanner : public EngravingItem
     API_PROPERTY(spannerTicks,            SPANNER_TICKS)
     /// The track this spanner end at.
     API_PROPERTY_T(int, spannerTrack2,    SPANNER_TRACK2)
-
-    /// The Anchor type for this spanner,
-    /// one of PluginAPI::PluginAPI::Anchor values.
-    API_PROPERTY_T(int, anchor,           ANCHOR)
 
     /// The starting element of the spanner.
     Q_PROPERTY(apiv1::EngravingItem * startElement READ startElement)

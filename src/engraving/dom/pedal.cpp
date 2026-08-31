@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -68,7 +68,6 @@ static const ElementStyle pedalStyle {
     { Sid::pedalDashGapLen,                    Pid::DASH_GAP_LEN },
     { Sid::pedalPlacement,                     Pid::PLACEMENT },
     { Sid::pedalLineStyle,                     Pid::LINE_STYLE },
-    { Sid::pedalPosBelow,                      Pid::OFFSET },
     { Sid::pedalFontSpatiumDependent,          Pid::TEXT_SIZE_SPATIUM_DEPENDENT },
     { Sid::pedalEndLineArrowHeight,            Pid::END_LINE_ARROW_HEIGHT },
     { Sid::pedalEndLineArrowWidth,             Pid::END_LINE_ARROW_WIDTH },
@@ -83,30 +82,16 @@ static const ElementStyle pedalStyle {
 const String Pedal::PEDAL_SYMBOL = u"<sym>keyboardPedalPed</sym>";
 const String Pedal::STAR_SYMBOL = u"<sym>keyboardPedalUp</sym>";
 
-PedalSegment::PedalSegment(Pedal* sp, System* parent)
-    : TextLineBaseSegment(ElementType::PEDAL_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+PedalSegment::PedalSegment(Pedal* sp)
+    : TextLineBaseSegment(ElementType::PEDAL_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
     m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
     m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
 }
 
-//---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid PedalSegment::getPropertyStyle(Pid pid) const
-{
-    if (pid == Pid::OFFSET) {
-        return spanner()->placeAbove() ? Sid::pedalPosAbove : Sid::pedalPosBelow;
-    }
-    return TextLineBaseSegment::getPropertyStyle(pid);
-}
-
 Sid Pedal::getPropertyStyle(Pid pid) const
 {
     switch (pid) {
-    case Pid::OFFSET:
-        return placeAbove() ? Sid::pedalPosAbove : Sid::pedalPosBelow;
     case Pid::END_TEXT:
         return lineVisible() ? Sid::pedalEndText : Sid::pedalRosetteEndText;
     case Pid::BEGIN_TEXT:
@@ -144,13 +129,12 @@ Pedal::Pedal(EngravingItem* parent)
 //---------------------------------------------------------
 
 static const ElementStyle pedalSegmentStyle {
-    { Sid::pedalPosBelow, Pid::OFFSET },
     { Sid::pedalMinDistance, Pid::MIN_DISTANCE },
 };
 
-LineSegment* Pedal::createLineSegment(System* parent)
+LineSegment* Pedal::createLineSegment()
 {
-    PedalSegment* p = new PedalSegment(this, parent);
+    PedalSegment* p = new PedalSegment(this);
     p->setTrack(track());
     p->initElementStyle(&pedalSegmentStyle);
     return p;
@@ -317,5 +301,10 @@ PointF Pedal::linePos(Grip grip, System** sys) const
     x -= (endSeg->isChordRestType() && nextPedal ? 1.25 : 0.75) * spatium();
 
     return PointF(x, 0.0);
+}
+
+Sid Pedal::defaultPosSid() const
+{
+    return placeAbove() ? Sid::pedalPosAbove : Sid::pedalPosBelow;
 }
 }

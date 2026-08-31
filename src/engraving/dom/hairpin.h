@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,6 +28,7 @@
 
 namespace mu::engraving {
 class Hairpin;
+class Transaction;
 
 enum class HairpinType : signed char {
     INVALID = -1,
@@ -47,7 +48,7 @@ class HairpinSegment final : public TextLineBaseSegment
     DECLARE_CLASSOF(ElementType::HAIRPIN_SEGMENT)
 
 public:
-    HairpinSegment(Hairpin* sp, System* parent);
+    HairpinSegment(Hairpin* sp);
 
     HairpinSegment* clone() const override { return new HairpinSegment(*this); }
 
@@ -84,7 +85,7 @@ private:
     Sid getPropertyStyle(Pid) const override;
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
     void setPropertyFlags(Pid id, PropertyFlags f) override;
 
@@ -109,6 +110,8 @@ public:
 
     Hairpin* clone() const override { return new Hairpin(*this); }
 
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
     DynamicType dynamicTypeFrom() const;
     DynamicType dynamicTypeTo() const;
 
@@ -118,7 +121,7 @@ public:
     HairpinType hairpinType() const { return m_hairpinType; }
     void setHairpinType(HairpinType val);
 
-    LineSegment* createLineSegment(System* parent) override;
+    LineSegment* createLineSegment() override;
 
     bool hairpinCircledTip() const { return m_hairpinCircledTip; }
     void setHairpinCircledTip(bool val) { m_hairpinCircledTip = val; }
@@ -178,6 +181,9 @@ public:
 
     int subtype() const override { return int(m_hairpinType); }
     TranslatableString subtypeUserName() const override;
+
+protected:
+    Sid defaultPosSid() const override;
 
 private:
 

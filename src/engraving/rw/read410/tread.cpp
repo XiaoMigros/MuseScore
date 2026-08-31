@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,19 +19,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "tread.h"
+
+#include "iengravingconfiguration.h" // IWYU pragma: keep
 
 #include "../../types/typesconv.h"
 #include "../../types/symnames.h"
 #include "../../infrastructure/rtti.h"
-#include "../../infrastructure/htmlparser.h"
+
+#include "../../compat/midi/event.h"
 
 #include "../../dom/accidental.h"
 #include "../../dom/actionicon.h"
 #include "../../dom/ambitus.h"
 #include "../../dom/arpeggio.h"
 #include "../../dom/articulation.h"
-#include "../../dom/audio.h"
 #include "../../dom/bagpembell.h"
 #include "../../dom/barline.h"
 #include "../../dom/beam.h"
@@ -105,6 +108,7 @@
 #include "../../dom/soundflag.h"
 #include "../../dom/spacer.h"
 #include "../../dom/spanner.h"
+#include "../../dom/staff.h"
 #include "../../dom/staffstate.h"
 #include "../../dom/stafftext.h"
 #include "../../dom/stafftextbase.h"
@@ -131,12 +135,14 @@
 #include "../../dom/vibrato.h"
 #include "../../dom/volta.h"
 #include "../../dom/whammybar.h"
+
+#include "../../editing/editstaffbrackets.h"
 #include "../../editing/transpose.h"
 
 #include "../xmlreader.h"
 #include "../read206/read206.h"
 #include "../read400/tread.h"
-#include "../read460/tread.h"
+#include "../read500/tread.h"
 #include "../compat/compatutils.h"
 #include "../compat/tremolocompat.h"
 #include "readcontext.h"
@@ -496,6 +502,10 @@ void TRead::readProperty(EngravingItem* item, XmlReader& xml, ReadContext& ctx, 
     if (pid == Pid::PLACEMENT && item->hasVoiceAssignmentProperties()) {
         pid = Pid::DIRECTION;
         v = v.value<PlacementV>() == PlacementV::ABOVE ? PropertyValue(DirectionV::UP) : PropertyValue(DirectionV::DOWN);
+    }
+
+    if (pid == Pid::OFFSET) {
+        compat::CompatUtils::migrateOffset500(item, v);
     }
 
     if (!ctx.shouldSkipProperty(pid)) {
@@ -976,7 +986,12 @@ void TRead::read(Instrument* item, XmlReader& e, ReadContext& ctx, Part* part)
 
     item->updateInstrumentId();
 
-    if (item->channel(0) && item->channel(0)->program() == -1) {
+    if (item->channel().empty()) { // for backward compatibility
+        InstrChannel* fallbackChannel = new InstrChannel;
+        fallbackChannel->setName(String::fromUtf8(InstrChannel::DEFAULT_NAME));
+        fallbackChannel->setProgram(item->recognizeMidiProgram());
+        item->appendChannel(fallbackChannel);
+    } else if (item->channel(0)->program() == -1) {
         item->channel(0)->setProgram(item->recognizeMidiProgram());
     }
 
@@ -998,9 +1013,9 @@ bool TRead::readProperties(Instrument* item, XmlReader& e, ReadContext& ctx, Par
     if (tag == "soundId") {
         item->setSoundId(e.readText());
     } else if (tag == "longName") {
-        item->setLongName(read460::TRead::readLegacyStaffName(e));
+        item->setLongName(read500::TRead::readLegacyStaffName(e));
     } else if (tag == "shortName") {
-        item->setShortName(read460::TRead::readLegacyStaffName(e));
+        item->setShortName(read500::TRead::readLegacyStaffName(e));
     } else if (tag == "trackName") {
         item->setTrackName(e.readText());
     } else if (tag == "minPitchA") {
@@ -1399,7 +1414,7 @@ void TRead::read(FiguredBass* b, XmlReader& e, ReadContext& ctx)
         } else if (tag == "FiguredBassItem") {
             FiguredBassItem* pItem = b->createItem(idx++);
             pItem->setTrack(b->track());
-            pItem->setParent(b);
+            pItem->setOwnershipParent(b);
             TRead::read(pItem, e, ctx);
             b->appendItem(pItem);
             // add item normalized text
@@ -1586,7 +1601,7 @@ void TRead::read(Tuplet* t, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Number") {
             number = Factory::createText(t, TextStyleType::TUPLET);
             number->setComposition(true);
-            number->setParent(t);
+            number->setOwnershipParent(t);
             Tuplet::resetNumberProperty(number);
             TRead::read(number, e, ctx);
             number->setVisible(t->visible());         //?? override saved property
@@ -1910,7 +1925,7 @@ bool TRead::readProperties(Ornament* o, XmlReader& xml, ReadContext& ctx)
         Accidental* accidental = Factory::createAccidental(o);
         TRead::read(accidental, xml, ctx);
         accidental->setTrack(ctx.track());
-        accidental->setParent(o);
+        accidental->setOwnershipParent(o);
         accidental->placement() == PlacementV::ABOVE ? o->setAccidentalAbove(accidental) : o->setAccidentalBelow(accidental);
     } else if (tag == "Chord") {
         Chord* chord = Factory::createChord(ctx.score()->dummy()->segment());
@@ -1973,17 +1988,6 @@ bool TRead::readProperties(Articulation* a, XmlReader& xml, ReadContext& ctx)
         return false;
     }
     return true;
-}
-
-void TRead::read(Audio* a, XmlReader& e, ReadContext&)
-{
-    while (e.readNextStartElement()) {
-        if (e.name() == "path") {
-            a->setPath(e.readText());
-        } else {
-            e.unknown();
-        }
-    }
 }
 
 void TRead::read(BagpipeEmbellishment* b, XmlReader& e, ReadContext&)
@@ -2205,7 +2209,7 @@ bool TRead::readProperties(Box* b, XmlReader& e, ReadContext& ctx)
         // If we do not set the parent of this new box correctly, it will cause a crash on read()
         // because it needs access to the system it is being added to. (c.r. issue #14643)
         if (b->parent() && b->parent()->isSystem()) {
-            HBox* hb = new HBox(toSystem(b->parent()));
+            HBox* hb = new HBox(b->score());
             TRead::read(hb, e, ctx);
             //! TODO Looks like a bug.
             //! The HBox parent must be System
@@ -2215,7 +2219,7 @@ bool TRead::readProperties(Box* b, XmlReader& e, ReadContext& ctx)
         }
     } else if (tag == "VBox") {
         if (b->parent() && b->parent()->isSystem()) {
-            VBox* vb = new VBox(toSystem(b->parent()));
+            VBox* vb = new VBox(b->score());
             TRead::read(vb, e, ctx);
             //! TODO Looks like a bug.
             //! The VBox parent must be System
@@ -2236,6 +2240,7 @@ bool TRead::readProperties(MeasureBase* b, XmlReader& e, ReadContext& ctx)
     if (tag == "LayoutBreak") {
         LayoutBreak* lb = Factory::createLayoutBreak(b);
         TRead::read(lb, e, ctx);
+        lb->setTrack(0);
         bool doAdd = true;
         switch (lb->layoutBreakType()) {
         case LayoutBreakType::LINE:
@@ -2266,7 +2271,7 @@ bool TRead::readProperties(MeasureBase* b, XmlReader& e, ReadContext& ctx)
     } else if (tag == "StaffTypeChange") {
         StaffTypeChange* stc = Factory::createStaffTypeChange(b);
         stc->setTrack(ctx.track());
-        stc->setParent(b);
+        stc->setOwnershipParent(b);
         TRead::read(stc, e, ctx);
         b->add(stc);
     } else if (readItemProperties(b, e, ctx)) {
@@ -2443,7 +2448,7 @@ bool TRead::readProperties(Chord* ch, XmlReader& e, ReadContext& ctx)
         Note* note = Factory::createNote(ch);
         // the note needs to know the properties of the track it belongs to
         note->setTrack(ch->track());
-        note->setParent(ch);
+        note->setOwnershipParent(ch);
         TRead::read(note, e, ctx);
         ch->add(note);
     } else if (TRead::readProperties(toChordRest(ch), e, ctx)) {
@@ -2493,18 +2498,18 @@ bool TRead::readProperties(Chord* ch, XmlReader& e, ReadContext& ctx)
         Arpeggio* arpeggio = Factory::createArpeggio(ch);
         arpeggio->setTrack(ch->track());
         TRead::read(arpeggio, e, ctx);
-        arpeggio->setParent(ch);
+        arpeggio->setOwnershipParent(ch);
         ch->setArpeggio(arpeggio);
     } else if (tag == "Tremolo") { // compat
         compat::TremoloCompat tcompat;
         tcompat.parent = ch;
         TRead::read(&tcompat, e, ctx);
         if (tcompat.two) {
-            tcompat.two->setParent(ch);
+            tcompat.two->setOwnershipParent(ch);
             tcompat.two->setDurationType(ch->durationType());
             ch->setTremoloTwoChord(tcompat.two, false);
         } else if (tcompat.single) {
-            tcompat.single->setParent(ch);
+            tcompat.single->setOwnershipParent(ch);
             tcompat.single->setDurationType(ch->durationType());
             ch->setTremoloSingleChord(tcompat.single);
         } else {
@@ -2514,14 +2519,14 @@ bool TRead::readProperties(Chord* ch, XmlReader& e, ReadContext& ctx)
         TremoloSingleChord* trem = Factory::createTremoloSingleChord(ch);
         trem->setTrack(ch->track());
         TRead::read(trem, e, ctx);
-        trem->setParent(ch);
+        trem->setOwnershipParent(ch);
         trem->setDurationType(ch->durationType());
         ch->setTremoloSingleChord(trem);
     } else if (tag == "TremoloTwoChord") {
         TremoloTwoChord* trem = Factory::createTremoloTwoChord(ch);
         trem->setTrack(ch->track());
         TRead::read(trem, e, ctx);
-        trem->setParent(ch);
+        trem->setOwnershipParent(ch);
         trem->setDurationType(ch->durationType());
         ch->setTremoloTwoChord(trem, false);
     } else if (tag == "ChordLine") {
@@ -2837,7 +2842,7 @@ void TRead::read(GuitarBend* g, XmlReader& e, ReadContext& ctx)
         } else if (tag == "GuitarBendHold") {
             GuitarBendHold* hold = new GuitarBendHold(g);
             TRead::read(hold, e, ctx);
-            hold->setParent(g);
+            hold->setOwnershipParent(g);
             g->setHoldLine(hold);
         } else if (TRead::readProperty(g, tag, e, ctx, Pid::DIRECTION)) {
         } else if (TRead::readProperty(g, tag, e, ctx, Pid::BEND_SHOW_HOLD_LINE)) {
@@ -2867,7 +2872,7 @@ bool TRead::readProperties(GuitarBendSegment* g, const AsciiStringView& tag, Xml
         g->setVertexPointOff(xml.readPoint() * g->style().spatium());
     } else if (tag == "GuitarBendText") {
         GuitarBendText* bendText = new GuitarBendText(g);
-        bendText->setParent(g);
+        bendText->setOwnershipParent(g);
         read(toTextBase(bendText), xml, ctx);
         g->setBendText(bendText);
     } else {
@@ -3301,10 +3306,10 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
         TRead::read(s, e, ctx);
         if (s->sym() == SymId::noteheadParenthesisLeft) {
             n->setParenthesesMode(ParenthesesMode::BOTH);
-            ctx.score()->deleteLater(s);
+            s->deleteLater();
         } else if (s->sym() == SymId::noteheadParenthesisRight) {
             n->setParenthesesMode(ParenthesesMode::BOTH);
-            ctx.score()->deleteLater(s);
+            s->deleteLater();
         } else {
             n->add(s);
         }
@@ -3352,7 +3357,7 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
     } else if (tag == "LaissezVib") {
         LaissezVib* lv = Factory::createLaissezVib(n);
         TRead::read(lv, e, ctx);
-        lv->setParent(n);
+        lv->setOwnershipParent(n);
         n->add(lv);
     } else if (tag == "PartialTie") {
         PartialTie* pt = Factory::createPartialTie(n);
@@ -3449,7 +3454,7 @@ void TRead::read(Page* p, XmlReader& e, ReadContext& ctx)
 {
     while (e.readNextStartElement()) {
         if (e.name() == "System") {
-            System* system = Factory::createSystem(p->score()->dummy()->page());
+            System* system = Factory::createSystem(p->score());
             p->score()->systems().push_back(system);
             read(system, e, ctx);
         } else {
@@ -3684,13 +3689,12 @@ bool TRead::readProperties(SLine* l, XmlReader& e, ReadContext& ctx)
     if (tag == "ticks") {
         l->setTicks(Fraction::fromTicks(e.readInt()));
     } else if (tag == "Segment") {
-        LineSegment* ls = l->createLineSegment(l->score()->dummy()->system());
+        LineSegment* ls = l->createLineSegment();
         ls->setTrack(l->track());     // needed in read to get the right staff mag
-        TRead::read(ls, e, ctx);
         l->add(ls);
+        TRead::read(ls, e, ctx);
         ls->setVisible(l->visible());
     } else if (TRead::readProperty(l, tag, e, ctx, Pid::DIAGONAL)) {
-    } else if (TRead::readProperty(l, tag, e, ctx, Pid::ANCHOR)) {
     } else if (TRead::readProperty(l, tag, e, ctx, Pid::LINE_WIDTH)) {
     } else if (TRead::readProperty(l, tag, e, ctx, Pid::LINE_STYLE)) {
     } else if (TRead::readProperty(l, tag, e, ctx, Pid::DASH_LINE_LEN)) {
@@ -3742,11 +3746,11 @@ bool TRead::readProperties(SlurTie* s, XmlReader& e, ReadContext& ctx)
         const int idx = e.intAttribute("no", 0);
         const int n = int(s->spannerSegments().size());
         for (int i = n; i < idx; ++i) {
-            s->add(s->newSlurTieSegment(s->score()->dummy()->system()));
+            s->add(s->newSlurTieSegment());
         }
-        SlurTieSegment* sts = s->newSlurTieSegment(s->score()->dummy()->system());
-        TRead::read(sts, e, ctx);
+        SlurTieSegment* sts = s->newSlurTieSegment();
         s->add(sts);
+        TRead::read(sts, e, ctx);
     } else if (!readProperties(toSpanner(s), e, ctx)) {
         return false;
     }
@@ -3814,7 +3818,7 @@ void TRead::read(StaffType* t, XmlReader& e, ReadContext&)
     while (e.readNextStartElement()) {
         const AsciiStringView tag(e.name());
         if (tag == "name") {
-            t->setXmlName(e.readText());
+            t->setType(TConv::fromXml(e.readAsciiText(), StaffTypes::STANDARD));
         } else if (tag == "lines") {
             t->setLines(e.readInt());
         } else if (tag == "lineDistance") {
@@ -3951,11 +3955,11 @@ bool TRead::readProperties(Staff* s, XmlReader& e, ReadContext& ctx, StaffHideMo
     } else if (tag == "bracket") {
         int col = e.intAttribute("col", -1);
         if (col == -1) {
-            col = static_cast<int>(s->brackets().size());
+            col = static_cast<int>(ctx.score()->brackets(s->idx()).size());
         }
-        s->setBracketType(col, BracketType(e.intAttribute("type", -1)));
-        s->setBracketSpan(col, e.intAttribute("span", 0));
-        s->setBracketVisible(col, static_cast<bool>(e.intAttribute("visible", 1)));
+        EditStaffBrackets::setBracketType(ctx.score(), s->idx(), col, BracketType(e.intAttribute("type", -1)));
+        EditStaffBrackets::setBracketSpan(ctx.score(), s->idx(), col, e.intAttribute("span", 0));
+        EditStaffBrackets::setBracketVisible(ctx.score(), s->idx(), col, static_cast<bool>(e.intAttribute("visible", 1)));
         e.readNext();
     } else if (tag == "barLineSpan") {
         const int barLineSpan = e.readInt();
@@ -4425,7 +4429,7 @@ void TRead::read(Trill* t, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Ornament") {
             Ornament* ornament = t->ornament();
             if (!ornament) {
-                ornament = Factory::createOrnament(toChordRest(t->parentItem(true)));
+                ornament = Factory::createOrnament(toChordRest(t->ownershipParent()));
                 t->setOrnament(ornament);
             }
             ornament->setSymId(Ornament::fromTrillType(t->trillType()));
@@ -4434,7 +4438,7 @@ void TRead::read(Trill* t, XmlReader& e, ReadContext& ctx)
         } else if (tag == "Accidental") {
             Accidental* accidental = Factory::createAccidental(t);
             TRead::read(accidental, e, ctx);
-            accidental->setParent(t);
+            accidental->setOwnershipParent(t);
             t->setAccidental(accidental);
             if (t->ornament()) {
                 t->ornament()->setTrillOldCompatAccidental(accidental);
@@ -4482,12 +4486,6 @@ bool TRead::readProperties(Volta* v, XmlReader& e, ReadContext& ctx)
 {
     if (!readProperties(toTextLineBase(v), e, ctx)) {
         return false;
-    }
-
-    if (v->anchor() != Volta::VOLTA_ANCHOR) {
-        // Volta strictly assumes that its anchor is measure, so don't let old scores override this.
-        LOGW("Correcting volta anchor type from %d to %d", int(v->anchor()), int(Volta::VOLTA_ANCHOR));
-        v->setAnchor(Volta::VOLTA_ANCHOR);
     }
 
     return true;
@@ -4539,5 +4537,5 @@ void TRead::readSystemLock(Score* score, XmlReader& e)
         return;
     }
 
-    score->addSystemLock(new SystemLock(startMeas, endMeas));
+    score->addSystemLock(new RangeLock(startMeas, endMeas));
 }

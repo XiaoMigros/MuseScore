@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -143,7 +143,7 @@ public:
     bool startsWithParenthesis() const;
 
     // specific API
-    const FiguredBass* figuredBass() const { return (FiguredBass*)(explicitParent()); }
+    const FiguredBass* figuredBass() const { return (FiguredBass*)(ownershipParent()); }
     bool parse(String& text);
 
     // getters / setters
@@ -280,7 +280,7 @@ public:
 
     bool onNote() const { return m_onNote; }
     void setOnNote(bool val) { m_onNote = val; }
-    Segment* segment() const { return (Segment*)(explicitParent()); }
+    Segment* segment() const { return (Segment*)(ownershipParent()); }
     const Fraction& ticks() const { return m_ticks; }
     void setTicks(const Fraction& v) { m_ticks = v; }
 

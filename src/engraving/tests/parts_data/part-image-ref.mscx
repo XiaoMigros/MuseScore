@@ -11,6 +11,8 @@
       <dividerRightAlignToSystemBarline>0</dividerRightAlignToSystemBarline>
       <scaleRythmicSpacingForSmallNotes>0</scaleRythmicSpacingForSmallNotes>
       <verticallyAlignChordSymbols>0</verticallyAlignChordSymbols>
+      <maskSlurs>0</maskSlurs>
+      <maskTies>0</maskTies>
       <changesBeforeBarlineRepeats>0</changesBeforeBarlineRepeats>
       <changesBeforeBarlineOtherJumps>0</changesBeforeBarlineOtherJumps>
       <showCourtesiesRepeats>0</showCourtesiesRepeats>
@@ -35,10 +37,11 @@
     <metaTag name="workNumber"></metaTag>
     <metaTag name="workTitle">testpart1</metaTag>
     <Part id="1">
+      <eid>6B_6B</eid>
       <Staff>
         <eid>C_C</eid>
         <StaffType group="pitched">
-          <name>Standard</name>
+          <name>stdNormal</name>
           </StaffType>
         </Staff>
       <Instrument id="alto">
@@ -74,10 +77,11 @@
         </Instrument>
       </Part>
     <Part id="2">
+      <eid>7B_7B</eid>
       <Staff>
         <eid>D_D</eid>
         <StaffType group="pitched">
-          <name>Standard</name>
+          <name>stdNormal</name>
           </StaffType>
         </Staff>
       <Instrument id="tenor">
@@ -150,7 +154,7 @@
               <Image>
                 <Image>
                   <eid>M_M</eid>
-                  <z>9399</z>
+                  <z>11399</z>
                   <path>71b2e9f575296b78c22ba721cd71f6e5.png</path>
                   <size w="32.12" h="32.16"/>
                   </Image>

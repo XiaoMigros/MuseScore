@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -741,8 +741,9 @@ void PowerTab::fillMeasure(tBeatList& elist, Measure* measure, int staff, std::v
 
         if (beat.tuplet && !tuple) {
             tuple = Factory::createTuplet(measure);
-            tuple->setParent(measure);
+            tuple->setOwnershipParent(measure);
             tuple->setTrack(cr->track());
+            tuple->setTick(cr->tick());
             tuple->setBaseLen(l);
             tuple->setRatio(Fraction(3, 2));
             tuple->setTicks(l * tuple->ratio().denominator());
@@ -837,13 +838,12 @@ void PowerTab::addToScore(ptSection& sec)
         tt->setXmlText(String(u"<sym>metNoteQuarterUp</sym> = %1").arg(sec.tempo));
         tt->setTrack(0);
         segment->add(tt);
-        score->setTempo(measure->tick(), tt->tempo());
     }
     if (!sec.partName.empty() && lastPart != sec.partMarker) {
         lastPart = sec.partMarker;
         auto seg = measure->getSegment(SegmentType::ChordRest, measure->tick());
         RehearsalMark* t = new RehearsalMark(seg);
-        t->setFrameType(FrameType::SQUARE);
+        t->setFrameType(FrameType::RECTANGLE);
         t->setPlainText(String(Char::fromAscii(sec.partMarker)));
         t->setTrack(0);
         seg->add(t);
@@ -1164,7 +1164,7 @@ std::string crTS(int strings, int tuning[])
 
 Measure* PowerTab::createMeasure(ptBar* bar, const Fraction& tick)
 {
-    auto measure = Factory::createMeasure(score->dummy()->system());
+    auto measure = Factory::createMeasure(score);
     Fraction nts(bar->numerator, bar->denominator);
 
     measure->setTick(tick);
@@ -1267,12 +1267,12 @@ Err PowerTab::read()
 
     MeasureBase* m;
     if (!score->measures()->first()) {
-        m = Factory::createTitleVBox(score->dummy()->system());
+        m = Factory::createTitleVBox(score);
         score->measures()->append(m);
     } else {
         m = score->measures()->first();
         if (!m->isVBox()) {
-            MeasureBase* mb = Factory::createTitleVBox(score->dummy()->system());
+            MeasureBase* mb = Factory::createTitleVBox(score);
             score->addMeasure(mb, m);
             m = mb;
         }

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,7 +26,11 @@
 
 #include "containers.h"
 
+#include "iengravingconfiguration.h" // IWYU pragma: keep
+
 #include "../editing/mscoreview.h"
+#include "../editing/navigation.h"
+#include "../rendering/iscorerenderer.h"
 
 #include "anchors.h"
 #include "barline.h"
@@ -48,13 +52,8 @@ using namespace mu;
 using namespace mu::engraving;
 
 namespace mu::engraving {
-LineSegment::LineSegment(const ElementType& type, Spanner* sp, System* parent, ElementFlags f)
-    : SpannerSegment(type, sp, parent, f)
-{
-}
-
-LineSegment::LineSegment(const ElementType& type, System* parent, ElementFlags f)
-    : SpannerSegment(type, parent, f)
+LineSegment::LineSegment(const ElementType& type, SLine* sp, ElementFlags f)
+    : SpannerSegment(type, sp, f)
 {
 }
 
@@ -298,16 +297,16 @@ bool LineSegment::edit(EditData& ed)
             break;
         case Key_Up:
             if (moveStart) {
-                note1 = toNote(score()->upAlt(note1));
+                note1 = toNote(Navigation::chordNoteAbove(score(), note1));
             } else if (moveEnd) {
-                note2 = toNote(score()->upAlt(note2));
+                note2 = toNote(Navigation::chordNoteAbove(score(), note2));
             }
             break;
         case Key_Down:
             if (moveStart) {
-                note1 = toNote(score()->downAlt(note1));
+                note1 = toNote(Navigation::chordNoteBelow(score(), note1));
             } else if (moveEnd) {
-                note2 = toNote(score()->downAlt(note2));
+                note2 = toNote(Navigation::chordNoteBelow(score(), note2));
             }
             break;
         default:
@@ -332,7 +331,7 @@ bool LineSegment::edit(EditData& ed)
     }
     break;
     case Spanner::Anchor::MEASURE:
-    case Spanner::Anchor::CHORD:
+    case Spanner::Anchor::CHORDREST:
     {
         Measure* m1 = l->startMeasure();
         Measure* m2 = l->endMeasure();
@@ -713,11 +712,6 @@ void LineSegment::dragGrip(EditData& ed)
     case Grip::START:         // Resize the begin of element (left grip)
         setOffset(offset() + deltaResize);
         m_offset2 -= deltaResize;
-
-        if (isStyled(Pid::OFFSET)) {
-            setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
-        }
-
         rebaseAnchors(ed, ed.curGrip);
         break;
     case Grip::END:         // Resize the end of element (right grip)
@@ -729,9 +723,6 @@ void LineSegment::dragGrip(EditData& ed)
         const PointF deltaMove(ed.evtDelta);
         setOffset(offset() + deltaMove);
         setOffsetChanged(true);
-        if (isStyled(Pid::OFFSET)) {
-            setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
-        }
         rebaseAnchors(ed, ed.curGrip);
     }
     break;
@@ -819,11 +810,6 @@ RectF LineSegment::drag(EditData& ed)
 {
     setOffset(offset() + ed.evtDelta);
     setOffsetChanged(true);
-
-    if (isStyled(Pid::OFFSET)) {
-        setPropertyFlags(Pid::OFFSET, PropertyFlags::UNSTYLED);
-    }
-
     rebaseAnchors(ed, Grip::MIDDLE);
 
     return canvasBoundingRect();
@@ -921,14 +907,14 @@ PointF SLine::linePos(Grip grip, System** system) const
         }
         return note->pagePos() - (*system)->pagePos();
     }
-    case Spanner::Anchor::CHORD:
+    case Spanner::Anchor::CHORDREST:
     case Spanner::Anchor::SEGMENT:
     {
         Segment* segment = start ? startSegment() : endSegment();
         if (!segment) {
             return PointF();
         }
-        if (anchor() == Spanner::Anchor::CHORD && !segment->isChordRestType()) {
+        if (anchor() == Spanner::Anchor::CHORDREST && !segment->isChordRestType()) {
             return PointF();
         }
         if (!start) {
@@ -969,7 +955,7 @@ PointF SLine::linePos(Grip grip, System** system) const
 void SLine::setLen(double l)
 {
     if (spannerSegments().empty()) {
-        add(createLineSegment(score()->dummy()->system()));
+        add(createLineSegment());
     }
     LineSegment* s = frontSegment();
     s->setPos(PointF());
@@ -1125,7 +1111,7 @@ Note* SLine::guessFinalNote(Note* startNote)
         }
     }
 
-    if (!chord->explicitParent()->isSegment()) {
+    if (!chord->ownershipParent()->isSegment()) {
         return 0;
     }
 

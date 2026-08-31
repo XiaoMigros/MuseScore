@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -113,6 +113,8 @@ public:
     MOCK_METHOD(void, setShouldDestinationFolderBeOpenedOnExport, (bool), (override));
 
     MOCK_METHOD(QUrl, supportForumUrl, (), (const, override));
+
+    MOCK_METHOD(QUrl, dotComBugReportUrl, (), (const, override));
 
     MOCK_METHOD(bool, openDetailedProjectUploadedDialog, (), (const, override));
     MOCK_METHOD(void, setOpenDetailedProjectUploadedDialog, (bool), (override));

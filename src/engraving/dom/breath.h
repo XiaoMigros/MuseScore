@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -59,7 +59,7 @@ public:
     double pause() const { return m_pause; }
     void setPause(double v) { m_pause = v; }
 
-    Segment* segment() const { return (Segment*)explicitParent(); }
+    Segment* segment() const { return (Segment*)ownershipParent(); }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -75,10 +75,6 @@ public:
     bool isCaesura() const;
 
     static const std::vector<BreathType> BREATH_LIST;
-
-protected:
-    void added() override;
-    void removed() override;
 
 private:
 

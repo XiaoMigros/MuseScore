@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -82,7 +82,8 @@ private:
     void updateAddSeparatorAvailability();
     void setIsAddSeparatorAvailable(bool isAddSeparatorAvailable);
 
-    NoteInputBarCustomiseItem* makeItem(const muse::ui::UiAction& action, bool checked);
+    NoteInputBarCustomiseItem* makeServiceItem(const std::string& intent, bool checked);
+    NoteInputBarCustomiseItem* makeActionItem(const std::string& intent, bool checked);
     NoteInputBarCustomiseItem* makeSeparatorItem();
 
     void saveActions();

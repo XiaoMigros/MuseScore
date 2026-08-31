@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,21 +21,42 @@
  */
 #include "playbacktoolbarmodel.h"
 
+#include <vector>
+
+#include "global/containers.h"
 #include "types/translatablestring.h"
 
 #include "ui/view/musicalsymbolcodes.h"
 #include "playback/playbacktypes.h"
-#include "playback/internal/playbackuiactions.h"
+#include "playback/playbackcommands.h"
+
+#include "ui/toolconfig.h"
 
 using namespace mu::playback;
-using namespace mu::notation;
+using namespace mu::engraving;
 using namespace muse;
 using namespace muse::actions;
 using namespace muse::ui;
 using namespace muse::uicomponents;
 using namespace muse::audio;
 
-static const ActionCode PLAY_ACTION_CODE("play");
+static const QString PLAY_TOGGLE_ID("play-toggle");
+
+static const ToolConfig& defaultPlaybackToolConfig()
+{
+    static ToolConfig config;
+    if (!config.isValid()) {
+        config.items = {
+            { REWIND_COMMAND, true },
+            { "play-toggle", true }, // virtual code
+            { LOOP_TOGGLE_COMMAND, true },
+            { LOOP_IN_COMMAND, true },
+            { LOOP_OUT_COMMAND, true },
+            { METRONOME_TOGGLE_COMMAND, true },
+        };
+    }
+    return config;
+}
 
 PlaybackToolBarModel::PlaybackToolBarModel(QObject* parent)
     : AbstractMenuModel(parent)
@@ -54,15 +75,15 @@ void PlaybackToolBarModel::load()
 
 void PlaybackToolBarModel::setupConnections()
 {
-    playbackController()->isPlayAllowedChanged().onNotify(this, [this]() {
+    playbackController()->isPlayAllowedChanged().onReceive(this, [this](bool) {
         emit isPlayAllowedChanged();
     });
 
-    playbackController()->isPlayingChanged().onNotify(this, [this]() {
-        onActionsStateChanges({ PLAY_ACTION_CODE });
+    globalContext()->playbackState()->playbackStatusChanged().onReceive(this, [this](audio::PlaybackStatus) {
+        updatePlayItem();
     });
 
-    playbackController()->currentPlaybackPositionChanged().onReceive(this, [this](secs_t secs, midi::tick_t) {
+    globalContext()->playbackState()->playbackPositionChanged().onReceive(this, [this](secs_t secs) {
         updatePlayPosition(secs);
     });
 
@@ -80,46 +101,39 @@ void PlaybackToolBarModel::setupConnections()
 void PlaybackToolBarModel::updateActions()
 {
     MenuItemList result;
-    MenuItemList settingsItems;
-
-    for (const UiAction& action : PlaybackUiActions::midiInputActions()) {
-        settingsItems << makeMenuItem(action.code);
-    }
-
-    settingsItems << makeInputPitchMenu();
-    settingsItems << makeSeparator();
-
-    for (const UiAction& action : PlaybackUiActions::settingsActions()) {
-        settingsItems << makeMenuItem(action.code);
-    }
+    MenuItemList settingsItems = {
+        makeMenuItem(MIDI_TOGGLE_COMMAND),
+        makeInputPitchMenu(),
+        makeSeparator(),
+        makeMenuItem(REPEATS_TOGGLE_COMMAND),
+        makeMenuItem(CHORDSYMBOLS_TOGGLE_COMMAND),
+        makeMenuItem(HEAR_PLAYBACK_WHEN_EDITING_TOGGLE_COMMAND),
+        makeMenuItem(PAN_TOGGLE_COMMAND),
+        makeMenuItem(COUNTIN_TOGGLE_COMMAND),
+    };
 
     if (!m_isToolbarFloating) {
         settingsItems << makeSeparator();
     }
 
     //! NOTE At the moment no customization ability
-    ToolConfig config = PlaybackUiActions::defaultPlaybackToolConfig();
+    ToolConfig config = defaultPlaybackToolConfig();
     for (const ToolConfig::Item& item : config.items) {
-        if (isAdditionalAction(item.action) && !m_isToolbarFloating) {
-            //! NOTE In this case, we want to see the actions' description instead of the title
-            settingsItems << makeMenuItem(item.action);
+        if (item.intent == PLAY_TOGGLE_ID) {
+            result << makePlayItem();
         } else {
-            MenuItem* menuItem = makeMenuItem(item.action);
-
-            if (item.action == PLAY_ACTION_CODE) {
-                menuItem->setAction(playAction());
+            const rcommand::Command command(item.intent);
+            if (isAdditionalCommand(command) && !m_isToolbarFloating) {
+                //! NOTE In this case, we want to see the actions' description instead of the title
+                settingsItems << makeMenuItem(command);
+            } else {
+                result << makeMenuItem(command);
             }
-
-            result << menuItem;
         }
     }
 
     MenuItem* settingsItem = makeMenu(TranslatableString("action", "Playback settings"), settingsItems);
-
-    UiAction action = settingsItem->action();
-    action.iconCode = IconCode::Code::SETTINGS_COG;
-    settingsItem->setAction(action);
-
+    settingsItem->setIcon(ui::IconCode::Code::SETTINGS_COG);
     result << settingsItem;
 
     setItems(result);
@@ -127,36 +141,24 @@ void PlaybackToolBarModel::updateActions()
 
 MenuItem* PlaybackToolBarModel::makeInputPitchMenu()
 {
-    MenuItemList items;
-    items.reserve(PlaybackUiActions::midiInputPitchActions().size());
+    MenuItemList items = {
+        makeMenuItem(MIDI_INPUT_WRITTEN_PITCH_COMMAND),
+        makeMenuItem(MIDI_INPUT_SOUNDING_PITCH_COMMAND),
+    };
 
-    for (const UiAction& action : PlaybackUiActions::midiInputPitchActions()) {
-        items << makeMenuItem(action.code);
-    }
-
-    MenuItem* menu = makeMenu(muse::TranslatableString("notation", "MIDI input pitch"), items);
-    UiAction action = menu->action();
-    action.iconCode = IconCode::Code::MUSIC_NOTES;
-    menu->setAction(action);
-
+    MenuItem* menu = makeMenu(muse::TranslatableString("playback", "MIDI input pitch"), items);
+    menu->setIcon(ui::IconCode::Code::MUSIC_NOTES);
     return menu;
 }
 
-void PlaybackToolBarModel::onActionsStateChanges(const ActionCodeList& codes)
+bool PlaybackToolBarModel::isAdditionalCommand(const muse::rcommand::Command& command) const
 {
-    AbstractMenuModel::onActionsStateChanges(codes);
+    static const std::vector<muse::rcommand::Command> additionalCommands = {
+        LOOP_IN_COMMAND,
+        LOOP_OUT_COMMAND,
+    };
 
-    if (isPlayAllowed() && containsAction(codes, PLAY_ACTION_CODE)) {
-        MenuItem& item = findItem(PLAY_ACTION_CODE);
-        item.setAction(playAction());
-    }
-}
-
-bool PlaybackToolBarModel::isAdditionalAction(const ActionCode& code) const
-{
-    return muse::contains_if(PlaybackUiActions::loopBoundaryActions(), [code](const UiAction& a) {
-        return a.code == code;
-    });
+    return muse::contains(additionalCommands, command);
 }
 
 bool PlaybackToolBarModel::isPlayAllowed() const
@@ -220,14 +222,22 @@ MeasureBeat PlaybackToolBarModel::measureBeat() const
     return playbackController()->currentBeat();
 }
 
-UiAction PlaybackToolBarModel::playAction() const
+muse::uicomponents::MenuItem* PlaybackToolBarModel::makePlayItem()
 {
-    UiAction action = uiActionsRegister()->action(PLAY_ACTION_CODE);
+    rcommand::Command command = globalContext()->playbackState()->isPlaying() ? PAUSE_COMMAND : PLAY_COMMAND;
+    MenuItem* item = makeMenuItem(command);
+    item->setId(PLAY_TOGGLE_ID);
+    return item;
+}
 
-    bool isPlaying = playbackController()->isPlaying();
-    action.iconCode =  isPlaying ? IconCode::Code::PAUSE : IconCode::Code::PLAY;
-
-    return action;
+void PlaybackToolBarModel::updatePlayItem()
+{
+    MenuItem& item = findItem(PLAY_TOGGLE_ID);
+    if (item.isValid()) {
+        rcommand::Command command = globalContext()->playbackState()->isPlaying() ? PAUSE_COMMAND : PLAY_COMMAND;
+        item.setCommandInfo(commandsRegister()->commandInfo(command));
+        item.setId(PLAY_TOGGLE_ID);
+    }
 }
 
 void PlaybackToolBarModel::updatePlayPosition(secs_t secs)
@@ -246,7 +256,7 @@ void PlaybackToolBarModel::rewind(secs_t secs)
         return;
     }
 
-    dispatch("rewind", ActionData::make_arg1<secs_t>(secs));
+    dispatch(rcommand::make_query(REWIND_COMMAND, { { "position", Val(secs) } }));
 }
 
 void PlaybackToolBarModel::rewindToBeat(const MeasureBeat& beat)
@@ -321,7 +331,7 @@ QVariant PlaybackToolBarModel::tempo() const
         { DurationType::V_16TH, MusicalSymbolCodes::Code::SEMIQUAVER },
     };
 
-    const Tempo& tempo = playbackController()->currentTempo();
+    const notation::Tempo& tempo = playbackController()->currentTempo();
     const MusicalSymbolCodes::Code noteIcon = muse::value(DURATION_TO_ICON, tempo.duration,
                                                           MusicalSymbolCodes::Code::CROTCHET);
 

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,7 +30,7 @@
 #include "dom/segment.h"
 #include "dom/chord.h"
 #include "dom/note.h"
-#include "dom/bracketItem.h"
+#include "dom/bracketitem.h"
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
 #include "accessibility/accessibleitem.h"
@@ -63,32 +63,35 @@ void DummyElement::init()
 #endif
 
     m_root = new RootItem(score());
-    m_root->setParent(this);
+    m_root->setOwnershipParent(this);
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
     m_root->setupAccessible();
 #endif
 
-    m_page = Factory::createPage(m_root);
-    m_page->setParent(m_root);
+    // the dummy's chain is a fake hierarchy, so it deliberately bypasses the typed setters
+    m_page = Factory::createPage(score());
+    static_cast<EngravingItem*>(m_page)->setOwnershipParent(m_root);
 
-    m_system = Factory::createSystem(m_page);
-    m_system->setParent(m_page);
+    m_system = Factory::createSystem(score());
+    static_cast<EngravingItem*>(m_system)->setOwnershipParent(m_page);
+    m_system->setPage(m_page);
 
-    m_measure = Factory::createMeasure(m_system);
-    m_measure->setParent(m_system);
+    m_measure = Factory::createMeasure(score());
+    static_cast<EngravingItem*>(m_measure)->setOwnershipParent(m_system);
+    m_measure->setSystem(m_system);
 
     m_segment = Factory::createSegment(m_measure);
-    m_segment->setParent(m_measure);
+    m_segment->setOwnershipParent(m_measure);
 
     m_chord = Factory::createChord(m_segment);
-    m_chord->setParent(m_segment);
+    m_chord->setOwnershipParent(m_segment);
 
     m_note = Factory::createNote(m_chord);
-    m_note->setParent(m_chord);
+    m_note->setOwnershipParent(m_chord);
 
     m_bracketItem = Factory::createBracketItem(m_system);
-    m_bracketItem->setParent(m_system);
+    m_bracketItem->setOwnershipParent(m_system);
 }
 
 RootItem* DummyElement::rootItem()

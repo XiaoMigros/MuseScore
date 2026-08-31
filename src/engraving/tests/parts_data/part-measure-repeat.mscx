@@ -30,6 +30,7 @@
       <barWidth>0.18</barWidth>
       <doubleBarWidth>0.18</doubleBarWidth>
       <endBarWidth>0.55</endBarWidth>
+      <dashBarWidth>0.18</dashBarWidth>
       <doubleBarDistance>0.37</doubleBarDistance>
       <endBarDistance>0.37</endBarDistance>
       <repeatBarlineDotSeparation>0.37</repeatBarlineDotSeparation>
@@ -91,6 +92,8 @@
       <slurMidWidth>0.21</slurMidWidth>
       <tieEndWidth>0.05</tieEndWidth>
       <tieMidWidth>0.21</tieMidWidth>
+      <maskSlurs>1</maskSlurs>
+      <maskTies>1</maskTies>
       <musicalSymbolFont>Leland</musicalSymbolFont>
       <musicalTextFont>Leland Text</musicalTextFont>
       <showHeader>1</showHeader>
@@ -254,10 +257,11 @@
     <metaTag name="workNumber"></metaTag>
     <metaTag name="workTitle">testpart1</metaTag>
     <Part id="1">
+      <eid>+B_+B</eid>
       <Staff>
         <eid>C_C</eid>
         <StaffType group="pitched">
-          <name>Standard</name>
+          <name>stdNormal</name>
           </StaffType>
         </Staff>
       <Instrument id="alto">
@@ -293,10 +297,11 @@
         </Instrument>
       </Part>
     <Part id="2">
+      <eid>/B_/B</eid>
       <Staff>
         <eid>D_D</eid>
         <StaffType group="pitched">
-          <name>Standard</name>
+          <name>stdNormal</name>
           </StaffType>
         </Staff>
       <Instrument id="tenor">

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -64,7 +64,7 @@ public:
     int subtype() const override { return int(m_markerType); }
     TranslatableString subtypeUserName() const override;
 
-    Measure* measure() const { return (Measure*)explicitParent(); }
+    Measure* measure() const { return (Measure*)ownershipParent(); }
 
     String label() const { return m_label; }
     void setLabel(const String& s) { m_label = s; }

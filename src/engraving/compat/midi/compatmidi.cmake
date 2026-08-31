@@ -4,7 +4,7 @@
 # MuseScore Studio
 # Music Composition & Notation
 #
-# Copyright (C) 2021 MuseScore Limited
+# Copyright (C) 2021 MuseScore Limited and others
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -28,6 +28,8 @@ set(COMPAT_MIDI_SRC
     ${CMAKE_CURRENT_LIST_DIR}/compatmidirenderinternal.h
     ${CMAKE_CURRENT_LIST_DIR}/compatmidirender.cpp
     ${CMAKE_CURRENT_LIST_DIR}/compatmidirender.h
+    ${CMAKE_CURRENT_LIST_DIR}/easeinout.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/easeinout.h
     ${CMAKE_CURRENT_LIST_DIR}/pausemap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/pausemap.h
     ${CMAKE_CURRENT_LIST_DIR}/pitchwheelrenderer.cpp

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,7 +33,7 @@ using namespace muse::draw;
 
 void TextLayout::layoutBaseTextBase(const TextBase* item, TextBase::LayoutData* ldata)
 {
-    IF_ASSERT_FAILED(item->explicitParent()) {
+    IF_ASSERT_FAILED(item->ownershipParent()) {
         return;
     }
 
@@ -53,8 +53,10 @@ void TextLayout::layoutBaseTextBase(TextBase* item, LayoutContext&)
 
 void TextLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData* ldata)
 {
-    if (item->explicitParent() && item->layoutToParentWidth()) {
-        LD_CONDITION(item->parentItem()->ldata()->isSetBbox());
+    TRACEFUNC;
+
+    if (item->layoutParent() && item->layoutToParentWidth()) {
+        LD_CONDITION(item->layoutParent()->ldata()->isSetBbox());
     }
 
     if (ldata->layoutInvalid) {
@@ -80,14 +82,15 @@ void TextLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData*
 
     double yoff = 0;
     double h    = 0;
-    if (item->explicitParent()) {
+    const EngravingItem* parent = item->layoutParent();
+    if (parent) {
         if (item->layoutToParentWidth()) {
-            if (item->explicitParent()->isTBox()) {
+            if (parent->isTBox()) {
                 // hack: vertical alignment is always TOP
                 const_cast<TextBase*>(item)->setAlign({ item->align().horizontal, AlignV::TOP });
-            } else if (item->explicitParent()->isBox()) {
+            } else if (parent->isBox()) {
                 // consider inner margins of frame
-                Box* b = toBox(item->explicitParent());
+                const Box* b = toBox(parent);
                 yoff = b->topMargin() * DPMM;
 
                 if (b->height() < bb.bottom()) {
@@ -95,13 +98,13 @@ void TextLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData*
                 } else {
                     h  = b->height() - yoff - b->bottomMargin() * DPMM;
                 }
-            } else if (item->explicitParent()->isPage()) {
-                Page* p = toPage(item->explicitParent());
+            } else if (parent->isPage()) {
+                const Page* p = toPage(parent);
                 h = p->height() - p->tm() - p->bm();
                 yoff = p->tm();
-            } else if (item->explicitParent()->isMeasure()) {
+            } else if (parent->isMeasure()) {
             } else {
-                h  = item->parentItem()->height();
+                h  = parent->height();
             }
         }
     } else {
@@ -129,7 +132,7 @@ void TextLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData*
         item->layoutFrame(ldata);
     }
 
-    if (!item->isDynamic() && !(item->explicitParent() && item->parent()->isBox())) {
+    if (!item->isDynamic() && !(parent && parent->isBox())) {
         computeTextHighResShape(item, ldata);
     }
 
@@ -139,6 +142,9 @@ void TextLayout::layoutBaseTextBase1(const TextBase* item, TextBase::LayoutData*
         ldata->setShape(shape.transform(t));
         ldata->highResShape.mut_value().transform(t);
     }
+
+    PointF defaultPos = item->defaultPos();
+    ldata->move(defaultPos);
 }
 
 void TextLayout::layoutBaseTextBase1(TextBase* item, const LayoutContext&)
@@ -167,7 +173,7 @@ void TextLayout::computeTextHighResShape(const TextBase* item, TextBase::LayoutD
                 }
                 RectF characterBoundingRect = fontMetrics.tightBoundingRect(text);
                 characterBoundingRect.translate(x, y);
-                shape.add(characterBoundingRect);
+                shape.add(characterBoundingRect, item);
                 if (i + 1 < textSize) {
                     x += fontMetrics.horizontalAdvance(text);
                 }
@@ -182,7 +188,7 @@ void TextLayout::textHorizontalLayout(const TextBase* item, Shape& shape, double
 {
     double leftMargin = 0.0;
     double layoutWidth = 0;
-    EngravingItem* parent = item->parentItem();
+    EngravingItem* parent = item->layoutParent();
     if (parent && item->layoutToParentWidth()) {
         layoutWidth = parent->width();
         switch (parent->type()) {

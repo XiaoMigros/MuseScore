@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -39,6 +39,7 @@
 #include "engraving/dom/keysig.h"
 #include "engraving/dom/masterscore.h"
 #include "engraving/dom/mscore.h"
+#include "engraving/rendering/iscorerenderer.h"
 #include "engraving/rw/rwregister.h"
 #include "engraving/style/defaultstyle.h"
 #include "engraving/types/symnames.h"
@@ -135,8 +136,7 @@ void KeyCanvas::paintEvent(QPaintEvent*)
     rendering::PaintOptions opt;
     opt.invertColors = notationConfiguration()->shouldInvertScore();
 
-    muse::draw::Pen pen(opt.invertColors ? engravingConfiguration()->scoreInversionColor()
-                        : engravingConfiguration()->defaultColor());
+    muse::draw::Pen pen(engravingConfiguration()->displayedDefaultColor(opt.invertColors));
     pen.setWidthF(engraving::DefaultStyle::defaultStyle().styleS(
                       Sid::staffLineWidth).val() * paletteScoreSpatium);
     painter.setPen(pen);
@@ -236,7 +236,6 @@ void KeyCanvas::dragEnterEvent(QDragEnterEvent* event)
 
         event->acceptProposedAction();
         dragElement = static_cast<Accidental*>(Factory::createItem(type, paletteScoreProvider()->paletteScore()->dummy()));
-        dragElement->resetExplicitParent();
 
         rw::RWRegister::reader()->readItem(dragElement, e);
         engravingRender()->layoutItem(dragElement);
@@ -324,7 +323,7 @@ KeyEditor::KeyEditor(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 0);
     keySigframe->setLayout(layout);
 
-    m_keySigPaletteWidget = new PaletteWidget(this);
+    m_keySigPaletteWidget = new PaletteWidget(this, true /*setIocContext*/);
     m_keySigPaletteWidget->setPalette(PaletteCreator(iocContext()).newKeySigPalette());
     m_keySigPaletteWidget->setReadOnly(false);
 
@@ -342,7 +341,7 @@ KeyEditor::KeyEditor(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 0);
     accidentalsFrame->setLayout(layout);
 
-    m_accidentalsPaletteWidget = new PaletteWidget(this);
+    m_accidentalsPaletteWidget = new PaletteWidget(this, true /*setIocContext*/);
     m_accidentalsPaletteWidget->setPalette(PaletteCreator(iocContext()).newAccidentalsPalette());
     qreal adj = m_accidentalsPaletteWidget->mag();
     m_accidentalsPaletteWidget->setGridSize(m_accidentalsPaletteWidget->gridWidth() / adj, m_accidentalsPaletteWidget->gridHeight() / adj);

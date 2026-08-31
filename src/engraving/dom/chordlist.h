@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,18 +20,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MU_ENGRAVING_CHORDLIST_H
-#define MU_ENGRAVING_CHORDLIST_H
+#pragma once
 
 #include <map>
 
 #include "global/allocator.h"
 #include "global/types/string.h"
-#include "global/containers.h"
-#include "global/io/iodevice.h"
 
-#include "modularity/ioc.h"
-#include "../iengravingconfiguration.h"
+#include "../types/types.h"
+
+namespace muse::io {
+class IODevice;
+}
 
 namespace mu::engraving::compat {
 class ReadChordListHook;
@@ -493,7 +493,7 @@ public:
     void unload();
 
     const ChordDescription* description(int id) const;
-    ChordSymbol symbol(const String& s) const { return muse::value(m_symbols, s); }
+    ChordSymbol symbol(const String& s) const;
     ChordToken token(const String& s, ChordTokenClass) const;
 
     void setCustomChordList(bool t) { m_customChordList = t; }
@@ -518,5 +518,4 @@ private:
 
     bool m_customChordList = false;         // if true, chordlist will be saved as part of score
 };
-} // namespace mu::engraving
-#endif
+}

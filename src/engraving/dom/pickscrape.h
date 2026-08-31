@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,7 +38,7 @@ class PickScrapeSegment final : public TextLineBaseSegment
     DECLARE_CLASSOF(ElementType::PICK_SCRAPE_SEGMENT)
 
 public:
-    PickScrapeSegment(PickScrape* sp, System* parent);
+    PickScrapeSegment(PickScrape* sp);
 
     PickScrapeSegment* clone() const override { return new PickScrapeSegment(*this); }
 
@@ -61,10 +61,15 @@ public:
 
     PickScrape* clone() const override { return new PickScrape(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
+    LineSegment* createLineSegment() override;
 
     PropertyValue propertyDefault(Pid propertyId) const override;
     Sid getPropertyStyle(Pid) const override;
+
+protected:
+    Sid defaultPosSid() const override;
 };
 } // namespace mu::engraving
 #endif

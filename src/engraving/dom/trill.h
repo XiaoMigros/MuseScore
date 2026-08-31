@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -39,8 +39,7 @@ class TrillSegment final : public LineSegment
     DECLARE_CLASSOF(ElementType::TRILL_SEGMENT)
 
 public:
-    TrillSegment(Trill* sp, System* parent);
-    TrillSegment(System* parent);
+    TrillSegment(Trill* sp);
 
     Trill* trill() const { return (Trill*)spanner(); }
 
@@ -62,8 +61,6 @@ protected:
     void rebaseAnchors(EditData& ed, Grip grip) override;
 
 private:
-    Sid getPropertyStyle(Pid) const override;
-
     SymIdList m_symbols;
 };
 
@@ -84,7 +81,9 @@ public:
     Trill* clone() const override { return new Trill(*this); }
     EngravingItem* linkedClone() override;
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
+    LineSegment* createLineSegment() override;
     void remove(EngravingItem*) override;
 
     void setTrack(track_idx_t n) override;
@@ -105,7 +104,7 @@ public:
     Chord* cueNoteChord() const { return m_cueNoteChord; }
     void setCueNoteChord(Chord* c) { m_cueNoteChord = c; }
 
-    Segment* segment() const { return (Segment*)explicitParent(); }
+    Segment* segment() const { return (Segment*)ownershipParent(); }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -116,13 +115,12 @@ public:
     Ornament* ornament() const { return m_ornament; }
     void setOrnament(Ornament* o) { m_ornament = o; }
 
+    Sid defaultPosSid() const override;
+
 protected:
     void doComputeEndElement() override;
 
 private:
-
-    Sid getPropertyStyle(Pid) const override;
-
     TrillType m_trillType = TrillType::TRILL_LINE;
     Accidental* m_accidental = nullptr;
     Chord* m_cueNoteChord = nullptr;

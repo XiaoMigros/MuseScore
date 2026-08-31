@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,17 +22,15 @@
 
 #include "stafftypechange.h"
 
+#include "iengravingconfiguration.h" // IWYU pragma: keep
+
 #include "score.h"
 #include "measure.h"
 #include "system.h"
 #include "staff.h"
 
-#include "log.h"
-
-using namespace mu;
 using namespace mu::engraving;
 
-namespace mu::engraving {
 //---------------------------------------------------------
 //   StaffTypeChange
 //---------------------------------------------------------
@@ -204,7 +202,7 @@ bool StaffTypeChange::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     }
 
-    if (explicitParent()) {
+    if (ownershipParent()) {
         staff()->staffTypeListChanged(measure()->tick());
     }
     return true;
@@ -254,5 +252,4 @@ PropertyValue StaffTypeChange::propertyDefault(Pid id) const
     default:
         return EngravingItem::propertyDefault(id);
     }
-}
 }

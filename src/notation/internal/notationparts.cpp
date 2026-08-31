@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,18 +26,20 @@
 #include "engraving/dom/barline.h"
 #include "engraving/dom/excerpt.h"
 #include "engraving/dom/factory.h"
-#include "engraving/dom/instrchange.h"
 #include "engraving/dom/instrument.h"
 #include "engraving/dom/page.h"
 #include "engraving/editing/addremoveelement.h"
 #include "engraving/editing/editexcerpt.h"
+#include "engraving/editing/editpagelocks.h"
 #include "engraving/editing/editpart.h"
-#include "engraving/editing/editscoreproperties.h"
 #include "engraving/editing/editstaff.h"
+#include "engraving/editing/editstavesharing.h"
 #include "engraving/editing/editsystemlocks.h"
+#include "engraving/editing/transaction/transaction.h"
 #include "engraving/editing/transpose.h"
 
 #include "igetscore.h"
+#include "inotationnoteinput.h" // IWYU pragma: keep
 
 #include "log.h"
 
@@ -48,11 +50,13 @@ using namespace mu::engraving;
 
 static const mu::engraving::Fraction DEFAULT_TICK = mu::engraving::Fraction(0, 1);
 
-NotationParts::NotationParts(IGetScore* getScore, INotationInteractionPtr interaction, INotationUndoStackPtr undoStack)
-    : m_getScore(getScore), m_undoStack(undoStack), m_interaction(interaction)
+NotationParts::NotationParts(IGetScore* getScore, INotationInteractionPtr interaction, INotationUndoStackPtr undoStack,
+                             INotationStylePtr style)
+    : m_getScore(getScore), m_undoStack(undoStack), m_interaction(interaction), m_style(style)
 {
     m_getScore->scoreInited().onNotify(this, [this]() {
         listenUndoStackChanges();
+        listenStyleChanges();
     });
 }
 
@@ -243,7 +247,9 @@ void NotationParts::setPartVisible(const ID& partId, bool visible)
     mu::engraving::EditPart::setPartVisible(score(), part, visible);
 
     if (visible) {
-        EditSystemLocks::removeSystemLocksContainingMMRests(score());
+        engraving::Transaction& tx = score()->transactionManager()->currentOrDummyTransaction();
+        EditPageLocks::removePageLocksContainingMMRests(tx, score());
+        EditSystemLocks::removeSystemLocksContainingMMRests(tx, score());
     }
 
     apply();
@@ -301,6 +307,7 @@ void NotationParts::listenUndoStackChanges()
             ElementType::SCORE,
             ElementType::STAFF,
             ElementType::PART,
+            ElementType::SHARED_PART,
         };
 
         for (ElementType type : TYPES_TO_CHECK) {
@@ -327,6 +334,10 @@ void NotationParts::updatePartsAndSystemObjectStaves(const mu::engraving::ScoreC
 
     if (systemObjectStavesChanged) {
         m_systemObjectStavesChanged.notify();
+    }
+
+    if (muse::contains(changes.changedTypes, ElementType::SHARED_PART)) {
+        m_sharedPartsChanged.notify();
     }
 
     std::vector<Staff*> removedStaves;
@@ -365,6 +376,15 @@ void NotationParts::updatePartsAndSystemObjectStaves(const mu::engraving::ScoreC
     for (Staff* staff: addedStaves) {
         notifyAboutStaffAdded(staff);
     }
+}
+
+void NotationParts::listenStyleChanges()
+{
+    if (!score()) {
+        return;
+    }
+
+    m_style->styleChanged().onNotify(this, [this]{ m_sharedPartsChanged.notify(); });
 }
 
 void NotationParts::doSetScoreOrder(const ScoreOrder& order)
@@ -549,10 +569,13 @@ void NotationParts::setStaffVisible(const ID& staffId, bool visible)
 
     startEdit(actionName);
 
-    mu::engraving::EditPart::setStaffVisible(score(), staff, visible);
+    config.visible = visible;
+    doSetStaffConfig(staff, config);
 
     if (visible) {
-        EditSystemLocks::removeSystemLocksContainingMMRests(score());
+        engraving::Transaction& tx = score()->transactionManager()->currentOrDummyTransaction();
+        EditPageLocks::removePageLocksContainingMMRests(tx, score());
+        EditSystemLocks::removeSystemLocksContainingMMRests(tx, score());
     }
 
     apply();
@@ -604,6 +627,32 @@ void NotationParts::setStaffConfig(const ID& staffId, const StaffConfig& config,
     apply();
 
     notifyAboutStaffChanged(staff);
+}
+
+void NotationParts::setSharedPartEnabled(const muse::ID& partId, bool enable)
+{
+    TRACEFUNC;
+
+    Part* part = partModifiable(partId);
+    if (!part) {
+        return;
+    }
+
+    if (part->getProperty(Pid::SHARED_PART_ENABLED).toBool() == enable) {
+        return;
+    }
+
+    const TranslatableString actionName = enable
+                                          ? TranslatableString("undoableAction", "Enable shared staff")
+                                          : TranslatableString("undoableAction", "Disable shared staff");
+
+    startEdit(actionName);
+
+    part->undoChangeProperty(Pid::SHARED_PART_ENABLED, enable);
+
+    apply();
+
+    notifyAboutPartChanged(part);
 }
 
 bool NotationParts::appendStaff(Staff* staff, const ID& destinationPartId)
@@ -686,7 +735,9 @@ void NotationParts::insertPart(Part* part, size_t index)
 
     startEdit(TranslatableString("undoableAction", "Add instrument"));
 
-    EditSystemLocks::removeSystemLocksContainingMMRests(score());
+    engraving::Transaction& tx = score()->transactionManager()->currentOrDummyTransaction();
+    EditPageLocks::removePageLocksContainingMMRests(tx, score());
+    EditSystemLocks::removeSystemLocksContainingMMRests(tx, score());
 
     doInsertPart(part, index);
 
@@ -844,6 +895,19 @@ void NotationParts::moveSystemObjectLayerAboveBottomStaff()
     score()->undoChangeStyleVal(Sid::systemObjectsBelowBottomStaff, false);
 
     apply();
+}
+
+void NotationParts::toggleStaveSharing(bool on)
+{
+    undoStack()->transaction(TranslatableString("undoableAction", "Toggle stave sharing"), [&](engraving::Transaction& tx) {
+        EditStaveSharing::toggleStaveSharing(tx, score(), on);
+    });
+    m_partsChanged.notify();
+}
+
+Notification NotationParts::sharedPartsChanged() const
+{
+    return m_sharedPartsChanged;
 }
 
 Notification NotationParts::partsChanged() const
@@ -1084,9 +1148,9 @@ void NotationParts::appendStaves(Part* part, const InstrumentTemplate& templ, co
         if (!staffType) {
             staffType = mu::engraving::StaffType::preset(StaffTypeId::STANDARD);
         }
-        initStaff(staff, templ, staffType, staffIndex);
 
         insertStaff(staff, staffIndex);
+        staff->init(&templ, staffType, staffIndex);
     }
 
     if (!part->nstaves()) {
@@ -1103,28 +1167,6 @@ void NotationParts::insertStaff(Staff* staff, staff_idx_t destinationStaffIndex,
     TRACEFUNC;
 
     score()->undoInsertStaff(staff, destinationStaffIndex, createRest);
-}
-
-void NotationParts::initStaff(Staff* staff, const InstrumentTemplate& templ, const mu::engraving::StaffType* staffType, size_t cleffIndex)
-{
-    TRACEFUNC;
-
-    const mu::engraving::StaffType* staffTypePreset = staffType ? staffType : templ.staffTypePreset;
-    if (!staffTypePreset) {
-        staffTypePreset = mu::engraving::StaffType::getDefaultPreset(templ.staffGroup);
-    }
-
-    mu::engraving::StaffType* stt = staff->setStaffType(DEFAULT_TICK, *staffTypePreset);
-    if (cleffIndex >= MAX_STAVES) {
-        stt->setSmall(false);
-    } else {
-        stt->setSmall(templ.smallStaff[cleffIndex]);
-        stt->setLines(templ.staffLines[cleffIndex]);
-        staff->setBracketType(0, templ.bracket[cleffIndex]);
-        staff->setBracketSpan(0, templ.bracketSpan[cleffIndex]);
-        staff->setBarLineSpan(templ.barlineSpan[cleffIndex]);
-    }
-    staff->setDefaultClefType(templ.clefType(cleffIndex));
 }
 
 void NotationParts::removeMissingParts(const PartInstrumentList& newParts)

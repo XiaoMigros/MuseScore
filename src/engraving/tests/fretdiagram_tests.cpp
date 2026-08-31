@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,6 +25,7 @@
 #include "engraving/dom/factory.h"
 #include "engraving/dom/fret.h"
 #include "engraving/dom/harmony.h"
+#include "engraving/dom/measure.h"
 
 #include "utils/scorerw.h"
 
@@ -78,4 +79,23 @@ TEST_F(Engraving_FretDiagramTests, harmonyToFretDiagramSolfeggio)
     score->endCmd();
 
     testChordSymToFretDiagram(score);
+}
+
+TEST_F(Engraving_FretDiagramTests, enharmonicFallbackRootAndBass)
+{
+    MasterScore* score = ScoreRW::readScore(FRETDIAGRAM_DATA_DIR + u"harmonytofrettest.mscx");
+    FretDiagram* fd = Factory::createFretDiagram(score->dummy()->segment());
+
+    // Root fallback: Fbdim7 -> Edim7 (Fb->E)
+    ASSERT_FALSE(fd->patternsFromHarmony(String(u"Edim7")).empty());
+    EXPECT_FALSE(fd->patternsFromHarmony(String(u"Fbdim7")).empty())
+        << "Fbdim7 should resolve via enharmonic root fallback (Fb->E)";
+
+    // Bass fallback: Am/Fb -> Am/E (Fb->E)
+    ASSERT_FALSE(fd->patternsFromHarmony(String(u"Am/E")).empty());
+    EXPECT_FALSE(fd->patternsFromHarmony(String(u"Am/Fb")).empty())
+        << "Am/Fb should resolve via enharmonic bass fallback (Fb->E)";
+
+    delete fd;
+    delete score;
 }

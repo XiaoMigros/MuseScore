@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "rcommand/commandtypes.h"
 #include "uicomponents/qml/Muse/UiComponents/abstractmenumodel.h"
 
 #include "modularity/ioc.h"
@@ -95,19 +96,19 @@ private:
     muse::uicomponents::MenuItem* makeInputPitchMenu();
 
     void updateActions();
-    void onActionsStateChanges(const muse::actions::ActionCodeList& codes) override;
 
-    bool isAdditionalAction(const muse::actions::ActionCode& actionCode) const;
+    bool isAdditionalCommand(const muse::rcommand::Command& command) const;
 
     muse::secs_t totalPlayTime() const;
-    notation::MeasureBeat measureBeat() const;
+    engraving::MeasureBeat measureBeat() const;
 
-    muse::ui::UiAction playAction() const;
+    muse::uicomponents::MenuItem* makePlayItem();
+    void updatePlayItem();
 
     void updatePlayPosition(muse::audio::secs_t secs);
 
     void rewind(muse::audio::secs_t secs);
-    void rewindToBeat(const notation::MeasureBeat& beat);
+    void rewindToBeat(const engraving::MeasureBeat& beat);
 
     bool m_isToolbarFloating = false;
     muse::secs_t m_playbackPositionSecs = 0.0;

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,6 +26,7 @@
 #include "rehearsalmark.h"
 #include "score.h"
 #include "segment.h"
+#include "staff.h"
 #include "system.h"
 #include "tempotext.h"
 #include "text.h"
@@ -44,7 +45,6 @@ static const ElementStyle tempoStyle {
     { Sid::tempoChangeLineSpacing, Pid::TEXT_LINE_SPACING },
 
     { Sid::tempoChangeColor, Pid::COLOR },
-    { Sid::tempoChangePosAbove, Pid::OFFSET },
 
     { Sid::tempoChangeFontFace, Pid::BEGIN_FONT_FACE },
     { Sid::tempoChangeFontFace, Pid::CONTINUE_FONT_FACE },
@@ -91,7 +91,6 @@ static const ElementStyle tempoStyle {
 };
 
 static const ElementStyle tempoSegmentStyle {
-    { Sid::tempoChangePosAbove, Pid::OFFSET },
     { Sid::tempoChangeMinDistance, Pid::MIN_DISTANCE }
 };
 
@@ -113,7 +112,6 @@ GradualTempoChange::GradualTempoChange(EngravingItem* parent)
     : TextLineBase(ElementType::GRADUAL_TEMPO_CHANGE, parent, ElementFlag::SYSTEM)
 {
     initElementStyle(&tempoStyle);
-    setAnchor(Anchor::SEGMENT);
 
     resetProperty(Pid::LINE_VISIBLE);
     resetProperty(Pid::BEGIN_TEXT_PLACE);
@@ -129,9 +127,9 @@ GradualTempoChange* GradualTempoChange::clone() const
     return new GradualTempoChange(*this);
 }
 
-LineSegment* GradualTempoChange::createLineSegment(System* parent)
+LineSegment* GradualTempoChange::createLineSegment()
 {
-    GradualTempoChangeSegment* lineSegment = new GradualTempoChangeSegment(this, parent);
+    GradualTempoChangeSegment* lineSegment = new GradualTempoChangeSegment(this);
     lineSegment->setTrack(track());
     return lineSegment;
 }
@@ -284,12 +282,6 @@ Sid GradualTempoChange::getPropertyStyle(Pid id) const
         return Sid::tempoChangeAlign;
     case Pid::BEGIN_TEXT:
         return Sid::letRingText;
-    case Pid::OFFSET:
-        if (placeAbove()) {
-            return Sid::tempoChangePosAbove;
-        } else {
-            return Sid::tempoChangePosBelow;
-        }
     default:
         break;
     }
@@ -307,12 +299,14 @@ bool GradualTempoChange::adjustForRehearsalMark(bool start) const
     if (!rehearsalMark) {
         return false;
     }
-    RectF thisBbox = ldata()->bbox().translated(pos());
+
+    double staffHeight = staff() && placeBelow() ? staff()->staffHeight(tick()) : 0.0;
+    double tempoChangePos = staffHeight + defaultPos().y() + (autoplace() ? absoluteFromSpatium(minDistance()) : 0.0);
     RectF rehearsalMarkBbox = rehearsalMark ? rehearsalMark->ldata()->bbox().translated(rehearsalMark->pos()) : RectF();
 
     const bool sameSide = placeAbove() == rehearsalMark->placeAbove();
-    const bool collision = placeAbove() ? muse::RealIsEqualOrMore(rehearsalMarkBbox.bottom(), thisBbox.top()) : muse::RealIsEqualOrLess(
-        rehearsalMarkBbox.top(), thisBbox.bottom());
+    const bool collision = muse::RealIsEqualOrMore(rehearsalMarkBbox.bottom(), tempoChangePos) && muse::RealIsEqualOrLess(
+        rehearsalMarkBbox.top(), tempoChangePos);
 
     return sameSide && collision;
 }
@@ -357,27 +351,13 @@ TranslatableString GradualTempoChange::subtypeUserName() const
     return TConv::userName(m_tempoChangeType);
 }
 
-void GradualTempoChange::added()
+Sid GradualTempoChange::defaultPosSid() const
 {
-    requestToRebuildTempo();
+    return placeAbove() ? Sid::tempoChangePosAbove : Sid::tempoChangePosBelow;
 }
 
-void GradualTempoChange::removed()
-{
-    requestToRebuildTempo();
-}
-
-void GradualTempoChange::requestToRebuildTempo()
-{
-    IF_ASSERT_FAILED(score()) {
-        return;
-    }
-
-    score()->setUpTempoMapLater();
-}
-
-GradualTempoChangeSegment::GradualTempoChangeSegment(GradualTempoChange* annotation, System* parent)
-    : TextLineBaseSegment(ElementType::GRADUAL_TEMPO_CHANGE_SEGMENT, annotation, parent,
+GradualTempoChangeSegment::GradualTempoChangeSegment(GradualTempoChange* annotation)
+    : TextLineBaseSegment(ElementType::GRADUAL_TEMPO_CHANGE_SEGMENT, annotation,
                           ElementFlag::MOVABLE | ElementFlag::ON_STAFF | ElementFlag::SYSTEM)
 {
     initElementStyle(&tempoSegmentStyle);
@@ -393,18 +373,6 @@ GradualTempoChangeSegment* GradualTempoChangeSegment::clone() const
 GradualTempoChange* GradualTempoChangeSegment::tempoChange() const
 {
     return static_cast<GradualTempoChange*>(spanner());
-}
-
-Sid GradualTempoChangeSegment::getPropertyStyle(Pid id) const
-{
-    if (id == Pid::OFFSET) {
-        if (placeAbove()) {
-            return Sid::tempoPosAbove;
-        } else {
-            return Sid::tempoPosBelow;
-        }
-    }
-    return TextLineBaseSegment::getPropertyStyle(id);
 }
 
 GradualTempoChangeSegment* GradualTempoChangeSegment::findElementToSnapBefore() const
@@ -483,28 +451,5 @@ TempoText* GradualTempoChangeSegment::findElementToSnapAfter() const
 
 void GradualTempoChangeSegment::endEdit(EditData& editData)
 {
-    IF_ASSERT_FAILED(tempoChange()) {
-        return;
-    }
-
     TextLineBaseSegment::endEdit(editData);
-    tempoChange()->requestToRebuildTempo();
-}
-
-void GradualTempoChangeSegment::added()
-{
-    IF_ASSERT_FAILED(tempoChange()) {
-        return;
-    }
-
-    tempoChange()->requestToRebuildTempo();
-}
-
-void GradualTempoChangeSegment::removed()
-{
-    IF_ASSERT_FAILED(tempoChange()) {
-        return;
-    }
-
-    tempoChange()->requestToRebuildTempo();
 }

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -40,11 +40,11 @@ using namespace mu::engraving::rendering::score;
 
 void TremoloLayout::layout(TremoloTwoChord* item, const LayoutContext& ctx)
 {
-    IF_ASSERT_FAILED(item->explicitParent()) {
+    IF_ASSERT_FAILED(item->ownershipParent()) {
         return;
     }
 
-    item->setChord1(toChord(item->explicitParent()));
+    item->setChord1(toChord(item->ownershipParent()));
 
     Note* anchor1 = item->chord1()->up() ? item->chord1()->upNote() : item->chord1()->downNote();
     Stem* stem    = item->chord1()->stem();
@@ -65,7 +65,7 @@ void TremoloLayout::layout(TremoloTwoChord* item, const LayoutContext& ctx)
 
 void TremoloLayout::layout(TremoloSingleChord* item, const LayoutContext& ctx)
 {
-    IF_ASSERT_FAILED(item->explicitParent()) {
+    IF_ASSERT_FAILED(item->ownershipParent()) {
         return;
     }
 
@@ -175,11 +175,14 @@ void TremoloLayout::calcIsUp(TremoloTwoChord* item)
         && item->chord2()->stemDirection() == DirectionV::AUTO
         && item->chord1()->staffMove() == item->chord2()->staffMove()
         && !hasVoices) {
+        std::vector<int> chord1Distances = item->chord1()->noteDistances();
+        std::vector<int> chord2Distances = item->chord2()->noteDistances();
         std::vector<int> noteDistances;
-        for (int distance : item->chord1()->noteDistances()) {
+        noteDistances.reserve(chord1Distances.size() + chord2Distances.size());
+        for (int distance : chord1Distances) {
             noteDistances.push_back(distance);
         }
-        for (int distance : item->chord2()->noteDistances()) {
+        for (int distance : chord2Distances) {
             noteDistances.push_back(distance);
         }
         std::sort(noteDistances.begin(), noteDistances.end());

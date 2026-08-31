@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -261,7 +261,6 @@ enum class Pid : short {
     USER_STRETCH,
     MEASURE_NUMBER_OFFSET,
     EXCLUDE_FROM_NUMBERING,
-    ANCHOR,
     SLUR_UOFF1,
     SLUR_UOFF2,
     SLUR_UOFF3,
@@ -491,6 +490,7 @@ enum class Pid : short {
 
     TIE_PLACEMENT,
     MIN_LENGTH,
+    MASK_SLURTIE,
 
     PARTIAL_SPANNER_DIRECTION,
 
@@ -525,6 +525,8 @@ enum class Pid : short {
     STAFF_HIDE_SYSTEM_BARLINE,
     STAFF_MERGE_MATCHING_RESTS,
     STAFF_REFLECT_TRANSPOSITION,
+
+    SHARED_PART_ENABLED,
 
     END
 };

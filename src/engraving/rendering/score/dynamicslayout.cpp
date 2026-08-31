@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,6 +26,7 @@
 #include "textlayout.h"
 
 #include "../dom/hairpin.h"
+#include "../dom/measure.h"
 #include "../dom/staff.h"
 #include "../dom/system.h"
 #include "../types/typesconv.h"
@@ -152,7 +153,7 @@ void DynamicsLayout::layoutDynamicToEndOfPrevious(const Dynamic* item, TextBase:
 
 void DynamicsLayout::manageBarlineCollisions(const Dynamic* item, TextBase::LayoutData* ldata)
 {
-    if (item->score()->nstaves() <= 1 || item->anchorToEndOfPrevious() || !item->isStyled(Pid::OFFSET)) {
+    if (item->score()->nstaves() <= 1 || item->anchorToEndOfPrevious() || !item->offset().isNull()) {
         return;
     }
 
@@ -199,7 +200,7 @@ void DynamicsLayout::manageBarlineCollisions(const Dynamic* item, TextBase::Layo
     // Check barlines to the right
     Segment* rightBarLineSegment = nullptr;
     for (Segment* segment = thisSegment; segment && segment->measure()->system() == system; segment = segment->next1enabled()) {
-        if (segment->segmentType() & SegmentType::BarLineType) {
+        if (segment->segmentType() & SegmentType::BarLineTypes) {
             rightBarLineSegment = segment;
             break;
         }
@@ -220,7 +221,7 @@ void DynamicsLayout::manageBarlineCollisions(const Dynamic* item, TextBase::Layo
     // Check barlines to the left
     Segment* leftBarLineSegment = nullptr;
     for (Segment* segment = thisSegment; segment && segment->measure()->system() == system; segment = segment->prev1enabled()) {
-        if (segment->segmentType() & SegmentType::BarLineType) {
+        if (segment->segmentType() & SegmentType::BarLineTypes) {
             leftBarLineSegment = segment;
             break;
         }

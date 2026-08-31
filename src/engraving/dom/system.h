@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,7 +28,7 @@
 */
 
 #include "engravingitem.h"
-#include "stafflabel.h"
+#include "instrumentname.h"
 
 namespace mu::engraving {
 class Box;
@@ -38,7 +38,7 @@ class MeasureBase;
 class Page;
 class SpannerSegment;
 class StaffVisibilityIndicator;
-class SystemLock;
+class RangeLock;
 
 //---------------------------------------------------------
 //   SysStaff
@@ -51,9 +51,10 @@ public:
     SysStaff() {}
     ~SysStaff();
 
-    InstrumentName* groupName = nullptr;
-    InstrumentName* instrumentName = nullptr;
-    InstrumentName* individualStaffName = nullptr;
+    const std::unordered_map<InstrumentNameRole, InstrumentName*>& instrumentNames() const { return m_instrumentNames; }
+    InstrumentName* name(InstrumentNameRole role) const;
+    void addInstrumentName(InstrumentName* n);
+    void removeInstrumentName(InstrumentNameRole role);
 
     const RectF& bbox() const { return m_bbox; }
     RectF& bbox() { return m_bbox; }
@@ -77,6 +78,8 @@ public:
     Skyline& skyline() { return m_skyline; }
 
 private:
+    std::unordered_map<InstrumentNameRole, InstrumentName*> m_instrumentNames;
+
     RectF m_bbox;               // Bbox of StaffLines.
     Skyline m_skyline;
     double m_yOff = 0.0;            // offset of top staff line within bbox
@@ -101,8 +104,6 @@ class System final : public EngravingItem
 public:
     ~System();
 
-    void moveToPage(Page* parent);
-
     System* clone() const override { return new System(*this); }
 
     void add(EngravingItem*) override;
@@ -110,12 +111,21 @@ public:
     void change(EngravingItem* o, EngravingItem* n) override;
 
     void scanElements(std::function<void(EngravingItem*)> func) override;
+    EngravingItemList accessibleChildren() const override;
 
     void appendMeasure(MeasureBase*);
     void removeMeasure(MeasureBase*);
     void removeLastMeasure();
 
-    Page* page() const { return (Page*)explicitParent(); }
+    //! The page this system is currently laid out on; null if not placed.
+    Page* page() const { return m_page; }
+    void setPage(Page* p) { m_page = p; }
+    EngravingItem* layoutParent() const override;
+
+    //! A system is owned by its score; a page merely places it, see setPage().
+    //! This overload hides EngravingItem::setOwnershipParent, so that no other
+    //! parent can be set by accident.
+    void setOwnershipParent(Score* score);
 
     void clear(); ///< Clear measure list.
 
@@ -203,7 +213,7 @@ public:
     AccessibleItemPtr createAccessible() override;
 #endif
 
-    size_t getBracketsColumnsCount();
+    size_t getBracketsColumnsCount() const;
 
     void resetShortestLongestChordRest();
 
@@ -211,11 +221,15 @@ public:
     void setHasStaffVisibilityIndicator(bool has);
 
     bool isLocked() const;
-    const SystemLock* systemLock() const;
+    const RangeLock* systemLock() const;
 
-    const std::vector<SystemLockIndicator*> lockIndicators() const { return m_lockIndicators; }
-    void addLockIndicator(SystemLockIndicator* sli);
-    void deleteLockIndicators();
+    const std::vector<SystemLockIndicator*> systemLockIndicators() const { return m_systemLockIndicators; }
+    void addSystemLockIndicator(SystemLockIndicator* sli);
+    void deleteSystemLockIndicators();
+
+    PageLockIndicator* pageLockIndicator() const { return m_pageLockIndicator; }
+    void setPageLockIndicator(PageLockIndicator* pli);
+    void deletePageLockIndicator();
 
     struct LayoutData : public EngravingItem::LayoutData {
     public:
@@ -261,12 +275,14 @@ public:
 private:
     friend class Factory;
 
-    System(Page* parent);
+    System(Score* parent);
 
     staff_idx_t firstVisibleSysStaff() const;
     staff_idx_t lastVisibleSysStaff() const;
 
     staff_idx_t firstVisibleStaffFrom(staff_idx_t startStaffIdx) const;
+
+    Page* m_page = nullptr;   // current layout placement; not owned, not copied
 
     SystemDivider* m_systemDividerLeft = nullptr;       // to the next system
     SystemDivider* m_systemDividerRight = nullptr;
@@ -275,7 +291,8 @@ private:
     std::vector<SysStaff*> m_staves;
     std::vector<Bracket*> m_brackets;
     std::list<SpannerSegment*> m_spannerSegments;
-    std::vector<SystemLockIndicator*> m_lockIndicators;
+    std::vector<SystemLockIndicator*> m_systemLockIndicators;
+    PageLockIndicator* m_pageLockIndicator = nullptr;
 
     StaffVisibilityIndicator* m_staffVisibilityIndicator = nullptr;
 

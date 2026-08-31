@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2024 MuseScore Limited
+ * Copyright (C) 2024 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,6 +23,8 @@
 #include "soundflag.h"
 
 #include <climits>
+
+#include "iengravingconfiguration.h" // IWYU pragma: keep
 
 #include "../editing/editsoundflag.h"
 #include "linkedobjects.h"
@@ -56,7 +58,7 @@ bool SoundFlag::isEditable() const
 
 void SoundFlag::setSelected(bool f)
 {
-    EngravingItem* parent = parentItem();
+    EngravingItem* parent = ownershipParentItem();
     if (parent) {
         parent->setSelected(f);
     }
@@ -190,7 +192,7 @@ bool SoundFlag::shouldHide() const
         return false;
     }
 
-    const EngravingItem* parent = parentItem();
+    const EngravingItem* parent = ownershipParentItem();
     if (parent && parent->selected() && score()->selection().isSingle()) {
         return false;
     }

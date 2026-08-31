@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -332,8 +332,8 @@ void EngravingElementsModel::click1(QModelIndex index)
     const mu::engraving::EngravingObject* parent = el->parent();
     UNUSED(parent);
 
-    const mu::engraving::EngravingObject* explicitParent = el->explicitParent();
-    UNUSED(explicitParent);
+    const mu::engraving::EngravingObject* ownershipParent = el->ownershipParent();
+    UNUSED(ownershipParent);
 
     size_t children = el->children().size();
     UNUSED(children);

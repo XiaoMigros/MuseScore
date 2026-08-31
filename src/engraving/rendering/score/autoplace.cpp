@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,7 +48,7 @@ void Autoplace::autoplaceSegmentElement(const EngravingItem* item, EngravingItem
     const double minSkylineHorizontalClearance = item->isArticulationOrFermata() ? 0.0 : item->style().styleAbsolute(
         Sid::skylineMinHorizontalClearance) * item->mag();
 
-    if (item->autoplace() && item->explicitParent()) {
+    if (item->autoplace() && item->ownershipParent()) {
         const Segment* s = toSegment(item->findAncestor(ElementType::SEGMENT));
         IF_ASSERT_FAILED(s) {
             return;
@@ -76,7 +76,6 @@ void Autoplace::autoplaceSegmentElement(const EngravingItem* item, EngravingItem
 
         SysStaff* ss = m->system()->staff(si);
         Shape shape = item->ldata()->shape().translate(item->systemPos());
-        RectF r = shape.bbox();
 
         // Adjust bbox Y pos for staffType offset
         shape.translate(item->staffOffset());
@@ -109,8 +108,7 @@ void Autoplace::autoplaceSegmentElement(const EngravingItem* item, EngravingItem
             if (ldata->autoplace.offsetChanged != OffsetChange::NONE) {
                 // user moved element within the skyline
                 // we may need to adjust minDistance, yd, and/or offset
-                bool inStaff = above ? r.bottom() + rebase > 0.0 : r.top() + rebase < item->staff()->staffHeight(item->tick());
-                if (rebaseMinDistance(item, ldata, minDistance, yd, sp, rebase, above, inStaff)) {
+                if (rebaseMinDistance(item, ldata, minDistance, yd, sp, rebase, above)) {
                     shape.translate(PointF(0.0, rebase));
                 }
             }
@@ -133,8 +131,8 @@ void Autoplace::autoplaceMeasureElement(const EngravingItem* item, EngravingItem
         rebase = rebaseOffset(item, ldata);
     }
 
-    if (item->autoplace() && item->explicitParent()) {
-        const Measure* m = toMeasure(item->explicitParent());
+    if (item->autoplace() && item->ownershipParent()) {
+        const Measure* m = toMeasure(item->ownershipParent());
 
         LD_CONDITION(ldata->isSetPos());
         LD_CONDITION(ldata->isSetBbox());
@@ -184,8 +182,7 @@ void Autoplace::autoplaceMeasureElement(const EngravingItem* item, EngravingItem
             if (ldata->autoplace.offsetChanged != OffsetChange::NONE) {
                 // user moved element within the skyline
                 // we may need to adjust minDistance, yd, and/or offset
-                bool inStaff = above ? sh.bottom() + rebase > 0.0 : sh.top() + rebase < item->staff()->staffHeight(item->tick());
-                if (rebaseMinDistance(item, ldata, minDistance, yd, sp, rebase, above, inStaff)) {
+                if (rebaseMinDistance(item, ldata, minDistance, yd, sp, rebase, above)) {
                     sh.translateY(rebase);
                 }
             }
@@ -201,10 +198,6 @@ void Autoplace::autoplaceMeasureElement(const EngravingItem* item, EngravingItem
 
 void Autoplace::autoplaceSpannerSegment(const SpannerSegment* item, EngravingItem::LayoutData* ldata, double sp)
 {
-    if (item->isStyled(Pid::OFFSET)) {
-        const_cast<SpannerSegment*>(item)->setOffset(item->spanner()->propertyDefault(Pid::OFFSET).value<PointF>());
-    }
-
     if (item->spanner()->anchor() == Spanner::Anchor::NOTE) {
         return;
     }
@@ -261,9 +254,7 @@ void Autoplace::autoplaceSpannerSegment(const SpannerSegment* item, EngravingIte
             if (ldata->offsetChanged() != OffsetChange::NONE) {
                 // user moved element within the skyline
                 // we may need to adjust minDistance, yd, and/or offset
-                double adj = item->pos().y() + rebase;
-                bool inStaff = above ? sh.bottom() + adj > 0.0 : sh.top() + adj < item->staff()->staffHeight(item->tick());
-                rebaseMinDistance(item, ldata, md, yd, sp, rebase, above, inStaff);
+                rebaseMinDistance(item, ldata, md, yd, sp, rebase, above);
             }
             ldata->moveY(yd);
         }
@@ -289,7 +280,8 @@ double Autoplace::rebaseOffset(const EngravingItem* item, EngravingItem::LayoutD
     }
     //OffsetChange saveChangedValue = _offsetChanged;
 
-    bool staffRelative = item->staff() && item->explicitParent() && !(item->explicitParent()->isNote() || item->explicitParent()->isRest());
+    bool staffRelative = item->staff() && item->ownershipParent()
+                         && !(item->ownershipParent()->isNote() || item->ownershipParent()->isRest());
     if (staffRelative && item->propertyFlags(Pid::PLACEMENT) != PropertyFlags::NOSTYLE) {
         // check if flipped
         // TODO: elements that support PLACEMENT but not as a styled property (add supportsPlacement() method?)
@@ -339,7 +331,7 @@ double Autoplace::rebaseOffset(const EngravingItem* item, EngravingItem::LayoutD
 //---------------------------------------------------------
 
 bool Autoplace::rebaseMinDistance(const EngravingItem* item, EngravingItem::LayoutData* ldata, double& md, double& yd, double sp,
-                                  double rebase, bool above, bool fix)
+                                  double rebase, bool above)
 {
     bool rc = false;
     PropertyFlags pf = item->propertyFlags(Pid::MIN_DISTANCE);
@@ -348,10 +340,7 @@ bool Autoplace::rebaseMinDistance(const EngravingItem* item, EngravingItem::Layo
     }
     double adjustedY = item->pos().y() + yd;
     double diff = ldata->autoplace.changedPos.y() - adjustedY;
-    if (fix) {
-        const_cast<EngravingItem*>(item)->undoChangeProperty(Pid::MIN_DISTANCE, Spatium(-999.0), pf);
-        yd = 0.0;
-    } else if (!item->isStyled(Pid::MIN_DISTANCE)) {
+    if (!item->isStyled(Pid::MIN_DISTANCE)) {
         md = (above ? md + yd : md - yd) / sp;
         const_cast<EngravingItem*>(item)->undoChangeProperty(Pid::MIN_DISTANCE, Spatium(md), pf);
         yd += diff;
@@ -397,8 +386,9 @@ bool Autoplace::itemsShouldIgnoreEachOther(const EngravingItem* itemToAutoplace,
         return true;
     }
 
-    if (itemInSkyline->isText() && itemInSkyline->explicitParent() && itemInSkyline->parent()->isSLineSegment()) {
-        return itemsShouldIgnoreEachOther(itemToAutoplace, itemInSkyline->parentItem());
+    const EngravingItem* skylineItemOwner = itemInSkyline->ownershipParentItem();
+    if (itemInSkyline->isText() && skylineItemOwner && skylineItemOwner->isSLineSegment()) {
+        return itemsShouldIgnoreEachOther(itemToAutoplace, skylineItemOwner);
     }
 
     ElementType type1 = itemToAutoplace->type();
@@ -409,7 +399,7 @@ bool Autoplace::itemsShouldIgnoreEachOther(const EngravingItem* itemToAutoplace,
     }
 
     if (type1 == ElementType::FRET_DIAGRAM && (type2 == ElementType::FRET_DIAGRAM || type2 == ElementType::HARMONY)) {
-        bool isFretDiagAgainstItsOwnHarmony = itemInSkyline->parentItem() == itemToAutoplace;
+        bool isFretDiagAgainstItsOwnHarmony = skylineItemOwner == itemToAutoplace;
         bool areOnDifferentSegments = itemToAutoplace->findAncestor(ElementType::SEGMENT)
                                       != itemInSkyline->findAncestor(ElementType::SEGMENT);
         return isFretDiagAgainstItsOwnHarmony || areOnDifferentSegments;
@@ -451,10 +441,6 @@ bool Autoplace::itemsShouldIgnoreEachOther(const EngravingItem* itemToAutoplace,
     if (itemToAutoplace->isArticulationOrFermata() && itemInSkyline->isArticulationOrFermata()) {
         // Ignore fermatas and articulations on other segments
         return itemToAutoplace->findAncestor(ElementType::SEGMENT) != itemInSkyline->findAncestor(ElementType::SEGMENT);
-    }
-
-    if (type1 == ElementType::VIBRATO_SEGMENT && type2 == ElementType::GUITAR_BEND_SEGMENT) {
-        return true;
     }
 
     return itemToAutoplace->ldata()->itemSnappedBefore() == itemInSkyline || itemToAutoplace->ldata()->itemSnappedAfter() == itemInSkyline;

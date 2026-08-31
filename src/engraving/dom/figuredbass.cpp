@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,7 +24,7 @@
 
 #include "io/file.h"
 
-#include "../editing/undo.h"
+#include "rendering/iscorerenderer.h"
 #include "rw/xmlreader.h"
 #include "style/textstyle.h"
 
@@ -672,7 +672,7 @@ FiguredBass::FiguredBass(const FiguredBass& fb)
     setTicks(fb.ticks());
     for (auto i : fb.m_items) {       // deep copy is needed
         FiguredBassItem* fbi = new FiguredBassItem(*i);
-        fbi->setParent(this);
+        fbi->setOwnershipParent(this);
         m_items.push_back(fbi);
     }
 //      items = fb.items;
@@ -917,7 +917,7 @@ void FiguredBass::addItemToLinked(FiguredBassItem* item)
         Score* linkedScore = linkedObject->score();
         if (linkedObject == this) {
             item->setTrack(track());
-            item->setParent(this);
+            item->setOwnershipParent(this);
             m_items.push_back(item);
             score()->doUndoAddElement(item);
         } else {
@@ -932,7 +932,7 @@ void FiguredBass::addItemToLinked(FiguredBassItem* item)
 
             itemClone->linkTo(item);
             itemClone->setTrack(linkedFb->track());
-            itemClone->setParent(linkedFb);
+            itemClone->setOwnershipParent(linkedFb);
             itemClone->setScore(linkedFb->score());
             linkedFb->appendItem(itemClone);
             linkedScore->doUndoAddElement(itemClone);
@@ -973,7 +973,7 @@ FiguredBass* FiguredBass::addFiguredBassToSegment(Segment* seg, track_idx_t trac
     if (fb == 0) {                            // no FB at segment: create new
         fb = Factory::createFiguredBass(seg);
         fb->setTrack(track);
-        fb->setParent(seg);
+        fb->setOwnershipParent(seg);
 
         // locate next SegChordRest in the same staff to estimate presumed duration of element
         endTick = Fraction::max();
@@ -1006,8 +1006,8 @@ FiguredBass* FiguredBass::addFiguredBassToSegment(Segment* seg, track_idx_t trac
         // locate previous FB for same staff
         Segment* prevSegm;
         FiguredBass* prevFB = 0;
-        for (prevSegm = seg->prev1(Segment::CHORD_REST_OR_TIME_TICK_TYPE); prevSegm;
-             prevSegm = prevSegm->prev1(Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
+        for (prevSegm = seg->prev1(SegmentType::Duration); prevSegm;
+             prevSegm = prevSegm->prev1(SegmentType::Duration)) {
             for (EngravingItem* e : prevSegm->annotations()) {
                 if (e->isFiguredBass() && (e->track()) == track) {
                     prevFB = toFiguredBass(e);             // previous FB found
@@ -1171,6 +1171,7 @@ bool FiguredBass::readConfigFile(const String& fileName)
 std::vector<String> FiguredBass::fontNames()
 {
     std::vector<String> names;
+    names.reserve(g_FBFonts.size());
     for (const FiguredBassFont& f : g_FBFonts) {
         names.push_back(f.displayName);
     }

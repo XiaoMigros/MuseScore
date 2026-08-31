@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,8 +22,15 @@
 
 #include "writecontext.h"
 
+#include "iengravingconfiguration.h"
+
 using namespace mu::engraving;
 using namespace mu::engraving::write;
+
+std::shared_ptr<IEngravingConfiguration> WriteContext::configuration() const
+{
+    return m_score->configuration();
+}
 
 bool WriteContext::canWrite(const EngravingItem* e) const
 {

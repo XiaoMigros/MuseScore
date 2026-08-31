@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,6 +26,8 @@
 #include "property.h"
 
 namespace mu::engraving {
+class Transaction;
+
 //---------------------------------------------------------
 //   Box
 //   virtual base class for frames "boxes"
@@ -36,7 +38,7 @@ class Box : public MeasureBase
     OBJECT_ALLOCATOR(engraving, Box)
 
 public:
-    Box(const ElementType& type, System* parent);
+    Box(const ElementType& type, Score* parent);
 
     virtual bool isEditable() const override { return true; }
 
@@ -46,7 +48,7 @@ public:
     virtual void dragGrip(EditData&) override;
 
     virtual bool acceptDrop(EditData&) const override;
-    virtual EngravingItem* drop(EditData&) override;
+    virtual EngravingItem* drop(Transaction& tx, EditData&) override;
     virtual void add(EngravingItem* e) override;
     virtual double absoluteFromSpatium(const Spatium& val) const override;
 
@@ -113,7 +115,7 @@ class HBox final : public Box
     DECLARE_CLASSOF(ElementType::HBOX)
 
 public:
-    HBox(System* parent);
+    HBox(Score* parent);
 
     HBox* clone() const override { return new HBox(*this); }
 
@@ -146,7 +148,7 @@ class VBox : public Box
     DECLARE_CLASSOF(ElementType::VBOX)
 
 public:
-    VBox(System* parent);
+    VBox(Score* parent);
 
     VBox* clone() const override { return new VBox(*this); }
 
@@ -165,7 +167,7 @@ public:
     Spatium paddingToNotationBelow() const { return m_paddingToNotationBelow; }
 
 protected:
-    VBox(const ElementType& type, System* parent);
+    VBox(const ElementType& type, Score* parent);
 
 private:
     Spatium m_paddingToNotationAbove;
@@ -183,7 +185,7 @@ class FBox : public VBox
     DECLARE_CLASSOF(ElementType::FBOX)
 
 public:
-    FBox(System* parent);
+    FBox(Score* parent);
     FBox* clone() const override { return new FBox(*this); }
 
     void init();
@@ -246,7 +248,7 @@ class TBox : public VBox
     DECLARE_CLASSOF(ElementType::TBOX)
 
 public:
-    TBox(System* parent);
+    TBox(Score* parent);
     TBox(const TBox&);
     ~TBox() override;
 
@@ -256,7 +258,7 @@ public:
 
     TBox* clone() const override { return new TBox(*this); }
 
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
     void add(EngravingItem* e) override;
     void remove(EngravingItem* el) override;
 

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,7 +25,10 @@
 #include "async/asyncable.h"
 #include "async/notifylist.h"
 
+#include "engraving/dom/score.h"
+
 #include "inotationparts.h"
+#include "inotationstyle.h"
 #include "inotationundostack.h"
 #include "inotationinteraction.h"
 
@@ -34,7 +37,7 @@ class IGetScore;
 class NotationParts : public INotationParts, public muse::async::Asyncable
 {
 public:
-    NotationParts(IGetScore* getScore, INotationInteractionPtr interaction, INotationUndoStackPtr undoStack);
+    NotationParts(IGetScore* getScore, INotationInteractionPtr interaction, INotationUndoStackPtr undoStack, INotationStylePtr style);
 
     muse::async::NotifyList<const Part*> partList() const override;
     muse::async::NotifyList<const Staff*> staffList(const muse::ID& partId) const override;
@@ -63,6 +66,7 @@ public:
     void setInstrumentNumber(const InstrumentKey& instrumentKey, int v) override;
     void setStaffType(const muse::ID& staffId, StaffTypeId type) override;
     void setStaffConfig(const muse::ID& staffId, const StaffConfig& config, Fraction tick = Fraction(0, 1)) override;
+    void setSharedPartEnabled(const muse::ID& partId, bool enable) override;
 
     void removeParts(const muse::IDList& partsIds) override;
     void removeStaves(const muse::IDList& stavesIds) override;
@@ -90,8 +94,12 @@ public:
     void moveSystemObjectLayerBelowBottomStaff() override;
     void moveSystemObjectLayerAboveBottomStaff() override;
 
+    void toggleStaveSharing(bool on) override;
+
     muse::async::Notification partsChanged() const override;
     muse::async::Notification scoreOrderChanged() const override;
+
+    muse::async::Notification sharedPartsChanged() const override;
 
 protected:
     mu::engraving::Score* score() const;
@@ -110,6 +118,7 @@ private:
 
     void listenUndoStackChanges();
     void updatePartsAndSystemObjectStaves(const mu::engraving::ScoreChanges& changes = {});
+    void listenStyleChanges();
 
     void doSetScoreOrder(const ScoreOrder& order);
     void doRemoveParts(const std::vector<Part*>& parts);
@@ -124,7 +133,6 @@ private:
 
     void appendStaves(Part* part, const InstrumentTemplate& templ, const mu::engraving::KeyList& keyList);
     void insertStaff(Staff* staff, engraving::staff_idx_t destinationStaffIndex, bool createRests=true);
-    void initStaff(Staff* staff, const InstrumentTemplate& templ, const mu::engraving::StaffType* staffType, size_t cleffIndex);
 
     void removeMissingParts(const PartInstrumentList& newParts);
     void insertNewParts(const PartInstrumentList& parts, const mu::engraving::KeyList& keyList);
@@ -149,12 +157,14 @@ private:
     IGetScore* m_getScore = nullptr;
     INotationUndoStackPtr m_undoStack;
     INotationInteractionPtr m_interaction;
+    INotationStylePtr m_style;
     muse::async::Notification m_partsChanged;
     muse::async::Notification m_scoreOrderChanged;
 
     std::vector<Part*> m_parts;
     std::vector<Staff*> m_systemObjectStaves;
     muse::async::Notification m_systemObjectStavesChanged;
+    muse::async::Notification m_sharedPartsChanged;
 
     bool m_ignoreUndoStackChanges = false;
 

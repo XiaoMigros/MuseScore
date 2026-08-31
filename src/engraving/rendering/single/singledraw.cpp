@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,12 +19,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "singledraw.h"
 
 #include "draw/painter.h"
 #include "draw/svgrenderer.h"
+#include "draw/types/drawtypes.h"
 
-#include "types/typesconv.h"
+#include "iengravingconfiguration.h" // IWYU pragma: keep
+
 #include "style/style.h"
 #include "style/defaultstyle.h"
 
@@ -81,6 +84,7 @@
 #include "dom/lyrics.h"
 
 #include "dom/marker.h"
+#include "dom/measure.h"
 #include "dom/measurenumber.h"
 #include "dom/measurerepeat.h"
 
@@ -106,10 +110,13 @@
 #include "dom/slur.h"
 #include "dom/soundflag.h"
 #include "dom/spacer.h"
+#include "dom/staff.h"
 #include "dom/stafflines.h"
 #include "dom/staffstate.h"
 #include "dom/stafftext.h"
+#include "dom/stafftype.h"
 #include "dom/stafftypechange.h"
+#include "dom/stavesharinglabel.h"
 #include "dom/stem.h"
 #include "dom/stemslash.h"
 #include "dom/sticking.h"
@@ -299,6 +306,8 @@ void SingleDraw::drawItem(const EngravingItem* item, Painter* painter, const Pai
     case ElementType::STAFF_STATE:          draw(item_cast<const StaffState*>(item), painter, opt);
         break;
     case ElementType::STAFF_TEXT:           draw(item_cast<const StaffText*>(item), painter, opt);
+        break;
+    case ElementType::STAVE_SHARING_LABEL:  draw(item_cast<const StaveSharingLabel*>(item), painter, opt);
         break;
     case ElementType::STAFFTYPE_CHANGE:     draw(item_cast<const StaffTypeChange*>(item), painter, opt);
         break;
@@ -506,7 +515,7 @@ void SingleDraw::draw(const Note* item, Painter* painter, const PaintOptions& op
 
     bool negativeFret = item->negativeFretUsed() && item->staff()->isTabStaff(item->tick());
 
-    Color c(negativeFret ? config->criticalColor() : item->curColor(opt));
+    Color c(negativeFret && !opt.isPrinting ? config->criticalColor() : item->curColor(opt));
     painter->setPen(c);
     bool tablature = item->staff() && item->staff()->isTabStaff(item->chord()->tick());
 
@@ -710,8 +719,12 @@ void SingleDraw::draw(const BarLine* item, Painter* painter, const PaintOptions&
     break;
 
     case BarLineType::BROKEN: {
-        double lw = item->style().styleAbsolute(Sid::barWidth) * item->mag();
-        painter->setPen(Pen(item->curColor(opt), lw, PenStyle::DashLine, PenCapStyle::FlatCap));
+        double lw = item->style().styleAbsolute(Sid::dashBarWidth) * item->mag();
+        double dl = RealIsNull(lw) ? 0.0 : item->style().styleAbsolute(Sid::dashBarDash) * item->mag() / lw;
+        double gl = RealIsNull(lw) ? 0.0 : item->style().styleAbsolute(Sid::dashBarGap) * item->mag() / lw;
+        Pen pen(item->curColor(opt), lw, PenStyle::DashLine, PenCapStyle::FlatCap);
+        pen.setDashPattern({ dl, gl });
+        painter->setPen(pen);
         painter->drawLine(LineF(lw * .5, ldata->y1, lw * .5, ldata->y2));
     }
     break;
@@ -922,7 +935,8 @@ void SingleDraw::draw(const Bend* item, Painter* painter, const PaintOptions& op
             int idx = (pitch + 12) / 25;
             const char* l = item->label[idx];
             painter->drawText(RectF(x2, y2, .0, .0),
-                              muse::draw::AlignHCenter | muse::draw::AlignBottom | muse::draw::TextDontClip,
+                              muse::draw::AlignHCenter | muse::draw::AlignBottom,
+                              muse::draw::TextDontClip,
                               String::fromAscii(l));
 
             y = y2;
@@ -954,7 +968,8 @@ void SingleDraw::draw(const Bend* item, Painter* painter, const PaintOptions& op
             const char* l = item->label[idx];
             double ty = y2;       // - _spatium;
             painter->drawText(RectF(x2, ty, .0, .0),
-                              muse::draw::AlignHCenter | muse::draw::AlignBottom | muse::draw::TextDontClip,
+                              muse::draw::AlignHCenter | muse::draw::AlignBottom,
+                              muse::draw::TextDontClip,
                               String::fromAscii(l));
         } else {
             // down
@@ -1164,7 +1179,10 @@ void SingleDraw::draw(const FiguredBassItem* item, Painter* painter, const Paint
     Pen pen(item->figuredBass()->curColor(opt), FiguredBass::FB_CONTLINE_THICKNESS.toAbsolute(_spatium), PenStyle::SolidLine,
             PenCapStyle::RoundCap);
     painter->setPen(pen);
-    painter->drawText(ldata->bbox(), muse::draw::TextDontClip | muse::draw::AlignLeft | muse::draw::AlignTop, ldata->displayText);
+    painter->drawText(ldata->bbox(),
+                      muse::draw::AlignLeft | muse::draw::AlignTop,
+                      muse::draw::TextDontClip,
+                      ldata->displayText);
 
     // continuation line
     double lineEndX = 0.0;
@@ -1209,6 +1227,7 @@ void SingleDraw::draw(const FiguredBassItem* item, Painter* painter, const Paint
         int x = lineEndX > 0.0 ? lineEndX : ldata->textWidth;
         painter->drawText(RectF(x, 0, ldata->bbox().width(), ldata->bbox().height()),
                           muse::draw::AlignLeft | muse::draw::AlignTop,
+                          muse::draw::TextDontClip,
                           Char(FiguredBass::FBFonts().at(font).displayParenthesis[int(item->parenth5())].unicode()));
     }
 }
@@ -1356,10 +1375,13 @@ void SingleDraw::draw(const FretDiagram* item, Painter* painter, const PaintOpti
         if (item->orientation() == Orientation::VERTICAL) {
             if (item->numPos() == 0) {
                 painter->drawText(RectF(-ldata->stringDist * .4, .0, .0, ldata->fretDist),
-                                  muse::draw::AlignVCenter | muse::draw::AlignRight | muse::draw::TextDontClip, text);
+                                  muse::draw::AlignVCenter | muse::draw::AlignRight,
+                                  muse::draw::TextDontClip,
+                                  text);
             } else {
                 painter->drawText(RectF(x2 + (ldata->stringDist * .4), .0, .0, ldata->fretDist),
-                                  muse::draw::AlignVCenter | muse::draw::AlignLeft | muse::draw::TextDontClip,
+                                  muse::draw::AlignVCenter | muse::draw::AlignLeft,
+                                  muse::draw::TextDontClip,
                                   String::number(item->fretOffset() + 1));
             }
         } else if (item->orientation() == Orientation::HORIZONTAL) {
@@ -1368,11 +1390,14 @@ void SingleDraw::draw(const FretDiagram* item, Painter* painter, const PaintOpti
             painter->rotate(90);
             if (item->numPos() == 0) {
                 painter->drawText(RectF(.0, ldata->stringDist * (item->strings() - 1), .0, .0),
-                                  muse::draw::AlignLeft | muse::draw::TextDontClip,
+                                  muse::draw::AlignLeft,
+                                  muse::draw::TextDontClip,
                                   text);
             } else {
                 painter->drawText(RectF(.0, .0, .0, .0),
-                                  muse::draw::AlignBottom | muse::draw::AlignLeft | muse::draw::TextDontClip, text);
+                                  muse::draw::AlignBottom | muse::draw::AlignLeft,
+                                  muse::draw::TextDontClip,
+                                  text);
             }
             painter->restore();
         }
@@ -1877,19 +1902,8 @@ void SingleDraw::draw(const Image* item, Painter* painter, const PaintOptions&)
                 s = item->size() * DPMM;
             }
 
-            Transform t = painter->worldTransform();
-            muse::Size ss = muse::Size(s.width() * t.m11(), s.height() * t.m22());
-            t.setMatrix(1.0, t.m12(), t.m13(), t.m21(), 1.0, t.m23(), t.m31(), t.m32(), t.m33());
-            painter->setWorldTransform(t);
-            if ((item->buffer().size() != ss || item->dirty()) && item->rasterImage() && !item->rasterImage()->isNull()) {
-                item->setBuffer(item->imageProvider()->scaled(*item->rasterImage(), ss));
-                item->setDirty(false);
-            }
-            if (item->buffer().isNull()) {
-                emptyImage = true;
-            } else {
-                painter->drawPixmap(PointF(0.0, 0.0), item->buffer());
-            }
+            painter->scale(s.width() / item->rasterImage()->width(), s.height() / item->rasterImage()->height());
+            painter->drawPixmap(PointF(0, 0), *item->rasterImage());
 
             painter->restore();
         }
@@ -1953,7 +1967,7 @@ void SingleDraw::draw(const KeySig* item, Painter* painter, const PaintOptions& 
         }
     }
 
-    if (!item->explicitParent() && (item->isAtonal() || item->isCustom()) && ldata->keySymbols.empty()) {
+    if (!item->ownershipParent() && (item->isAtonal() || item->isCustom()) && ldata->keySymbols.empty()) {
         // empty custom or atonal key signature - draw something for palette
         painter->setPen(item->configuration()->scoreGreyColor());
         item->drawSymbol(SymId::timeSigX, painter, PointF(item->symWidth(SymId::timeSigX) * -0.5, 2.0 * item->spatium()));
@@ -2262,6 +2276,13 @@ void SingleDraw::draw(const StaffText* item, Painter* painter, const PaintOption
     }
 }
 
+void SingleDraw::draw(const StaveSharingLabel* item, muse::draw::Painter* painter, const PaintOptions& opt)
+{
+    TRACE_DRAW_ITEM;
+
+    drawTextBase(item, painter, opt);
+}
+
 void SingleDraw::draw(const StaffTypeChange* item, Painter* painter, const PaintOptions&)
 {
     TRACE_DRAW_ITEM;
@@ -2338,7 +2359,7 @@ void SingleDraw::draw(const SoundFlag* item, Painter* painter, const PaintOption
     TRACE_DRAW_ITEM;
 
     painter->setFont(item->iconFont());
-    painter->drawText(item->ldata()->bbox(), muse::draw::AlignCenter, Char(item->iconCode()));
+    painter->drawText(item->ldata()->bbox(), muse::draw::AlignCenter, muse::draw::TextDontClip, Char(item->iconCode()));
 }
 
 void SingleDraw::draw(const Tapping* item, muse::draw::Painter* painter, const PaintOptions& opt)

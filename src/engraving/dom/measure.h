@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -43,6 +43,10 @@ namespace mu::engraving::read460 {
 class MeasureRead;
 }
 
+namespace mu::engraving::read500 {
+class MeasureRead;
+}
+
 namespace mu::engraving::write {
 class MeasureWrite;
 }
@@ -61,6 +65,7 @@ class Spacer;
 class Staff;
 class System;
 class TieMap;
+class Transaction;
 
 //---------------------------------------------------------
 //   MeasureNumberMode
@@ -154,8 +159,6 @@ public:
 
     ~Measure();
 
-    void setParent(System* s);
-
     Measure* clone() const override { return new Measure(*this); }
     void setScore(Score* s) override;
     Measure* cloneMeasure(Score*, const Fraction& tick, TieMap*);
@@ -168,7 +171,6 @@ public:
     void change(EngravingItem* o, EngravingItem* n) override;
     void spatiumChanged(double oldValue, double newValue) override;
 
-    System* system() const { return toSystem(explicitParent()); }
     bool hasVoices(staff_idx_t staffIdx, Fraction stick, Fraction len, bool considerInvisible = false) const;
     bool hasVoices(staff_idx_t staffIdx) const;
     void setHasVoices(staff_idx_t staffIdx, bool v);
@@ -278,7 +280,7 @@ public:
     void sortStaves(std::vector<staff_idx_t>& dst);
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
     int repeatCount() const { return m_repeatCount; }
     void setRepeatCount(int val) { m_repeatCount = val; }
@@ -303,8 +305,8 @@ public:
     void createVoice(int track);
     void adjustToLen(Fraction, bool appendRestsIfNecessary = true);
 
-    AccidentalVal findAccidental(Note*) const;
-    AccidentalVal findAccidental(Segment* s, staff_idx_t staffIdx, int line, bool& error) const;
+    AccidentalVal findAccidental(const Note*) const;
+    AccidentalVal findAccidental(const Segment* s, staff_idx_t staffIdx, int line, bool& error) const;
     void checkMultiVoices(staff_idx_t staffIdx);
     bool hasVoice(track_idx_t track) const;
     bool isEmpty(staff_idx_t staffIdx) const;
@@ -324,7 +326,7 @@ public:
 
     bool empty() const;
     bool isOnlyRests(track_idx_t track) const;
-    bool isOnlyDeletedRests(track_idx_t track) const;
+    bool isOnlyGapRests(track_idx_t track) const;
 
     int playbackCount() const { return m_playbackCount; }
     void setPlaybackCount(int val) { m_playbackCount = val; }
@@ -396,11 +398,20 @@ public:
     bool canAddStringTunings(staff_idx_t staffIdx) const;
     bool canAddStaffTypeChange(staff_idx_t staffIdx) const;
 
+    struct LayoutData : public MeasureBase::LayoutData {
+    private:
+        bool m_needLayout = true;
+    public:
+        bool needLayout() const { return m_needLayout; }
+        void setNeedLayout(bool v) { m_needLayout = v; }
+    };
+    DECLARE_LAYOUTDATA_METHODS(Measure)
+
 private:
 
     friend class Factory;
 
-    Measure(System* parent = 0);
+    Measure(Score* parent);
     Measure(const Measure&);
 
     void push_back(Segment* e);
@@ -418,9 +429,7 @@ private:
 
     Fraction m_timesig;
 
-    int m_mmRestCount = 0;      // > 0 if this is a multimeasure rest
-                                // 0 if this is the start of am mmrest (m_mmRest != 0)
-                                // < 0 if this measure is covered by an mmrest
+    int m_mmRestCount = 0;      // number of measures an mmrest spans
 
     int m_playbackCount = 0;    // temp. value used in RepeatList
                                 // counts how many times this measure was already played

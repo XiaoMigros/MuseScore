@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,10 +21,12 @@
  */
 #include "slurtielayout.h"
 
+#include "iengravingconfiguration.h" // IWYU pragma: keep
 #include "iengravingfont.h"
 
 #include "dom/slur.h"
 #include "dom/chord.h"
+#include "dom/clef.h"
 #include "dom/score.h"
 #include "dom/system.h"
 #include "dom/staff.h"
@@ -64,8 +66,8 @@ SpannerSegment* SlurTieLayout::layoutSystem(Slur* item, System* system, LayoutCo
     Fraction stick = system->firstMeasure()->tick();
     Fraction etick = system->lastMeasure()->endTick();
 
-    SlurSegment* slurSegment = toSlurSegment(TLayout::getNextLayoutSystemSegment(item, system, [item](System* parent) {
-        return item->newSlurTieSegment(parent);
+    SlurSegment* slurSegment = toSlurSegment(TLayout::getNextLayoutSystemSegment(item, system, [item]() {
+        return item->newSlurTieSegment();
     }));
 
     SpannerSegmentType sst;
@@ -80,6 +82,12 @@ SpannerSegment* SlurTieLayout::layoutSystem(Slur* item, System* system, LayoutCo
         if (item->startCR() == 0 || item->startCR()->measure() == 0) {
             LOGD("Slur::layout(): track %zu-%zu  %p - %p tick %d-%d null start anchor",
                  item->track(), item->track2(), item->startCR(), item->endCR(), item->tick().ticks(), item->tick2().ticks());
+            return slurSegment;
+        }
+        if (item->ticks().isZero() && !(item->startCR() && item->startCR()->isGrace()) && !(item->endCR() && item->endCR()->isGrace())
+            && !item->isIncoming() && !item->isOutgoing() && !item->isTappingHalfSlur()) {
+            LOGD("Slur::layout(): track %zu tick %d zero-length slur, skipping",
+                 item->track(), item->tick().ticks());
             return slurSegment;
         }
         if (item->endCR() == 0) {         // sanity check
@@ -262,7 +270,7 @@ SpannerSegment* SlurTieLayout::layoutSystem(Slur* item, System* system, LayoutCo
             }
         }
 
-        double endingX = outgoingPartialSlur ? measure->endingXForOpenEndedLines() : system->endingXForOpenEndedLines();
+        double endingX = endingXForOpenEndedSlurTie(outgoingPartialSlur ? measure : system->lastMeasure(), item->startCR()->vStaffIdx());
         p2 = PointF(endingX, y);
 
         // adjust for ties at the end of the system
@@ -347,6 +355,35 @@ void SlurTieLayout::adjustSlurFloatingEndPointAngles(SlurSegment* slurSeg, Point
     }
 }
 
+double SlurTieLayout::endingXForOpenEndedSlurTie(const Measure* measure, staff_idx_t staffIdx)
+{
+    double endingX = measure->endingXForOpenEndedLines();
+
+    const SegmentType segmentTypesToAvoid = SegmentType::TimeSigTypes | SegmentType::KeySigTypes | SegmentType::ClefTypes;
+
+    // Find the first segment at the end of the measure which meets the criteria for the SlurTie to stop before it:
+    const Segment* endSegment = measure->findSegmentR(segmentTypesToAvoid, measure->ticks());
+    const EngravingItem* endItem = nullptr;
+    while (endSegment) {
+        if (endSegment->isType(segmentTypesToAvoid) && endSegment->enabled()) {
+            endItem = endSegment->element(staff2track(staffIdx));
+            if (endItem && endItem->visible() && endItem->addToSkyline()) {
+                break;
+            }
+        }
+        endSegment = endSegment->next();
+    }
+
+    if (!endSegment || !endItem) {
+        return endingX;
+    }
+
+    const double margin = endItem->style().styleAbsolute(Sid::lineEndToBarlineDistance);
+    const double itemLeftX = measure->x() + endSegment->x() + endItem->ldata()->shape().translated(endItem->pos()).left();
+
+    return std::min(endingX, itemLeftX - margin);
+}
+
 //---------------------------------------------------------
 //   slurPos
 //    calculate position of start- and endpoint of slur
@@ -417,10 +454,10 @@ void SlurTieLayout::slurPos(Slur* item, SlurTiePos* sp, LayoutContext& ctx)
     sp->p1 = scr->pos() + scr->segment()->pos() + scr->measure()->pos();
     sp->p2 = ecr->pos() + ecr->segment()->pos() + ecr->measure()->pos();
     if (scr->isGrace()) {
-        sp->p1 += scr->parentItem()->pos();
+        sp->p1 += scr->layoutParent()->pos();
     }
     if (ecr->isGrace()) {
-        sp->p2 += ecr->parentItem()->pos();
+        sp->p2 += ecr->layoutParent()->pos();
     }
 
     // adjust for cross-staff
@@ -1130,7 +1167,7 @@ Shape SlurTieLayout::getSegmentShapes(SlurSegment* slurSeg, ChordRest* startCR, 
     if (slurSeg->isSingleBeginType()) {
         if (startCR->isChord() && toChord(startCR)->isGraceAfter()) {
             // if this is a grace-note-after, the shape is stored the *appended* segment
-            Chord* parent = toChord(startCR->parentItem());
+            Chord* parent = toChord(startCR->ownershipParent());
             if (parent) {
                 startSeg = parent->graceNotesAfter().appendedSegment();
             }
@@ -1145,7 +1182,7 @@ Shape SlurTieLayout::getSegmentShapes(SlurSegment* slurSeg, ChordRest* startCR, 
     if (slurSeg->isSingleEndType()) {
         if (endCR->isChord() && toChord(endCR)->isGraceAfter()) {
             // if this is a grace-note-after, the shape is stored the *appended* segment
-            Chord* parent = toChord(endCR->parentItem());
+            Chord* parent = toChord(endCR->ownershipParent());
             if (parent) {
                 endSeg = parent->graceNotesAfter().appendedSegment();
             }
@@ -1161,7 +1198,7 @@ Shape SlurTieLayout::getSegmentShapes(SlurSegment* slurSeg, ChordRest* startCR, 
     }
 
     for (Segment* seg = startSeg; seg && (seg->isBefore(endSeg) || seg == endSeg); seg = seg->next1enabled()) {
-        if (seg->isType(SegmentType::BarLineType) || seg->isBreathType() || seg->hasTimeSigAboveStaves() || seg->isTimeTickType()) {
+        if (seg->isType(SegmentType::BarLineTypes) || seg->isBreathType() || seg->hasTimeSigAboveStaves() || seg->isTimeTickType()) {
             continue;
         }
         segShapes.add(getSegmentShape(slurSeg, seg, startCR, endCR));
@@ -1225,11 +1262,11 @@ Shape SlurTieLayout::getSegmentShape(SlurSegment* slurSeg, Segment* seg, ChordRe
 
     // Remove items that the slur shouldn't try to avoid
     segShape.remove_if([&](ShapeElement& shapeEl) {
-        if (!shapeEl.item() || !shapeEl.item()->parentItem() || !shapeEl.item()->visible()) {
+        if (!shapeEl.item() || !shapeEl.item()->ownershipParent() || !shapeEl.item()->visible()) {
             return true;
         }
         const EngravingItem* item = shapeEl.item();
-        const EngravingItem* parent = item->parentItem();
+        const EngravingObject* parent = item->ownershipParent();
         // Don't remove arpeggio starting on a different voice and ending on the same voice as endCR when slur is on the outside
         if ((item->isArpeggio() || item->isChordBracket()) && (endCR->track() == toArpeggio(item)->endTrack())
             && endCR->tick() == item->tick()
@@ -1244,7 +1281,7 @@ Shape SlurTieLayout::getSegmentShape(SlurSegment* slurSeg, Segment* seg, ChordRe
         }
         // Ornament accidentals on start or end chord
         if (item->isAccidental() && parent->isOrnament()) {
-            EngravingItem* parentParent = parent->parentItem();
+            const EngravingObject* parentParent = parent->ownershipParent();
             if (parentParent && (parentParent == startCR || parentParent == endCR)) {
                 return true;
             }
@@ -1556,7 +1593,7 @@ TieSegment* SlurTieLayout::layoutTieFor(Tie* item, System* system)
 
     int segmentCount = sPos.system1 == sPos.system2 ? 1 : 2;
     if (segmentCount == 2) {
-        sPos.p2 = PointF(system->endingXForOpenEndedLines(), sPos.p1.y());
+        sPos.p2 = PointF(endingXForOpenEndedSlurTie(system->lastMeasure(), item->startNote()->vStaffIdx()), sPos.p1.y());
     } else {
         sPos.p2 = computeDefaultStartOrEndPoint(item, Grip::END);
     }
@@ -1568,7 +1605,7 @@ TieSegment* SlurTieLayout::layoutTieFor(Tie* item, System* system)
     TieSegment* segment = item->segmentAt(0);
     segment->setTrack(item->track());
     segment->setSpannerSegmentType(sPos.system1 != sPos.system2 ? SpannerSegmentType::BEGIN : SpannerSegmentType::SINGLE);
-    segment->setSystem(system);   // Needed to populate System.spannerSegments
+    segment->moveToSystem(system);   // Needed to populate System.spannerSegments
     segment->resetAdjustmentOffset();
     segment->mutldata()->allJumpPointsInactive = item->allJumpPointsInactive();
 
@@ -1629,7 +1666,7 @@ TieSegment* SlurTieLayout::layoutTieBack(Tie* item, System* system, LayoutContex
     item->fixupSegments(2);
     TieSegment* segment = item->segmentAt(1);
     segment->setTrack(item->track());
-    segment->setSystem(system);
+    segment->moveToSystem(system);
     segment->resetAdjustmentOffset();
 
     if (chord) {
@@ -1783,7 +1820,7 @@ void SlurTieLayout::createSlurSegments(Slur* item, LayoutContext& ctx)
             continue;
         }
         SlurSegment* lineSegm = item->segmentAt(segIdx++);
-        lineSegm->setSystem(system);
+        lineSegm->moveToSystem(system);
         if (startSysIdx == endSysIdx) {
             lineSegm->setSpannerSegmentType(SpannerSegmentType::SINGLE);
         } else if (i == startSysIdx) {
@@ -1873,7 +1910,7 @@ LaissezVibSegment* SlurTieLayout::createLaissezVibSegment(LaissezVib* item)
     LaissezVibSegment* segment = item->segmentAt(0);
     segment->setSpannerSegmentType(SpannerSegmentType::SINGLE);
     segment->setTrack(item->track());
-    segment->setSystem(item->startNote()->chord()->segment()->measure()->system());
+    segment->moveToSystem(item->startNote()->chord()->segment()->measure()->system());
     segment->resetAdjustmentOffset();
 
     return segment;
@@ -1952,7 +1989,7 @@ PartialTieSegment* SlurTieLayout::createPartialTieSegment(PartialTie* item)
     item->fixupSegments(1);
     PartialTieSegment* segment = item->segmentAt(0);
     segment->setSpannerSegmentType(SpannerSegmentType::SINGLE);
-    segment->setSystem(chord->segment()->measure()->system());
+    segment->moveToSystem(chord->segment()->measure()->system());
     segment->setTrack(item->track());
     segment->resetAdjustmentOffset();
     segment->mutldata()->allJumpPointsInactive = item->allJumpPointsInactive();
@@ -2036,7 +2073,8 @@ void SlurTieLayout::setPartialTieEndPos(PartialTie* item, SlurTiePos& sPos)
 
         const double elPosInSystemCoords = adjSeg->xPosInSystemCoords() + elPos;
         widthToSegment = outgoing ? elPosInSystemCoords - sPos.p1.x() : sPos.p2.x() - (elPosInSystemCoords + elementWidth);
-        bool incomingFromBarline = !outgoing && element->isBarLine() && toBarLine(element)->barLineType() != BarLineType::START_REPEAT;
+        bool incomingFromBarline = !outgoing && element && element->isBarLine()
+                                   && toBarLine(element)->barLineType() != BarLineType::START_REPEAT;
         widthToSegment
             -= item->style().styleAbsolute(incomingFromBarline ? Sid::barlineToLineStartDistance : Sid::lineEndToBarlineDistance);
     }
@@ -2157,7 +2195,7 @@ void SlurTieLayout::forceHorizontal(Tie* tie, SlurTiePos& sPos)
 
     if (startNote && endNote
         && startNote->line() == endNote->line()
-        && startNote->chord()->vStaffIdx() == endNote->chord()->vStaffIdx()) {
+        && startNote->vStaffIdx() == endNote->vStaffIdx()) {
         double y1 = sPos.p1.y();
         double y2 = sPos.p2.y();
         double outerY = tie->up() ? std::min(y1, y2) : std::max(y1, y2);
@@ -2315,7 +2353,7 @@ void SlurTieLayout::adjustXforLedgerLines(TieSegment* tieSegment, bool start, Ch
         return !s.item()->addToSkyline() || s.item()->isNoteDot() || (tieSegment->isLaissezVibSegment() && s.item()->isLaissezVibSegment());
     });
     noteShape.translate(note->pos() + chordSystemPos);
-    double xNoteEdge = (start ? noteShape.right() : -noteShape.left()) + padding;
+    double xNoteEdge = (start ? noteShape.right() : noteShape.left()) + padding;
 
     resultingX = start ? std::max(resultingX, xNoteEdge) : std::min(resultingX, xNoteEdge);
 }
@@ -2640,6 +2678,9 @@ void SlurTieLayout::computeBezier(TieSegment* tieSeg, PointF shoulderOffset)
 {
     const PointF tieStart = tieSeg->ups(Grip::START).p + tieSeg->ups(Grip::START).off;
     const PointF tieEnd = tieSeg->ups(Grip::END).p + tieSeg->ups(Grip::END).off;
+    if (!muse::RealIsEqualOrMore(tieEnd.x(), tieStart.x())) {
+        return;
+    }
 
     PointF tieEndNormalized = tieEnd - tieStart;  // normalize to zero
     if (muse::RealIsNull(tieEndNormalized.x())) {
@@ -2683,7 +2724,10 @@ void SlurTieLayout::computeBezier(TieSegment* tieSeg, PointF shoulderOffset)
 
     computeMidThickness(tieSeg, tieLengthInSp);
 
-    PointF tieThickness(0.0, tieSeg->ldata()->midThickness());
+    PointF tieThickness(0.0, 0.0);
+    if (tieSeg->tie()->styleType() == SlurStyleType::Solid) {
+        tieThickness.setY(tieSeg->ldata()->midThickness());
+    }
 
     const PointF bezier1Offset = t.map(tieSeg->ups(Grip::BEZIER1).off);
     const PointF bezier2Offset = t.map(tieSeg->ups(Grip::BEZIER2).off);
@@ -2843,7 +2887,11 @@ void SlurTieLayout::computeBezier(SlurSegment* slurSeg, PointF shoulderOffset)
 
     // Set slur thickness
     computeMidThickness(slurSeg, p2.x() / slurSeg->spatium());
-    PointF thick(0.0, slurSeg->ldata()->midThickness());
+
+    PointF thick(0.0, 0.0);
+    if (slurSeg->slur()->styleType() == SlurStyleType::Solid) {
+        thick.setY(slurSeg->ldata()->midThickness());
+    }
 
     // Set path
     PainterPath path = PainterPath();
@@ -2906,8 +2954,9 @@ bool SlurTieLayout::isDirectionMixture(const Chord* c1, const Chord* c2, LayoutC
     if (c2->isGrace() && c2->up() != up) {
         return true;
     }
-    if (c1->isGraceBefore() && c2->isGraceAfter() && c1->parentItem() == c2->parentItem()) {
-        if (toChord(c1->parentItem())->stem() && toChord(c1->parentItem())->up() != up) {
+    if (c1->isGraceBefore() && c2->isGraceAfter() && c1->ownershipParent() == c2->ownershipParent()) {
+        const Chord* mainChord = toChord(c1->ownershipParent());
+        if (mainChord->stem() && mainChord->up() != up) {
             return true;
         }
     }
@@ -3173,10 +3222,17 @@ void SlurTieLayout::layoutSegment(SlurSegment* item, const PointF& p1, const Poi
 
 void SlurTieLayout::computeMidThickness(SlurTieSegment* slurTieSeg, double slurTieLengthInSp)
 {
-    const double endWidth = slurTieSeg->endWidth();
-    const double midWidth = slurTieSeg->midWidth();
     Staff* staff = slurTieSeg->score() ? slurTieSeg->score()->staff(slurTieSeg->vStaffIdx()) : nullptr;
     const double mag = staff ? staff->staffMag(slurTieSeg->slurTie()->tick()) : 1.0;
+    const double scalingFactor = slurTieSeg->slurTie()->scalingFactor();
+
+    if (slurTieSeg->slurTie()->styleType() != SlurStyleType::Solid) {
+        slurTieSeg->mutldata()->midThickness.set_value(0.5 * slurTieSeg->dottedWidth() * mag * scalingFactor);
+        return;
+    }
+
+    const double endWidth = slurTieSeg->endWidth();
+    const double midWidth = slurTieSeg->midWidth();
     const double minTieLength = mag * slurTieSeg->style().styleS(Sid::minTieLength).val();
     const double shortTieLimit = mag * 4.0;
     const double minTieThickness = mag * (0.15 * slurTieSeg->spatium() - endWidth);
@@ -3193,8 +3249,6 @@ void SlurTieLayout::computeMidThickness(SlurTieSegment* slurTieSeg, double slurT
         const double C = shortTieLimit * minTieThickness - minTieLength * normalThickness;
         finalThickness = A * (B * slurTieLengthInSp + C);
     }
-
-    double scalingFactor = slurTieSeg->slurTie()->scalingFactor();
 
     finalThickness = std::min(finalThickness, normalThickness * scalingFactor);
 
@@ -3216,7 +3270,10 @@ void SlurTieLayout::fillShape(SlurTieSegment* slurTieSeg, double slurTieLengthIn
         double percent = pow(sin(0.5 * M_PI * (double(i) / double(nbShapes))), 2);
         const PointF point = b.pointAtPercent(percent);
         RectF re = RectF(startPoint, point).normalized();
-        double approxThicknessAtPercent = (1 - 2 * std::abs(0.5 - percent)) * midThickness;
+        double approxThicknessAtPercent = midThickness;
+        if (slurTieSeg->slurTie()->styleType() == SlurStyleType::Solid) {
+            approxThicknessAtPercent *= (1 - 2 * std::abs(0.5 - percent));
+        }
         if (re.height() < approxThicknessAtPercent) {
             double adjust = (approxThicknessAtPercent - re.height()) * .5;
             re.adjust(0.0, -adjust, 0.0, adjust);

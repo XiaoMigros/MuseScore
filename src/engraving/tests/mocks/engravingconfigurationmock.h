@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -46,7 +46,12 @@ public:
     MOCK_METHOD(String, iconsFontFamily, (), (const, override));
 
     MOCK_METHOD(Color, defaultColor, (), (const, override));
-    MOCK_METHOD(Color, scoreInversionColor, (), (const, override));
+    MOCK_METHOD(Color, displayedDefaultColor, (bool), (const, override));
+    MOCK_METHOD(void, setDisplayedDefaultColor, (Color, bool), (override));
+    MOCK_METHOD((muse::async::Channel<bool, Color>), displayedDefaultColorChanged, (), (const, override));
+    MOCK_METHOD(void, resetDisplayedDefaultColors, (), (override));
+
+    MOCK_METHOD(Color, indicatorIconInvertedSelectionColor, (), (const, override));
     MOCK_METHOD(Color, lassoColor, (), (const, override));
     MOCK_METHOD(Color, warningColor, (), (const, override));
     MOCK_METHOD(Color, warningSelectedColor, (), (const, override));
@@ -90,9 +95,6 @@ public:
     MOCK_METHOD(void, setDebuggingOptions, (const DebuggingOptions&), (override));
     MOCK_METHOD(muse::async::Notification, debuggingOptionsChanged, (), (const, override));
 
-    MOCK_METHOD(bool, doNotSaveEIDsForBackCompat, (), (const, override));
-    MOCK_METHOD(void, setDoNotSaveEIDsForBackCompat, (bool), (override));
-
     MOCK_METHOD(bool, allowReadingImagesFromOutsideMscz, (), (const, override));
 
     MOCK_METHOD(bool, guitarProImportExperimental, (), (const, override));
@@ -103,5 +105,6 @@ public:
     MOCK_METHOD(bool, specificSlursLayoutWorkaround, (), (const, override));
     MOCK_METHOD(bool, preferSameStringForTranspose, (), (const, override));
     MOCK_METHOD(void, setPreferSameStringForTranspose, (bool), (override));
+    MOCK_METHOD(bool, keepDeadNotesUnchangedOnTranspose, (), (const, override));
 };
 }

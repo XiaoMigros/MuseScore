@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -40,6 +40,11 @@
 #include "engraving/dom/note.h"
 #include "engraving/dom/score.h"
 #include "engraving/dom/utils.h"
+
+#include "notation/inotation.h"
+#include "notation/inotationinteraction.h"
+#include "notation/inotationnoteinput.h" // IWYU pragma: keep
+#include "notation/inotationparts.h" // IWYU pragma: keep
 
 #include "modularity/ioc.h"
 #include "notationscene/utilities/percussionutilities.h"
@@ -153,8 +158,7 @@ CustomizeKitDialog::CustomizeKitDialog(QWidget* parent)
     drumNote->setGridSize(70, 80);
     drumNote->setDrawGrid(false);
     drumNote->setReadOnly(true);
-
-    QTreeWidgetItem* itemToSelect = loadPitchesList();
+    drumNote->setIgnoreInputEvents(true);
 
     for (auto g : noteHeadNames) {
         noteHead->addItem(TConv::translatedUserName(g), int(g));
@@ -259,9 +263,6 @@ CustomizeKitDialog::CustomizeKitDialog(QWidget* parent)
     connect(customGbox, &QGroupBox::toggled, this, &CustomizeKitDialog::customGboxToggled);
     connect(quarterCmb, &QComboBox::currentIndexChanged, this, &CustomizeKitDialog::customQuarterChanged);
 
-    Q_ASSERT(pitchList->topLevelItemCount() > 0);
-    pitchList->setCurrentItem(itemToSelect ? itemToSelect : pitchList->topLevelItem(0));
-
     quarterCmb->setAccessibleName(quarterLbl->text() + " " + quarterCmb->currentText());
     halfCmb->setAccessibleName(halfLbl->text() + " " + halfCmb->currentText());
     wholeCmb->setAccessibleName(wholeLbl->text() + " " + wholeCmb->currentText());
@@ -279,6 +280,13 @@ void CustomizeKitDialog::componentComplete()
     }
 
     initDrumsetAndKey();
+
+    QTreeWidgetItem* itemToSelect = loadPitchesList();
+    itemToSelect = itemToSelect ? itemToSelect : pitchList->topLevelItem(0);
+
+    if (itemToSelect) {
+        pitchList->setCurrentItem(itemToSelect);
+    }
 }
 
 //---------------------------------------------------------
@@ -578,7 +586,7 @@ void CustomizeKitDialog::updateExample()
     chord->setTrack(v);
     chord->setIsUiItem(true);
     Note* note = Factory::createNote(chord.get());
-    note->setParent(chord.get());
+    note->setOwnershipParent(chord.get());
     note->setTrack(v);
     note->setPitch(pitch);
     note->setTpcFromPitch();
@@ -589,7 +597,7 @@ void CustomizeKitDialog::updateExample()
     note->mutldata()->cachedNoteheadSym.set_value(static_cast<SymId>(quarterCmb->currentData().toInt()));
     chord->add(note);
     Stem* stem = Factory::createStem(chord.get());
-    stem->setParent(chord.get());
+    stem->setOwnershipParent(chord.get());
     stem->setBaseLength(up ? -3.0_sp : 3.0_sp);
     engravingRenderer()->layoutItem(stem);
     chord->add(stem);

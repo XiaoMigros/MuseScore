@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -122,12 +122,13 @@ void ScoreVerticalViewLayout::layoutVerticalView(Score* score, LayoutContext& ct
                     score->setSelectionChanged(true);
                 }
             }
-            s->resetExplicitParent();
+            // no need to clear the page placement: the systems are deleted below,
+            // and ~System unlinks itself from its page
         }
         for (MeasureBase* mb = score->first(); mb; mb = mb->next()) {
-            mb->resetExplicitParent();
+            mb->setSystem(nullptr);
             if (mb->isMeasure() && toMeasure(mb)->mmRest()) {
-                toMeasure(mb)->mmRest()->moveToDummy();
+                toMeasure(mb)->mmRest()->setSystem(nullptr);
             }
         }
         muse::DeleteAll(score->systems());

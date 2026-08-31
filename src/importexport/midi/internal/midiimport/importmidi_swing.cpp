@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -251,7 +251,7 @@ void detectSwing(Staff* staff, MidiOperations::Swing swingType)
         Segment* seg = score->firstSegment(SegmentType::ChordRest);
         StaffText* st = new StaffText(seg, TextStyleType::STAFF);
         st->setPlainText(swingCaption(swingType));
-        st->setParent(seg);
+        st->setOwnershipParent(seg);
         st->setTrack(strack);       // voice == 0
         score->addElement(st);
     }

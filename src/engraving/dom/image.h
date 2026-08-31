@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,14 +22,20 @@
 
 #pragma once
 
+#include "modularity/ioc.h"
+
+#include "draw/types/pixmap.h"
+
 #include "bsymbol.h"
 
-#include "modularity/ioc.h"
-#include "draw/iimageprovider.h"
-
 namespace muse::draw {
+class IImageProvider;
 class Pixmap;
 class SvgRenderer;
+}
+
+namespace muse::io {
+struct path_t;
 }
 
 namespace mu::engraving {
@@ -43,7 +49,7 @@ enum class ImageType : char {
 //   @@ Image
 //---------------------------------------------------------
 
-class Image final : public BSymbol, public muse::Contextable
+class Image final : public BSymbol
 {
     OBJECT_ALLOCATOR(engraving, Image)
     DECLARE_CLASSOF(ElementType::IMAGE)

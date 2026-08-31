@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -28,6 +28,10 @@
 
 #include "modularity/ioc.h"
 #include "context/iglobalcontext.h"
+
+namespace mu::engraving {
+class Instrument;
+}
 
 namespace mu::notation {
 //---------------------------------------------------------
@@ -76,6 +80,6 @@ private:
     std::vector<mu::engraving::instrString> _stringsLoc;         // local working copy of string list
 
     bool m_updateOnExit = false;
-    Instrument* m_instrument = nullptr;
+    engraving::Instrument* m_instrument = nullptr;
 };
 }

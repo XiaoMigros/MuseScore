@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,6 +26,7 @@
 
 namespace mu::engraving {
 class Chord;
+class Transaction;
 
 class Stem final : public EngravingItem
 {
@@ -47,7 +48,7 @@ public:
     void dragGrip(EditData&) override;
 
     bool acceptDrop(EditData&) const override;
-    EngravingItem* drop(EditData&) override;
+    EngravingItem* drop(Transaction& tx, EditData&) override;
 
     void reset() override;
     PropertyValue getProperty(Pid propertyId) const override;
@@ -56,7 +57,7 @@ public:
 
     staff_idx_t vStaffIdx() const override;
 
-    Chord* chord() const { return toChord(explicitParent()); }
+    Chord* chord() const { return toChord(ownershipParent()); }
     bool up() const;
 
     Spatium baseLength() const { return m_baseLength; }

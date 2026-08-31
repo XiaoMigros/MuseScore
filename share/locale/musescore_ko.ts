@@ -84,7 +84,7 @@
         <location filename="../../src/notationscene/widgets/breaksdialog.ui" line="79"/>
         <location filename="../../src/notationscene/widgets/breaksdialog.ui" line="82"/>
         <source>Remove current system locks</source>
-        <translation>현재 시스템 잠금 제거</translation>
+        <translation>현재 단 고정 해제</translation>
     </message>
 </context>
 <context>
@@ -441,7 +441,7 @@
     <message>
         <location filename="../../src/notationscene/widgets/editstaff.ui" line="249"/>
         <source>Hide system barline</source>
-        <translation>시스템 세로줄 숨기기</translation>
+        <translation>단 세로줄 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstaff.ui" line="269"/>
@@ -514,7 +514,7 @@
     <message>
         <location filename="../../src/notationscene/widgets/editstaff.ui" line="599"/>
         <source>Transposition:</source>
-        <translation>이조:</translation>
+        <translation>조옮김:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstaff.ui" line="609"/>
@@ -704,7 +704,7 @@
     <message>
         <location filename="../../src/notationscene/widgets/editstaff.ui" line="913"/>
         <source>Don’t reflect transposition in linked tablature staves</source>
-        <translation>연결된 타블라추어 보표에 이조 반영 안 함</translation>
+        <translation>연결된 타블라추어 보표에 조옮김 반영 안 함</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstaff.ui" line="950"/>
@@ -930,7 +930,7 @@
     <message>
         <location filename="../../src/notationscene/widgets/editstafftype.ui" line="976"/>
         <source>At new system</source>
-        <translation>새 단마다</translation>
+        <translation>새 단 마다</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstafftype.ui" line="989"/>
@@ -1129,7 +1129,7 @@
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="112"/>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6004"/>
         <source>Beams</source>
-        <translation>꼬리묶음</translation>
+        <translation>빔</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="117"/>
@@ -1147,7 +1147,7 @@
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="127"/>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6943"/>
         <source>Chord brackets</source>
-        <translation>화음 대괄호</translation>
+        <translation>코드 대괄호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="132"/>
@@ -1162,7 +1162,7 @@
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="142"/>
         <source>Voltas</source>
-        <translation>볼타(반복 괄호)</translation>
+        <translation>볼타</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="147"/>
@@ -1208,12 +1208,12 @@
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="182"/>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9097"/>
         <source>System text lines</source>
-        <translation>시스템 텍스트 선</translation>
+        <translation>단 텍스트 선</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="187"/>
         <source>Articulations &amp; ornaments</source>
-        <translation>아티큘레이션 및 꾸밈음</translation>
+        <translation>연주기호 및 꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="192"/>
@@ -1265,7 +1265,7 @@
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="232"/>
         <source>Chord symbols</source>
-        <translation>화음 기호</translation>
+        <translation>코드 기호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="237"/>
@@ -1625,27 +1625,27 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="482"/>
         <source>Enable indentation on first system</source>
-        <translation>첫 번째 단 들여쓰기 사용</translation>
+        <translation>첫 단에 들여쓰기 활성화</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="500"/>
         <source>First system indentation:</source>
-        <translation>첫 번째 단 들여쓰기:</translation>
+        <translation>첫 단 들여쓰기:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="532"/>
         <source>Reset &apos;First system indentation&apos; value</source>
-        <translation>&apos;첫 번째 단 들여쓰기&apos; 값 재설정</translation>
+        <translation>&apos;첫 단 들여쓰기&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="558"/>
         <source>Automatically hide all empty staves</source>
-        <translation>모든 빈 보표 자동 숨기기</translation>
+        <translation>모든 빈 보표 자동 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="570"/>
         <source>Don’t hide empty staves in first system</source>
-        <translation>첫 번째 단의 빈 보표 숨기지 않음</translation>
+        <translation>첫 단의 빈 보표 숨기지 않음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="577"/>
@@ -1655,7 +1655,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="587"/>
         <source>Display note values across measure boundaries (EXPERIMENTAL, early music only!)</source>
-        <translation>마디 경계 너머로 음가 화면표시 (실험적 기능, 고음악 전용)</translation>
+        <translation>마디 경계 너머로 음가 화면표시 (실험적 기능, 초기 음악 전용!)&quot;</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="594"/>
@@ -1665,7 +1665,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="600"/>
         <source>Hide if there is only 1 instrument</source>
-        <translation>악기가 하나인 경우 숨기기</translation>
+        <translation>악기가 하나인 경우 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="609"/>
@@ -1676,18 +1676,18 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="619"/>
         <source>Reset &apos;Instrument labels on subsequent systems&apos; value</source>
-        <translation>&apos;다음 단부터의 악기 이름&apos; 값 재설정</translation>
+        <translation>&apos;다음 단부터 악기 명칭&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="639"/>
         <source>Reset &apos;Instrument labels on first system of sections&apos; value</source>
-        <translation>&apos;섹션 첫 단의 악기 이름&apos; 값 재설정</translation>
+        <translation>&apos;섹션 첫 단의 악기 명칭&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="649"/>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="684"/>
         <source>Hide</source>
-        <translation>숨기기</translation>
+        <translation>숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="656"/>
@@ -1932,7 +1932,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2054"/>
         <source>Barline to grace note:</source>
-        <translation>세로줄에서 꾸밈음까지 간격:</translation>
+        <translation>세로줄에서 앞꾸밈음까지 간격:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2064"/>
@@ -2037,7 +2037,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2483"/>
         <source>Reset &apos;Barline to grace note distance&apos; value</source>
-        <translation>&apos;세로줄에서 꾸밈음까지 간격&apos; 재설정</translation>
+        <translation>&apos;세로줄에서 앞꾸밈음까지 간격&apos; 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2506"/>
@@ -2087,7 +2087,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2702"/>
         <source>System density:</source>
-        <translation>단 조밀도(System density):</translation>
+        <translation>단 밀도:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2709"/>
@@ -2102,12 +2102,12 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2732"/>
         <source>System header</source>
-        <translation>단 헤더</translation>
+        <translation>단 머리</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2741"/>
         <source>Reset &apos;System header distance&apos; value</source>
-        <translation>&apos;단 헤더 간격&apos; 재설정</translation>
+        <translation>&apos;단 머리 간격&apos; 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2751"/>
@@ -2117,7 +2117,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2790"/>
         <source>Reset &apos;System header with time signature distance&apos; value</source>
-        <translation>&apos;박자표 포함 단 헤더 간격&apos; 재설정</translation>
+        <translation>&apos;박자표 포함 단 머리 간격&apos; 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2800"/>
@@ -2127,7 +2127,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2836"/>
         <source>Start of the system to first note:</source>
-        <translation>단 시작점에서 첫 음표까지 간격:</translation>
+        <translation>단 시작부터 첫 음표까지:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="2889"/>
@@ -2187,12 +2187,12 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="3151"/>
         <source>Grace note size:</source>
-        <translation>꾸밈음 크기:</translation>
+        <translation>앞꾸밈음 크기:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="3189"/>
         <source>Reset &apos;Grace note size&apos; value</source>
-        <translation>&apos;꾸밈음 크기&apos; 재설정</translation>
+        <translation>&apos;앞꾸밈음 크기&apos; 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="3249"/>
@@ -2332,7 +2332,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="4060"/>
         <source>System dividers</source>
-        <translation>단 구분 기호</translation>
+        <translation>단 구분선</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="4125"/>
@@ -2590,7 +2590,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="5298"/>
         <source>Alignment in chords</source>
-        <translation>화음 내 정렬</translation>
+        <translation>코드 내 정렬</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="5304"/>
@@ -2618,7 +2618,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="5371"/>
         <source>Rests (multiple voices)</source>
-        <translation>쉼표 (다성부)</translation>
+        <translation>쉼표 (다중 성부)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="5377"/>
@@ -2881,47 +2881,47 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6386"/>
         <source>Brackets</source>
-        <translation>묶음표</translation>
+        <translation>대괄호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6427"/>
         <source>Bracket hook height:</source>
         <comment>Tuplet bracket</comment>
-        <translation>묶음표 갈고리 높이:</translation>
+        <translation>대괄호 꺾임 높이:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6450"/>
         <source>Bracket type:</source>
         <comment>Bracket type for tuplets</comment>
-        <translation>묶음표 유형:</translation>
+        <translation>대괄호 유형:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6469"/>
         <source>Reset &apos;Bracket thickness&apos; value</source>
         <comment>Tuplet bracket</comment>
-        <translation>&apos;묶음표 두께&apos; 값 재설정</translation>
+        <translation>&apos;대괄호 두께&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6488"/>
         <source>Reset &apos;Bracket type&apos; value</source>
         <comment>Bracket type for tuplets</comment>
-        <translation>&apos;묶음표 유형&apos; 값 재설정</translation>
+        <translation>&apos;대괄호 유형&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6498"/>
         <source>Bracket thickness:</source>
         <comment>Tuplet bracket</comment>
-        <translation>묶음표 두께:</translation>
+        <translation>대괄호 두께:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6517"/>
         <source>Reset &apos;Bracket hook height&apos; value</source>
-        <translation>&apos;묶음표 갈고리 높이&apos; 값 재설정</translation>
+        <translation>&apos;대괄호 꺾임 높이&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6555"/>
         <source>Bracket</source>
-        <translation>묶음표</translation>
+        <translation>대괄호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6560"/>
@@ -2932,7 +2932,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6568"/>
         <source>Extend bracket to end of duration</source>
-        <translation>음길이 끝까지 묶음표 연장</translation>
+        <translation>음길이 끝까지 대괄호 연장</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6578"/>
@@ -3005,7 +3005,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="6982"/>
         <source>Hook length:</source>
-        <translation>갈고리 길이:</translation>
+        <translation>꺾임 길이:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7090"/>
@@ -3029,7 +3029,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7118"/>
         <source>Voices 1 &amp; 3 above staff, voices 2 &amp; 4 below staff</source>
-        <translation>1·3성부는 보표 위, 2·4성부는 보표 아래</translation>
+        <translation>1 &amp; 3 성부는 보표 위, 2 &amp; 4 성부는 보표 아래</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7141"/>
@@ -3225,7 +3225,7 @@ space unit</extracomment>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7792"/>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7870"/>
         <source>Reset &apos;Hook height&apos; value</source>
-        <translation>&apos;갈고리 높이&apos; 값 재설정</translation>
+        <translation>&apos;꺾임 높이&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7803"/>
@@ -3270,7 +3270,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7831"/>
         <source>Hook height above:</source>
-        <translation>위쪽 갈고리 높이:</translation>
+        <translation>위쪽 꺾임 높이:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7841"/>
@@ -3280,7 +3280,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7880"/>
         <source>Hook height below:</source>
-        <translation>아래쪽 갈고리 높이:</translation>
+        <translation>아래쪽 꺾임 높이:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="7899"/>
@@ -3326,12 +3326,12 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9433"/>
         <source>Articulations &amp;&amp; ornaments</source>
-        <translation>아티큘레이션 및 꾸밈음</translation>
+        <translation>연주기호 및 꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9439"/>
         <source>Reset &apos;Articulation distance&apos; value</source>
-        <translation>&apos;아티큘레이션 간격&apos; 값 재설정</translation>
+        <translation>&apos;연주기호 간격&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9449"/>
@@ -3349,7 +3349,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9469"/>
         <source>Articulation size:</source>
-        <translation>아티큘레이션 크기:</translation>
+        <translation>연주기호 크기:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9524"/>
@@ -3374,7 +3374,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9571"/>
         <source>Reset &apos;Articulation size&apos; value</source>
-        <translation>&apos;아티큘레이션 크기&apos; 값 재설정</translation>
+        <translation>&apos;연주기호 크기&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9578"/>
@@ -3384,7 +3384,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9624"/>
         <source>Articulation alignment when positioned at the stem</source>
-        <translation>기둥 위치 시 아티큘레이션 정렬</translation>
+        <translation>기둥 위치 시 연주기호 정렬</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9630"/>
@@ -3404,7 +3404,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9670"/>
         <source>Combined articulation</source>
-        <translation>결합된 아티큘레이션</translation>
+        <translation>결합된 연주기호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9676"/>
@@ -3414,7 +3414,7 @@ space unit</extracomment>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9683"/>
         <source>Prefer closeness to notehead (combined articulations may become separated)</source>
-        <translation>음표 머리에 가깝게 배치 (결합된 아티큘레이션이 분리될 수 있음)</translation>
+        <translation>음표 머리에 가깝게 배치 (결합된 연주기호가 분리될 수 있음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="9709"/>
@@ -3571,7 +3571,7 @@ x-높이에 대한 %):</translation>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="11081"/>
         <source>Reset &apos;Dash placement at the start of the system&apos; value</source>
-        <translation>&apos;단 시작점의 구분선 배치&apos; 값 재설정</translation>
+        <translation>&apos;단 시작 부분의 파선 배치&apos; 값 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="11097"/>
@@ -3592,13 +3592,13 @@ x-높이에 대한 %):</translation>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="11127"/>
         <source>Restate dash before syllable on 
 first note of the system</source>
-        <translation>단(System)의 첫 음표에서 
+        <translation>단의 첫 음표에서 
 음절 앞 구분선 다시 표시</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="11135"/>
         <source>Dash placement at the start of the system:</source>
-        <translation>단 시작점의 구분선 배치:</translation>
+        <translation>단 시작 부분의 파선 배치:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="11142"/>
@@ -3709,7 +3709,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="11925"/>
         <source>Select the elements you would like displayed in common and simple tablature staves</source>
-        <translation>일반 및 단순 타블라추어 보표에 화면표시할 요소를 선택하십시오</translation>
+        <translation>일반 및 단순 타블라추어 보표에 화면표시할 요소를 선택합니다</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12014"/>
@@ -3749,7 +3749,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12123"/>
         <source>Turns</source>
-        <translation>턴(Turn)</translation>
+        <translation>턴</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12151"/>
@@ -3809,7 +3809,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12407"/>
         <source>Only show at the start of a system</source>
-        <translation>단 시작점에서만 표시</translation>
+        <translation>단 시작 부분에만 표시</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12414"/>
@@ -3824,7 +3824,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12428"/>
         <source>Always show parenthesized fret marks when articulation markings are present</source>
-        <translation>아티큘레이션 기호가 있을 때 항상 괄호로 프렛 기호 표시</translation>
+        <translation>연주기호 표시가 있을 때 항상 괄호로 프렛 기호 표시</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.ui" line="12479"/>
@@ -4091,12 +4091,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/framework/dockwindow/thirdparty/KDDockWidgets/src/private/widgets/TitleBarWidget.cpp" line="265"/>
         <source>Auto-hide</source>
-        <translation>자동 숨기기</translation>
+        <translation>자동 숨김</translation>
     </message>
     <message>
         <location filename="../../src/framework/dockwindow/thirdparty/KDDockWidgets/src/private/widgets/TitleBarWidget.cpp" line="268"/>
         <source>Disable auto-hide</source>
-        <translation>자동 숨기기 해제</translation>
+        <translation>자동 숨김 해제</translation>
     </message>
     <message>
         <location filename="../../src/framework/dockwindow/thirdparty/KDDockWidgets/src/private/widgets/TitleBarWidget.cpp" line="285"/>
@@ -4285,7 +4285,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/measureproperties.ui" line="433"/>
         <source>Always hide</source>
-        <translation>항상 숨기기</translation>
+        <translation>항상 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/measureproperties.ui" line="471"/>
@@ -4308,12 +4308,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/palette/widgets/note_groups.ui" line="17"/>
         <source>Beam groups</source>
-        <translation>꼬리묶음 그룹</translation>
+        <translation>빔 그룹</translation>
     </message>
     <message>
         <location filename="../../src/palette/widgets/note_groups.ui" line="37"/>
         <source>Beam selector</source>
-        <translation>꼬리묶음 선택기</translation>
+        <translation>빔 선택기</translation>
     </message>
     <message>
         <location filename="../../src/palette/widgets/note_groups.ui" line="69"/>
@@ -4498,17 +4498,17 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/realizeharmonydialog.ui" line="14"/>
         <source>Realize chord symbols</source>
-        <translation>화음 기호 실음 기보</translation>
+        <translation>코드 기호 실음 기보</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/realizeharmonydialog.ui" line="17"/>
         <source>Convert chord symbols into notes</source>
-        <translation>화음 기호를 음표로 변환</translation>
+        <translation>코드 기호를 음표로 변환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/realizeharmonydialog.ui" line="41"/>
         <source>Chord symbols to be realized:</source>
-        <translation>실음 기보할 화음 기호:</translation>
+        <translation>실음 기보할 코드 기호:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/realizeharmonydialog.ui" line="95"/>
@@ -4765,7 +4765,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/palette/widgets/symboldialog.ui" line="72"/>
         <source>System flag</source>
-        <translation>시스템 플래그</translation>
+        <translation>단 플래그</translation>
     </message>
     <message>
         <location filename="../../src/palette/widgets/symboldialog.ui" line="92"/>
@@ -4857,7 +4857,7 @@ followed by dashes</source>
         <location filename="../../src/palette/view/widgets/timesignaturepropertiesdialog.ui" line="49"/>
         <location filename="../../src/palette/widgets/timesignaturepropertiesdialog.ui" line="49"/>
         <source>Beam groups</source>
-        <translation>꼬리묶음 그룹</translation>
+        <translation>빔 그룹</translation>
     </message>
     <message>
         <location filename="../../src/palette/view/widgets/timesignaturepropertiesdialog.ui" line="56"/>
@@ -4883,12 +4883,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="20"/>
         <source>Transpose</source>
-        <translation>이조</translation>
+        <translation>조옮김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="26"/>
         <source>Transpose chromatically</source>
-        <translation>반음계 단위 이조</translation>
+        <translation>반음계 단위 조옮김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="35"/>
@@ -5004,7 +5004,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="186"/>
         <source>Transpose by interval</source>
-        <translation>음정 단위 이조</translation>
+        <translation>음정 단위 조옮김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="189"/>
@@ -5149,12 +5149,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="385"/>
         <source>Transpose key signatures</source>
-        <translation>조표 함께 이조</translation>
+        <translation>조표 생성</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="398"/>
         <source>Transpose diatonically</source>
-        <translation>온음계 단위 이조</translation>
+        <translation>온음계 단위 조옮김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="412"/>
@@ -5205,7 +5205,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="513"/>
         <source>Transpose chord symbols and fretboard diagrams</source>
-        <translation>화음 기호 및 지판 도표 함께 이조</translation>
+        <translation>지판 다이어그램에 코드 기호 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/transposedialog.ui" line="523"/>
@@ -5266,7 +5266,7 @@ followed by dashes</source>
         <location filename="../../src/notationscene/widgets/tupletdialog.ui" line="197"/>
         <location filename="../../src/notationscene/widgets/tupletdialog.ui" line="225"/>
         <source>Bracket</source>
-        <translation>묶음표</translation>
+        <translation>대괄호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/tupletdialog.ui" line="215"/>
@@ -5317,7 +5317,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/voicing_select.ui" line="88"/>
         <source>Root only</source>
-        <translation>근음만</translation>
+        <translation>기본음 만</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/voicing_select.ui" line="93"/>
@@ -5352,7 +5352,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/voicing_select.ui" line="122"/>
         <source>Until next chord symbol</source>
-        <translation>다음 화음 기호 전까지</translation>
+        <translation>다음 코드 기호 전까지</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/voicing_select.ui" line="127"/>
@@ -5362,7 +5362,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/widgets/voicing_select.ui" line="132"/>
         <source>Chord/rest duration</source>
-        <translation>화음/쉼표 음길이</translation>
+        <translation>코드/쉼표 음길이</translation>
     </message>
 </context>
 <context>
@@ -5414,12 +5414,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="81"/>
         <source>Online &amp;handbook</source>
-        <translation>온라인 안내서(&amp;H)</translation>
+        <translation>온라인 핸드북(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="82"/>
         <source>Open online handbook</source>
-        <translation>온라인 안내서 열기</translation>
+        <translation>온라인 핸드북 열기</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="87"/>
@@ -5455,13 +5455,13 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="113"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="48"/>
         <source>&amp;Playback controls</source>
-        <translation>재생 제어(&amp;P)</translation>
+        <translation>플레이백 제어(&amp;P)</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="114"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="49"/>
         <source>Show/hide playback controls</source>
-        <translation>재생 제어 표시/숨기기</translation>
+        <translation>플레이백 제어 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="120"/>
@@ -5473,7 +5473,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="121"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="56"/>
         <source>Show/hide note input toolbar</source>
-        <translation>음표 입력 도구 모음 표시/숨기기</translation>
+        <translation>음표 입력 도구 모음 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="129"/>
@@ -5485,7 +5485,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="130"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="65"/>
         <source>Show/hide palettes</source>
-        <translation>팔레트 표시/숨기기</translation>
+        <translation>팔레트 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="136"/>
@@ -5497,7 +5497,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="137"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="72"/>
         <source>Show/hide layout panel</source>
-        <translation>레이아웃 패널 표시/숨기기</translation>
+        <translation>레이아웃 패널 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="143"/>
@@ -5509,7 +5509,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="144"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="79"/>
         <source>Show/hide properties</source>
-        <translation>속성 표시/숨기기</translation>
+        <translation>속성 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="150"/>
@@ -5520,7 +5520,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="151"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="86"/>
         <source>Show/hide selection filter</source>
-        <translation>선택영역 필터 표시/숨기기</translation>
+        <translation>선택영역 필터 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="157"/>
@@ -5532,7 +5532,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="158"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="93"/>
         <source>Show/hide undo history</source>
-        <translation>실행 취소 히스토리 표시/숨기기</translation>
+        <translation>실행 취소 히스토리 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="166"/>
@@ -5544,7 +5544,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="167"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="102"/>
         <source>Show/hide navigator</source>
-        <translation>내비게이터 표시/숨기기</translation>
+        <translation>내비게이터 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="175"/>
@@ -5556,7 +5556,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="176"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="111"/>
         <source>Show/hide braille panel</source>
-        <translation>점자 패널 표시/숨기기</translation>
+        <translation>점자 패널 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="184"/>
@@ -5568,7 +5568,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="185"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="120"/>
         <source>Show/hide timeline</source>
-        <translation>타임라인 표시/숨기기</translation>
+        <translation>타임라인 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="191"/>
@@ -5580,7 +5580,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="192"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="127"/>
         <source>Show/hide mixer</source>
-        <translation>믹서 표시/숨기기</translation>
+        <translation>믹서 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="199"/>
@@ -5592,7 +5592,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="200"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="135"/>
         <source>Show/hide piano keyboard</source>
-        <translation>피아노 키보드 표시/숨기기</translation>
+        <translation>피아노 키보드 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="206"/>
@@ -5604,7 +5604,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="207"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="142"/>
         <source>Show/hide percussion panel</source>
-        <translation>퍼커션 패널 표시/숨기기</translation>
+        <translation>퍼커션 패널 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="213"/>
@@ -5622,7 +5622,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="222"/>
         <location filename="../../src/web/appshell/internal/applicationuiactions.cpp" line="157"/>
         <source>Show/hide status bar</source>
-        <translation>상태 표시줄 표시/숨기기</translation>
+        <translation>상태 표시줄 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="229"/>
@@ -5673,7 +5673,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="261"/>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="262"/>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="281"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="282"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2662"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2663"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/internal/undoredotoolbarmodel.cpp" line="76"/>
@@ -5684,7 +5684,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="269"/>
         <location filename="../../src/appshell/internal/applicationuiactions.cpp" line="270"/>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="287"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="288"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2669"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2670"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/internal/undoredotoolbarmodel.cpp" line="84"/>
@@ -5705,19 +5705,19 @@ followed by dashes</source>
         <translation>삭제</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="215"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="216"/>
         <source>Parts…</source>
         <translation>파트…</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="282"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="283"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/internal/undoredotoolbarmodel.cpp" line="77"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="160"/>
         <source>Undo ‘%1’</source>
         <translation>‘%1’ 실행 취소</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="288"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="289"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/internal/undoredotoolbarmodel.cpp" line="85"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="166"/>
         <source>Redo ‘%1’</source>
@@ -5866,7 +5866,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/framework/musesampler/internal/musesampleruiactions.cpp" line="42"/>
         <source>Reload MuseSampler</source>
-        <translation>MuseSampler 다시 로드</translation>
+        <translation>MuseSampler 다시 불러오기</translation>
     </message>
     <message>
         <location filename="../../src/framework/update/internal/updateuiactions.cpp" line="36"/>
@@ -5973,12 +5973,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="67"/>
         <source>Add %1 to chord</source>
-        <translation>화음에 %1 추가</translation>
+        <translation>코드에 %1 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="68"/>
         <source>Add note %1 to chord</source>
-        <translation>화음에 %1 음표 추가</translation>
+        <translation>코드에 %1 음표 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="69"/>
@@ -6034,22 +6034,22 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="142"/>
         <source>Next chord / Shift text right</source>
-        <translation>다음 화음 / 텍스트 오른쪽 이동</translation>
+        <translation>다음 코드 / 텍스트 오른쪽 이동</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="143"/>
         <source>Select next chord / move text right</source>
-        <translation>다음 화음 선택 / 텍스트 오른쪽 이동</translation>
+        <translation>다음 코드 선택 / 텍스트 오른쪽 이동</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="148"/>
         <source>Previous chord / Shift text left</source>
-        <translation>이전 화음 / 텍스트 왼쪽 이동</translation>
+        <translation>이전 코드 / 텍스트 왼쪽 이동</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="149"/>
         <source>Select previous chord / move text left</source>
-        <translation>이전 화음 선택 / 텍스트 왼쪽 이동</translation>
+        <translation>이전 코드 선택 / 텍스트 왼쪽 이동</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="154"/>
@@ -6074,7 +6074,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="166"/>
         <source>Up note in chord</source>
-        <translation>화음의 위쪽 음표</translation>
+        <translation>코드의 위쪽 음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="167"/>
@@ -6084,7 +6084,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="172"/>
         <source>Down note in chord</source>
-        <translation>화음의 아래쪽 음표</translation>
+        <translation>코드의 아래쪽 음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="173"/>
@@ -6094,22 +6094,22 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="178"/>
         <source>Top note in chord</source>
-        <translation>화음의 최상성부 음표</translation>
+        <translation>코드의 최상성부 음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="179"/>
         <source>Select top note in chord</source>
-        <translation>화음의 최상성부 음표 선택</translation>
+        <translation>코드의 최상성부 음표 선택</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="184"/>
         <source>Bottom note in chord</source>
-        <translation>화음의 최하성부 음표</translation>
+        <translation>코드의 최하성부 음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="185"/>
         <source>Select bottom note in chord</source>
-        <translation>화음의 최하성부 음표 선택</translation>
+        <translation>코드의 최하성부 음표 선택</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="190"/>
@@ -6199,7 +6199,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="239"/>
         <source>Go to next system</source>
-        <translation>다음 단으로 이동</translation>
+        <translation>다음 단으로 가기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="244"/>
@@ -6209,12 +6209,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="245"/>
         <source>Go to previous system</source>
-        <translation>이전 단으로 이동</translation>
+        <translation>이전 단으로 가기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="250"/>
         <source>Add next chord to selection</source>
-        <translation>선택영역에 다음 화음 추가</translation>
+        <translation>선택영역에 다음 코드 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="251"/>
@@ -6224,7 +6224,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="256"/>
         <source>Add previous chord to selection</source>
-        <translation>선택영역에 이전 화음 추가</translation>
+        <translation>선택영역에 이전 코드 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="257"/>
@@ -6235,13 +6235,13 @@ followed by dashes</source>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="262"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="263"/>
         <source>Move chord/rest left</source>
-        <translation>화음/쉼표 왼쪽으로 이동</translation>
+        <translation>코드/쉼표 왼쪽으로 이동</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="268"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="269"/>
         <source>Move chord/rest right</source>
-        <translation>화음/쉼표 오른쪽으로 이동</translation>
+        <translation>코드/쉼표 오른쪽으로 이동</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="274"/>
@@ -6488,12 +6488,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="426"/>
         <source>&amp;Transpose…</source>
-        <translation>이조(&amp;T)…</translation>
+        <translation>조옮김(&amp;T)…</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="427"/>
         <source>Transpose</source>
-        <translation>이조</translation>
+        <translation>조옮김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="432"/>
@@ -6528,12 +6528,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="451"/>
         <source>Realize &amp;chord symbols</source>
-        <translation>화음 기호 실음 기보(&amp;C)</translation>
+        <translation>코드 기호 실음 기보(&amp;C)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="452"/>
         <source>Realize chord symbols</source>
-        <translation>화음 기호 실음 기보</translation>
+        <translation>코드 기호 실음 기보</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="457"/>
@@ -6730,12 +6730,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="583"/>
         <source>System text properties…</source>
-        <translation>시스템 텍스트 속성…</translation>
+        <translation>단 텍스트 속성…</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="584"/>
         <source>System text properties</source>
-        <translation>시스템 텍스트 속성</translation>
+        <translation>단 텍스트 속성</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="589"/>
@@ -6760,54 +6760,54 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="601"/>
         <source>Exchange voice &amp;1-2</source>
-        <translation>1-2성부 교체(&amp;1)</translation>
+        <translation>1-2성부 교환(&amp;1)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="602"/>
         <source>Exchange voice 1-2</source>
-        <translation>1-2성부 교체</translation>
+        <translation>1-2성부 교환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="607"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="608"/>
         <source>Exchange voice 1-3</source>
-        <translation>1-3성부 교체</translation>
+        <translation>1-3성부 교환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="613"/>
         <source>Exchange voice 1-&amp;4</source>
-        <translation>1-4성부 교체(&amp;4)</translation>
+        <translation>1-4성부 교환(&amp;4)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="614"/>
         <source>Exchange voice 1-4</source>
-        <translation>1-4성부 교체</translation>
+        <translation>1-4성부 교환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="619"/>
         <source>Exchange voice &amp;2-3</source>
-        <translation>2-3성부 교체(&amp;2)</translation>
+        <translation>2-3성부 교환(&amp;2)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="620"/>
         <source>Exchange voice 2-3</source>
-        <translation>2-3성부 교체</translation>
+        <translation>2-3성부 교환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="625"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="626"/>
         <source>Exchange voice 2-4</source>
-        <translation>2-4성부 교체</translation>
+        <translation>2-4성부 교환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="631"/>
         <source>Exchange voice &amp;3-4</source>
-        <translation>3-4성부 교체(&amp;3)</translation>
+        <translation>3-4성부 교환(&amp;3)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="632"/>
         <source>Exchange voice 3-4</source>
-        <translation>3-4성부 교체</translation>
+        <translation>3-4성부 교환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="637"/>
@@ -6825,7 +6825,7 @@ followed by dashes</source>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="649"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="650"/>
         <source>Add/remove system lock</source>
-        <translation>단 잠금 추가/제거</translation>
+        <translation>단 고정 추가/제거</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="655"/>
@@ -6854,22 +6854,22 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="681"/>
         <source>&amp;Split measure before selected note/rest</source>
-        <translation>선택한 음표/쉼표 앞에서 마디 나누기(&amp;S)</translation>
+        <translation>선택한 음표/쉼표 앞에서 마디 분할하기(&amp;S)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="682"/>
         <source>Split measure before selected note/rest</source>
-        <translation>선택한 음표/쉼표 앞에서 마디 나누기</translation>
+        <translation>선택한 음표/쉼표 앞에서 마디 분할하기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="687"/>
         <source>&amp;Join selected measures</source>
-        <translation>선택한 마디 합치기(&amp;J)</translation>
+        <translation>선택한 마디 연결하기(&amp;J)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="688"/>
         <source>Join selected measures</source>
-        <translation>선택한 마디 합치기</translation>
+        <translation>선택한 마디 연결하기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="693"/>
@@ -7014,12 +7014,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="786"/>
         <source>Acciaccatura</source>
-        <translation>단전타음(꾸밈음)</translation>
+        <translation>단꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="787"/>
         <source>Add grace note: acciaccatura</source>
-        <translation>단전타음(꾸밈음) 추가</translation>
+        <translation>앞꾸밈음 추가: 단꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="793"/>
@@ -7029,7 +7029,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="794"/>
         <source>Add grace note: appoggiatura</source>
-        <translation>장전타음(꾸밈음) 추가</translation>
+        <translation>장앞꾸밈음(앞꾸밈음) 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="800"/>
@@ -7039,7 +7039,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="801"/>
         <source>Add grace note: quarter</source>
-        <translation>4분음표 꾸밈음 추가</translation>
+        <translation>4분음표 앞꾸밈음 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="807"/>
@@ -7049,7 +7049,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="808"/>
         <source>Add grace note: 16th</source>
-        <translation>16분음표 꾸밈음 추가</translation>
+        <translation>16분음표 앞꾸밈음 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="814"/>
@@ -7059,7 +7059,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="815"/>
         <source>Add grace note: 32nd</source>
-        <translation>32분음표 꾸밈음 추가</translation>
+        <translation>32분음표 앞꾸밈음 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="821"/>
@@ -7069,7 +7069,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="822"/>
         <source>Add grace note: eighth after</source>
-        <translation>8분음표 뒤꾸밈음 추가</translation>
+        <translation>8분음표 뒤앞꾸밈음 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="828"/>
@@ -7079,7 +7079,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="829"/>
         <source>Add grace note: 16th after</source>
-        <translation>16분음표 뒤꾸밈음 추가</translation>
+        <translation>16분음표 뒤앞꾸밈음 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="835"/>
@@ -7089,73 +7089,73 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="836"/>
         <source>Add grace note: 32nd after</source>
-        <translation>32분음표 뒤꾸밈음 추가</translation>
+        <translation>32분음표 뒤앞꾸밈음 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="842"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="843"/>
         <source>Auto beam</source>
-        <translation>자동 꼬리묶음</translation>
+        <translation>자동 빔</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="849"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="850"/>
         <source>No beam</source>
-        <translation>꼬리묶음 없음</translation>
+        <translation>빔 없음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="856"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="857"/>
         <source>Break beam left</source>
-        <translation>왼쪽 꼬리 끊기</translation>
+        <translation>왼쪽 빔 끊기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="863"/>
         <source>Break inner beams (8th)</source>
-        <translation>안쪽 꼬리 끊기(8분)</translation>
+        <translation>내부 빔 끊기(8분)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="864"/>
         <source>Break inner beams (eighth)</source>
-        <translation>안쪽 꼬리 끊기(8분)</translation>
+        <translation>내부 빔 끊기(8분)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="870"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="871"/>
         <source>Break inner beams (16th)</source>
-        <translation>안쪽 꼬리 끊기(16분)</translation>
+        <translation>내부 빔 끊기(16분)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="877"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="878"/>
         <source>Join beams</source>
-        <translation>꼬리 연결</translation>
+        <translation>빔 연결하기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="884"/>
         <source>Feathered beam, decelerate</source>
-        <translation>부채꼴 꼬리(점점 느리게)</translation>
+        <translation>페더드 빔, 점점 느리게</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="885"/>
         <source>Add feathered beam: decelerate</source>
-        <translation>부채꼴 꼬리 추가(점점 느리게)</translation>
+        <translation>페더드 빔 추가: 점점 느리게</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="891"/>
         <source>Feathered beam, accelerate</source>
-        <translation>부채꼴 꼬리(점점 빠르게)</translation>
+        <translation>페더드 빔, 점점 빠르게</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="892"/>
         <source>Add feathered beam: accelerate</source>
-        <translation>부채꼴 꼬리 추가(점점 빠르게)</translation>
+        <translation>페더드 빔 추가: 점점 빠르게</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="898"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="899"/>
         <source>Add brackets to accidental</source>
-        <translation>임시표에 괄호 추가</translation>
+        <translation>임시표에 대괄호 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="905"/>
@@ -7435,7 +7435,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1292"/>
         <source>Add tied note to chord</source>
-        <translation>화음에 붙임줄 음표 추가</translation>
+        <translation>코드에 붙임줄 음표 추가</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1297"/>
@@ -7510,7 +7510,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1339"/>
         <source>Add text: system text</source>
-        <translation>텍스트 추가: 시스템 텍스트</translation>
+        <translation>텍스트 추가: 단 텍스트</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1344"/>
@@ -7575,12 +7575,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1380"/>
         <source>C&amp;hord symbol</source>
-        <translation>화음 기호(&amp;H)</translation>
+        <translation>코드 기호(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1381"/>
         <source>Add text: chord symbol</source>
-        <translation>텍스트 추가: 화음 기호</translation>
+        <translation>텍스트 추가: 코드 기호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1386"/>
@@ -7590,7 +7590,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1387"/>
         <source>Add text: Roman numeral analysis</source>
-        <translation>텍스트 추가: 로마 숫자 분석</translation>
+        <translation>텍스트 추가: 로마자 분석</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1392"/>
@@ -7640,7 +7640,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1417"/>
         <source>Enter tuplet: duplet</source>
-        <translation>둘잇단음표 입력</translation>
+        <translation>잇단음표 입력: 2잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1422"/>
@@ -7650,57 +7650,57 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1423"/>
         <source>Enter tuplet: triplet</source>
-        <translation>셋잇단음표 입력</translation>
+        <translation>잇단음표 입력: 3잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1428"/>
         <source>&amp;Quadruplet</source>
-        <translation>넷잇단음표(&amp;Q)</translation>
+        <translation>네잇단음표(&amp;Q)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1429"/>
         <source>Enter tuplet: quadruplet</source>
-        <translation>넷잇단음표 입력</translation>
+        <translation>잇단음표 입력: 4잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1434"/>
         <source>Q&amp;uintuplet</source>
-        <translation>다섯잇단음표(&amp;U)</translation>
+        <translation>5잇단음표(&amp;U)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1435"/>
         <source>Enter tuplet: quintuplet</source>
-        <translation>다섯잇단음표 입력</translation>
+        <translation>잇단음표 입력: 5잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1440"/>
         <source>Se&amp;xtuplet</source>
-        <translation>여섯잇단음표(&amp;X)</translation>
+        <translation>6잇단음표(&amp;X)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1441"/>
         <source>Enter tuplet: sextuplet</source>
-        <translation>여섯잇단음표 입력</translation>
+        <translation>잇단음표 입력: 6잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1446"/>
         <source>Se&amp;ptuplet</source>
-        <translation>일곱잇단음표(&amp;P)</translation>
+        <translation>7잇단음표(&amp;P)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1447"/>
         <source>Enter tuplet: septuplet</source>
-        <translation>일곱잇단음표 입력</translation>
+        <translation>잇단음표 입력: 7잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1452"/>
         <source>&amp;Octuplet</source>
-        <translation>여덟잇단음표(&amp;O)</translation>
+        <translation>8잇단음표(&amp;O)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1453"/>
         <source>Enter tuplet: octuplet</source>
-        <translation>여덟잇단음표 입력</translation>
+        <translation>잇단음표 입력: 8잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1458"/>
@@ -7710,7 +7710,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1459"/>
         <source>Enter tuplet: nonuplet</source>
-        <translation>아홉잇단음표 입력</translation>
+        <translation>잇단음표 입력: 9잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1464"/>
@@ -7765,12 +7765,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1494"/>
         <source>Reset &amp;beams</source>
-        <translation>꼬리묶음 재설정(&amp;B)</translation>
+        <translation>빔 재설정(&amp;B)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1495"/>
         <source>Reset beams to default grouping</source>
-        <translation>꼬리묶음을 기본 그룹으로 재설정</translation>
+        <translation>빔을 기본 그룹으로 재설정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1500"/>
@@ -7975,13 +7975,13 @@ followed by dashes</source>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1657"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1658"/>
         <source>Lock/unlock all systems</source>
-        <translation>모든 단 잠금/해제</translation>
+        <translation>모든 단 고정/해제</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1663"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1664"/>
         <source>Lock/unlock selected system(s)</source>
-        <translation>선택한 단 잠금/해제</translation>
+        <translation>선택한 단 고정/해제</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1670"/>
@@ -8059,67 +8059,67 @@ followed by dashes</source>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1722"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1723"/>
         <source>Advance cursor: next beat (chord symbols)</source>
-        <translation>커서 이동: 다음 박(화음 기호)</translation>
+        <translation>커서 이동: 다음 박(코드 기호)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1728"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1729"/>
         <source>Advance cursor: previous beat (chord symbols)</source>
-        <translation>커서 이동: 이전 박(화음 기호)</translation>
+        <translation>커서 이동: 이전 박(코드 기호)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1734"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1735"/>
         <source>Advance cursor: longa (chord symbols/figured bass)</source>
-        <translation>커서 이동: 4온음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 4온음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1740"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1741"/>
         <source>Advance cursor: breve (chord symbols/figured bass)</source>
-        <translation>커서 이동: 브레베(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 브레베(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1746"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1747"/>
         <source>Advance cursor: whole note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 온음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 온음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1752"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1753"/>
         <source>Advance cursor: half note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 2분음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 2분음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1758"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1759"/>
         <source>Advance cursor: quarter note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 4분음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 4분음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1764"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1765"/>
         <source>Advance cursor: eighth note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 8분음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 8분음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1770"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1771"/>
         <source>Advance cursor: 16th note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 16분음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 16분음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1776"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1777"/>
         <source>Advance cursor: 32nd note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 32분음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 32분음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1782"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1783"/>
         <source>Advance cursor: 64th note (chord symbols/figured bass)</source>
-        <translation>커서 이동: 64분음표(화음 기호/숫자 저음)</translation>
+        <translation>커서 이동: 64분음표(코드 기호/숫자 저음)</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1788"/>
@@ -8278,22 +8278,22 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1896"/>
         <source>Toggle inverted turn</source>
-        <translation>역턴 전환</translation>
+        <translation>인버티드 턴 전환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1897"/>
         <source>Add ornament: inverted turn</source>
-        <translation>꾸밈음 추가: 역턴</translation>
+        <translation>꾸밈음 추가: 인버티드 턴</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1902"/>
         <source>Toggle turn with slash</source>
-        <translation>슬래시 턴 전환</translation>
+        <translation>턴 슬래시 전환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1903"/>
         <source>Add ornament: turn with slash</source>
-        <translation>꾸밈음 추가: 슬래시 턴</translation>
+        <translation>꾸밈음 추가: 턴 슬래시</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1908"/>
@@ -8308,12 +8308,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1914"/>
         <source>Toggle vertical inverted turn</source>
-        <translation>수직 역턴 전환</translation>
+        <translation>수직 인버티드 턴 전환</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1915"/>
         <source>Add ornament: vertical inverted turn</source>
-        <translation>꾸밈음 추가: 수직 역턴</translation>
+        <translation>꾸밈음 추가: 수직 인버티드 턴</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1920"/>
@@ -8443,7 +8443,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1993"/>
         <source>Add clef: treble</source>
-        <translation>음자리표 추가: 높은음자리표</translation>
+        <translation>음자리표 추가: 높은음자리</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1998"/>
@@ -8453,7 +8453,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="1999"/>
         <source>Add clef: bass</source>
-        <translation>음자리표 추가: 낮은음자리표</translation>
+        <translation>음자리표 추가: 낮은음자리</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2004"/>
@@ -8569,12 +8569,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2071"/>
         <source>Show/hide empty staves</source>
-        <translation>빈 보표 표시/숨기기</translation>
+        <translation>빈 보표 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2076"/>
         <source>Set visible</source>
-        <translation>표시 설정</translation>
+        <translation>보이기 지정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2077"/>
@@ -8584,7 +8584,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2082"/>
         <source>Set invisible</source>
-        <translation>숨기기 설정</translation>
+        <translation>숨기기 지정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2083"/>
@@ -8874,7 +8874,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2350"/>
         <source>Augmentation dot</source>
-        <translation>부점</translation>
+        <translation>증가점</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2351"/>
@@ -8884,7 +8884,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2357"/>
         <source>Double augmentation dot</source>
-        <translation>겹부점</translation>
+        <translation>겹증가점</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2358"/>
@@ -8894,22 +8894,22 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2364"/>
         <source>Triple augmentation dot</source>
-        <translation>겹겹부점</translation>
+        <translation>세겹 증가점</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2365"/>
         <source>Toggle duration dot: triple</source>
-        <translation>부점 전환: 겹겹부점</translation>
+        <translation>부점 전환: 세겹부점</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2371"/>
         <source>Quadruple augmentation dot</source>
-        <translation>겹겹겹부점</translation>
+        <translation>네겹 증가점</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2372"/>
         <source>Toggle duration dot: quadruple</source>
-        <translation>부점 전환: 겹겹겹부점</translation>
+        <translation>부점 전환: 네겹부점</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2379"/>
@@ -9024,7 +9024,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2454"/>
         <source>Add articulation: marcato</source>
-        <translation>아티큘레이션 추가: 마르카토</translation>
+        <translation>연주기호 추가: 마르카토</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2460"/>
@@ -9034,7 +9034,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2461"/>
         <source>Add articulation: accent</source>
-        <translation>아티큘레이션 추가: 악센트</translation>
+        <translation>연주기호 추가: 악센트</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2467"/>
@@ -9044,7 +9044,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2468"/>
         <source>Add articulation: tenuto</source>
-        <translation>아티큘레이션 추가: 테누토</translation>
+        <translation>연주기호 추가: 테누토</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2474"/>
@@ -9054,12 +9054,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2475"/>
         <source>Add articulation: staccato</source>
-        <translation>아티큘레이션 추가: 스타카토</translation>
+        <translation>연주기호 추가: 스타카토</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2481"/>
         <source>Cross-staff beaming</source>
-        <translation>보표 횡단 빔</translation>
+        <translation>보표 간 빔 연결</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2487"/>
@@ -9152,7 +9152,7 @@ followed by dashes</source>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2562"/>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2563"/>
         <source>Grace note bend</source>
-        <translation>꾸밈음 밴드</translation>
+        <translation>앞꾸밈음 밴드</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2569"/>
@@ -9206,7 +9206,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2618"/>
         <source>Show/hide invisible elements</source>
-        <translation>숨긴 요소 표시/숨기기</translation>
+        <translation>숨긴 요소 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2624"/>
@@ -9216,7 +9216,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2625"/>
         <source>Show/hide formatting</source>
-        <translation>서식 표시/숨기기</translation>
+        <translation>서식 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2631"/>
@@ -9226,7 +9226,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2632"/>
         <source>Show/hide frames</source>
-        <translation>프레임 표시/숨기기</translation>
+        <translation>프레임 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2638"/>
@@ -9236,7 +9236,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2639"/>
         <source>Show/hide page margins</source>
-        <translation>페이지 여백 표시/숨기기</translation>
+        <translation>페이지 여백 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2645"/>
@@ -9246,7 +9246,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2646"/>
         <source>Show/hide sound flags</source>
-        <translation>사운드 플래그 표시/숨기기</translation>
+        <translation>사운드 플래그 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2652"/>
@@ -9266,7 +9266,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2680"/>
         <source>Show/hide element bounding rectangles</source>
-        <translation>요소 경계 사각형 표시/숨기기</translation>
+        <translation>요소 경계 사각형 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2686"/>
@@ -9281,7 +9281,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2693"/>
         <source>Show/hide segment shapes</source>
-        <translation>세그먼트 모양 표시/숨기기</translation>
+        <translation>세그먼트 모양 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2699"/>
@@ -9296,7 +9296,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2706"/>
         <source>Show/hide skylines</source>
-        <translation>스카이라인 표시/숨기기</translation>
+        <translation>스카이라인 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2712"/>
@@ -9306,7 +9306,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2713"/>
         <source>Show/hide system bounding rectangles</source>
-        <translation>단 경계 사각형 표시/숨기기</translation>
+        <translation>단 경계 사각형 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2719"/>
@@ -9316,7 +9316,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2720"/>
         <source>Show/hide element masks</source>
-        <translation>요소 마스크 표시/숨기기</translation>
+        <translation>요소 마스크 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2726"/>
@@ -9326,7 +9326,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2727"/>
         <source>Show/hide line-attach points</source>
-        <translation>선 부착 점 표시/숨기기</translation>
+        <translation>선 부착 점 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/internal/notationuiactions.cpp" line="2733"/>
@@ -9427,7 +9427,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="71"/>
         <source>Stop playback</source>
-        <translation>재생 정지</translation>
+        <translation>플레이백 정지</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="63"/>
@@ -9442,12 +9442,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="57"/>
         <source>Pause playback</source>
-        <translation>재생 일시정지</translation>
+        <translation>플레이백 일시정지</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="64"/>
         <source>Pause and select playback position</source>
-        <translation>일시정지 및 재생 위치 선택</translation>
+        <translation>일시정지 및 플레이백 위치 선택</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="77"/>
@@ -9458,12 +9458,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="84"/>
         <source>Loop playback</source>
-        <translation>반복 재생</translation>
+        <translation>반복 플레이백</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="85"/>
         <source>Toggle ‘Loop playback’</source>
-        <translation>반복 재생 전환</translation>
+        <translation>반복 플레이백 전환</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="92"/>
@@ -9473,17 +9473,17 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="93"/>
         <source>Toggle metronome playback</source>
-        <translation>메트로놈 재생 전환</translation>
+        <translation>메트로놈 플레이백 전환</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="100"/>
         <source>Playback setup</source>
-        <translation>재생 설정</translation>
+        <translation>플레이백 설정</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="101"/>
         <source>Open playback setup dialog</source>
-        <translation>재생 설정 대화상자 열기</translation>
+        <translation>플레이백 설정 대화상자 열기</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="110"/>
@@ -9530,12 +9530,12 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="156"/>
         <source>Hear playback when editing</source>
-        <translation>편집 시 재생 음향 듣기</translation>
+        <translation>편집 시 플레이백 듣기</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="157"/>
         <source>Toggle hear playback when editing</source>
-        <translation>편집 시 재생 음향 듣기 전환</translation>
+        <translation>편집 시 플레이백 듣기 전환</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="164"/>
@@ -9545,7 +9545,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="165"/>
         <source>Pan score automatically during playback</source>
-        <translation>재생 중 악보 자동 스크롤</translation>
+        <translation>플레이백 중 악보 자동 스크롤</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="172"/>
@@ -9557,18 +9557,18 @@ followed by dashes</source>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="183"/>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="184"/>
         <source>Set loop marker left</source>
-        <translation>반복 왼쪽 마커 설정</translation>
+        <translation>반복 왼쪽 마커 지정</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="190"/>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="191"/>
         <source>Set loop marker right</source>
-        <translation>반복 오른쪽 마커 설정</translation>
+        <translation>반복 오른쪽 마커 지정</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="200"/>
         <source>Reload playback cache</source>
-        <translation>재생 캐시 다시 로드</translation>
+        <translation>플레이백 캐시 다시 불러오기</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/playbackuiactions.cpp" line="208"/>
@@ -9578,7 +9578,7 @@ followed by dashes</source>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/playbacktoolbarmodel.cpp" line="117"/>
         <source>Playback settings</source>
-        <translation>재생 설정</translation>
+        <translation>플레이백 설정</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/projectuiactions.cpp" line="37"/>
@@ -9702,31 +9702,41 @@ followed by dashes</source>
     </message>
     <message>
         <location filename="../../src/project/internal/projectuiactions.cpp" line="117"/>
+        <source>Import A&amp;udio to Score…</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="118"/>
+        <source>Import Audio to Score</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="124"/>
         <source>Project propert&amp;ies…</source>
         <translation>프로젝트 속성(&amp;I)…</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectuiactions.cpp" line="118"/>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="125"/>
         <source>Project properties</source>
         <translation>프로젝트 속성</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectuiactions.cpp" line="123"/>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="130"/>
         <source>&amp;Print…</source>
         <translation>인쇄(&amp;P)…</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectuiactions.cpp" line="124"/>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="131"/>
         <source>Print</source>
         <translation>인쇄</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectuiactions.cpp" line="130"/>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="137"/>
         <source>&amp;Clear list of recent files</source>
         <translation>최근 파일 목록 지우기(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectuiactions.cpp" line="131"/>
+        <location filename="../../src/project/internal/projectuiactions.cpp" line="138"/>
         <source>Clear list of recent files</source>
         <translation>최근 파일 목록 지우기</translation>
     </message>
@@ -9757,7 +9767,8 @@ followed by dashes</source>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/HomePage/HomeMenu.qml" line="93"/>
-        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="88"/>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="71"/>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="96"/>
         <source>MuseSounds</source>
         <translation>MuseSounds</translation>
     </message>
@@ -9798,7 +9809,7 @@ followed by dashes</source>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/NotationPage/NotationPage.qml" line="143"/>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/PublishPage/PublishPage.qml" line="78"/>
         <source>Playback controls</source>
-        <translation>재생 컨트롤</translation>
+        <translation>플레이백 컨트롤</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/NotationPage/NotationPage.qml" line="170"/>
@@ -9936,12 +9947,12 @@ This action will not delete any of your scores.</source>
         <translation>재시작</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/internal/startupscenario.cpp" line="337"/>
+        <location filename="../../src/appshell/internal/startupscenario.cpp" line="332"/>
         <source>The previous session quit unexpectedly.</source>
         <translation>이전 세션이 예기치 않게 종료되었습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/internal/startupscenario.cpp" line="338"/>
+        <location filename="../../src/appshell/internal/startupscenario.cpp" line="333"/>
         <source>Do you want to restore the session?</source>
         <translation>세션을 복원하시겠습니까?</translation>
     </message>
@@ -9966,12 +9977,7 @@ This action will not delete any of your scores.</source>
         <translation>개발자 도구</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/widgets/splashscreen/loadingscreenview.cpp" line="54"/>
-        <source>Loading…‎</source>
-        <translation>로드 중…</translation>
-    </message>
-    <message>
-        <location filename="../../src/appshell/widgets/splashscreen/loadingscreenview.cpp" line="99"/>
+        <location filename="../../src/appshell/widgets/splashscreen/loadingscreenview.cpp" line="93"/>
         <source>Version %1</source>
         <translation>버전 %1</translation>
     </message>
@@ -10031,7 +10037,7 @@ This action cannot be undone.</source>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/AboutDialog.qml" line="116"/>
         <source>Visit %1 for new versions and more information.</source>
         <extracomment>%1 will be a link to the MuseScore website</extracomment>
-        <translation>새 버전 및 자세한 정보를 보려면 %1을 방문하십시오.</translation>
+        <translation>새 버전 및 자세한 정보를 보려면 %1을 방문합니다.</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/AboutDialog.qml" line="119"/>
@@ -10041,13 +10047,13 @@ This action cannot be undone.</source>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/AboutDialog.qml" line="132"/>
         <source>For privacy information, see our &lt;a href=&quot;%1&quot;&gt;privacy policy&lt;/a&gt;.</source>
-        <translation>개인정보 관련 정보는 &lt;a href=&quot;%1&quot;&gt;개인정보 처리방침&lt;/a&gt;을 참조하십시오.</translation>
+        <translation>개인정보 관련 정보는 &lt;a href=&quot;%1&quot;&gt;개인정보 처리방침&lt;/a&gt;을 참조합니다.</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/AboutDialog.qml" line="141"/>
-        <source>Copyright © 1999-2026 MuseScore Limited.
+        <source>Copyright © 1999-2026 MuseScore Limited and others.
 Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License version 3&lt;/a&gt;.</source>
-        <translation>Copyright © 1999-2026 MuseScore Limited.
+        <translation>Copyright © 1999-2026 MuseScore Limited and others.
 &lt;a href=&quot;%1&quot;&gt;GNU 일반 공중 사용 허가서 버전 3&lt;/a&gt;에 따라 배포됩니다.</translation>
     </message>
     <message>
@@ -10084,12 +10090,12 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>닫기</translation>
     </message>
     <message>
-        <location filename="../../src/framework/dockwindow/qml/Muse/Dock/dockpanelview.cpp" line="117"/>
+        <location filename="../../src/framework/dockwindow/qml/Muse/Dock/dockpanelview.cpp" line="121"/>
         <source>Dock</source>
         <translation>도킹(고정)</translation>
     </message>
     <message>
-        <location filename="../../src/framework/dockwindow/qml/Muse/Dock/dockpanelview.cpp" line="117"/>
+        <location filename="../../src/framework/dockwindow/qml/Muse/Dock/dockpanelview.cpp" line="121"/>
         <source>Undock</source>
         <translation>분리</translation>
     </message>
@@ -10109,12 +10115,12 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/FirstLaunchSetup/PlaybackPage.qml" line="31"/>
         <source>Playback</source>
-        <translation>Playback</translation>
+        <translation>플레이백</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/FirstLaunchSetup/PlaybackPage.qml" line="32"/>
         <source>Discover new sound libraries in MuseHub and enjoy realistic score playback</source>
-        <translation>MuseHub에서 새로운 사운드 라이브러리를 탐색하고 실감 나는 악보 재생을 즐겨보세요</translation>
+        <translation>MuseHub에서 새로운 사운드 라이브러리를 탐색하고 실감 나는 악보 플레이백을 즐겨보세요</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/FirstLaunchSetup/PlaybackPage.qml" line="36"/>
@@ -10171,7 +10177,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/FirstLaunchSetup/firstlaunchsetupmodel.cpp" line="104"/>
         <source>If you choose to cancel, then be sure to check out our free MuseSounds playback libraries on &lt;a href=&quot;%1&quot;&gt;MuseHub.com&lt;/a&gt;.</source>
-        <translation>취소하시더라도 &lt;a href=&quot;%1&quot;&gt;MuseHub.com&lt;/a&gt;에서 제공하는 무료 MuseSounds 재생 라이브러리를 꼭 확인해 보세요.</translation>
+        <translation>취소하시더라도 &lt;a href=&quot;%1&quot;&gt;MuseHub.com&lt;/a&gt;에서 제공하는 무료 MuseSounds 플레이백 라이브러리를 꼭 확인해 보세요.</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/FirstLaunchSetup/firstlaunchsetupmodel.cpp" line="114"/>
@@ -10187,54 +10193,54 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/add</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="333"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="334"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="205"/>
         <source>&amp;Notes</source>
         <translation>음표(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="334"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="335"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="206"/>
         <source>&amp;Intervals</source>
         <translation>음정(&amp;I)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="335"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="336"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="207"/>
         <source>T&amp;uplets</source>
         <translation>잇단음표(&amp;U)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="337"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="338"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="209"/>
         <source>&amp;Measures</source>
         <translation>마디(&amp;M)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="338"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="339"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="210"/>
         <source>&amp;Frames</source>
         <translation>프레임(&amp;F)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="339"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="340"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="211"/>
         <source>&amp;Text</source>
         <translation>텍스트(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="340"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="341"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="212"/>
         <source>&amp;Lines</source>
         <translation>선(&amp;L)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="341"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="342"/>
         <source>&amp;Chords and fretboard diagrams</source>
         <translation>코드 및 프렛보드 다이어그램(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="345"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="346"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="215"/>
         <source>&amp;Add</source>
         <translation>추가(&amp;A)</translation>
@@ -10251,52 +10257,52 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/diagnostics</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="497"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="498"/>
         <source>&amp;System</source>
-        <translation>시스템(&amp;S)</translation>
+        <translation>단(&amp;S)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="509"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="510"/>
         <source>&amp;MuseSampler</source>
         <translation>MuseSampler(&amp;M)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="564"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="567"/>
         <source>A&amp;ctions</source>
         <translation>동작(&amp;C)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="565"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="568"/>
         <source>&amp;Accessibility</source>
         <translation>접근성(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="566"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="569"/>
         <source>&amp;Engraving</source>
         <translation>인쇄 및 기보(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="567"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="570"/>
         <source>E&amp;xtensions</source>
         <translation>확장(&amp;X)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="568"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="571"/>
         <source>Auto&amp;bot</source>
         <translation>Autobot(&amp;B)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="569"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="574"/>
         <source>&amp;VST</source>
         <translation>VST(&amp;V)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="570"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="577"/>
         <source>&amp;Audio</source>
         <translation>오디오(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="574"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="581"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="291"/>
         <source>&amp;Diagnostics</source>
         <translation>진단(&amp;D)</translation>
@@ -10305,7 +10311,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/edit</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="265"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="266"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="143"/>
         <source>&amp;Edit</source>
         <translation>편집(&amp;E)</translation>
@@ -10329,7 +10335,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>온라인에 게시(&amp;B)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="222"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="223"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="120"/>
         <source>&amp;File</source>
         <translation>파일(&amp;F)</translation>
@@ -10338,13 +10344,13 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/format</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="361"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="362"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="231"/>
         <source>Str&amp;etch</source>
         <translation>마디 너비(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="372"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="373"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="239"/>
         <source>F&amp;ormat</source>
         <translation>양식(&amp;O)</translation>
@@ -10353,7 +10359,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/help</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="483"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="484"/>
         <source>&amp;Help</source>
         <translation>도움말(&amp;H)</translation>
     </message>
@@ -10361,7 +10367,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/plugins</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="430"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="431"/>
         <source>&amp;Plugins</source>
         <translation>플러그인(&amp;P)</translation>
     </message>
@@ -10369,24 +10375,24 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/tools</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="403"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="404"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="264"/>
         <source>&amp;Voices</source>
         <translation>성부(&amp;V)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="404"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="405"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="265"/>
         <source>&amp;Measures</source>
         <translation>마디(&amp;M)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="412"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="413"/>
         <source>Enharmonic spelling</source>
         <translation>이명동음 표기</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="425"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="426"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="282"/>
         <source>&amp;Tools</source>
         <translation>도구(&amp;T)</translation>
@@ -10395,25 +10401,25 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>appshell/menu/view</name>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="315"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="316"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="187"/>
         <source>&amp;Toolbars</source>
         <translation>도구 모음(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="319"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="320"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="191"/>
         <source>W&amp;orkspaces</source>
         <translation>작업공간(&amp;O)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="323"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="324"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="195"/>
         <source>&amp;Show</source>
         <translation>표시(&amp;S)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="327"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="328"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="199"/>
         <source>&amp;View</source>
         <translation>보기(&amp;V)</translation>
@@ -10427,7 +10433,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>템포를 가장 가까운 정수로 반올림</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/commonaudioapiconfigurationmodel.cpp" line="97"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/commonaudioapiconfigurationmodel.cpp" line="99"/>
         <source>The driver for this device could not be opened.</source>
         <translation>이 장치의 드라이버를 열 수 없습니다.</translation>
     </message>
@@ -10455,17 +10461,17 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>시작할 때 시작 대화상자 표시 안 함</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="33"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="50"/>
         <source>Enjoy free cloud storage</source>
         <translation>무료 클라우드 저장 공간 이용</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="35"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="52"/>
         <source>Save your scores privately on MuseScore.com to revisit past versions and invite others to view and comment – and when you’re ready, share your music with the world.</source>
         <translation>악보를 MuseScore.com에 비공개로 저장하여 이전 버전을 다시 확인하거나 다른 사람을 초대하여 감상 및 의견을 나눌 수 있습니다. 준비가 되면 전 세계와 음악을 공유해 보세요.</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="37"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="54"/>
         <source>View my scores online</source>
         <translation>온라인에서 내 악보 보기</translation>
     </message>
@@ -10475,9 +10481,24 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>MuseScore Studio 새로운 기능</translation>
     </message>
     <message>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="33"/>
+        <source>Unlock Premium Playback</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="35"/>
+        <source>Hear your scores come to life with professionally recorded instrument libraries for expressive, realistic playback in MuseScore Studio.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="37"/>
+        <source>Get MuseSounds Pro</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="44"/>
-        <source>Includes a new system for hiding empty staves, a new text editing widget, guitar notation improvements, engraving improvements and more.</source>
-        <translation>빈 보표 숨기기를 위한 새로운 시스템, 새 텍스트 편집 위젯, 기타 기보 개선, 악보 채보 성능 향상 등이 포함되었습니다.</translation>
+        <source>Includes essential new engraving tools, major improvements to playback, video export, dive notation for guitar, and features to speed up your workflow.</source>
+        <translation>새로운 필수 악보 제작 도구, 플레이백 기능의 주요 개선 사항, 비디오 내보내기, 기타용 다이브 기보, 그리고 작업 흐름을 가속화하는 기능들이 포함되어 있습니다.</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="46"/>
@@ -10485,32 +10506,32 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>영상 보기</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="51"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="59"/>
         <source>Install our free MuseSounds libraries</source>
         <translation>무료 MuseSounds 라이브러리 설치</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="53"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="61"/>
         <source>Explore our collection of realistic sample libraries, including solo instruments, marching percussion, and full orchestra - available for free on MuseHub.</source>
         <translation>독주 악기, 마칭 퍼커션, 풀 오케스트라 등 실제와 가까운 샘플 라이브러리 컬렉션을 살펴보세요. MuseHub에서 무료로 이용 가능합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="55"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="63"/>
         <source>Get it on MuseHub</source>
         <translation>MuseHub에서 받기</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="60"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="68"/>
         <source>Explore our tutorials</source>
         <translation>튜토리얼 살펴보기</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="62"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="70"/>
         <source>We’ve put together a playlist of tutorials to help both beginners and experienced users get the most out of MuseScore Studio.</source>
         <translation>초보자와 숙련자 모두가 MuseScore Studio를 최대한 활용할 수 있도록 튜토리얼 재생목록을 준비했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="64"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/welcomedialogmodel.cpp" line="72"/>
         <source>View tutorials</source>
         <translation>튜토리얼 보기</translation>
     </message>
@@ -10524,7 +10545,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <location filename="../../src/framework/audio/driver/platform/osx/osxaudiodriver.mm" line="211"/>
         <location filename="../../src/framework/audio/driver/platform/win/wasapiaudiodriver.cpp" line="341"/>
         <source>System default</source>
-        <translation>시스템 기본값</translation>
+        <translation>단 기본값</translation>
     </message>
     <message>
         <location filename="../../src/framework/audio/main/platform/general/generalsoundfontcontroller.cpp" line="52"/>
@@ -10554,8 +10575,8 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>믹서 패널에서 각 악기에 사운드폰트를 할당할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/framework/audioplugins/internal/registeraudiopluginsscenario.cpp" line="123"/>
-        <location filename="../../src/framework/audioplugins/tests/registeraudiopluginsscenariotest.cpp" line="162"/>
+        <location filename="../../src/framework/audioplugins/internal/registeraudiopluginsscenario.cpp" line="133"/>
+        <location filename="../../src/framework/audioplugins/tests/registeraudiopluginsscenariotest.cpp" line="161"/>
         <source>Scanning audio plugins</source>
         <translation>오디오 플러그인 스캔 중</translation>
     </message>
@@ -10565,7 +10586,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     <message>
         <location filename="../../src/braille/internal/notationbraille.cpp" line="641"/>
         <source>Tuplet %1</source>
-        <translation>잇단음표 %1</translation>
+        <translation>%1잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/braille/internal/notationbraille.cpp" line="880"/>
@@ -10659,7 +10680,7 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
 <context>
     <name>debugOption</name>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8416"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8437"/>
         <source>Toggle show gap rests</source>
         <translation>간격 쉼표 표시 토글</translation>
     </message>
@@ -10723,31 +10744,31 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
     <message>
         <location filename="../../src/engraving/dom/articulation.cpp" line="174"/>
         <source>Articulation text</source>
-        <translation>아티큘레이션 텍스트</translation>
+        <translation>연주기호 텍스트</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/articulation.cpp" line="177"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1755"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1757"/>
         <source>Articulation</source>
-        <translation>아티큘레이션</translation>
+        <translation>연주기호</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/barline.cpp" line="1030"/>
-        <location filename="../../src/engraving/dom/chordrest.cpp" line="1095"/>
-        <location filename="../../src/engraving/dom/chordrest.cpp" line="1106"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3425"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3437"/>
-        <location filename="../../src/engraving/dom/segment.cpp" line="2540"/>
+        <location filename="../../src/engraving/dom/chordrest.cpp" line="1131"/>
+        <location filename="../../src/engraving/dom/chordrest.cpp" line="1142"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3504"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3516"/>
+        <location filename="../../src/engraving/dom/segment.cpp" line="2543"/>
         <source>Start of %1</source>
         <translation>%1 시작</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/barline.cpp" line="1033"/>
-        <location filename="../../src/engraving/dom/chordrest.cpp" line="1098"/>
-        <location filename="../../src/engraving/dom/chordrest.cpp" line="1108"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3429"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3445"/>
-        <location filename="../../src/engraving/dom/segment.cpp" line="2555"/>
+        <location filename="../../src/engraving/dom/chordrest.cpp" line="1134"/>
+        <location filename="../../src/engraving/dom/chordrest.cpp" line="1144"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3508"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3524"/>
+        <location filename="../../src/engraving/dom/segment.cpp" line="2558"/>
         <source>End of %1</source>
         <translation>%1 종료</translation>
     </message>
@@ -10810,27 +10831,27 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="500"/>
         <source>Quadruplet</source>
-        <translation>넷잇단음표</translation>
+        <translation>네잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="503"/>
         <source>Quintuplet</source>
-        <translation>다섯잇단음표</translation>
+        <translation>5잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="506"/>
         <source>Sextuplet</source>
-        <translation>여섯잇단음표</translation>
+        <translation>6잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="509"/>
         <source>Septuplet</source>
-        <translation>일곱잇단음표</translation>
+        <translation>7잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="512"/>
         <source>Octuplet</source>
-        <translation>여덟잇단음표</translation>
+        <translation>8잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="515"/>
@@ -10847,49 +10868,49 @@ Fret %1 on strings %2</source>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="529"/>
         <location filename="../../src/engraving/dom/tempotext.cpp" line="415"/>
         <source>Dotted %1</source>
-        <translation>점%1</translation>
+        <translation>점 %1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="532"/>
         <location filename="../../src/engraving/dom/tempotext.cpp" line="417"/>
         <source>Double dotted %1</source>
-        <translation>겹점%1</translation>
+        <translation>겹점 %1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="535"/>
         <location filename="../../src/engraving/dom/tempotext.cpp" line="419"/>
         <source>Triple dotted %1</source>
-        <translation>세겹점%1</translation>
+        <translation>세겹점 %1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/chordrest.cpp" line="538"/>
         <location filename="../../src/engraving/dom/tempotext.cpp" line="421"/>
         <source>Quadruple dotted %1</source>
-        <translation>네겹점%1</translation>
+        <translation>네겹점 %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/chordrest.cpp" line="1104"/>
+        <location filename="../../src/engraving/dom/chordrest.cpp" line="1140"/>
         <source>Start and end of %1</source>
         <translation>%1의 시작과 끝</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/engravingitem.cpp" line="2629"/>
+        <location filename="../../src/engraving/dom/engravingitem.cpp" line="2623"/>
         <source>Measure: %1</source>
         <translation>마디: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/engravingitem.cpp" line="2632"/>
+        <location filename="../../src/engraving/dom/engravingitem.cpp" line="2626"/>
         <source>Displayed measure: %1</source>
         <translation>화면표시된 마디 번호: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/engravingitem.cpp" line="2636"/>
+        <location filename="../../src/engraving/dom/engravingitem.cpp" line="2630"/>
         <source>Beat: %1</source>
         <translation>박자: %1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/fingering.cpp" line="127"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1747"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1749"/>
         <source>String number</source>
         <translation>현 번호</translation>
     </message>
@@ -10973,7 +10994,7 @@ Fret %1 on strings %2</source>
     </message>
     <message>
         <location filename="../../src/engraving/dom/harmony.cpp" line="1292"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1737"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1739"/>
         <source>Nashville number</source>
         <translation>내슈빌 넘버</translation>
     </message>
@@ -11004,107 +11025,107 @@ Fret %1 on strings %2</source>
         <translation><numerusform>%Ln마디</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="864"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="931"/>
         <source>%1 (sounding as %2%3)</source>
         <translation>%1 (실음: %2%3)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2252"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2320"/>
         <source>Acciaccatura</source>
-        <translation>아치아카투라</translation>
+        <translation>단꾸밈음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2254"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2322"/>
         <source>Appoggiatura</source>
         <translation>아포자투라</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2258"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2326"/>
         <source>Grace note after</source>
-        <translation>뒤꾸밈음</translation>
+        <translation>뒤앞꾸밈음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2262"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2330"/>
         <source>Grace note before</source>
-        <translation>앞꾸밈음</translation>
+        <translation>앞앞꾸밈음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="2264"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="2332"/>
         <source>Note</source>
         <translation>음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3332"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3370"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3400"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3450"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="506"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="518"/>
         <source>Voice: %1</source>
         <translation>성부: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3340"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3408"/>
         <source>(on %1‰ off %2‰)</source>
         <extracomment>Note-on and note-off times relative to note duration, expressed in thousandths (per mille)</extracomment>
         <translation>(온 %1‰ 오프 %2‰)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3346"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3375"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3414"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3454"/>
         <source>Beat slash</source>
         <translation>비트 슬래시</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3346"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3375"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3414"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3454"/>
         <source>Rhythm slash</source>
         <translation>리듬 슬래시</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3350"/>
-        <location filename="../../src/engraving/dom/note.cpp" line="3379"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3418"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3458"/>
         <source>%1; String: %2; Fret: %3</source>
         <translation>%1; 줄: %2; 프렛: %3</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3356"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3424"/>
         <source>%1; Pitch: %2; Duration: %3%4%5</source>
         <translation>%1; 피치: %2; 음길이: %3%4%5</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3385"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3464"/>
         <source>%1 head %2</source>
         <extracomment>head as in note head. %1 is head type (circle, cross, etc.). %2 is pitch (e.g. Db4).</extracomment>
         <translation>%1 머리 %2</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3387"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3466"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="521"/>
         <source>Cross-staff above</source>
         <translation>보표 위로 횡단</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3389"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3468"/>
         <location filename="../../src/engraving/dom/rest.cpp" line="523"/>
         <source>Cross-staff below</source>
         <translation>보표 아래로 횡단</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3393"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3472"/>
         <source>too low</source>
         <translation>너무 낮음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3395"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3474"/>
         <source>too high</source>
         <translation>너무 높음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3397"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3476"/>
         <source>too low for amateurs</source>
         <translation>아마추어에겐 너무 낮음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/note.cpp" line="3399"/>
+        <location filename="../../src/engraving/dom/note.cpp" line="3478"/>
         <source>too high for amateurs</source>
         <translation>아마추어에겐 너무 높음</translation>
     </message>
@@ -11134,42 +11155,42 @@ Fret %1 on strings %2</source>
         <translation>%1; 음길이: %2; %3</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/segment.cpp" line="2514"/>
+        <location filename="../../src/engraving/dom/segment.cpp" line="2517"/>
         <source>Annotations:</source>
         <translation>주석:</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1607"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1630"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="155"/>
         <source>Start measure: %1</source>
         <translation>시작 마디: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1610"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1633"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="157"/>
         <source>Start displayed measure: %1</source>
         <translation>화면표시된 시작 마디: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1613"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1636"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="159"/>
         <source>Start beat: %1</source>
         <translation>시작 박: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1620"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1643"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="162"/>
         <source>End measure: %1</source>
         <translation>종료 마디: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1623"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1646"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="164"/>
         <source>End displayed measure: %1</source>
         <translation>화면표시된 종료 마디: %1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/dom/spanner.cpp" line="1626"/>
+        <location filename="../../src/engraving/dom/spanner.cpp" line="1649"/>
         <location filename="../../src/notation/internal/notationaccessibility.cpp" line="166"/>
         <source>End beat: %1</source>
         <translation>종료 박: %1</translation>
@@ -11364,7 +11385,7 @@ Fret %1 on strings %2</source>
         <source>coda</source>
         <comment>partial tie menu</comment>
         <extracomment>Used at %1 in the string &quot;Tie to %1 (m. %2)&quot;</extracomment>
-        <translation>코다(coda)</translation>
+        <translation>코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/tiejumppointlist.cpp" line="104"/>
@@ -11378,7 +11399,7 @@ Fret %1 on strings %2</source>
         <source>“%1” volta</source>
         <comment>partial tie menu</comment>
         <extracomment>Used at %1 in the string &quot;Tie to %1 (m. %2)&quot;. %1 in this string represents the volta's text set by the user</extracomment>
-        <translation>“%1” 볼타(volta)</translation>
+        <translation>“%1” 볼타</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/tiejumppointlist.cpp" line="124"/>
@@ -11408,12 +11429,12 @@ Fret %1 on strings %2</source>
         <translation>부분 붙임줄 전환</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/editing/cmd.cpp" line="3869"/>
+        <location filename="../../src/engraving/editing/cmd.cpp" line="3879"/>
         <source>Current contents of measures will be replaced</source>
         <translation>마디의 현재 내용이 교체됨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/editing/cmd.cpp" line="3870"/>
+        <location filename="../../src/engraving/editing/cmd.cpp" line="3880"/>
         <source>Continue with inserting measure repeat?</source>
         <translation>마디 반복 기호를 삽입하시겠습니까?</translation>
     </message>
@@ -11423,18 +11444,28 @@ Fret %1 on strings %2</source>
         <translation>비율 %1, 음길이 %2의 잇단음표를 만들기할 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/editing/edit.cpp" line="7954"/>
-        <location filename="../../src/engraving/editing/edit.cpp" line="8102"/>
+        <location filename="../../src/engraving/editing/edit.cpp" line="7976"/>
+        <location filename="../../src/engraving/editing/edit.cpp" line="8156"/>
         <source>Remove stale partial tie</source>
         <translation>유효하지 않은 부분 붙임줄 제거</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/editing/edit.cpp" line="8012"/>
+        <location filename="../../src/engraving/editing/edit.cpp" line="8042"/>
+        <source>Remove invalid incoming partial slur</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/engraving/editing/edit.cpp" line="8050"/>
         <source>Reset incoming partial slur</source>
         <translation>유입되는 부분 이음줄 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/editing/edit.cpp" line="8022"/>
+        <location filename="../../src/engraving/editing/edit.cpp" line="8065"/>
+        <source>Remove invalid outgoing partial slur</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/engraving/editing/edit.cpp" line="8073"/>
         <source>Reset outgoing partial slur</source>
         <translation>유출되는 부분 이음줄 재설정</translation>
     </message>
@@ -11466,12 +11497,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/engravingerrors.h" line="81"/>
         <source>This file was last saved in a version older than 2.0.0. You can convert this score by opening and then saving in MuseScore version 2.x. Visit the &lt;a href=&quot;%1&quot;&gt;MuseScore download page&lt;/a&gt; to obtain such a 2.x version.</source>
-        <translation>이 파일은 2.0.0 이전 버전에 마지막으로 저장되었습니다. 이 악보는 MuseScore 버전 2.x에서 열고 저장하여 변환할 수 있습니다. &lt;a href=&quot;%1&quot;&gt;MuseScore 다운로드 페이지&lt;/a&gt;를 방문하여 2.x 버전을 얻으십시오.</translation>
+        <translation>이 파일은 2.0.0 이전 버전에 마지막으로 저장되었습니다. 이 악보는 MuseScore 버전 2.x에서 열고 저장하여 변환할 수 있습니다. &lt;a href=&quot;%1&quot;&gt;MuseScore 다운로드 페이지&lt;/a&gt;를 방문하여 2.x 버전을 얻으세요.</translation>
     </message>
     <message>
         <location filename="../../src/engraving/engravingerrors.h" line="88"/>
         <source>This file was saved using a newer version of MuseScore Studio. Please visit &lt;a href=&quot;%1&quot;&gt;MuseScore.org&lt;/a&gt; to obtain the latest version.</source>
-        <translation>이 파일은 최신 버전의 MuseScore Studio에서 저장되었습니다. &lt;a href=&quot;%1&quot;&gt;MuseScore.org&lt;/a&gt;를 방문하여 최신 버전을 받으십시오.</translation>
+        <translation>이 파일은 최신 버전의 MuseScore Studio에서 저장되었습니다. &lt;a href=&quot;%1&quot;&gt;MuseScore.org&lt;/a&gt;를 방문하여 최신 버전을 받으세요.</translation>
     </message>
     <message>
         <location filename="../../src/engraving/engravingerrors.h" line="93"/>
@@ -11491,7 +11522,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/internal/engravingconfiguration.cpp" line="91"/>
         <source>Voice %1 color</source>
-        <translation>%1성부 색상</translation>
+        <translation>%1 성부 색상</translation>
     </message>
     <message>
         <location filename="../../src/engraving/internal/engravingconfiguration.cpp" line="105"/>
@@ -11542,7 +11573,7 @@ Fret %1 on strings %2</source>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="186"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2071"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2073"/>
         <source>Invalid</source>
         <translation><numerusform>무효</numerusform></translation>
     </message>
@@ -11691,12 +11722,12 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="230"/>
         <source>system divider(s)</source>
-        <translation><numerusform>단 구분 기호</numerusform></translation>
+        <translation><numerusform>단 구분선</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="231"/>
         <source>System divider(s)</source>
-        <translation><numerusform>단 구분 기호</numerusform></translation>
+        <translation><numerusform>단 구분선</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="233"/>
@@ -11721,12 +11752,12 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="239"/>
         <source>chord bracket(s)</source>
-        <translation><numerusform>화음 대괄호</numerusform></translation>
+        <translation><numerusform>코드 대괄호</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="240"/>
         <source>Chord bracket(s)</source>
-        <translation><numerusform>화음 대괄호</numerusform></translation>
+        <translation><numerusform>코드 대괄호</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="242"/>
@@ -11911,12 +11942,12 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="296"/>
         <source>articulation(s)</source>
-        <translation><numerusform>아티큘레이션</numerusform></translation>
+        <translation><numerusform>연주기호</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="297"/>
         <source>Articulation(s)</source>
-        <translation><numerusform>아티큘레이션</numerusform></translation>
+        <translation><numerusform>연주기호</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="299"/>
@@ -11941,12 +11972,12 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="305"/>
         <source>chord line(s)</source>
-        <translation><numerusform>화음 선</numerusform></translation>
+        <translation><numerusform>코드 선</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="306"/>
         <source>Chord line(s)</source>
-        <translation><numerusform>화음 선</numerusform></translation>
+        <translation><numerusform>코드 선</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="308"/>
@@ -12071,12 +12102,12 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="344"/>
         <source>system text(s)</source>
-        <translation><numerusform>시스템 텍스트</numerusform></translation>
+        <translation><numerusform>단 텍스트</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="345"/>
         <source>System text(s)</source>
-        <translation><numerusform>시스템 텍스트</numerusform></translation>
+        <translation><numerusform>단 텍스트</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="347"/>
@@ -12125,7 +12156,7 @@ Fret %1 on strings %2</source>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="360"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1748"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1750"/>
         <source>String tunings</source>
         <translation><numerusform>현 튜닝</numerusform></translation>
     </message>
@@ -12432,12 +12463,12 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="452"/>
         <source>system lock(s)</source>
-        <translation><numerusform>시스템 잠금</numerusform></translation>
+        <translation><numerusform>단 고정</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="453"/>
         <source>System lock(s)</source>
-        <translation><numerusform>시스템 잠금</numerusform></translation>
+        <translation><numerusform>단 고정</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="455"/>
@@ -12616,7 +12647,7 @@ Fret %1 on strings %2</source>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="507"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1765"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1767"/>
         <source>Let ring</source>
         <translation><numerusform>렛 링(Let ring)</numerusform></translation>
     </message>
@@ -12763,22 +12794,22 @@ Fret %1 on strings %2</source>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="554"/>
         <source>system(s)</source>
-        <translation><numerusform>단(System)</numerusform></translation>
+        <translation><numerusform>단</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="555"/>
         <source>System(s)</source>
-        <translation><numerusform>단(System)</numerusform></translation>
+        <translation><numerusform>단</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="557"/>
         <source>chord(s)</source>
-        <translation><numerusform>화음</numerusform></translation>
+        <translation><numerusform>코드</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="558"/>
         <source>Chord(s)</source>
-        <translation><numerusform>화음</numerusform></translation>
+        <translation><numerusform>코드</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../../src/engraving/types/typesconv.cpp" line="560"/>
@@ -13025,830 +13056,830 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="1093"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="1117"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2254"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2290"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2256"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2292"/>
         <source>Auto</source>
         <translation>자동</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1234"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3084"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3108"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3362"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1236"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3086"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3110"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3364"/>
         <source>Custom</source>
         <translation>사용자 지정</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1698"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1700"/>
         <source>Default</source>
         <translation>기본값</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1699"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1701"/>
         <source>Title</source>
         <translation>제목</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1700"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1702"/>
         <source>Subtitle</source>
         <translation>부제</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1701"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1703"/>
         <source>Composer</source>
         <translation>작곡가</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1702"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1704"/>
         <source>Lyricist</source>
         <translation>작사자</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1703"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1705"/>
         <source>Translator</source>
         <translation>번역가</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1704"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1706"/>
         <source>Frame</source>
         <translation>프레임</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1705"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1707"/>
         <source>Instrument name (Part)</source>
         <translation>악기 이름 (파트)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1706"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1708"/>
         <source>Instrument name (Long)</source>
         <translation>악기 이름 (전체)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1707"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1709"/>
         <source>Instrument name (Short)</source>
         <translation>악기 이름 (약식)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1708"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1710"/>
         <source>Instrument change</source>
         <translation>악기 변경</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1709"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1711"/>
         <source>Header</source>
         <translation>머리글</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1710"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1712"/>
         <source>Footer</source>
         <translation>바닥글</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1711"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1713"/>
         <source>Copyright</source>
         <translation>저작권</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1712"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1714"/>
         <source>Page number</source>
         <translation>페이지 번호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1714"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1716"/>
         <source>Measure number</source>
         <translation>마디 번호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1716"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1718"/>
         <source>Measure number (alternate)</source>
         <translation>마디 번호 (대체)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1717"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1719"/>
         <source>Multimeasure rest range</source>
         <translation>다중 마디 쉼표 범위</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1719"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1721"/>
         <source>Tempo</source>
         <translation>템포</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1720"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1722"/>
         <source>Gradual tempo change</source>
         <translation>점진적 템포 변화</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1721"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1723"/>
         <source>Metronome</source>
         <translation>메트로놈</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1722"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1724"/>
         <source>Repeat play count</source>
         <translation>반복 연주 횟수</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1723"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1725"/>
         <source>Repeat text left</source>
         <translation>반복 텍스트 (왼쪽)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1724"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1726"/>
         <source>Repeat text right</source>
         <translation>반복 텍스트 (오른쪽)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1725"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1727"/>
         <source>Rehearsal mark</source>
         <translation>리허설 마크</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1726"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1728"/>
         <source>System</source>
-        <translation>시스템</translation>
+        <translation>단</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1728"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1730"/>
         <source>Staff</source>
         <translation>보표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1729"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1731"/>
         <source>Expression</source>
         <translation>나타냄말</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1730"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1732"/>
         <source>Dynamics</source>
         <translation>강약 기호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1731"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1733"/>
         <source>Hairpin</source>
         <translation>헤어핀</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1732"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1734"/>
         <source>Lyrics odd lines</source>
         <translation>가사 홀수 줄</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1733"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1735"/>
         <source>Lyrics even lines</source>
         <translation>가사 짝수 줄</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1734"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1736"/>
         <source>Chord symbol</source>
         <translation>코드 기호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1735"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1737"/>
         <source>Chord symbol (alternate)</source>
         <translation>코드 기호 (대체)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1736"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1738"/>
         <source>Roman numeral analysis</source>
-        <translation>로마 숫자 분석</translation>
+        <translation>로마자 분석</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1739"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1741"/>
         <source>Tuplet</source>
         <translation>잇단음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1740"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1742"/>
         <source>Sticking</source>
         <translation>스티킹(Sticking)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1741"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1743"/>
         <source>Fingering</source>
         <translation>운지법</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1742"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1744"/>
         <source>Tablature fret number</source>
         <translation>타블라추어 프렛 번호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1743"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1745"/>
         <source>LH guitar fingering</source>
         <translation>왼손 기타 운지법</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1744"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1746"/>
         <source>RH guitar fingering</source>
         <translation>오른손 기타 운지법</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1746"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1748"/>
         <source>Hammer-ons, pull-offs, and tapping</source>
         <translation>해머링 온, 풀 오프 및 태핑</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1750"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1752"/>
         <source>Fretboard diagram fingering</source>
         <translation>프렛보드 다이어그램 운지법</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1752"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1754"/>
         <source>Fretboard diagram fret number</source>
         <translation>프렛보드 다이어그램 프렛 번호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1753"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1755"/>
         <source>Harp pedal diagram</source>
         <translation>하프 페달 다이어그램</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1754"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1756"/>
         <source>Harp pedal text diagram</source>
         <translation>하프 페달 텍스트 다이어그램</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1757"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1759"/>
         <source>Text line</source>
         <translation>텍스트 줄</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1758"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1760"/>
         <source>System text line</source>
-        <translation>시스템 텍스트 줄</translation>
+        <translation>단 텍스트 선</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1759"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1761"/>
         <source>Note-anchored line</source>
         <translation>음표 고정 줄</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1760"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1762"/>
         <source>Volta</source>
         <translation>볼타</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1761"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1763"/>
         <source>Ottava</source>
         <translation>옥타브(Ottava)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1762"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1764"/>
         <source>Glissando</source>
         <translation>글리산도</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1763"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1765"/>
         <source>Pedal</source>
         <translation>페달</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1764"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1766"/>
         <source>Bends &amp; Dives</source>
         <translation>밴드 및 다이브</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1766"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1768"/>
         <source>Whammy bar</source>
         <translation>와미 바</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1767"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1769"/>
         <source>Palm mute</source>
         <translation>팜 뮤트</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1769"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1771"/>
         <source>User-1</source>
         <translation>사용자-1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1770"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1772"/>
         <source>User-2</source>
         <translation>사용자-2</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1771"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1773"/>
         <source>User-3</source>
         <translation>사용자-3</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1772"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1774"/>
         <source>User-4</source>
         <translation>사용자-4</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1773"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1775"/>
         <source>User-5</source>
         <translation>사용자-5</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1774"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1776"/>
         <source>User-6</source>
         <translation>사용자-6</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1775"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1777"/>
         <source>User-7</source>
         <translation>사용자-7</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1776"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1778"/>
         <source>User-8</source>
         <translation>사용자-8</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1777"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1779"/>
         <source>User-9</source>
         <translation>사용자-9</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1778"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1780"/>
         <source>User-10</source>
         <translation>사용자-10</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1779"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1781"/>
         <source>User-11</source>
         <translation>사용자-11</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1780"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1782"/>
         <source>User-12</source>
         <translation>사용자-12</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1983"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1985"/>
         <source>triple ♯</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>세겹올림표 ♯</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1985"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1987"/>
         <source>triple sharp</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>세겹올림표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1988"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1990"/>
         <source>double ♯</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>겹올림표 ♯</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1990"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1992"/>
         <source>double sharp</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>겹올림표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1993"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1995"/>
         <source>♯</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>올림표 ♯</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1995"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1997"/>
         <source>sharp</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>올림표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1998"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2000"/>
         <source>♮</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>제자리표 ♮</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2000"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2002"/>
         <source>natural</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>제자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2003"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2005"/>
         <source>♭</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>내림표 ♭</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2005"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2007"/>
         <source>flat</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>내림표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2008"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2010"/>
         <source>double ♭</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>겹내림표 ♭</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2010"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2012"/>
         <source>double flat</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>겹내림표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2013"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2015"/>
         <source>triple ♭</source>
         <extracomment>Visible text in the UI. Please preserve the accidental symbol in the translation</extracomment>
         <translation>세겹내림표 ♭</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2015"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2017"/>
         <source>triple flat</source>
         <extracomment>Accessible text for screen readers. Please avoid using accidental symbols in the translation</extracomment>
         <translation>세겹내림표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2056"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2058"/>
         <source>Quarter</source>
         <translation>4분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2057"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2059"/>
         <source>Eighth</source>
         <translation>8분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2058"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2060"/>
         <source>1024th</source>
         <translation>1024분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2059"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2061"/>
         <source>512th</source>
         <translation>512분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2060"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2062"/>
         <source>256th</source>
         <translation>256분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2061"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2063"/>
         <source>128th</source>
         <translation>128분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2062"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2064"/>
         <source>64th</source>
         <translation>64분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2063"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2065"/>
         <source>32nd</source>
         <translation>32분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2064"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2066"/>
         <source>16th</source>
         <translation>16분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2065"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2067"/>
         <source>Half</source>
         <translation>2분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2066"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2068"/>
         <source>Whole</source>
         <translation>온음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2067"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2069"/>
         <source>Measure</source>
         <translation>마디</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2068"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2070"/>
         <source>Breve</source>
         <translation>겹온음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2069"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2071"/>
         <source>Longa</source>
         <translation>4온음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2070"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2072"/>
         <source>Zero</source>
         <translation>제로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2255"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2257"/>
         <source>Up</source>
         <translation>위</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2256"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2258"/>
         <source>Down</source>
         <translation>아래</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2291"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2293"/>
         <source>Right</source>
         <translation>오른쪽</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2292"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2294"/>
         <source>Left</source>
         <translation>왼쪽</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2559"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2561"/>
         <source>Arpeggio</source>
         <translation>아르페지오</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2560"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2562"/>
         <source>Up arpeggio</source>
         <translation>상행 아르페지오</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2561"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2563"/>
         <source>Down arpeggio</source>
         <translation>하행 아르페지오</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2562"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2564"/>
         <source>Bracket arpeggio</source>
         <translation>대괄호 아르페지오</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2563"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2565"/>
         <source>Up arpeggio straight</source>
         <translation>상행 아르페지오(직선)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2564"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2566"/>
         <source>Down arpeggio straight</source>
         <translation>하행 아르페지오(직선)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2920"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2922"/>
         <source>Fall</source>
         <translation>폴(Fall)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2921"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2923"/>
         <source>Doit</source>
         <translation>도이트(Doit)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2922"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2924"/>
         <source>Plop</source>
         <translation>플롭(Plop)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2923"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2925"/>
         <source>Scoop</source>
         <translation>스쿱(Scoop)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2925"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2927"/>
         <source>Slide out down</source>
         <translation>슬라이드 아웃 다운</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2926"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2928"/>
         <source>Slide out up</source>
         <translation>슬라이드 아웃 업</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2927"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2929"/>
         <source>Slide in above</source>
         <translation>위에서 슬라이드 인</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2928"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2930"/>
         <source>Slide in below</source>
         <translation>아래에서 슬라이드 인</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2930"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2932"/>
         <source>Slide out down (rough)</source>
         <translation>슬라이드 아웃 다운(거칠게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2931"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2933"/>
         <source>Slide out up (rough)</source>
         <translation>슬라이드 아웃 업(거칠게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2932"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2934"/>
         <source>Slide in above (rough)</source>
         <translation>위에서 슬라이드 인(거칠게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2933"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2935"/>
         <source>Slide in below (rough)</source>
         <translation>아래에서 슬라이드 인(거칠게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3050"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3052"/>
         <source>Straight glissando</source>
         <translation>직선 글리산도</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3051"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3053"/>
         <source>Wavy glissando</source>
         <translation>물결 글리산도</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3070"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3072"/>
         <source>Da Capo</source>
         <translation>다 카포</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3071"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3073"/>
         <source>Da Capo al Fine</source>
         <translation>다 카포 알 피네</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3072"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3074"/>
         <source>Da Capo al Coda</source>
         <translation>다 카포 알 코다</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3073"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3075"/>
         <source>D.S. al Coda</source>
         <translation>달 세뇨 알 코다</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3074"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3076"/>
         <source>D.S. al Fine</source>
         <translation>달 세뇨 알 피네</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3075"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3077"/>
         <source>D.S.</source>
         <translation>달 세뇨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3077"/>
-        <source>Da Capo al Doppia Coda</source>
-        <translation>다 카포 알 이중 코다</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3078"/>
-        <source>Dal Segno al Doppia Coda</source>
-        <translation>달 세뇨 알 이중 코다</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3079"/>
-        <source>Dal Doppio Segno</source>
-        <translation>달 이중 세뇨</translation>
+        <source>Da Capo al Doppia Coda</source>
+        <translation>다 카포 알 도피아 코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3080"/>
-        <source>Dal Doppio Segno al Coda</source>
-        <translation>달 이중 세뇨 알 코다</translation>
+        <source>Dal Segno al Doppia Coda</source>
+        <translation>달 세뇨 알 도피아 코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3081"/>
-        <source>Dal Doppio Segno al Doppia Coda</source>
-        <translation>달 이중 세뇨 알 이중 코다</translation>
+        <source>Dal Doppio Segno</source>
+        <translation>달 도파아 세뇨</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3082"/>
-        <source>Dal Doppio Segno al Fine</source>
-        <translation>달 이중 세뇨 알 피네</translation>
+        <source>Dal Doppio Segno al Coda</source>
+        <translation>달 도파아 세뇨 알 코다</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3098"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3083"/>
+        <source>Dal Doppio Segno al Doppia Coda</source>
+        <translation>달 도파아 세뇨 알 도피아 코다</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3084"/>
+        <source>Dal Doppio Segno al Fine</source>
+        <translation>달 도파아 세뇨 알 피네</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3100"/>
         <source>Segno</source>
         <translation>세뇨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3099"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3101"/>
         <source>Segno variation</source>
-        <translation>세뇨 변형</translation>
+        <translation>세뇨 세르펜트</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3100"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3102"/>
         <source>Coda</source>
         <translation>코다</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3101"/>
-        <source>Varied coda</source>
-        <translation>코다 변형</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3102"/>
-        <source>Doppia Coda</source>
-        <translation>이중 코다</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3103"/>
-        <source>Fine</source>
-        <translation>피네(Fine)</translation>
+        <source>Varied coda</source>
+        <translation>스퀘어 코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3104"/>
-        <source>To coda</source>
-        <translation>코다로(To coda)</translation>
+        <source>Doppia Coda</source>
+        <translation>도피아 코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3105"/>
-        <source>To coda (symbol)</source>
-        <translation>코다 기호로(To coda)</translation>
+        <source>Fine</source>
+        <translation>피네</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3106"/>
-        <source>Da Coda</source>
-        <translation>다 코다(Da Coda)</translation>
+        <source>To coda</source>
+        <translation>투 코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="3107"/>
-        <source>Da Doppia Coda</source>
-        <translation>다 이중 코다(Da Doppia Coda)</translation>
+        <source>To coda (symbol)</source>
+        <translation>투 코다 (기호)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3346"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3108"/>
+        <source>Da Coda</source>
+        <translation>다 코다</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3109"/>
+        <source>Da Doppia Coda</source>
+        <translation>다 도피아 코다</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3348"/>
         <source>C♭ major / A♭ minor</source>
         <translation>내림 다장조 / 내림 가장조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3347"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3349"/>
         <source>G♭ major / E♭ minor</source>
         <translation>내림 사장조 / 내림 마단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3348"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3350"/>
         <source>D♭ major / B♭ minor</source>
         <translation>내림 라장조 / 내림 나단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3349"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3351"/>
         <source>A♭ major / F minor</source>
         <translation>내림 가장조 / 바단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3350"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3352"/>
         <source>E♭ major / C minor</source>
         <translation>내림 마장조 / 다단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3351"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3353"/>
         <source>B♭ major / G minor</source>
         <translation>내림 나장조 / 사단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3352"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3354"/>
         <source>F major / D minor</source>
         <translation>바장조 / 라단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3353"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3355"/>
         <source>C major / A minor</source>
         <translation>다장조 / 가단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3354"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3356"/>
         <source>G major / E minor</source>
         <translation>사장조 / 마단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3355"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3357"/>
         <source>D major / B minor</source>
         <translation>라장조 / 나단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3356"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3358"/>
         <source>A major / F♯ minor</source>
         <translation>가장조 / 올림 바단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3357"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3359"/>
         <source>E major / C♯ minor</source>
         <translation>마장조 / 올림 다단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3358"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3360"/>
         <source>B major / G♯ minor</source>
         <translation>나장조 / 올림 사단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3359"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3361"/>
         <source>F♯ major / D♯ minor</source>
         <translation>올림 바장조 / 올림 라단조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3360"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3362"/>
         <source>C♯ major / A♯ minor</source>
         <translation>올림 다장조 / 올림 가장조</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3361"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3363"/>
         <source>Open / Atonal</source>
         <translation>개방형 / 무조성</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/partialtiepopupmodel.cpp" line="218"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/partialtiepopupmodel.cpp" line="222"/>
         <source>Remove partial tie</source>
         <translation>부분 붙임줄 제거</translation>
     </message>
@@ -13876,53 +13907,51 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/bagpipeembellishment</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2591"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2593"/>
         <source>Single grace low G</source>
         <translation>단일 꾸밈음 낮은 G</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2592"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2594"/>
         <source>Single grace low A</source>
         <translation>단일 꾸밈음 낮은 A</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2593"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2595"/>
         <source>Single grace B</source>
         <translation>단일 꾸밈음 B</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2594"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2596"/>
         <source>Single grace C</source>
         <translation>단일 꾸밈음 C</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2595"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2597"/>
         <source>Single grace D</source>
         <translation>단일 꾸밈음 D</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2596"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2598"/>
         <source>Single grace E</source>
         <translation>단일 꾸밈음 E</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2597"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2599"/>
         <source>Single grace F</source>
         <translation>단일 꾸밈음 F</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2598"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2600"/>
         <source>Single grace high G</source>
         <translation>단일 꾸밈음 높은 G</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2599"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2601"/>
         <source>Single grace high A</source>
         <translation>단일 꾸밈음 높은 A</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2602"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2603"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2604"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2605"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2606"/>
@@ -13930,1018 +13959,1020 @@ Fret %1 on strings %2</source>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2608"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2609"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2610"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2611"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2612"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2613"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2614"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2615"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2616"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2617"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2618"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2619"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2620"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2621"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2622"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2623"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2624"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2625"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2626"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2627"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2628"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2629"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2630"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2631"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2632"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2633"/>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2634"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2635"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2636"/>
         <source>Double grace</source>
         <translation>이중 꾸밈음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2637"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2639"/>
         <source>Half doubling on low G</source>
         <translation>낮은 G 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2638"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2640"/>
         <source>Half doubling on low A</source>
         <translation>낮은 A 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2639"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2641"/>
         <source>Half doubling on B</source>
         <translation>B 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2640"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2642"/>
         <source>Half doubling on C</source>
         <translation>C 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2641"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2643"/>
         <source>Half doubling on D</source>
         <translation>D 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2642"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2644"/>
         <source>Half doubling on E</source>
         <translation>E 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2643"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2645"/>
         <source>Half doubling on F</source>
         <translation>F 하프 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2648"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2650"/>
         <source>Doubling on high G</source>
         <translation>높은 G 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2649"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2651"/>
         <source>Doubling on high A</source>
         <translation>높은 A 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2652"/>
-        <source>Half strike on low A</source>
-        <translation>낮은 A 하프 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2653"/>
-        <source>Half strike on B</source>
-        <translation>B 하프 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2654"/>
-        <source>Half strike on C</source>
-        <translation>C 하프 스트라이크</translation>
+        <source>Half strike on low A</source>
+        <translation>Low A에서 살짝 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2655"/>
+        <source>Half strike on B</source>
+        <translation>B에서 살짝 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2656"/>
-        <source>Half strike on D</source>
-        <translation>D 하프 스트라이크</translation>
+        <source>Half strike on C</source>
+        <translation>C에서 살짝 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2657"/>
-        <source>Half strike on E</source>
-        <translation>E 하프 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2658"/>
-        <source>Half strike on F</source>
-        <translation>F 하프 스트라이크</translation>
+        <source>Half strike on D</source>
+        <translation>D에서 살짝 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2659"/>
-        <source>Half strike on high G</source>
-        <translation>높은 G 하프 스트라이크</translation>
+        <source>Half strike on E</source>
+        <translation>E에서 살짝 치기</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2662"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2717"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2718"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2660"/>
+        <source>Half strike on F</source>
+        <translation>F에서 살짝 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2661"/>
+        <source>Half strike on high G</source>
+        <translation>High G에서 살짝 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2664"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2719"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2720"/>
         <source>Grip</source>
         <translation>그립(Grip)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2665"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2667"/>
         <source>Half D throw</source>
         <translation>하프 D 스로우</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2668"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2670"/>
         <source>Doubling on low G</source>
         <translation>낮은 G 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2669"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2671"/>
         <source>Doubling on low A</source>
         <translation>낮은 A 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2670"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2672"/>
         <source>Doubling on B</source>
         <translation>B 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2671"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2673"/>
         <source>Doubling on C</source>
         <translation>C 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2672"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2674"/>
         <source>Doubling on D</source>
         <translation>D 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2673"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2675"/>
         <source>Doubling on E</source>
         <translation>E 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2674"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2676"/>
         <source>Doubling on F</source>
         <translation>F 더블링</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2677"/>
-        <source>Thumb doubling on low G</source>
-        <translation>낮은 G 썸 더블링</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2678"/>
-        <source>Thumb doubling on low A</source>
-        <translation>낮은 A 썸 더블링</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2679"/>
-        <source>Thumb doubling on B</source>
-        <translation>B 썸 더블링</translation>
+        <source>Thumb doubling on low G</source>
+        <translation>낮은 G 엄지 더블링</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2680"/>
-        <source>Thumb doubling on C</source>
-        <translation>C 썸 더블링</translation>
+        <source>Thumb doubling on low A</source>
+        <translation>낮은 A 엄지 더블링</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2681"/>
-        <source>Thumb doubling on D</source>
-        <translation>D 썸 더블링</translation>
+        <source>Thumb doubling on B</source>
+        <translation>B 엄지 더블링</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2682"/>
-        <source>Thumb doubling on E</source>
-        <translation>E 썸 더블링</translation>
+        <source>Thumb doubling on C</source>
+        <translation>C 엄지 더블링</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2683"/>
+        <source>Thumb doubling on D</source>
+        <translation>D 엄지 더블링</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2684"/>
+        <source>Thumb doubling on E</source>
+        <translation>E 엄지 더블링</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2685"/>
         <source>Thumb doubling on F</source>
-        <translation>F 썸 더블링</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2687"/>
-        <source>G grace note on low A</source>
-        <translation>낮은 A 위 G 꾸밈음</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2688"/>
-        <source>G grace note on B</source>
-        <translation>B 위 G 꾸밈음</translation>
+        <translation>F 엄지 더블링</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2689"/>
-        <source>G grace note on C</source>
-        <translation>C 위 G 꾸밈음</translation>
+        <source>G grace note on low A</source>
+        <translation>낮은 A 위 G 앞꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2690"/>
+        <source>G grace note on B</source>
+        <translation>B 위 G 앞꾸밈음</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2691"/>
-        <source>G grace note on D</source>
-        <translation>D 위 G 꾸밈음</translation>
+        <source>G grace note on C</source>
+        <translation>C 위 G 앞꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2692"/>
-        <source>G grace note on E</source>
-        <translation>E 위 G 꾸밈음</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2693"/>
+        <source>G grace note on D</source>
+        <translation>D 위 G 앞꾸밈음</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2694"/>
+        <source>G grace note on E</source>
+        <translation>E 위 G 앞꾸밈음</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2695"/>
         <source>G grace note on F</source>
-        <translation>F 위 G 꾸밈음</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2696"/>
-        <source>Double strike on low A</source>
-        <translation>낮은 A 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2697"/>
-        <source>Double strike on B</source>
-        <translation>B 이중 스트라이크</translation>
+        <translation>F 위 G 앞꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2698"/>
-        <source>Double strike on C</source>
-        <translation>C 이중 스트라이크</translation>
+        <source>Double strike on low A</source>
+        <translation>Low A에서 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2699"/>
+        <source>Double strike on B</source>
+        <translation>B에서 두번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2700"/>
-        <source>Double strike on D</source>
-        <translation>D 이중 스트라이크</translation>
+        <source>Double strike on C</source>
+        <translation>C에서 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2701"/>
-        <source>Double strike on E</source>
-        <translation>E 이중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2702"/>
-        <source>Double strike on F</source>
-        <translation>F 이중 스트라이크</translation>
+        <source>Double strike on D</source>
+        <translation>D에서 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2703"/>
-        <source>Double strike on high G</source>
-        <translation>높은 G 이중 스트라이크</translation>
+        <source>Double strike on E</source>
+        <translation>E에서 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2704"/>
+        <source>Double strike on F</source>
+        <translation>F에서 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2705"/>
+        <source>Double strike on high G</source>
+        <translation>High G에서 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2706"/>
         <source>Double strike on high A</source>
-        <translation>높은 A 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2707"/>
-        <source>Thumb strike on low A</source>
-        <translation>낮은 A 썸 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2708"/>
-        <source>Thumb strike on B</source>
-        <translation>B 썸 스트라이크</translation>
+        <translation>High A에서 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2709"/>
-        <source>Thumb strike on C</source>
-        <translation>C 썸 스트라이크</translation>
+        <source>Thumb strike on low A</source>
+        <translation>Low A에서 엄지 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2710"/>
+        <source>Thumb strike on B</source>
+        <translation>B에서 엄지 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2711"/>
-        <source>Thumb strike on D</source>
-        <translation>D 썸 스트라이크</translation>
+        <source>Thumb strike on C</source>
+        <translation>C에서 엄지 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2712"/>
-        <source>Thumb strike on E</source>
-        <translation>E 썸 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2713"/>
-        <source>Thumb strike on F</source>
-        <translation>F 썸 스트라이크</translation>
+        <source>Thumb strike on D</source>
+        <translation>D에서 엄지 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2714"/>
-        <source>Thumb strike on high G</source>
-        <translation>높은 G 썸 스트라이크</translation>
+        <source>Thumb strike on E</source>
+        <translation>E에서 엄지 치기</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2721"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2727"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2788"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2789"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2715"/>
+        <source>Thumb strike on F</source>
+        <translation>F에서 엄지 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2716"/>
+        <source>Thumb strike on high G</source>
+        <translation>High G에서 엄지 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2723"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2729"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2790"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2791"/>
         <source>Birl</source>
         <translation>벌(Birl)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2722"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2724"/>
         <source>D throw</source>
         <translation>D 스로우</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2723"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2725"/>
         <source>Half heavy D throw</source>
         <translation>하프 헤비 D 스로우</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2724"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2730"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2731"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2726"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2732"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2733"/>
         <source>Taorluath</source>
         <translation>타오루(Taorluath)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2728"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2785"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2730"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2787"/>
         <source>Bubbly</source>
         <translation>버블리(Bubbly)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2729"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2731"/>
         <source>Heavy D throw</source>
         <translation>헤비 D 스로우</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2734"/>
-        <source>Half double strike on low A</source>
-        <translation>낮은 A 하프 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2735"/>
-        <source>Half double strike on B</source>
-        <translation>B 하프 이중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2736"/>
-        <source>Half double strike on C</source>
-        <translation>C 하프 이중 스트라이크</translation>
+        <source>Half double strike on low A</source>
+        <translation>Low A에서 살짝 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2737"/>
+        <source>Half double strike on B</source>
+        <translation>B에서 살짝 두번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2738"/>
-        <source>Half double strike on D</source>
-        <translation>D 하프 이중 스트라이크</translation>
+        <source>Half double strike on C</source>
+        <translation>C에서 살짝 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2739"/>
-        <source>Half double strike on E</source>
-        <translation>E 하프 이중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2740"/>
-        <source>Half double strike on F</source>
-        <translation>F 하프 이중 스트라이크</translation>
+        <source>Half double strike on D</source>
+        <translation>D에서 살짝 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2741"/>
-        <source>Half double strike on high G</source>
-        <translation>높은 G 하프 이중 스트라이크</translation>
+        <source>Half double strike on E</source>
+        <translation>E에서 살짝 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2742"/>
-        <source>Half double strike on high A</source>
-        <translation>높은 A 하프 이중 스트라이크</translation>
+        <source>Half double strike on F</source>
+        <translation>F에서 살짝 두번 치기</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2745"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2743"/>
+        <source>Half double strike on high G</source>
+        <translation>High G에서 살짝 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2744"/>
+        <source>Half double strike on high A</source>
+        <translation>High A에서 살짝 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2747"/>
         <source>Half grip on low A</source>
         <translation>낮은 A 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2746"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2748"/>
         <source>Half grip on B</source>
         <translation>B 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2747"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2749"/>
         <source>Half grip on C</source>
         <translation>C 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2748"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2749"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2750"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2751"/>
         <source>Half grip on D</source>
         <translation>D 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2750"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2752"/>
         <source>Half grip on E</source>
         <translation>E 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2751"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2753"/>
         <source>Half grip on F</source>
         <translation>F 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2752"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2754"/>
         <source>Half grip on high G</source>
         <translation>높은 G 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2753"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2755"/>
         <source>Half grip on high A</source>
         <translation>높은 A 하프 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2756"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2758"/>
         <source>Half pele on low A</source>
         <translation>낮은 A 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2757"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2759"/>
         <source>Half pele on B</source>
         <translation>B 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2758"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2760"/>
         <source>Half pele on C</source>
         <translation>C 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2759"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2760"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2761"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2762"/>
         <source>Half pele on D</source>
         <translation>D 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2761"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2763"/>
         <source>Half pele on E</source>
         <translation>E 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2762"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2764"/>
         <source>Half pele on F</source>
         <translation>F 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2763"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2765"/>
         <source>Half pele on high G</source>
         <translation>높은 G 하프 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2766"/>
-        <source>G grace note grip on low A</source>
-        <translation>낮은 A G 꾸밈음 그립</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2767"/>
-        <source>G grace note grip on B</source>
-        <translation>B G 꾸밈음 그립</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2768"/>
-        <source>G grace note grip on C</source>
-        <translation>C G 꾸밈음 그립</translation>
+        <source>G grace note grip on low A</source>
+        <translation>낮은 A G 앞꾸밈음 그립</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2769"/>
+        <source>G grace note grip on B</source>
+        <translation>B G 앞꾸밈음 그립</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2770"/>
-        <source>G grace note grip on D</source>
-        <translation>D G 꾸밈음 그립</translation>
+        <source>G grace note grip on C</source>
+        <translation>C G 앞꾸밈음 그립</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2771"/>
-        <source>G grace note grip on E</source>
-        <translation>E G 꾸밈음 그립</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2772"/>
+        <source>G grace note grip on D</source>
+        <translation>D G 앞꾸밈음 그립</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2773"/>
+        <source>G grace note grip on E</source>
+        <translation>E G 앞꾸밈음 그립</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2774"/>
         <source>G grace note grip on F</source>
-        <translation>F G 꾸밈음 그립</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2775"/>
-        <source>Thumb grip on low A</source>
-        <translation>낮은 A 썸 그립</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2776"/>
-        <source>Thumb grip on B</source>
-        <translation>B 썸 그립</translation>
+        <translation>F G 앞꾸밈음 그립</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2777"/>
-        <source>Thumb grip on C</source>
-        <translation>C 썸 그립</translation>
+        <source>Thumb grip on low A</source>
+        <translation>낮은 A 엄지 그립</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2778"/>
+        <source>Thumb grip on B</source>
+        <translation>B 엄지 그립</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2779"/>
-        <source>Thumb grip on D</source>
-        <translation>D 썸 그립</translation>
+        <source>Thumb grip on C</source>
+        <translation>C 엄지 그립</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2780"/>
-        <source>Thumb grip on E</source>
-        <translation>E 썸 그립</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2781"/>
-        <source>Thumb grip on F</source>
-        <translation>F 썸 그립</translation>
+        <source>Thumb grip on D</source>
+        <translation>D 엄지 그립</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2782"/>
-        <source>Thumb grip on high G</source>
-        <translation>높은 G 썸 그립</translation>
+        <source>Thumb grip on E</source>
+        <translation>E 엄지 그립</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2792"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2783"/>
+        <source>Thumb grip on F</source>
+        <translation>F 엄지 그립</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2784"/>
+        <source>Thumb grip on high G</source>
+        <translation>높은 G 엄지 그립</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2794"/>
         <source>Pele on low A</source>
         <translation>낮은 A 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2793"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2795"/>
         <source>Pele on B</source>
         <translation>B 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2794"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2796"/>
         <source>Pele on C</source>
         <translation>C 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2795"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2796"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2797"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2798"/>
         <source>Pele on D</source>
         <translation>D 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2797"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2799"/>
         <source>Pele on E</source>
         <translation>E 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2798"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2800"/>
         <source>Pele on F</source>
         <translation>F 펠레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2801"/>
-        <source>Thumb grace note pele on low A</source>
-        <translation>낮은 A 썸 꾸밈음 펠레</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2802"/>
-        <source>Thumb grace note pele on B</source>
-        <translation>B 썸 꾸밈음 펠레</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2803"/>
-        <source>Thumb grace note pele on C</source>
-        <translation>C 썸 꾸밈음 펠레</translation>
+        <source>Thumb grace note pele on low A</source>
+        <translation>낮은 A 엄지 앞꾸밈음 펠레</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2804"/>
+        <source>Thumb grace note pele on B</source>
+        <translation>B 엄지 앞꾸밈음 펠레</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2805"/>
-        <source>Thumb grace note pele on D</source>
-        <translation>D 썸 꾸밈음 펠레</translation>
+        <source>Thumb grace note pele on C</source>
+        <translation>C 엄지 앞꾸밈음 펠레</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2806"/>
-        <source>Thumb grace note pele on E</source>
-        <translation>E 썸 꾸밈음 펠레</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2807"/>
-        <source>Thumb grace note pele on F</source>
-        <translation>F 썸 꾸밈음 펠레</translation>
+        <source>Thumb grace note pele on D</source>
+        <translation>D 엄지 앞꾸밈음 펠레</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2808"/>
+        <source>Thumb grace note pele on E</source>
+        <translation>E 엄지 앞꾸밈음 펠레</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2809"/>
+        <source>Thumb grace note pele on F</source>
+        <translation>F 엄지 앞꾸밈음 펠레</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2810"/>
         <source>Thumb grace note pele on high G</source>
-        <translation>높은 G 썸 꾸밈음 펠레</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2811"/>
-        <source>G grace note double strike on low A</source>
-        <translation>낮은 A G 꾸밈음 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2812"/>
-        <source>G grace note double strike on B</source>
-        <translation>B G 꾸밈음 이중 스트라이크</translation>
+        <translation>높은 G 엄지 앞꾸밈음 펠레</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2813"/>
-        <source>G grace note double strike on C</source>
-        <translation>C G 꾸밈음 이중 스트라이크</translation>
+        <source>G grace note double strike on low A</source>
+        <translation>Low A에서 G 앞꾸밈음 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2814"/>
+        <source>G grace note double strike on B</source>
+        <translation>B에서 G 앞꾸밈음 두번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2815"/>
-        <source>G grace note double strike on D</source>
-        <translation>D G 꾸밈음 이중 스트라이크</translation>
+        <source>G grace note double strike on C</source>
+        <translation>C에서 G 앞꾸밈음 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2816"/>
-        <source>G grace note double strike on E</source>
-        <translation>E G 꾸밈음 이중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2817"/>
+        <source>G grace note double strike on D</source>
+        <translation>D에서 G 앞꾸밈음 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2818"/>
+        <source>G grace note double strike on E</source>
+        <translation>E에서 G 앞꾸밈음 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2819"/>
         <source>G grace note double strike on F</source>
-        <translation>F G 꾸밈음 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2820"/>
-        <source>Thumb double strike on low A</source>
-        <translation>낮은 A 썸 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2821"/>
-        <source>Thumb double strike on B</source>
-        <translation>B 썸 이중 스트라이크</translation>
+        <translation>F에서 G 앞꾸밈음 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2822"/>
-        <source>Thumb double strike on C</source>
-        <translation>C 썸 이중 스트라이크</translation>
+        <source>Thumb double strike on low A</source>
+        <translation>Low A에서 엄지 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2823"/>
+        <source>Thumb double strike on B</source>
+        <translation>B에서 엄지 두번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2824"/>
-        <source>Thumb double strike on D</source>
-        <translation>D 썸 이중 스트라이크</translation>
+        <source>Thumb double strike on C</source>
+        <translation>C에서 엄지 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2825"/>
-        <source>Thumb double strike on E</source>
-        <translation>E 썸 이중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2826"/>
-        <source>Thumb double strike on F</source>
-        <translation>F 썸 이중 스트라이크</translation>
+        <source>Thumb double strike on D</source>
+        <translation>D에서 엄지 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2827"/>
+        <source>Thumb double strike on E</source>
+        <translation>E에서 엄지 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2828"/>
+        <source>Thumb double strike on F</source>
+        <translation>F에서 엄지 두번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2829"/>
         <source>Thumb double strike on high G</source>
-        <translation>높은 G 썸 이중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2830"/>
-        <source>Triple strike on low A</source>
-        <translation>낮은 A 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2831"/>
-        <source>Triple strike on B</source>
-        <translation>B 삼중 스트라이크</translation>
+        <translation>High G에서 엄지 두번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2832"/>
-        <source>Triple strike on C</source>
-        <translation>C 삼중 스트라이크</translation>
+        <source>Triple strike on low A</source>
+        <translation>Low A에서 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2833"/>
+        <source>Triple strike on B</source>
+        <translation>B에서 세번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2834"/>
-        <source>Triple strike on D</source>
-        <translation>D 삼중 스트라이크</translation>
+        <source>Triple strike on C</source>
+        <translation>C에서 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2835"/>
-        <source>Triple strike on E</source>
-        <translation>E 삼중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2836"/>
-        <source>Triple strike on F</source>
-        <translation>F 삼중 스트라이크</translation>
+        <source>Triple strike on D</source>
+        <translation>D에서 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2837"/>
-        <source>Triple strike on high G</source>
-        <translation>높은 G 삼중 스트라이크</translation>
+        <source>Triple strike on E</source>
+        <translation>E에서 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2838"/>
+        <source>Triple strike on F</source>
+        <translation>F에서 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2839"/>
+        <source>Triple strike on high G</source>
+        <translation>High G에서 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2840"/>
         <source>Triple strike on high A</source>
-        <translation>높은 A 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2841"/>
-        <source>Half triple strike on low A</source>
-        <translation>낮은 A 하프 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2842"/>
-        <source>Half triple strike on B</source>
-        <translation>B 하프 삼중 스트라이크</translation>
+        <translation>High A에서 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2843"/>
-        <source>Half triple strike on C</source>
-        <translation>C 하프 삼중 스트라이크</translation>
+        <source>Half triple strike on low A</source>
+        <translation>Low A에서 살짝 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2844"/>
+        <source>Half triple strike on B</source>
+        <translation>B에서 살짝 세번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2845"/>
-        <source>Half triple strike on D</source>
-        <translation>D 하프 삼중 스트라이크</translation>
+        <source>Half triple strike on C</source>
+        <translation>C에서 살짝 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2846"/>
-        <source>Half triple strike on E</source>
-        <translation>E 하프 삼중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2847"/>
-        <source>Half triple strike on F</source>
-        <translation>F 하프 삼중 스트라이크</translation>
+        <source>Half triple strike on D</source>
+        <translation>D에서 살짝 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2848"/>
-        <source>Half triple strike on high G</source>
-        <translation>높은 G 하프 삼중 스트라이크</translation>
+        <source>Half triple strike on E</source>
+        <translation>E에서 살짝 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2849"/>
+        <source>Half triple strike on F</source>
+        <translation>F에서 살짝 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2850"/>
+        <source>Half triple strike on high G</source>
+        <translation>High G에서 살짝 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2851"/>
         <source>Half triple strike on high A</source>
-        <translation>높은 A 하프 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2852"/>
-        <source>G grace note triple strike on low A</source>
-        <translation>낮은 A G 꾸밈음 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2853"/>
-        <source>G grace note triple strike on B</source>
-        <translation>B G 꾸밈음 삼중 스트라이크</translation>
+        <translation>High A에서 살짝 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2854"/>
-        <source>G grace note triple strike on C</source>
-        <translation>C G 꾸밈음 삼중 스트라이크</translation>
+        <source>G grace note triple strike on low A</source>
+        <translation>Low A에서 G 앞꾸밈음 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2855"/>
+        <source>G grace note triple strike on B</source>
+        <translation>B에서 G 앞꾸밈음 세번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2856"/>
-        <source>G grace note triple strike on D</source>
-        <translation>D G 꾸밈음 삼중 스트라이크</translation>
+        <source>G grace note triple strike on C</source>
+        <translation>C에서 G 앞꾸밈음 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2857"/>
-        <source>G grace note triple strike on E</source>
-        <translation>E G 꾸밈음 삼중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2858"/>
+        <source>G grace note triple strike on D</source>
+        <translation>D에서 G 앞꾸밈음 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2859"/>
+        <source>G grace note triple strike on E</source>
+        <translation>E에서 G 앞꾸밈음 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2860"/>
         <source>G grace note triple strike on F</source>
-        <translation>F G 꾸밈음 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2861"/>
-        <source>Thumb triple strike on low A</source>
-        <translation>낮은 A 썸 삼중 스트라이크</translation>
-    </message>
-    <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2862"/>
-        <source>Thumb triple strike on B</source>
-        <translation>B 썸 삼중 스트라이크</translation>
+        <translation>F에서 G 앞꾸밈음 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2863"/>
-        <source>Thumb triple strike on C</source>
-        <translation>C 썸 삼중 스트라이크</translation>
+        <source>Thumb triple strike on low A</source>
+        <translation>Low A에서 엄지 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2864"/>
+        <source>Thumb triple strike on B</source>
+        <translation>B에서 엄지 세번 치기</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2865"/>
-        <source>Thumb triple strike on D</source>
-        <translation>D 썸 삼중 스트라이크</translation>
+        <source>Thumb triple strike on C</source>
+        <translation>C에서 엄지 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2866"/>
-        <source>Thumb triple strike on E</source>
-        <translation>E 썸 삼중 스트라이크</translation>
-    </message>
-    <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2867"/>
-        <source>Thumb triple strike on F</source>
-        <translation>F 썸 삼중 스트라이크</translation>
+        <source>Thumb triple strike on D</source>
+        <translation>D에서 엄지 세번 치기</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="2868"/>
+        <source>Thumb triple strike on E</source>
+        <translation>E에서 엄지 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2869"/>
+        <source>Thumb triple strike on F</source>
+        <translation>F에서 엄지 세번 치기</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2870"/>
         <source>Thumb triple strike on high G</source>
-        <translation>높은 G 썸 삼중 스트라이크</translation>
+        <translation>High G에서 엄지 세번 치기</translation>
     </message>
 </context>
 <context>
     <name>engraving/brackettype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2517"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2519"/>
         <source>Normal</source>
         <translation>일반</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2518"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2520"/>
         <source>Brace</source>
         <translation>중괄호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2519"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2521"/>
         <source>Square</source>
         <translation>대괄호</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2520"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2522"/>
         <source>Line</source>
         <translation>직선</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2521"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2523"/>
         <source>No bracket</source>
-        <translation>괄호 없음</translation>
+        <translation>대괄호 없음</translation>
     </message>
 </context>
 <context>
     <name>engraving/cleftype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1274"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1276"/>
         <source>Treble clef</source>
         <translation>높은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1275"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1277"/>
         <source>Treble clef 15ma bassa</source>
         <translation>15ma 아래 높은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1276"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1278"/>
         <source>Treble clef 8va bassa</source>
         <translation>8va 아래 높은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1277"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1279"/>
         <source>Treble clef 8va alta</source>
         <translation>8va 위 높은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1278"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1280"/>
         <source>Treble clef 15ma alta</source>
         <translation>15ma 위 높은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1279"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1281"/>
         <source>Double treble clef 8va bassa on 2nd line</source>
         <translation>이중 높은음자리표 (둘째 줄, 8va 아래)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1280"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1282"/>
         <source>Treble clef optional 8va bassa</source>
         <translation>높은음자리표 (선택적 8va 아래)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1281"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1283"/>
         <source>French violin clef</source>
         <translation>프랑스식 바이올린 음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1282"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1284"/>
         <source>Soprano clef</source>
         <translation>소프라노 음자리표 (가온음자리표)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1283"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1285"/>
         <source>Mezzo-soprano clef</source>
         <translation>메조소프라노 음자리표 (가온음자리표)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1284"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1286"/>
         <source>Alto clef</source>
         <translation>알토 음자리표 (가온음자리표)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1285"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1287"/>
         <source>Tenor clef</source>
         <translation>테너 음자리표 (가온음자리표)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1286"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1288"/>
         <source>Baritone clef (C clef)</source>
         <translation>바리톤 음자리표 (가온음자리표)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1287"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1289"/>
         <source>C clef, H shape (19th century)</source>
         <translation>가온음자리표 (H자형, 19세기)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1288"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1290"/>
         <source>Soprano clef (French, 18th century)</source>
         <translation>소프라노 음자리표 (18세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1289"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1291"/>
         <source>Alto clef (French, 18th century)</source>
         <translation>알토 음자리표 (18세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1290"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1292"/>
         <source>Tenor clef (French, 18th century)</source>
         <translation>테너 음자리표 (18세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1291"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1293"/>
         <source>Soprano clef (French, 20th century)</source>
         <translation>소프라노 음자리표 (20세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1292"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1294"/>
         <source>Alto clef (French, 20th century)</source>
         <translation>알토 음자리표 (20세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1293"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1295"/>
         <source>Tenor clef (French, 20th century)</source>
         <translation>테너 음자리표 (20세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1294"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1296"/>
         <source>Bass clef</source>
         <translation>낮은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1295"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1297"/>
         <source>Bass clef 15ma bassa</source>
         <translation>15ma 아래 낮은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1296"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1298"/>
         <source>Bass clef 8va bassa</source>
         <translation>8va 아래 낮은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1297"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1299"/>
         <source>Bass clef 8va alta</source>
         <translation>8va 위 낮은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1298"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1300"/>
         <source>Bass clef 15ma alta</source>
         <translation>15ma 위 낮은음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1299"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1301"/>
         <source>Baritone clef (F clef)</source>
         <translation>바리톤 음자리표 (낮은음자리표)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1300"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1302"/>
         <source>Subbass clef</source>
         <translation>서브베이스 음자리표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1301"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1303"/>
         <source>F clef (French, 18th century)</source>
         <translation>낮은음자리표 (18세기 프랑스)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1302"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1304"/>
         <source>F clef (19th century)</source>
         <translation>낮은음자리표 (19세기)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1304"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1306"/>
         <source>Percussion</source>
         <translation>퍼커션</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1305"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1307"/>
         <source>Percussion 2</source>
         <translation>퍼커션 2</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1307"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1309"/>
         <source>Tablature</source>
         <translation>타블라추어(TAB)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1308"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1310"/>
         <source>Tablature 4 lines</source>
         <translation>타블라추어 (4줄)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1309"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1311"/>
         <source>Tablature Serif</source>
         <translation>타블라추어 (세리프)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1310"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1312"/>
         <source>Tablature Serif 4 lines</source>
         <translation>타블라추어 (세리프, 4줄)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1312"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1314"/>
         <source>Tenor clef 8va bassa</source>
         <translation>테너 음자리표 (8va 아래)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1313"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1315"/>
         <source>G clef ottava bassa with C clef</source>
         <translation>G 음자리표 (8va 아래, C 음자리표 병기)</translation>
     </message>
@@ -14949,327 +14980,327 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/drumset</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2958"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2960"/>
         <source>High Q</source>
         <translation>하이 Q (High Q)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2959"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2961"/>
         <source>Slap</source>
         <translation>슬랩</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2960"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2962"/>
         <source>Scratch Push</source>
         <translation>스크래치 푸시</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2962"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2964"/>
         <source>Scratch Pull</source>
         <translation>스크래치 풀</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2963"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2965"/>
         <source>Sticks</source>
         <translation>스틱</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2964"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2966"/>
         <source>Square Click</source>
         <translation>스퀘어 클릭</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2965"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2967"/>
         <source>Metronome Click</source>
         <translation>메트로놈 클릭</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2966"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2968"/>
         <source>Metronome Bell</source>
         <translation>메트로놈 벨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2967"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2969"/>
         <source>Acoustic Bass Drum</source>
         <translation>어쿠스틱 베이스 드럼</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2968"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2970"/>
         <source>Bass Drum 1</source>
         <translation>베이스 드럼 1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2969"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2971"/>
         <source>Side Stick</source>
         <translation>사이드 스틱</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2970"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2972"/>
         <source>Acoustic Snare</source>
         <translation>어쿠스틱 스네어</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2971"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2973"/>
         <source>Hand Clap</source>
         <translation>박수</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2973"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2975"/>
         <source>Electric Snare</source>
         <translation>일렉트릭 스네어</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2974"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2976"/>
         <source>Low Floor Tom</source>
         <translation>로우 플로어 탐</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2975"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2977"/>
         <source>Closed Hi-Hat</source>
         <translation>클로즈드 하이햇</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2976"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2978"/>
         <source>High Floor Tom</source>
         <translation>하이 플로어 탐</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2977"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2979"/>
         <source>Pedal Hi-Hat</source>
         <translation>페달 하이햇</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2978"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2980"/>
         <source>Low Tom</source>
         <translation>로우 탐</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2979"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2981"/>
         <source>Open Hi-Hat</source>
         <translation>오픈 하이햇</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2980"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2982"/>
         <source>Low-Mid Tom</source>
         <translation>로우 미드 탐</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2981"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2983"/>
         <source>Hi-Mid Tom</source>
         <translation>하이 미드 탐</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2982"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2984"/>
         <source>Crash Cymbal 1</source>
         <translation>크래시 심벌 1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2984"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2986"/>
         <source>High Tom</source>
         <translation>하이 탐</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2985"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2987"/>
         <source>Ride Cymbal 1</source>
         <translation>라이드 심벌 1</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2986"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2988"/>
         <source>Chinese Cymbal</source>
         <translation>차이니스 심벌</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2987"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2989"/>
         <source>Ride Bell</source>
         <translation>라이드 벨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2988"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2990"/>
         <source>Tambourine</source>
         <translation>탬버린</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2989"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2991"/>
         <source>Splash Cymbal</source>
         <translation>스플래시 심벌</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2990"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2992"/>
         <source>Cowbell</source>
         <translation>카우벨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2991"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2993"/>
         <source>Crash Cymbal 2</source>
         <translation>크래시 심벌 2</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2992"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2994"/>
         <source>Vibraslap</source>
         <translation>비브라슬랩</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2993"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2995"/>
         <source>Ride Cymbal 2</source>
         <translation>라이드 심벌 2</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2995"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2997"/>
         <source>Hi Bongo</source>
         <translation>하이 봉고</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2996"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2998"/>
         <source>Low Bongo</source>
         <translation>로우 봉고</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2997"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2999"/>
         <source>Mute Hi Conga</source>
         <translation>뮤트 하이 콩가</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2998"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3000"/>
         <source>Open Hi Conga</source>
         <translation>오픈 하이 콩가</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2999"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3001"/>
         <source>Low Conga</source>
         <translation>로우 콩가</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3000"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3002"/>
         <source>High Timbale</source>
         <translation>하이 팀발레스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3001"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3003"/>
         <source>Low Timbale</source>
         <translation>로우 팀발레스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3002"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3004"/>
         <source>High Agogo</source>
         <translation>하이 아고고</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3003"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3005"/>
         <source>Low Agogo</source>
         <translation>로우 아고고</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3004"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3006"/>
         <source>Cabasa</source>
         <translation>카바사</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3006"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3008"/>
         <source>Maracas</source>
         <translation>마라카스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3007"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3009"/>
         <source>Short Whistle</source>
         <translation>쇼트 휘슬</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3008"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3010"/>
         <source>Long Whistle</source>
         <translation>롱 휘슬</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3009"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3011"/>
         <source>Short Güiro</source>
         <translation>쇼트 귀로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3010"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3012"/>
         <source>Long Güiro</source>
         <translation>롱 귀로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3011"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3013"/>
         <source>Claves</source>
         <translation>클라베</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3012"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3014"/>
         <source>Hi Wood Block</source>
         <translation>하이 우드 블록</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3013"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3015"/>
         <source>Low Wood Block</source>
         <translation>로우 우드 블록</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3014"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3016"/>
         <source>Mute Cuica</source>
         <translation>뮤트 쿠이카</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3015"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3017"/>
         <source>Open Cuica</source>
         <translation>오픈 쿠이카</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3017"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3019"/>
         <source>Mute Triangle</source>
         <translation>뮤트 트라이앵글</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3018"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3020"/>
         <source>Open Triangle</source>
         <translation>오픈 트라이앵글</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3019"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3021"/>
         <source>Shaker</source>
         <translation>셰이커</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3020"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3022"/>
         <source>Sleigh Bell</source>
         <translation>슬레이 벨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3021"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3023"/>
         <source>Mark Tree</source>
         <translation>마크 트리</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3022"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3024"/>
         <source>Castanets</source>
         <translation>캐스터네츠</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3023"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3025"/>
         <source>Mute Surdo</source>
         <translation>뮤트 수르두</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3024"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3026"/>
         <source>Open Surdo</source>
         <translation>오픈 수르두</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3026"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3028"/>
         <source>Snare (Rim shot)</source>
         <translation>스네어 (림 샷)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3028"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3030"/>
         <source>Ride (Edge)</source>
         <translation>라이드 (가장자리)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3030"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3032"/>
         <source>Cowbell Low</source>
         <translation>카우벨 로우</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3032"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3034"/>
         <source>Cowbell High</source>
         <translation>카우벨 하이</translation>
     </message>
@@ -15277,167 +15308,167 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/dynamictype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1360"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1362"/>
         <source>Other dynamic</source>
         <translation>그 외 셈여림</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1362"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1364"/>
         <source>pppppp (Pianissississississimo)</source>
         <translation>pppppp (피아니시시시시시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1364"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1366"/>
         <source>ppppp (Pianississississimo)</source>
         <translation>ppppp (피아니시시시시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1366"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1368"/>
         <source>pppp (Pianissississimo)</source>
         <translation>pppp (피아니시시시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1368"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1370"/>
         <source>ppp (Pianississimo)</source>
         <translation>ppp (피아니시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1370"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1372"/>
         <source>pp (Pianissimo)</source>
         <translation>pp (피아니시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1372"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1374"/>
         <source>p (Piano)</source>
         <translation>p (피아노)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1375"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1377"/>
         <source>mp (Mezzo-piano)</source>
         <translation>mp (메조 피아노)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1377"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1379"/>
         <source>mf (Mezzo-forte)</source>
         <translation>mf (메조 포르테)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1380"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1382"/>
         <source>f (Forte)</source>
         <translation>f (포르테)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1382"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1384"/>
         <source>ff (Fortissimo)</source>
         <translation>ff (포르티시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1384"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1386"/>
         <source>fff (Fortississimo)</source>
         <translation>fff (포르티시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1386"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1388"/>
         <source>ffff (Fortissississimo)</source>
         <translation>ffff (포르티시시시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1388"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1390"/>
         <source>fffff (Fortississississimo)</source>
         <translation>fffff (포르티시시시시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1390"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1392"/>
         <source>ffffff (Fortissississississimo)</source>
         <translation>ffffff (포르티시시시시시시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1393"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1395"/>
         <source>fp (Fortepiano)</source>
         <translation>fp (포르테피아노)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1395"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1397"/>
         <source>pf (Pianoforte)</source>
         <translation>pf (피아노포르테)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1398"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1400"/>
         <source>sf (Sforzando)</source>
         <translation>sf (스포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1400"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1402"/>
         <source>sfz (Sforzato)</source>
         <translation>sfz (스포르차토)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1402"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1404"/>
         <source>sff (Sforzando)</source>
         <translation>sff (스포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1404"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1406"/>
         <source>sffz (Sforzato)</source>
         <translation>sffz (스포르차토)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1406"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1408"/>
         <source>sfff (Sforzando)</source>
         <translation>sfff (스포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1408"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1410"/>
         <source>sfffz (Sforzato)</source>
         <translation>sfffz (스포르차토)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1410"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1412"/>
         <source>sfp (Sforzando-piano)</source>
         <translation>sfp (스포르찬도 피아노)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1412"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1414"/>
         <source>sfpp (Sforzando-pianissimo)</source>
         <translation>sfpp (스포르찬도 피아니시모)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1415"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1417"/>
         <source>rfz (Rinforzando)</source>
         <translation>rfz (린포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1417"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1419"/>
         <source>rf (Rinforzando)</source>
         <translation>rf (린포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1419"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1421"/>
         <source>fz (Forzando)</source>
         <translation>fz (포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1421"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1423"/>
         <source>m (Mezzo)</source>
         <translation>m (메조)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1423"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1425"/>
         <source>r (Rinforzando)</source>
         <translation>r (린포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1425"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1427"/>
         <source>s (Sforzando)</source>
         <translation>s (스포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1427"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1429"/>
         <source>z (Forzando)</source>
         <translation>z (포르찬도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1429"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1431"/>
         <source>n (Niente)</source>
         <translation>n (니엔테)</translation>
     </message>
@@ -15445,57 +15476,57 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/gradualtempochangetype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2139"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2141"/>
         <source>accel.</source>
         <translation>accel. (점점 빠르게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2140"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2142"/>
         <source>allarg.</source>
         <translation>allarg. (점점 폭넓고 느리게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2141"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2143"/>
         <source>calando</source>
         <translation>calando (점점 평온하게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2142"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2144"/>
         <source>lentando</source>
         <translation>lentando (점점 느리게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2143"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2145"/>
         <source>morendo</source>
         <translation>morendo (사라지듯이)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2144"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2146"/>
         <source>precipitando</source>
         <translation>precipitando (서둘러서)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2145"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2147"/>
         <source>rall.</source>
         <translation>rall. (점점 느리게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2146"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2148"/>
         <source>rit.</source>
         <translation>rit. (점점 느리게)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2147"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2149"/>
         <source>smorz.</source>
         <translation>smorz. (사라지듯이)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2148"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2150"/>
         <source>sost.</source>
         <translation>sost. (음 길이를 충분히 유지하며)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2149"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2151"/>
         <source>string.</source>
         <translation>string. (점점 서둘러서)</translation>
     </message>
@@ -15531,395 +15562,395 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/layoutbreaktype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2326"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2328"/>
         <source>System break</source>
-        <translation>단 나누기</translation>
+        <translation>단 바꿈</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2327"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2329"/>
         <source>Page break</source>
         <translation>페이지 나누기</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2328"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2330"/>
         <source>Section break</source>
         <translation>구역 나누기</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2329"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2331"/>
         <source>Keep measures on the same system</source>
-        <translation>마디를 같은 단에 유지</translation>
+        <translation>마디를 동일 단에 유지</translation>
     </message>
 </context>
 <context>
     <name>engraving/noteheadgroup</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1146"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1148"/>
         <source>Normal</source>
         <translation>보통</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1147"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1149"/>
         <source>Cross</source>
         <translation>크로스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1148"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1150"/>
         <source>Plus</source>
         <translation>플러스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1149"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1151"/>
         <source>XCircle</source>
         <translation>원 안에 X표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1150"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1152"/>
         <source>With X</source>
         <translation>X표 포함</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1151"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1153"/>
         <source>Triangle up</source>
         <translation>상향 삼각형</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1152"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1154"/>
         <source>Triangle down</source>
         <translation>하향 삼각형</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1153"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1155"/>
         <source>Slashed (forwards)</source>
         <translation>슬래시 (순방향)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1154"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1156"/>
         <source>Slashed (backwards)</source>
         <translation>슬래시 (역방향)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1155"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1157"/>
         <source>Diamond</source>
         <translation>다이아몬드</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1156"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1158"/>
         <source>Diamond (old)</source>
         <translation>다이아몬드 (구형)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1157"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1159"/>
         <source>Circled</source>
         <translation>원형</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1158"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1160"/>
         <source>Circled large</source>
         <translation>큰 원형</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1159"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1161"/>
         <source>Large arrow</source>
         <translation>큰 화살표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1160"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1162"/>
         <source>Alt. brevis</source>
         <translation>대체 겹온음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1162"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1164"/>
         <source>Slash</source>
         <translation>슬래시</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1163"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1165"/>
         <source>Large diamond</source>
         <translation>큰 다이아몬드</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1165"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1167"/>
         <source>Heavy cross</source>
         <translation>굵은 크로스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1166"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1168"/>
         <source>Heavy cross hat</source>
         <translation>굵은 크로스 햇</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1169"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1171"/>
         <source>Sol</source>
         <translation>솔</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1170"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1172"/>
         <source>La</source>
         <translation>라</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1171"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1173"/>
         <source>Fa</source>
         <translation>파</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1172"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1174"/>
         <source>Mi</source>
         <translation>미</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1173"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1175"/>
         <source>Do</source>
         <translation>도</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1174"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1176"/>
         <source>Re</source>
         <translation>레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1175"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1177"/>
         <source>Ti</source>
         <translation>시</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1178"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1180"/>
         <source>Do (Walker)</source>
         <translation>도 (Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1179"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1181"/>
         <source>Re (Walker)</source>
         <translation>레 (Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1180"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1182"/>
         <source>Ti (Walker)</source>
         <translation>시 (Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1181"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1183"/>
         <source>Do (Funk)</source>
         <translation>도 (Funk)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1182"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1184"/>
         <source>Re (Funk)</source>
         <translation>레 (Funk)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1183"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1185"/>
         <source>Ti (Funk)</source>
         <translation>시 (Funk)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1186"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1188"/>
         <source>Do (Name)</source>
         <translation>도 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1187"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1189"/>
         <source>Di (Name)</source>
         <translation>디 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1188"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1190"/>
         <source>Ra (Name)</source>
         <translation>래 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1189"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1191"/>
         <source>Re (Name)</source>
         <translation>레 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1190"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1192"/>
         <source>Ri (Name)</source>
         <translation>리 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1191"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1193"/>
         <source>Me (Name)</source>
         <translation>메 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1192"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1194"/>
         <source>Mi (Name)</source>
         <translation>미 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1193"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1195"/>
         <source>Fa (Name)</source>
         <translation>파 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1194"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1196"/>
         <source>Fi (Name)</source>
         <translation>피 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1195"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1197"/>
         <source>Se (Name)</source>
         <translation>세 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1196"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1198"/>
         <source>Sol (Name)</source>
         <translation>솔 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1197"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1199"/>
         <source>Le (Name)</source>
         <translation>레 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1198"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1200"/>
         <source>La (Name)</source>
         <translation>라 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1199"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1201"/>
         <source>Li (Name)</source>
         <translation>리 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1200"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1202"/>
         <source>Te (Name)</source>
         <translation>테 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1201"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1203"/>
         <source>Ti (Name)</source>
         <translation>시 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1202"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1204"/>
         <source>Si (Name)</source>
         <translation>실 (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1204"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1206"/>
         <source>A♯ (Name)</source>
         <translation>A♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1205"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1207"/>
         <source>A (Name)</source>
         <translation>A (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1206"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1208"/>
         <source>A♭ (Name)</source>
         <translation>A♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1207"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1209"/>
         <source>B♯ (Name)</source>
         <translation>B♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1208"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1210"/>
         <source>B (Name)</source>
         <translation>B (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1209"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1211"/>
         <source>B♭ (Name)</source>
         <translation>B♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1210"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1212"/>
         <source>C♯ (Name)</source>
         <translation>C♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1211"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1213"/>
         <source>C (Name)</source>
         <translation>C (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1212"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1214"/>
         <source>C♭ (Name)</source>
         <translation>C♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1213"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1215"/>
         <source>D♯ (Name)</source>
         <translation>D♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1214"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1216"/>
         <source>D (Name)</source>
         <translation>D (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1215"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1217"/>
         <source>D♭ (Name)</source>
         <translation>D♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1216"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1218"/>
         <source>E♯ (Name)</source>
         <translation>E♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1217"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1219"/>
         <source>E (Name)</source>
         <translation>E (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1218"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1220"/>
         <source>E♭ (Name)</source>
         <translation>E♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1219"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1221"/>
         <source>F♯ (Name)</source>
         <translation>F♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1220"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1222"/>
         <source>F (Name)</source>
         <translation>F (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1221"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1223"/>
         <source>F♭ (Name)</source>
         <translation>F♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1222"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1224"/>
         <source>G♯ (Name)</source>
         <translation>G♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1223"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1225"/>
         <source>G (Name)</source>
         <translation>G (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1224"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1226"/>
         <source>G♭ (Name)</source>
         <translation>G♭ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1225"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1227"/>
         <source>H (Name)</source>
         <translation>H (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1226"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1228"/>
         <source>H♯ (Name)</source>
         <translation>H♯ (이름)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1229"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1231"/>
         <source>Swiss Rudiments Flam</source>
         <translation>스위스 루디먼트 플램</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1231"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1233"/>
         <source>Swiss Rudiments Doublé</source>
         <translation>스위스 루디먼트 더블레</translation>
     </message>
@@ -15938,36 +15969,46 @@ Fret %1 on strings %2</source>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="1120"/>
+        <source>Pitch names, no accidentals</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1121"/>
         <source>German pitch names</source>
         <translation>독일식 피치 이름</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1121"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1122"/>
+        <source>German pitch names, no accidentals</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1123"/>
         <source>Solfège movable Do</source>
         <translation>계명창 (이동도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1122"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1124"/>
         <source>Solfège fixed Do</source>
         <translation>계명창 (고정도)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1123"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1125"/>
         <source>4-shape (Walker)</source>
         <translation>4형 음표 (Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1124"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1126"/>
         <source>7-shape (Aikin)</source>
         <translation>7형 음표 (Aikin)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1125"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1127"/>
         <source>7-shape (Funk)</source>
         <translation>7형 음표 (Funk)</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="1126"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="1128"/>
         <source>7-shape (Walker)</source>
         <translation>7형 음표 (Walker)</translation>
     </message>
@@ -16031,120 +16072,120 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/playtechtype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2091"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2093"/>
         <source>Normal</source>
         <translation>일반</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2092"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2094"/>
         <source>Pizzicato</source>
         <translation>피치카토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2094"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2096"/>
         <source>Open</source>
         <extracomment>For brass and plucked string instruments: staff text that prescribes to play without mute, see https://en.wikipedia.org/wiki/Mute_(music)</extracomment>
         <translation>오픈</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2096"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2098"/>
         <source>Mute</source>
         <extracomment>For brass and plucked string instruments: staff text that prescribes to use mute while playing, see https://en.wikipedia.org/wiki/Mute_(music)</extracomment>
         <translation>뮤트</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2097"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2099"/>
         <source>Tremolo</source>
         <translation>트레몰로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2098"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2100"/>
         <source>Détaché</source>
         <translation>데타셰</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2099"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2101"/>
         <source>Martelé</source>
         <translation>마르텔레</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2100"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2102"/>
         <source>Col legno</source>
         <translation>콜 레뇨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2101"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2103"/>
         <source>Sul ponticello</source>
         <translation>술 폰티첼로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2102"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2104"/>
         <source>Sul tasto</source>
         <translation>술 타스토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2103"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2105"/>
         <source>Vibrato</source>
         <translation>비브라토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2104"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2106"/>
         <source>Legato</source>
         <translation>레가토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2105"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2107"/>
         <source>Distortion</source>
         <translation>디스토션</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2106"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2108"/>
         <source>Overdrive</source>
         <translation>오버드라이브</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2107"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2109"/>
         <source>Harmonics</source>
         <translation>하모닉스</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2108"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2110"/>
         <source>Jazz tone</source>
         <translation>재즈 톤</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2110"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2112"/>
         <source>Swing</source>
         <translation>스윙</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2112"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2114"/>
         <source>Swing up</source>
         <translation>스윙 업</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2114"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2116"/>
         <source>Swing down</source>
         <translation>스윙 다운</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2115"/>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2116"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2117"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2118"/>
         <source>Echo</source>
         <translation>에코</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2117"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2119"/>
         <source>Damp</source>
         <translation>댐프</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2118"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2120"/>
         <source>Let vibrate</source>
         <translation>울리게 둠</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2119"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2121"/>
         <source>Ring</source>
         <translation>링</translation>
     </message>
@@ -16190,12 +16231,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="67"/>
         <source>hide when empty</source>
-        <translation>빈 보표 숨기기</translation>
+        <translation>빈 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="68"/>
         <source>hide staves when individually empty</source>
-        <translation>개별 빈 보표 숨기기</translation>
+        <translation>개별 빈 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="69"/>
@@ -16328,7 +16369,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="96"/>
         <source>hide generated parentheses</source>
-        <translation>생성된 괄호 숨기기</translation>
+        <translation>생성된 괄호 숨김</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="97"/>
@@ -16423,7 +16464,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="117"/>
         <source>bracket type</source>
-        <translation>괄호 유형</translation>
+        <translation>대괄호 유형</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="118"/>
@@ -16438,12 +16479,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="120"/>
         <source>bracket start offset</source>
-        <translation>괄호 시작 오프셋</translation>
+        <translation>대괄호 시작 오프셋</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="121"/>
         <source>bracket end offset</source>
-        <translation>괄호 끝 오프셋</translation>
+        <translation>대괄호 끝 오프셋</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="122"/>
@@ -16564,7 +16605,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="149"/>
         <source>chord symbols per row</source>
-        <translation>행당 화음 기호 수</translation>
+        <translation>행당 코드 기호 수</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="150"/>
@@ -17123,27 +17164,27 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="286"/>
         <source>chord symbol interpretation</source>
-        <translation>화음 기호 해석</translation>
+        <translation>코드 기호 해석</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="287"/>
         <source>chord symbol voicing</source>
-        <translation>화음 기호 보이싱</translation>
+        <translation>코드 기호 보이싱</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="288"/>
         <source>chord symbol duration</source>
-        <translation>화음 기호 음길이</translation>
+        <translation>코드 기호 음길이</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="289"/>
         <source>chord symbol bass scale</source>
-        <translation>화음 기호 베이스 스케일</translation>
+        <translation>코드 기호 베이스 스케일</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="290"/>
         <source>chord symbol do not stack modifiers</source>
-        <translation>화음 기호 수식어 수직 쌓기 방지</translation>
+        <translation>코드 기호 수식어 수직 쌓기 방지</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="292"/>
@@ -17173,22 +17214,22 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="298"/>
         <source>playback voice 1</source>
-        <translation>재생 성부 1</translation>
+        <translation>플레이백 성부 1</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="299"/>
         <source>playback voice 2</source>
-        <translation>재생 성부 2</translation>
+        <translation>플레이백 성부 2</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="300"/>
         <source>playback voice 3</source>
-        <translation>재생 성부 3</translation>
+        <translation>플레이백 성부 3</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="302"/>
         <source>playback voice 4</source>
-        <translation>재생 성부 4</translation>
+        <translation>플레이백 성부 4</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="303"/>
@@ -17203,7 +17244,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="305"/>
         <source>creating system header</source>
-        <translation>단 헤더 생성</translation>
+        <translation>단 머리 생성</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="306"/>
@@ -17373,7 +17414,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="345"/>
         <source>system flag</source>
-        <translation>시스템 플래그</translation>
+        <translation>단 플래그</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="347"/>
@@ -17398,12 +17439,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="351"/>
         <source>begin hook type</source>
-        <translation>시작 갈고리 종류</translation>
+        <translation>시작 꺾임 종류</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="352"/>
         <source>begin hook height</source>
-        <translation>시작 갈고리 높이</translation>
+        <translation>시작 꺾임 높이</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="353"/>
@@ -17543,12 +17584,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="382"/>
         <source>end hook type</source>
-        <translation>종료 갈고리 종류</translation>
+        <translation>끝 꺾임 종류</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="383"/>
         <source>end hook height</source>
-        <translation>종료 갈고리 높이</translation>
+        <translation>끝 꺾임 높이</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="384"/>
@@ -17668,7 +17709,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="413"/>
         <source>grace note index</source>
-        <translation>꾸밈음 인덱스</translation>
+        <translation>앞꾸밈음 인덱스</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="414"/>
@@ -17728,17 +17769,17 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="429"/>
         <source>chord line type</source>
-        <translation>화음 선 종류</translation>
+        <translation>코드 선 종류</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="430"/>
         <source>straight chord line</source>
-        <translation>직선 화음 선</translation>
+        <translation>직선 코드 선</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="431"/>
         <source>wavy chord line</source>
-        <translation>물결 화음 선</translation>
+        <translation>물결 코드 선</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="432"/>
@@ -17763,12 +17804,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="438"/>
         <source>bracket hook length</source>
-        <translation>대괄호 갈고리 길이</translation>
+        <translation>대괄호 꺾임 길이</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="439"/>
         <source>bracket hook position</source>
-        <translation>대괄호 갈고리 위치</translation>
+        <translation>대괄호 꼬리 위치</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="440"/>
@@ -17878,7 +17919,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="469"/>
         <source>tempo easing method</source>
-        <translation>템포 이징 방식</translation>
+        <translation>템포 가감속 방식</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="470"/>
@@ -17913,7 +17954,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="479"/>
         <source>transposition behaviour</source>
-        <translation>이조 동작</translation>
+        <translation>조옮김 동작</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="481"/>
@@ -18023,7 +18064,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="509"/>
         <source>hide system barline</source>
-        <translation>시스템 세로줄 숨기기</translation>
+        <translation>단 세로줄 숨김</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="510"/>
@@ -18033,7 +18074,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/dom/property.cpp" line="511"/>
         <source>reflect transposition</source>
-        <translation>이조 반영</translation>
+        <translation>조옮김 반영</translation>
     </message>
 </context>
 <context>
@@ -18098,17 +18139,17 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/staffgroup</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3146"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3148"/>
         <source>Standard</source>
         <translation>표준</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3147"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3149"/>
         <source>Percussion</source>
         <translation>퍼커션</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3148"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3150"/>
         <source>Tablature</source>
         <translation>타블라추어</translation>
     </message>
@@ -19428,7 +19469,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="3975"/>
         <source>Square coda</source>
-        <translation>사각형 코다</translation>
+        <translation>스퀘어 코다</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4050"/>
@@ -19653,12 +19694,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4394"/>
         <source>Mallet, bell on table</source>
-        <translation>말렛, 벨을 테이블에 놓음</translation>
+        <translation>말렛, 거치형 핸드벨</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4395"/>
         <source>Mallet, bell suspended</source>
-        <translation>말렛, 벨을 매달음</translation>
+        <translation>말렛, 걸이형 핸드벨</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4396"/>
@@ -19723,112 +19764,112 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4798"/>
         <source>Tempus perfectum cum prolatione perfecta (9/8)</source>
-        <translation>완전 정간법 및 완전 분할법(9/8)</translation>
+        <translation>완전 박자 및 완전 분할 (9/8)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4799"/>
         <source>Tempus imperfectum cum prolatione imperfecta diminution 4</source>
-        <translation>불완전 정간법 및 불완전 분할법(축소 4)</translation>
+        <translation>불완전 박자 및 불완전 분할 4배속</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4800"/>
         <source>Tempus imperfectum cum prolatione imperfecta diminution 5</source>
-        <translation>불완전 정간법 및 불완전 분할법(축소 5)</translation>
+        <translation>불완전 박자 및 불완전 분할 5배속</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4801"/>
         <source>Tempus perfectum cum prolatione imperfecta (3/4)</source>
-        <translation>완전 정간법 및 불완전 분할법(3/4)</translation>
+        <translation>완전 박자 및 불완전 분할 (3/4)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4802"/>
         <source>Tempus perfectum cum prolatione imperfecta diminution 1 (3/8)</source>
-        <translation>완전 정간법 및 불완전 분할법(축소 1)(3/8)</translation>
+        <translation>완전 박자 및 불완전 분할 1배속 (3/8)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4803"/>
         <source>Tempus perfectum cum prolatione perfecta diminution 2 (9/16)</source>
-        <translation>완전 정간법 및 완전 분할법(축소 2)(9/16)</translation>
+        <translation>완전 박자 및 완전 분할 2배속 (9/16)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4804"/>
         <source>Tempus imperfectum cum prolatione perfecta (6/8)</source>
-        <translation>불완전 정간법 및 완전 분할법(6/8)</translation>
+        <translation>불완전 박자 및 완전 분할 (6/8)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4805"/>
         <source>Tempus imperfectum cum prolatione imperfecta (2/4)</source>
-        <translation>불완전 정간법 및 불완전 분할법(2/4)</translation>
+        <translation>불완전 박자 및 불완전 분할 (2/4)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4806"/>
         <source>Tempus imperfectum cum prolatione imperfecta diminution 1 (2/2)</source>
-        <translation>불완전 정간법 및 불완전 분할법(축소 1)(2/2)</translation>
+        <translation>불완전 박자 및 불완전 분할 1배속 (2/2)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4807"/>
         <source>Tempus imperfectum cum prolatione imperfecta diminution 2 (6/16)</source>
-        <translation>불완전 정간법 및 불완전 분할법(축소 2)(6/16)</translation>
+        <translation>불완전 박자 및 불완전 분할 2배속 (6/16)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4808"/>
         <source>Tempus imperfectum cum prolatione imperfecta diminution 3 (2/2)</source>
-        <translation>불완전 정간법 및 불완전 분할법(축소 3)(2/2)</translation>
+        <translation>불완전 박자 및 불완전 분할 3배속 (2/2)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4851"/>
         <source>Augmentation dot</source>
-        <translation>부점</translation>
+        <translation>증가점</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4853"/>
         <source>1024th note (semihemidemisemihemidemisemiquaver) stem up</source>
-        <translation>1024분음표(위 기둥)</translation>
+        <translation>1024분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4855"/>
         <source>128th note (semihemidemisemiquaver) stem up</source>
-        <translation>128분음표(위 기둥)</translation>
+        <translation>128분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4857"/>
         <source>16th note (semiquaver) stem up</source>
-        <translation>16분음표(위 기둥)</translation>
+        <translation>16분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4859"/>
         <source>256th note (demisemihemidemisemiquaver) stem up</source>
-        <translation>256분음표(위 기둥)</translation>
+        <translation>256분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4861"/>
         <source>32nd note (demisemiquaver) stem up</source>
-        <translation>32분음표(위 기둥)</translation>
+        <translation>32분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4863"/>
         <source>512th note (hemidemisemihemidemisemiquaver) stem up</source>
-        <translation>512분음표(위 기둥)</translation>
+        <translation>512분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4865"/>
         <source>64th note (hemidemisemiquaver) stem up</source>
-        <translation>64분음표(위 기둥)</translation>
+        <translation>64분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4867"/>
         <source>Eighth note (quaver) stem up</source>
-        <translation>8분음표(위 기둥)</translation>
+        <translation>8분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4871"/>
         <source>Half note (minim) stem up</source>
-        <translation>2분음표(위 기둥)</translation>
+        <translation>2분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4873"/>
         <source>Quarter note (crotchet) stem up</source>
-        <translation>4분음표(위 기둥)</translation>
+        <translation>4분음표(기둥 위)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="4874"/>
@@ -19853,7 +19894,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5372"/>
         <source>Mordent with upper prefix</source>
-        <translation>윗 접두어가 붙은 모르덴트</translation>
+        <translation>모르덴트 (상향 접두어)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5374"/>
@@ -19893,17 +19934,17 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5402"/>
         <source>Turn</source>
-        <translation>돈 꾸밈음(턴)</translation>
+        <translation>턴</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5403"/>
         <source>Inverted turn</source>
-        <translation>거꾸로 된 돈 꾸밈음</translation>
+        <translation>인버티드 턴</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5404"/>
         <source>Turn with slash</source>
-        <translation>사선이 있는 돈 꾸밈음</translation>
+        <translation>턴 슬래시</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5405"/>
@@ -19913,12 +19954,12 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5406"/>
         <source>Inverted turn up</source>
-        <translation>역방향 턴 업</translation>
+        <translation>인버티드 턴 (상향)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5595"/>
         <source>Half-open 2 (Weinberg)</source>
-        <translation>하프 오픈 2(바인베르크)</translation>
+        <translation>절반 열기 2 바인베르크)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5702"/>
@@ -20053,7 +20094,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5761"/>
         <source>Segno (serpent)</source>
-        <translation>세뇨(서펜트 모양)</translation>
+        <translation>세뇨 (서펜트)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5839"/>
@@ -20078,17 +20119,17 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5874"/>
         <source>System divider</source>
-        <translation>시스템 구분선</translation>
+        <translation>단 구분선</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5875"/>
         <source>Extra long system divider</source>
-        <translation>매우 긴 시스템 구분선</translation>
+        <translation>매우 긴 단 구분선</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5876"/>
         <source>Long system divider</source>
-        <translation>긴 시스템 구분선</translation>
+        <translation>긴 단 구분선</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5941"/>
@@ -20113,27 +20154,27 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5972"/>
         <source>Divide measured tremolo by 2</source>
-        <translation>정량 트레몰로 2분할</translation>
+        <translation>측정된 트레몰로 2분할</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5973"/>
         <source>Divide measured tremolo by 3</source>
-        <translation>정량 트레몰로 3분할</translation>
+        <translation>측정된 트레몰로 3분할</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5974"/>
         <source>Divide measured tremolo by 4</source>
-        <translation>정량 트레몰로 4분할</translation>
+        <translation>측정된 트레몰로 4분할</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5975"/>
         <source>Divide measured tremolo by 6</source>
-        <translation>정량 트레몰로 6분할</translation>
+        <translation>측정된 트레몰로 6분할</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="5986"/>
         <source>Tuplet 3</source>
-        <translation>셋잇단음표 3</translation>
+        <translation>3잇단음표</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/symnames.cpp" line="6040"/>
@@ -20276,42 +20317,42 @@ Fret %1 on strings %2</source>
         <translation>공백</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3248"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3250"/>
         <source>Slap</source>
         <translation>슬랩</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3249"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3251"/>
         <source>Pop</source>
         <translation>팝</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3251"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3253"/>
         <source>Thumb damp</source>
         <translation>엄지 댐프</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3252"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3254"/>
         <source>Brush damp</source>
         <translation>브러시 댐프</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3253"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3255"/>
         <source>Ring touch</source>
         <translation>링 터치</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3254"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3256"/>
         <source>Pluck</source>
         <translation>플럭</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3255"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3257"/>
         <source>Singing bell</source>
         <translation>싱잉 벨</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3256"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3258"/>
         <source>Vibrato</source>
         <translation>비브라토</translation>
     </message>
@@ -20330,29 +20371,29 @@ Fret %1 on strings %2</source>
     <name>engraving/timesig</name>
     <message>
         <location filename="../../src/engraving/dom/timesig.cpp" line="349"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1635"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1654"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1636"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1655"/>
         <location filename="../../src/project/qml/MuseScore/Project/internal/NewScore/additionalinfomodel.cpp" line="200"/>
         <source>Common time</source>
         <translation>공통 박자</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/timesig.cpp" line="351"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1636"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1655"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1637"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1656"/>
         <location filename="../../src/project/qml/MuseScore/Project/internal/NewScore/additionalinfomodel.cpp" line="202"/>
         <source>Cut time</source>
         <translation>컷 타임</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/timesig.cpp" line="353"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1659"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1660"/>
         <source>Cut time (Bach)</source>
         <translation>컷 타임(바흐)</translation>
     </message>
     <message>
         <location filename="../../src/engraving/dom/timesig.cpp" line="355"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1660"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1661"/>
         <source>Cut triple time (9/8)</source>
         <translation>컷 트리플 타임(9/8)</translation>
     </message>
@@ -20365,47 +20406,47 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/tremolotype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2470"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2472"/>
         <source>Eighth through stem</source>
         <translation>기둥을 지나는 8분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2471"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2473"/>
         <source>16th through stem</source>
         <translation>기둥을 지나는 16분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2472"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2474"/>
         <source>32nd through stem</source>
         <translation>기둥을 지나는 32분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2473"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2475"/>
         <source>64th through stem</source>
         <translation>기둥을 지나는 64분음표</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2474"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2476"/>
         <source>Buzz roll</source>
         <translation>버즈 롤</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2475"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2477"/>
         <source>Eighth between notes</source>
         <translation>두 음 사이 8분 트레몰로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2476"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2478"/>
         <source>16th between notes</source>
         <translation>두 음 사이 16분 트레몰로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2477"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2479"/>
         <source>32nd between notes</source>
         <translation>두 음 사이 32분 트레몰로</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="2478"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="2480"/>
         <source>64th between notes</source>
         <translation>두 음 사이 64분 트레몰로</translation>
     </message>
@@ -20413,22 +20454,22 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/trilltype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3167"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3169"/>
         <source>Trill line</source>
         <translation>트릴 선</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3168"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3170"/>
         <source>Upprall line</source>
         <translation>업프랄 선</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3169"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3171"/>
         <source>Downprall line</source>
         <translation>다운프랄 선</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3170"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3172"/>
         <source>Prallprall line</source>
         <translation>프랄프랄 선</translation>
     </message>
@@ -20474,27 +20515,27 @@ Fret %1 on strings %2</source>
 <context>
     <name>engraving/vibratotype</name>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3210"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3212"/>
         <source>None</source>
         <translation>없음</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3211"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3213"/>
         <source>Guitar vibrato</source>
         <translation>기타 비브라토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3212"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3214"/>
         <source>Guitar vibrato wide</source>
         <translation>넓은 기타 비브라토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3213"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3215"/>
         <source>Vibrato sawtooth</source>
         <translation>톱니파 비브라토</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/types/typesconv.cpp" line="3215"/>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="3217"/>
         <source>Tremolo sawtooth wide</source>
         <translation>넓은 톱니파 트레몰로</translation>
     </message>
@@ -20629,7 +20670,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/framework/extensions/internal/extensionsprovider.cpp" line="45"/>
         <source>Playback</source>
-        <translation>재생</translation>
+        <translation>플레이백</translation>
     </message>
     <message>
         <location filename="../../src/framework/extensions/internal/extensionsprovider.cpp" line="46"/>
@@ -20640,7 +20681,7 @@ Fret %1 on strings %2</source>
         <location filename="../../src/framework/extensions/qml/Muse/Extensions/extensionslistmodel.cpp" line="115"/>
         <source>Not specified</source>
         <extracomment>No version is specified for this plugin.</extracomment>
-        <translation>(미지정)</translation>
+        <translation>지정되지 않음</translation>
     </message>
     <message>
         <location filename="../../src/framework/extensions/qml/Muse/Extensions/extensionslistmodel.cpp" line="131"/>
@@ -20689,9 +20730,9 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/framework/cloud/qml/Muse/Cloud/CloudScoresView.qml" line="219"/>
         <location filename="../../src/framework/learn/qml/Muse/Learn/internal/Playlist.qml" line="142"/>
-        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="178"/>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="202"/>
         <source>Please check your internet connection or try again later.</source>
-        <translation>인터넷 연결을 확인하거나 나중에 다시 시도하십시오.</translation>
+        <translation>인터넷 연결을 확인하거나 나중에 다시 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/framework/cloud/qml/Muse/Cloud/internal/CloudScoresListView.qml" line="210"/>
@@ -20721,7 +20762,7 @@ Fret %1 on strings %2</source>
     </message>
     <message>
         <location filename="../../src/framework/midiremote/qml/Muse/MidiRemote/EditMidiMappingDialog.qml" line="134"/>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="552"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="562"/>
         <source>Add</source>
         <translation>추가</translation>
     </message>
@@ -20752,7 +20793,7 @@ Fret %1 on strings %2</source>
     <message>
         <location filename="../../src/framework/ui/qml/Muse/Ui/Dialogs/StandardDialog.qml" line="52"/>
         <source>Hide details</source>
-        <translation>세부 정보 숨기기</translation>
+        <translation>세부 정보 숨김</translation>
     </message>
     <message>
         <location filename="../../src/framework/ui/qml/Muse/Ui/Dialogs/StandardDialog.qml" line="52"/>
@@ -21173,6 +21214,7 @@ Fret %1 on strings %2</source>
         <translation>이 설정은 설정창에서 언제든지 변경 가능함</translation>
     </message>
     <message>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="215"/>
         <location filename="../../src/palette/qml/MuseScore/Palette/PalettesPanel.qml" line="129"/>
         <location filename="../../src/project/qml/MuseScore/Project/internal/NewScore/TitleListView.qml" line="129"/>
         <location filename="../../src/project/qml/MuseScore/Project/internal/ScoresPage/ScoreGridItem.qml" line="293"/>
@@ -21247,7 +21289,7 @@ Fret %1 on strings %2</source>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/ProjectUploadedDialog.qml" line="108"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1399"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1405"/>
         <source>Success!</source>
         <translation>성공!</translation>
     </message>
@@ -22647,7 +22689,7 @@ Fret %1 on strings %2</source>
 <context>
     <name>iex_audio</name>
     <message>
-        <location filename="../../src/importexport/audioexport/internal/abstractaudiowriter.cpp" line="132"/>
+        <location filename="../../src/importexport/audioexport/internal/abstractaudiowriter.cpp" line="143"/>
         <source>Processing online sounds…</source>
         <translation>온라인 사운드 처리 중…</translation>
     </message>
@@ -22837,7 +22879,7 @@ performance</source>
     <message>
         <location filename="../../src/importexport/midi/internal/midiimport/importmidi_model.cpp" line="667"/>
         <source>Split staff</source>
-        <translation>보표 분리</translation>
+        <translation>보표 분할하기</translation>
     </message>
     <message>
         <location filename="../../src/importexport/midi/internal/midiimport/importmidi_model.cpp" line="691"/>
@@ -22878,7 +22920,7 @@ tempo text</source>
         <location filename="../../src/importexport/midi/internal/midiimport/importmidi_model.cpp" line="835"/>
         <source>Show
 chord symbols</source>
-        <translation>화음 기호
+        <translation>코드 기호
 표시</translation>
     </message>
     <message>
@@ -23150,7 +23192,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/InspectorPropertyView.qml" line="167"/>
         <source>This is set as the default style for this score</source>
-        <translation>이 악보의 기본 스타일로 설정됨</translation>
+        <translation>이 악보의 기본 스타일로 지정됨</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/OffsetSection.qml" line="36"/>
@@ -23234,22 +23276,22 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/VoicesAndPositionSection.qml" line="153"/>
         <source>Voice 1</source>
-        <translation>1성부</translation>
+        <translation>성부 1</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/VoicesAndPositionSection.qml" line="154"/>
         <source>Voice 2</source>
-        <translation>2성부</translation>
+        <translation>성부 2</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/VoicesAndPositionSection.qml" line="155"/>
         <source>Voice 3</source>
-        <translation>3성부</translation>
+        <translation>성부 3</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/VoicesAndPositionSection.qml" line="156"/>
         <source>Voice 4</source>
-        <translation>4성부</translation>
+        <translation>성부 4</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/common/VoicesAndPositionSection.qml" line="189"/>
@@ -23364,7 +23406,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/general/GeneralInspectorView.qml" line="129"/>
         <source>Playback</source>
-        <translation>재생</translation>
+        <translation>플레이백</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/general/GeneralInspectorView.qml" line="155"/>
@@ -23539,7 +23581,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/accidentals/AccidentalSettings.qml" line="48"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tuplets/TupletSettings.qml" line="68"/>
         <source>Bracket type</source>
-        <translation>괄호 종류</translation>
+        <translation>대괄호 종류</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/accidentals/AccidentalSettings.qml" line="55"/>
@@ -23557,7 +23599,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/accidentals/AccidentalSettings.qml" line="57"/>
         <source>Brackets</source>
         <comment>bracket type</comment>
-        <translation>각진 괄호</translation>
+        <translation>대괄호</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/accidentals/AccidentalSettings.qml" line="65"/>
@@ -23582,7 +23624,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/ambituses/AmbitusSettings.qml" line="172"/>
         <source>Update to match the notes on the staff</source>
-        <translation>보표 음표에 맞춰 업데이트</translation>
+        <translation>보표의 음표와 일치하도록 업데이트</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/ambituses/AmbitusSettings.qml" line="189"/>
@@ -23593,7 +23635,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/stems/StemSettings.qml" line="152"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="426"/>
         <source>Show less</source>
-        <translation>간략히 보기</translation>
+        <translation>간략히 표시</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/ambituses/AmbitusSettings.qml" line="189"/>
@@ -23604,7 +23646,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/stems/StemSettings.qml" line="152"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/text/TextInspectorView.qml" line="426"/>
         <source>Show more</source>
-        <translation>더 보기</translation>
+        <translation>자세히 표시</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/ambituses/AmbitusSettings.qml" line="212"/>
@@ -23644,7 +23686,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="60"/>
         <source>Single barline</source>
-        <translation>단일 세로줄</translation>
+        <translation>세로줄</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="61"/>
@@ -23669,7 +23711,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="65"/>
         <source>Reverse final barline</source>
-        <translation>역방향 끝세로줄</translation>
+        <translation>역끝세로줄</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="66"/>
@@ -23704,7 +23746,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="106"/>
         <source>Play count</source>
-        <translation>재생 횟수</translation>
+        <translation>반복 횟수</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="144"/>
@@ -23724,7 +23766,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="195"/>
         <source>Set as staff default</source>
-        <translation>보표 기본값으로 설정</translation>
+        <translation>보표 기본값으로 지정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/BarlineSettings.qml" line="218"/>
@@ -23771,17 +23813,17 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/beams/BeamTypeSelector.qml" line="64"/>
         <source>Break inner beams (8th)</source>
-        <translation>안쪽 빔 끊기 (8분음표)</translation>
+        <translation>내부 빔 끊기 (8분음표)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/beams/BeamTypeSelector.qml" line="65"/>
         <source>Break inner beams (16th)</source>
-        <translation>안쪽 빔 끊기 (16분음표)</translation>
+        <translation>내부 빔 끊기 (16분음표)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/beams/BeamTypeSelector.qml" line="66"/>
         <source>Join beams</source>
-        <translation>빔 연결</translation>
+        <translation>빔 연결하기</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/bends/BendSettings.qml" line="68"/>
@@ -23798,7 +23840,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/bends/BendSettings.qml" line="78"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/playcounttext/PlayCountSettings.qml" line="71"/>
         <source>Hide</source>
-        <translation>숨기기</translation>
+        <translation>숨김</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/bends/BendSettings.qml" line="85"/>
@@ -23892,7 +23934,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/brackets/BracketSettings.qml" line="93"/>
         <source>You have multiple brackets selected. Select a single bracket to edit its settings.</source>
-        <translation>여러 개의 묶음표가 선택되었습니다. 설정을 수정하려면 하나만 선택하세요.</translation>
+        <translation>여러 개의 대괄호가 선택되었습니다. 설정을 수정하려면 하나만 선택하세요.</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/chordsymbols/ChordSymbolSettings.qml" line="49"/>
@@ -23917,7 +23959,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/chordsymbols/ChordSymbolSettings.qml" line="75"/>
         <source>Root only</source>
-        <translation>근음만</translation>
+        <translation>기본음 만</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/chordsymbols/ChordSymbolSettings.qml" line="76"/>
@@ -23952,7 +23994,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/chordsymbols/ChordSymbolSettings.qml" line="93"/>
         <source>Until the next chord symbol</source>
-        <translation>다음 화음 기호까지</translation>
+        <translation>다음 코드 기호까지</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/chordsymbols/ChordSymbolSettings.qml" line="94"/>
@@ -24045,7 +24087,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/FretFrameSettings.qml" line="58"/>
         <source>Chords</source>
-        <translation>화음</translation>
+        <translation>코드</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/HorizontalFrameSettings.qml" line="55"/>
@@ -24064,7 +24106,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/HorizontalFrameSettings.qml" line="86"/>
         <source>Display brackets, clefs and key signatures in the next measure</source>
-        <translation>다음 마디에 묶음표, 음자리표, 조표 화면표시</translation>
+        <translation>다음 마디에 대괄호, 음자리표, 조표 화면표시</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/internal/FretFrameAlignmentSection.qml" line="35"/>
@@ -24121,12 +24163,12 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/internal/FretFrameChordsControlPanel.qml" line="93"/>
         <source>Reset chord list</source>
-        <translation>화음 목록 재설정</translation>
+        <translation>코드 목록 재설정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/internal/FretFrameChordsTab.qml" line="114"/>
         <source>Add chord symbols to your score and they’ll automatically appear in the legend.</source>
-        <translation>악보에 화음 기호를 추가하면 범례에 자동으로 표시됩니다.</translation>
+        <translation>악보에 코드 기호를 추가하면 범례에 자동으로 표시됩니다.</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/internal/FretFrameGapsSection.qml" line="53"/>
@@ -24151,7 +24193,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/internal/FretFrameSettingsTab.qml" line="85"/>
         <source>Chords per row</source>
-        <translation>행당 화음 수</translation>
+        <translation>행당 코드 수</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/internal/HorizontalGapsSection.qml" line="49"/>
@@ -24440,7 +24482,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/ChordBracketSettings.qml" line="63"/>
         <source>Hooks</source>
-        <translation>꺾쇠</translation>
+        <translation>꺾임 기호</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/ChordBracketSettings.qml" line="69"/>
@@ -24450,7 +24492,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/ChordBracketSettings.qml" line="78"/>
         <source>Hook length</source>
-        <translation>꺾쇠 길이</translation>
+        <translation>꺾임 길이</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/GlissandoSettings.qml" line="49"/>
@@ -24536,14 +24578,14 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/internal/HooksAndArrowsSection.qml" line="289"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/internal/HooksSection.qml" line="117"/>
         <source>Start hook height</source>
-        <translation>시작 꺾쇠 높이</translation>
+        <translation>시작 꺾임 높이</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/internal/HooksAndArrowsSection.qml" line="320"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/internal/HooksAndArrowsSection.qml" line="542"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/internal/HooksSection.qml" line="137"/>
         <source>End hook height</source>
-        <translation>끝 꺾쇠 높이</translation>
+        <translation>끝 꺾임 높이</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/internal/HooksAndArrowsSection.qml" line="374"/>
@@ -24614,7 +24656,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/LyricsLineSettings.qml" line="65"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lyrics/LyricsSettings.qml" line="48"/>
         <source>Set to verse</source>
-        <translation>절 번호 설정</translation>
+        <translation>절 번호 지정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/SlurAndTieSettings.qml" line="91"/>
@@ -24684,7 +24726,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/beams/BeamSettings.qml" line="82"/>
         <source>Feathered beams</source>
-        <translation>부채꼴 빔</translation>
+        <translation>페더드 빔</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/beams/BeamSettings.qml" line="96"/>
@@ -24707,12 +24749,12 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/beams/BeamSettings.qml" line="135"/>
         <source>Feathering left</source>
-        <translation>왼쪽 부채꼴 빔</translation>
+        <translation>왼쪽 페더링</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/beams/BeamSettings.qml" line="155"/>
         <source>Feathering right</source>
-        <translation>오른쪽 부채꼴 빔</translation>
+        <translation>오른쪽 페더링</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/beams/BeamSettings.qml" line="176"/>
@@ -24782,7 +24824,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/HeadSettings.qml" line="77"/>
         <source>Hide notehead</source>
-        <translation>음표 머리 숨기기</translation>
+        <translation>음표 머리 숨김</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/HeadSettings.qml" line="88"/>
@@ -24840,7 +24882,7 @@ pickup measure</source>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/stems/StemSettings.qml" line="53"/>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="209"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="211"/>
         <source>Stemless</source>
         <translation>음표 기둥 없음</translation>
     </message>
@@ -25064,7 +25106,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/sectionbreaks/SectionBreakSettings.qml" line="95"/>
         <source>Hide courtesy clefs and signatures</source>
-        <translation>예비 음자리표 및 조표/박자표 숨기기</translation>
+        <translation>예비 음자리표 및 조표/박자표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="111"/>
@@ -25084,12 +25126,12 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="162"/>
         <source>Invisible staff lines</source>
-        <translation>보이지 않는 보표 줄</translation>
+        <translation>보이지 않는 보표 선</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="172"/>
         <source>Staff line color</source>
-        <translation>보표 줄 색상</translation>
+        <translation>보표 선 색상</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="192"/>
@@ -25098,61 +25140,71 @@ pickup measure</source>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="193"/>
+        <source>Pitch names, no accidentals</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="194"/>
         <source>German pitch names</source>
         <translation>독일식 피치 이름</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="194"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="195"/>
+        <source>German pitch names, no accidentals</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="196"/>
         <source>Solfege movable Do</source>
         <translation>이동도법</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="195"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="197"/>
         <source>Solfege fixed Do</source>
         <translation>고정도법</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="196"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="198"/>
         <source>4-shape (Walker)</source>
         <translation>4모양 음표 (Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="197"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="199"/>
         <source>7-shape (Aikin)</source>
         <translation>7모양 음표 (Aikin)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="198"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="200"/>
         <source>7-shape (Funk)</source>
         <translation>7모양 음표 (Funk)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="199"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="201"/>
         <source>7-shape (Walker)</source>
         <translation>7모양 음표 (Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="218"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="220"/>
         <source>Show barlines</source>
         <translation>세로줄 표시</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="227"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="229"/>
         <source>Show ledger lines</source>
         <translation>덧줄 표시</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="236"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="238"/>
         <source>Generate clefs</source>
         <translation>음자리표 생성</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="245"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="247"/>
         <source>Generate time signatures</source>
         <translation>박자표 생성</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="254"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/stafftype/StaffTypeSettings.qml" line="256"/>
         <source>Generate key signatures</source>
         <translation>조표 생성</translation>
     </message>
@@ -25176,7 +25228,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tempos/TempoRestorePreviousSettings.qml" line="53"/>
         <source>Set specific tempo</source>
-        <translation>특정 템포 설정</translation>
+        <translation>특정 템포 지정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tempos/TempoRestorePreviousSettings.qml" line="73"/>
@@ -25253,7 +25305,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tremolobars/TremoloBarSettings.qml" line="150"/>
         <source>You have multiple tremolo bars selected. Select a single one to edit its settings.</source>
-        <translation>여러 개의 트레몰로 바(아밍)가 선택되었습니다. 설정을 수정하려면 하나만 선택하십시오.</translation>
+        <translation>여러 개의 트레몰로 바(아밍)가 선택되었습니다. 설정을 수정하려면 하나만 선택합니다.</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tremolos/TremoloSettings.qml" line="48"/>
@@ -25308,7 +25360,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/score/ScoreAppearanceInspectorView.qml" line="54"/>
         <source>Automatically hide all empty staves</source>
-        <translation>모든 빈 보표 자동 숨기기</translation>
+        <translation>모든 빈 보표 자동 숨김</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/score/ScoreAppearanceInspectorView.qml" line="81"/>
@@ -25573,7 +25625,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/general/playback/internal/breathplaybackmodel.cpp" line="33"/>
         <source>Breaths &amp; pauses</source>
-        <translation>숨표 및 휴지(&amp;P)</translation>
+        <translation>숨표 및 쉬기(&amp;P)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/general/playback/internal/fermataplaybackmodel.cpp" line="34"/>
@@ -25633,7 +25685,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/articulations/articulationsettingsmodel.cpp" line="38"/>
         <source>Articulation</source>
-        <translation>아티큘레이션</translation>
+        <translation>연주기호</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/articulations/articulationsettingsmodel.cpp" line="38"/>
@@ -25833,7 +25885,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/textlinesettingsmodel.cpp" line="443"/>
         <source>Hooked 90°</source>
         <comment>hook type</comment>
-        <translation>90° 꺽임</translation>
+        <translation>90° 꺾임</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/ottavasettingsmodel.cpp" line="84"/>
@@ -25877,7 +25929,7 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/textlinesettingsmodel.cpp" line="446"/>
         <source>Hooked 90° T-style</source>
         <comment>hook type</comment>
-        <translation>90° 꺾임(T자형)</translation>
+        <translation>90° 꺾임 (T자형)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/pedalsettingsmodel.cpp" line="69"/>
@@ -25963,7 +26015,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/voltasettingsmodel.cpp" line="37"/>
         <source>Volta</source>
-        <translation>볼타(반복 괄호)</translation>
+        <translation>볼타</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/lines/voltasettingsmodel.cpp" line="53"/>
@@ -26006,12 +26058,12 @@ pickup measure</source>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/beams/beamsettingsmodel.cpp" line="34"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/rests/beams/restbeamsettingsmodel.cpp" line="34"/>
         <source>Beam</source>
-        <translation>빔(묶음줄)</translation>
+        <translation>빔(빔)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/chords/chordsettingsmodel.cpp" line="33"/>
         <source>Chord</source>
-        <translation>화음</translation>
+        <translation>코드</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/hooks/hooksettingsmodel.cpp" line="32"/>
@@ -26043,42 +26095,54 @@ pickup measure</source>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="239"/>
+        <source>Pitch names, no accidentals</source>
+        <comment>notehead scheme</comment>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="241"/>
         <source>German pitch names</source>
         <comment>notehead scheme</comment>
         <translation>독일식 피치 이름</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="240"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="242"/>
+        <source>German pitch names, no accidentals</source>
+        <comment>notehead scheme</comment>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="244"/>
         <source>Solfège movable do</source>
         <comment>notehead scheme</comment>
         <translation>이동도법 계명</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="241"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="245"/>
         <source>Solfège fixed do</source>
         <comment>notehead scheme</comment>
         <translation>고정도법 계명</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="242"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="246"/>
         <source>4-shape (Walker)</source>
         <comment>notehead scheme</comment>
         <translation>4-셰이프(Walker)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="243"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="247"/>
         <source>7-shape (Aikin)</source>
         <comment>notehead scheme</comment>
         <translation>7-셰이프(Aikin)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="244"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="248"/>
         <source>7-shape (Funk)</source>
         <comment>notehead scheme</comment>
         <translation>7-셰이프(Funk)</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="245"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/notes/noteheads/noteheadsettingsmodel.cpp" line="249"/>
         <source>7-shape (Walker)</source>
         <comment>notehead scheme</comment>
         <translation>7-셰이프(Walker)</translation>
@@ -26131,12 +26195,12 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tempos/temposettingsmodel.cpp" line="46"/>
         <source>A tempo</source>
-        <translation>아 템포(본디 속도로)</translation>
+        <translation>A tempo (본디 속도로)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tempos/temposettingsmodel.cpp" line="49"/>
         <source>Tempo primo</source>
-        <translation>템포 프리모(처음 속도로)</translation>
+        <translation>Tempo primo (처음 속도로)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/timesignatures/timesignaturesettingsmodel.cpp" line="37"/>
@@ -26146,7 +26210,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tremolobars/tremolobarsettingsmodel.cpp" line="36"/>
         <source>Tremolo bar</source>
-        <translation>트레몰로 바(아밍)</translation>
+        <translation>Tremolo bar (트레몰로 바)</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/tremolos/tremolosettingsmodel.cpp" line="38"/>
@@ -26260,7 +26324,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/expressions/expressionsettingsmodel.cpp" line="33"/>
         <source>Expression</source>
-        <translation>표현(Expression)</translation>
+        <translation>나타냄말</translation>
     </message>
 </context>
 <context>
@@ -26328,7 +26392,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsOnScoreView.qml" line="189"/>
         <source>Choose your instruments by adding them to this list</source>
-        <translation>목록에 악기를 추가하여 선택하십시오</translation>
+        <translation>목록에 악기를 추가하여 선택합니다</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsView.qml" line="56"/>
@@ -26404,7 +26468,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutControlPanel.qml" line="95"/>
         <source>Move selected system markings up</source>
-        <translation>선택한 시스템 객체를 위로 이동</translation>
+        <translation>선택한 단 기호를 위로 이동</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutControlPanel.qml" line="118"/>
@@ -26419,7 +26483,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutControlPanel.qml" line="120"/>
         <source>Move selected system markings down</source>
-        <translation>선택한 시스템 객체를 아래로 이동</translation>
+        <translation>선택한 단 기호를 아래로 이동</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutControlPanel.qml" line="143"/>
@@ -26434,7 +26498,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutControlPanel.qml" line="145"/>
         <source>Remove selected system markings</source>
-        <translation>선택한 시스템 객체 제거</translation>
+        <translation>선택한 단 기호 제거</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutPanelAddButton.qml" line="38"/>
@@ -26445,7 +26509,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutPanelAddButton.qml" line="41"/>
         <source>Add instruments or system markings</source>
-        <translation>악기 또는 시스템 객체 추가</translation>
+        <translation>악기 또는 단 기호 추가</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutPanelAddButton.qml" line="48"/>
@@ -26455,7 +26519,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutPanelAddButton.qml" line="50"/>
         <source>System markings (tempo, rehearsal marks, etc.)</source>
-        <translation>시스템 객체(템포, 연습 번호 등)</translation>
+        <translation>단 기호(템포, 연습 번호 등)</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/LayoutPanelItemDelegate.qml" line="247"/>
@@ -26471,13 +26535,13 @@ pickup measure</source>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/LayoutPanel.qml" line="135"/>
         <source>There are no instruments in your score. To choose some, press &lt;b&gt;Add&lt;/b&gt;, or use the keyboard shortcut %1.</source>
         <extracomment>Keep in sync with the text of the &quot;Add&quot; button at the top of the Layout panel (LayoutControlPanel.qml)</extracomment>
-        <translation>악보에 악기가 없습니다. 악기를 선택하려면 &lt;b&gt;추가&lt;/b&gt;를 누르거나 단축키 %1을 사용하십시오.</translation>
+        <translation>악보에 악기가 없습니다. 악기를 선택하려면 &lt;b&gt;추가&lt;/b&gt;를 누르거나 단축키 %1을 사용합니다.</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/LayoutPanel.qml" line="139"/>
         <source>There are no instruments in your score. To choose some, press &lt;b&gt;Add&lt;/b&gt;.</source>
         <extracomment>Keep in sync with the text of the &quot;Add&quot; button at the top of the Layout panel (LayoutControlPanel.qml)</extracomment>
-        <translation>악보에 악기가 없습니다. 악기를 선택하려면 &lt;b&gt;추가&lt;/b&gt;를 누르십시오.</translation>
+        <translation>악보에 악기가 없습니다. 악기를 선택하려면 &lt;b&gt;추가&lt;/b&gt;를 누르세요.</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/layoutpanelcontextmenumodel.cpp" line="182"/>
@@ -26528,12 +26592,12 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/systemobjectslayertreeitem.cpp" line="39"/>
         <source>System markings</source>
-        <translation>시스템 객체</translation>
+        <translation>단 기호</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/systemobjectslayertreeitem.cpp" line="57"/>
         <source>System markings hidden</source>
-        <translation>시스템 객체 숨겨짐</translation>
+        <translation>단 기호 숨겨짐</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/systemobjectslayertreeitem.cpp" line="69"/>
@@ -26568,7 +26632,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentSettingsPopup.qml" line="132"/>
         <source>Hide empty staves</source>
-        <translation>빈 보표 숨기기</translation>
+        <translation>빈 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentSettingsPopup.qml" line="144"/>
@@ -26578,7 +26642,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentSettingsPopup.qml" line="145"/>
         <source>Always hide</source>
-        <translation>항상 숨기기</translation>
+        <translation>항상 숨김</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentSettingsPopup.qml" line="146"/>
@@ -26588,7 +26652,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentSettingsPopup.qml" line="176"/>
         <source>Only hide staves on a system if the entire instrument is empty</source>
-        <translation>악기 전체가 비어 있는 단에서만 보표 숨기기</translation>
+        <translation>악기 전체가 비어 있는 단에서만 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentSettingsPopup.qml" line="197"/>
@@ -26621,13 +26685,13 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/StaffSettingsPopup.qml" line="182"/>
         <source>Hide all measures that do not contain notation (cutaway)</source>
-        <translation>기보가 없는 모든 마디 숨기기(컷어웨이)</translation>
+        <translation>기보가 없는 모든 마디 숨김(컷어웨이)</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/StaffSettingsPopup.qml" line="200"/>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/StaffSettingsPopup.qml" line="224"/>
         <source>Hide empty staves</source>
-        <translation>빈 보표 숨기기</translation>
+        <translation>빈 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/StaffSettingsPopup.qml" line="212"/>
@@ -26637,7 +26701,7 @@ pickup measure</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/StaffSettingsPopup.qml" line="213"/>
         <source>Always hide</source>
-        <translation>항상 숨기기</translation>
+        <translation>항상 숨김</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/StaffSettingsPopup.qml" line="214"/>
@@ -26676,12 +26740,12 @@ pickup measure</source>
         <location filename="../../src/framework/learn/qml/Muse/Learn/LearnPage.qml" line="96"/>
         <location filename="../../src/framework/learn/qml/Muse/Learn/LearnPage.qml" line="103"/>
         <source>Learn</source>
-        <translation>학습</translation>
+        <translation>배우기</translation>
     </message>
     <message>
         <location filename="../../src/framework/learn/qml/Muse/Learn/LearnPage.qml" line="156"/>
         <source>Learn tab bar</source>
-        <translation>학습 탭 막대</translation>
+        <translation>배우기 탭 표시줄</translation>
     </message>
     <message>
         <location filename="../../src/framework/learn/qml/Muse/Learn/LearnPage.qml" line="167"/>
@@ -26726,7 +26790,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
 (Note: Mastering MuseScore is available in English only)</source>
         <translation>세계에서 가장 인기 있는 사보 소프트웨어를 배우기 위한 가장 포괄적인 리소스, Mastering MuseScore에 오신 것을 환영합니다! 제 이름은 Marc Sabatella이며, 10여 년 전 MuseScore가 처음 출시된 이래로 개발, 지원 및 홍보를 돕고 있습니다.
 
-사보 소프트웨어를 처음 시작하는 초보자이든, 고급 인그레이빙 및 재생 기법을 탐구하고자 하는 파워 유저이든 관계없이, 저의 대표 온라인 강좌인 Mastering MuseScore는 MuseScore를 최대한 활용하는 데 필요한 모든 내용을 다룹니다.
+사보 소프트웨어를 처음 시작하는 초보자이든, 고급 인그레이빙 및 플레이백 기법을 탐구하고자 하는 파워 유저이든 관계없이, 저의 대표 온라인 강좌인 Mastering MuseScore는 MuseScore를 최대한 활용하는 데 필요한 모든 내용을 다룹니다.
 
 또한 Mastering MuseScore는 음악가들을 위한 커뮤니티, 토론 공간, 라이브 스트리밍, 그리고 최고의 음악을 만드는 데 도움이 될 관련 강좌 및 서비스를 제공합니다. MuseScore의 최고 전문가 중 한 명에게 직접 배울 수 있는 이 기회를 놓치지 마세요!
 
@@ -26777,7 +26841,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>지금 다운로드</translation>
     </message>
     <message>
-        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="173"/>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="109"/>
+        <source>Search sounds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/musesounds/qml/MuseScore/MuseSounds/MuseSoundsPage.qml" line="197"/>
         <source>Sorry, we are unable to load these sounds right now</source>
         <translation>죄송합니다. 현재 사운드를 불러올 수 없습니다.</translation>
     </message>
@@ -26817,7 +26886,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/musesounds/internal/musesamplercheckupdatescenario.cpp" line="98"/>
         <source>To keep MuseSounds running smoothly, MuseScore Studio needs to close briefly so MuseSounds Manager can apply the update. You’ll need to restart MuseScore Studio when the update is complete.</source>
-        <translation>MuseSounds의 원활한 실행을 위해 MuseScore Studio를 잠시 종료하고 MuseSounds Manager에서 업데이트를 진행해야 합니다. 업데이트가 완료되면 MuseScore Studio를 다시 시작하십시오.</translation>
+        <translation>MuseSounds의 원활한 실행을 위해 MuseScore Studio를 잠시 종료하고 MuseSounds Manager에서 업데이트를 진행해야 합니다. 업데이트가 완료되면 MuseScore Studio를 다시 시작합니다.</translation>
     </message>
     <message>
         <location filename="../../src/musesounds/internal/musesamplercheckupdatescenario.cpp" line="105"/>
@@ -26955,7 +27024,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/CapoPopup.qml" line="121"/>
         <source>No transposition</source>
-        <translation>조표 변경 없음</translation>
+        <translation>조옮김 없음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/CapoPopup.qml" line="136"/>
@@ -27152,7 +27221,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/HarpPedalPopup.qml" line="315"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/HarpPedalPopup.qml" line="320"/>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="592"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="602"/>
         <source>Text</source>
         <translation>텍스트</translation>
     </message>
@@ -27294,7 +27363,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/selectionfilter/voicesselectionfiltermodel.cpp" line="55"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/selectionfilter/voicesselectionfiltermodel.cpp" line="57"/>
         <source>Voice %1</source>
-        <translation>제%1성부</translation>
+        <translation>성부 %1</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/NotationToolBar.qml" line="30"/>
@@ -27309,7 +27378,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/NoteInputBar.qml" line="192"/>
         <source>Show/hide toolbar buttons</source>
-        <translation>도구 모음 버튼 표시/숨기기</translation>
+        <translation>도구 모음 버튼 표시/숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/SelectionFilterPanel.qml" line="80"/>
@@ -27319,7 +27388,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/SelectionFilterPanel.qml" line="126"/>
         <source>Chords</source>
-        <translation>화음</translation>
+        <translation>코드</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/SelectionFilterPanel.qml" line="168"/>
@@ -27359,7 +27428,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/AccidentalsPage.qml" line="90"/>
         <source>Align accidentals an octave apart across subchords</source>
-        <translation>하위 화음 간 옥타브 차이가 나는 임시표 정렬</translation>
+        <translation>하위 코드 간 옥타브 차이가 나는 임시표 정렬</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/AccidentalsPage.qml" line="98"/>
@@ -27557,22 +27626,22 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="113"/>
         <source>Left</source>
-        <translation>왼쪽</translation>
+        <translation>좌측</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="113"/>
         <source>Bottom</source>
-        <translation>아래</translation>
+        <translation>하단</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="119"/>
         <source>Right</source>
-        <translation>오른쪽</translation>
+        <translation>우측</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="119"/>
         <source>Top</source>
-        <translation>위</translation>
+        <translation>상단</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="126"/>
@@ -27607,7 +27676,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="186"/>
         <source>Barré</source>
-        <translation>바레(Barré)</translation>
+        <translation>바레</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="194"/>
@@ -27648,12 +27717,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="232"/>
         <source>Trimmed</source>
-        <translation>다듬어짐(Trimmed)</translation>
+        <translation>축소형</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="233"/>
         <source>Extended</source>
-        <translation>확장됨(Extended)</translation>
+        <translation>확장형</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/FretboardsPage.qml" line="239"/>
@@ -27809,12 +27878,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/TiesSection.qml" line="218"/>
         <source>Placement on chords:</source>
-        <translation>화음의 배치:</translation>
+        <translation>코드의 배치:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/TiesSection.qml" line="250"/>
         <source>Placement of inner ties with respect to augmentation dots:</source>
-        <translation>부점과의 관계에 따른 내부 붙임줄의 배치:</translation>
+        <translation>증가점 위치에 따른 내부 붙임줄의 배치:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/TiesSection.qml" line="258"/>
@@ -27852,42 +27921,42 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>확대/축소 메뉴</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="698"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="705"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="367"/>
         <source>Insert &amp;after selection…</source>
         <translation>선택영역 뒤에 삽입(&amp;A)…</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="697"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="704"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="368"/>
         <source>Insert &amp;before selection…</source>
         <translation>선택영역 앞에 삽입(&amp;B)…</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="694"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="701"/>
         <source>&amp;Insert one measure before selection</source>
         <translation>선택영역 앞에 한 마디 삽입(&amp;I)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="695"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="702"/>
         <source>Insert &amp;one measure at end of score</source>
         <translation>악보 끝에 한 마디 삽입(&amp;O)</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="700"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="707"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="370"/>
         <source>Insert at &amp;start of score…</source>
         <translation>악보 시작 부분에 삽입(&amp;S)…</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="701"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="708"/>
         <location filename="../../src/web/appshell/view/appmenumodel.cpp" line="371"/>
         <source>Insert at &amp;end of score…</source>
         <translation>악보 끝 부분에 삽입(&amp;E)…</translation>
     </message>
     <message>
-        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="715"/>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="675"/>
+        <location filename="../../src/appshell/qml/MuseScore/AppShell/appmenumodel.cpp" line="722"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="685"/>
         <source>Insert at end of score</source>
         <translation>악보 끝 부분에 삽입</translation>
     </message>
@@ -27905,17 +27974,17 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="58"/>
         <source>Please select a note and retry</source>
-        <translation>음표를 선택하고 다시 시도하십시오</translation>
+        <translation>음표를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="61"/>
         <source>No chord/rest selected</source>
-        <translation>선택된 화음/쉼표 없음</translation>
+        <translation>선택된 코드/쉼표 없음</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="62"/>
         <source>Please select a chord or rest and retry</source>
-        <translation>화음 또는 쉼표를 선택하고 다시 시도하십시오</translation>
+        <translation>코드 또는 쉼표를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="65"/>
@@ -27925,7 +27994,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="66"/>
         <source>Please select a note or lyrics and retry</source>
-        <translation>음표 또는 가사를 선택하고 다시 시도하십시오</translation>
+        <translation>음표 또는 가사를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="69"/>
@@ -27936,7 +28005,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="70"/>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="111"/>
         <source>Please select a note or rest and retry</source>
-        <translation>음표 또는 쉼표를 선택하고 다시 시도하십시오</translation>
+        <translation>음표 또는 쉼표를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="73"/>
@@ -27946,7 +28015,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="74"/>
         <source>Please select an element that can be flipped and retry</source>
-        <translation>뒤집을 수 있는 요소를 선택하고 다시 시도하십시오</translation>
+        <translation>뒤집을 수 있는 요소를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="77"/>
@@ -27956,7 +28025,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="78"/>
         <source>Please select a measure and retry</source>
-        <translation>마디를 선택하고 다시 시도하십시오</translation>
+        <translation>마디를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="81"/>
@@ -27966,7 +28035,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="82"/>
         <source>Please select one or more staves and retry</source>
-        <translation>하나 이상의 보표를 선택하고 다시 시도하십시오</translation>
+        <translation>하나 이상의 보표를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="85"/>
@@ -27976,7 +28045,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="86"/>
         <source>Please select a note or figured bass and retry</source>
-        <translation>음표 또는 통주저음을 선택하고 다시 시도하십시오</translation>
+        <translation>음표 또는 통주저음을 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="89"/>
@@ -27986,28 +28055,28 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="90"/>
         <source>Please select a note or rest or chord symbol and retry</source>
-        <translation>음표, 쉼표 또는 코드 기호를 선택하고 다시 시도하십시오</translation>
+        <translation>음표, 쉼표 또는 코드 기호를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="93"/>
         <source>Cannot insert chord/rest in tuplet</source>
-        <translation>잇단음표 내에 화음/쉼표를 삽입할 수 없음</translation>
+        <translation>잇단음표 내에 코드/쉼표를 삽입할 수 없음</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="96"/>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="103"/>
         <source>Cannot split tuplet</source>
-        <translation>잇단음표를 분할할 수 없음</translation>
+        <translation>잇단음표를 분할할 수 없습니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="99"/>
         <source>Cannot split measure at the first beat</source>
-        <translation>첫 박에서 마디를 분할할 수 없음</translation>
+        <translation>첫 박에서는 마디를 분할할 수 없습니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="102"/>
         <source>Cannot split measure here</source>
-        <translation>이 위치에서 마디를 분할할 수 없음</translation>
+        <translation>여기서는 마디를 분할할 수 없습니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="106"/>
@@ -28022,12 +28091,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="110"/>
         <source>Cannot split measure repeat</source>
-        <translation>마디 반복 기호를 분할할 수 없음</translation>
+        <translation>마디 반복 기호를 분할할 수 없습니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="114"/>
         <source>This measure is too short to be split</source>
-        <translation>분할하기에 마디 길이가 너무 짧음</translation>
+        <translation>이 마디는 너무 짧아서 분할할 수 없습니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="117"/>
@@ -28037,7 +28106,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="118"/>
         <source>Please select the complete tuplet and retry</source>
-        <translation>잇단음표 전체를 선택하고 다시 시도하십시오</translation>
+        <translation>잇단음표 전체를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="121"/>
@@ -28047,7 +28116,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="122"/>
         <source>Please select the complete measure repeat and retry</source>
-        <translation>마디 반복 전체를 선택하고 다시 시도하십시오</translation>
+        <translation>마디 반복 전체를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="125"/>
@@ -28063,7 +28132,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="129"/>
         <source>Please select all notes that are part of this tuplet and try again.</source>
-        <translation>이 잇단음표에 포함된 모든 음표를 선택하고 다시 시도하십시오.</translation>
+        <translation>이 잇단음표에 포함된 모든 음표를 선택하고 다시 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="132"/>
@@ -28083,7 +28152,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="142"/>
         <source>Please select all notes that are part of this tremolo and try again.</source>
-        <translation>이 트레몰로에 포함된 모든 음표를 선택하고 다시 시도하십시오.</translation>
+        <translation>이 트레몰로에 포함된 모든 음표를 선택하고 다시 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="145"/>
@@ -28098,7 +28167,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="151"/>
         <source>Destination is not a chord or rest</source>
-        <translation>대상에 화음이나 쉼표가 없음</translation>
+        <translation>대상에 코드이나 쉼표가 없음</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="154"/>
@@ -28129,17 +28198,17 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="167"/>
         <source>Please replace it with a key signature from the palettes instead.</source>
-        <translation>팔레트의 다른 조표로 교체하십시오.</translation>
+        <translation>팔레트의 다른 조표로 교체합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="170"/>
         <source>These measures cannot be joined</source>
-        <translation>이 마디들을 합칠 수 없음</translation>
+        <translation>이 마디들을 연결할 수 없음</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="171"/>
         <source>Please remove the staff type change and retry.</source>
-        <translation>보표 유형 변경 지시어를 제거하고 다시 시도하십시오.</translation>
+        <translation>보표 유형 변경 지시어를 제거하고 다시 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="174"/>
@@ -28149,7 +28218,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="175"/>
         <source>Make a list selection of notes or rests on the same beat or any range selection and retry.</source>
-        <translation>동일한 박의 음표/쉼표를 리스트로 선택하거나 일정 범위를 선택한 후 다시 시도하십시오.</translation>
+        <translation>동일한 박의 음표/쉼표를 리스트로 선택하거나 일정 범위를 선택한 후 다시 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/mscoreerrorscontroller.cpp" line="178"/>
@@ -28202,25 +28271,25 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>죄송합니다. 웹에서의 악기 변경은 현재 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4567"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4571"/>
         <source>‘</source>
         <extracomment>Single open quotation mark</extracomment>
         <translation>‘</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4569"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4573"/>
         <source>’</source>
         <extracomment>Single close quotation mark</extracomment>
         <translation>’</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4571"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4575"/>
         <source>“</source>
         <extracomment>Double open quotation mark</extracomment>
         <translation>“</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4573"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4577"/>
         <source>”</source>
         <extracomment>Double close quotation mark</extracomment>
         <translation>”</translation>
@@ -28254,7 +28323,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notation/notationerrors.h" line="48"/>
         <source>Please select the complete tuplet or tremolo and retry</source>
-        <translation>잇단음표 또는 트레몰로 전체를 선택하고 다시 시도하십시오</translation>
+        <translation>잇단음표 또는 트레몰로 전체를 선택하고 다시 시도합니다</translation>
     </message>
     <message>
         <location filename="../../src/notation/notationerrors.h" line="51"/>
@@ -28384,48 +28453,48 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>이미지 삽입</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1833"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1835"/>
         <source>MuseScore style files</source>
         <translation>MuseScore 스타일 파일</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1834"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1836"/>
         <source>MuseScore style file</source>
         <translation>MuseScore 스타일 파일</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1837"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1839"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="123"/>
         <source>Load style</source>
         <translation>스타일 불러오기</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1838"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1840"/>
         <source>Save style</source>
         <translation>스타일 저장</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1848"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1850"/>
         <source>The style file could not be loaded.</source>
         <translation>스타일 파일을 불러올 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1854"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1856"/>
         <source>Since this style file is from a different version of MuseScore Studio, your score is not guaranteed to display correctly.</source>
         <translation>이 스타일 파일은 다른 버전의 MuseScore Studio에서 작성되었으므로 악보가 올바르게 화면표시되지 않을 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1856"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1858"/>
         <source>Click OK to load anyway.</source>
-        <translation>무시하고 불러오려면 확인을 누르십시오.</translation>
+        <translation>무시하고 불러오려면 확인을 누르세요.</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1874"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1876"/>
         <source>The style file could not be saved.</source>
         <translation>스타일 파일을 저장할 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1875"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="1877"/>
         <source>An error occurred.</source>
         <translation>오류 발생</translation>
     </message>
@@ -28482,7 +28551,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/notationcontextmenumodel.cpp" line="233"/>
         <source>Hide</source>
-        <translation>숨기기</translation>
+        <translation>숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/notationcontextmenumodel.cpp" line="242"/>
@@ -28548,37 +28617,37 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>구분선</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="588"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="598"/>
         <source>Notes</source>
         <translation>음표</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="589"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="599"/>
         <source>Intervals</source>
         <translation>음정</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="590"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="600"/>
         <source>Measures</source>
         <translation>마디</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="591"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="601"/>
         <source>Frames</source>
         <translation>프레임</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="593"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="603"/>
         <source>Lines</source>
         <translation>선</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="594"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="604"/>
         <source>Chords and fretboard diagrams</source>
-        <translation>화음 및 프렛보드 다이어그램</translation>
+        <translation>코드 및 프렛보드 다이어그램</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="742"/>
+        <location filename="../../src/notationscene/qml/MuseScore/NotationScene/noteinputbarmodel.cpp" line="752"/>
         <source>Fretboard diagram legend</source>
         <translation>프렛보드 다이어그램 범례</translation>
     </message>
@@ -28680,7 +28749,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/selectionfilter/elementsselectionfiltermodel.cpp" line="65"/>
         <source>Articulations</source>
-        <translation>아티큘레이션</translation>
+        <translation>연주기호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/selectionfilter/elementsselectionfiltermodel.cpp" line="67"/>
@@ -28740,7 +28809,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/selectionfilter/elementsselectionfiltermodel.cpp" line="91"/>
         <source>Grace notes</source>
-        <translation>전타음/후타음(Grace notes)</translation>
+        <translation>앞꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/selectionfilter/notesinchordselectionfiltermodel.cpp" line="149"/>
@@ -28964,7 +29033,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.cpp" line="1376"/>
         <source>Type these special character combinations in the fields above to reference document data in the header/footer.</source>
-        <translation>헤더/푸터에서 문서 데이터를 참조하려면 위 필드에 해당 특수 문자 조합을 입력하십시오.</translation>
+        <translation>헤더/푸터에서 문서 데이터를 참조하려면 위 필드에 해당 특수 문자 조합을 입력합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.cpp" line="1379"/>
@@ -29059,7 +29128,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/widgets/editstyle.cpp" line="1415"/>
         <source>Type $:tag: into a field above, replacing the word ‘tag’ with one of the labels below. Its associated metadata will be shown on your score.</source>
-        <translation>위 필드에 $:태그명:을 입력하십시오(&apos;태그명&apos;은 아래 라벨 중 하나로 교체). 해당 메타데이터가 악보에 표시됩니다.</translation>
+        <translation>위 필드에 $:태그명:을 입력합니다(&apos;태그명&apos;은 아래 라벨 중 하나로 교체). 해당 메타데이터가 악보에 표시됩니다.</translation>
     </message>
 </context>
 <context>
@@ -29077,7 +29146,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/AccidentalsPage.qml" line="64"/>
         <source>Multiple accidentals in chords</source>
-        <translation>화음 내 다중 임시표</translation>
+        <translation>코드 내 다중 임시표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="496"/>
@@ -29193,7 +29262,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/BendsPage.qml" line="289"/>
         <source>Grace note bends/dives on tablature</source>
-        <translation>타블라추어의 전타음 벤드/다이브</translation>
+        <translation>타블라추어의 앞꾸밈음 벤드/다이브</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/BendsPage.qml" line="296"/>
@@ -29213,7 +29282,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/BendsPage.qml" line="315"/>
         <source>To the grace note</source>
-        <translation>전타음에 맞춤</translation>
+        <translation>앞꾸밈음에 맞춤</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/BendsPage.qml" line="333"/>
@@ -29261,7 +29330,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ChordSymbolsPage.qml" line="240"/>
         <source>Lowercase minor chords</source>
-        <translation>단화음(Minor)을 소문자로 표기</translation>
+        <translation>단코드(Minor)을 소문자로 표기</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ChordSymbolsPage.qml" line="247"/>
@@ -29326,7 +29395,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ChordSymbolsPage.qml" line="781"/>
         <source>Playback</source>
-        <translation>재생</translation>
+        <translation>플레이백</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ChordSymbolsPage.qml" line="868"/>
@@ -29368,7 +29437,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="164"/>
         <source>Solfeggio</source>
-        <translation>솔페지오(계명창)</translation>
+        <translation>솔페지오</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="167"/>
@@ -29378,7 +29447,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="190"/>
         <source>Literal</source>
-        <translation>문자 그대로(Literal)</translation>
+        <translation>문자 그대로</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="201"/>
@@ -29388,32 +29457,32 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="204"/>
         <source>Root only</source>
-        <translation>근음(Root)만</translation>
+        <translation>기본음 만</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="207"/>
         <source>Close</source>
-        <translation>밀집 화음(Close)</translation>
+        <translation>밀집 화음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="210"/>
         <source>Drop two</source>
-        <translation>드롭 투(Drop 2)</translation>
+        <translation>드롭 투</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="213"/>
         <source>Six note</source>
-        <translation>6성부</translation>
+        <translation>6음 화음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="216"/>
         <source>Four note</source>
-        <translation>4성부</translation>
+        <translation>4음 화음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="219"/>
         <source>Three note</source>
-        <translation>3성부</translation>
+        <translation>3음 화음</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="230"/>
@@ -29428,7 +29497,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="236"/>
         <source>Chord/rest duration</source>
-        <translation>화음/쉼표 음길이만큼</translation>
+        <translation>코드/쉼표 음길이</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/chordsymbolspagemodel.cpp" line="253"/>
@@ -29553,7 +29622,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/HammerOnPullOffTappingPage.qml" line="385"/>
         <source>Slur top and bottom notes in chords</source>
-        <translation>화음의 최상성부 및 최하성부 음에 이음줄 표시</translation>
+        <translation>코드의 최상성부 및 최하성부 음에 이음줄 표시</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/HammerOnPullOffTappingPage.qml" line="395"/>
@@ -29702,12 +29771,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="93"/>
         <source>Hide all clefs after the first system where they appear</source>
-        <translation>첫 단 이후의 모든 음자리표 숨기기</translation>
+        <translation>첫 단 이후의 모든 음자리표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="107"/>
         <source>Hide TAB clefs after the first system where they appear</source>
-        <translation>첫 단 이후의 TAB 음자리표 숨기기</translation>
+        <translation>첫 단 이후의 TAB 음자리표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="114"/>
@@ -29757,7 +29826,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="183"/>
         <source>Set where time signatures appear using the Layout panel.</source>
-        <translation>레이아웃 패널을 사용하여 박자표가 표시될 위치를 설정하십시오.</translation>
+        <translation>레이아웃 패널을 사용하여 박자표가 표시될 위치를 지정합니다.</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="201"/>
@@ -29832,7 +29901,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="475"/>
         <source>Hide after the first system where they appear</source>
-        <translation>첫 단 이후의 조표 숨기기</translation>
+        <translation>첫 단 이후의 조표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/ClefKeyTimeSigPage.qml" line="489"/>
@@ -30023,7 +30092,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/MeasureNumbersPage.qml" line="237"/>
         <source>At system marking positions</source>
-        <translation>시스템 객체 표시 위치</translation>
+        <translation>단 기호 표시 위치 마다</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/MeasureNumbersPage.qml" line="238"/>
@@ -30065,12 +30134,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/MeasureNumbersPage.qml" line="374"/>
         <source>Bracket type</source>
-        <translation>괄호 종류</translation>
+        <translation>대괄호 종류</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/MeasureNumbersPage.qml" line="381"/>
         <source>Brackets</source>
-        <translation>대괄호([ ])</translation>
+        <translation>대괄호</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/MeasureNumbersPage.qml" line="382"/>
@@ -30090,7 +30159,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/VoltasPage.qml" line="47"/>
         <source>Voltas</source>
-        <translation>볼타(반복 괄호)</translation>
+        <translation>볼타</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/VoltasPage.qml" line="56"/>
@@ -30120,7 +30189,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/VoltasPage.qml" line="157"/>
         <source>At start of system, start volta:</source>
-        <translation>단 시작 부분의 볼타 시작점:</translation>
+        <translation>단 시작 마다, 볼타 시작:</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/styledialog/VoltasPage.qml" line="162"/>
@@ -30340,7 +30409,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/widgets/stafftextpropertiesdialog.cpp" line="56"/>
         <source>System text properties</source>
-        <translation>시스템 텍스트 속성</translation>
+        <translation>단 텍스트 속성</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/stafftextpropertiesdialog.cpp" line="58"/>
@@ -30358,7 +30427,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/StaffVisibilityPopup.qml" line="85"/>
         <source>Hide empty staves</source>
-        <translation>빈 보표 숨기기</translation>
+        <translation>빈 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/StaffVisibilityPopup.qml" line="93"/>
@@ -30416,7 +30485,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="600"/>
         <source>Hide instrument in score</source>
-        <translation>악보에서 악기 숨기기</translation>
+        <translation>악보에서 악기 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="603"/>
@@ -30426,21 +30495,21 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="765"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1162"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2524"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2545"/>
         <source>Tempo</source>
         <translation>템포</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="766"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1193"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2525"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2546"/>
         <source>Time signature</source>
         <translation>박자표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="767"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1232"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2526"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2547"/>
         <source>Rehearsal mark</source>
         <translation>연습 번호</translation>
     </message>
@@ -30449,14 +30518,14 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1097"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1101"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1263"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2527"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2548"/>
         <source>Key signature</source>
         <translation>조표</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="769"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1366"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2528"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2549"/>
         <source>Barlines</source>
         <translation>세로줄</translation>
     </message>
@@ -30464,7 +30533,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="770"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1122"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1422"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2529"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2550"/>
         <source>Jumps and markers</source>
         <translation>점프 및 마커</translation>
     </message>
@@ -30472,10 +30541,10 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="771"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1506"/>
         <location filename="../../src/notationscene/widgets/timeline.cpp" line="1548"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2530"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2789"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3058"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3093"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2551"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="2810"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3079"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3114"/>
         <source>Measures</source>
         <translation>마디</translation>
     </message>
@@ -30490,24 +30559,24 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>사용자 지정 조표</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3048"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3069"/>
         <source>Context menu</source>
         <translation>콘텍스트 메뉴</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3050"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3071"/>
         <source>Edit instruments</source>
         <translation>악기 편집</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3067"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3090"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3088"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3111"/>
         <source>Hide all</source>
-        <translation>모두 숨기기</translation>
+        <translation>모두 숨김</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3070"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3099"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3091"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3120"/>
         <source>Show all</source>
         <translation>모두 표시</translation>
     </message>
@@ -30628,12 +30697,12 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/MoreElementsPopup.qml" line="315"/>
         <source>Drag items to the palette or directly on your score</source>
-        <translation>항목을 팔레트나 악보 위로 직접 드래그하십시오</translation>
+        <translation>항목을 팔레트나 악보 위로 직접 드래그합니다</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteGridView.qml" line="139"/>
         <source>Drag and drop any element here</source>
-        <translation>여기에 요소를 드래그 앤 드롭 하십시오</translation>
+        <translation>여기에 요소를 드래그 앤 드롭 합니다</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteGridView.qml" line="140"/>
@@ -30648,13 +30717,13 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteGridView.qml" line="493"/>
-        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1113"/>
+        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1127"/>
         <source>Delete</source>
         <translation>삭제</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteGridView.qml" line="494"/>
-        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1114"/>
+        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1128"/>
         <source>Properties…</source>
         <translation>속성…</translation>
     </message>
@@ -30669,31 +30738,31 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
         <translation>팔레트 검색</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteTree.qml" line="531"/>
+        <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteTree.qml" line="552"/>
         <source>%1, contains %Ln matching element(s)</source>
         <translation><numerusform>%1, 일치하는 요소 %Ln개 포함</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteTree.qml" line="532"/>
+        <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteTree.qml" line="553"/>
         <source>%1 expanded</source>
         <comment>tree item not collapsed</comment>
         <translation>%1 펼쳐짐</translation>
     </message>
     <message>
-        <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteTree.qml" line="669"/>
+        <location filename="../../src/palette/qml/MuseScore/Palette/internal/PaletteTree.qml" line="673"/>
         <location filename="../../src/palette/internal/palettemodel.cpp" line="835"/>
         <source>Untitled palette</source>
-        <translation>제목 없는 팔레트</translation>
+        <translation>팔레트 제목 없음</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/TreePaletteHeader.qml" line="167"/>
         <source>Hide/Delete palette</source>
-        <translation>팔레트 숨기기/삭제</translation>
+        <translation>팔레트 숨김/삭제</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/TreePaletteHeader.qml" line="167"/>
         <source>Hide palette</source>
-        <translation>팔레트 숨기기</translation>
+        <translation>팔레트 숨김</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/internal/TreePaletteHeader.qml" line="168"/>
@@ -30759,7 +30828,7 @@ In addition, Mastering MuseScore features a supportive community of musicians, w
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/PaletteCellPropertiesDialog.qml" line="149"/>
         <source>Draw staff</source>
-        <translation>보표 기보</translation>
+        <translation>보표 그리기</translation>
     </message>
     <message>
         <location filename="../../src/palette/qml/MuseScore/Palette/PalettePropertiesDialog.qml" line="34"/>
@@ -30815,52 +30884,52 @@ failed.</source>
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="326"/>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="328"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1827"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="340"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="342"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1828"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1829"/>
         <source>Capo</source>
         <translation>카포</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="336"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1833"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="350"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1834"/>
         <source>String tunings</source>
         <translation>현 조율</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="311"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1805"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="325"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1806"/>
         <source>Left-hand tapping</source>
         <translation>왼손 태핑</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="315"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1809"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="329"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1810"/>
         <source>Right-hand tapping</source>
         <translation>오른손 태핑</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="321"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1812"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="335"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1813"/>
         <source>Hammer-on / pull-off</source>
         <translation>해머링 온 / 풀 오프</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="379"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1295"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="393"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1296"/>
         <source>Line (right arrowhead)</source>
         <translation>선(오른쪽 화살표)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="387"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1300"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="401"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1301"/>
         <source>Line (left arrowhead)</source>
         <translation>선(왼쪽 화살표)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="427"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1686"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="434"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1687"/>
         <source>Blank</source>
         <translation>빈 기호</translation>
     </message>
@@ -30899,31 +30968,31 @@ failed.</source>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="390"/>
         <source>Repeats &amp; jumps</source>
-        <translation>반복 및 이동</translation>
+        <translation>반복·도약 기호</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="484"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1160"/>
         <source>Prima volta</source>
-        <translation>프리마 볼타 (1번 반복 괄호)</translation>
+        <translation>프리마 볼타</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="492"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1186"/>
         <source>Seconda volta, open</source>
-        <translation>세콘다 볼타 (열린 2번 반복 괄호)</translation>
+        <translation>세콘다 볼타, 오픈</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="500"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1169"/>
         <source>Seconda volta</source>
-        <translation>세콘다 볼타 (2번 반복 괄호)</translation>
+        <translation>세콘다 볼타</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="508"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1177"/>
         <source>Terza volta</source>
-        <translation>테르차 볼타 (3번 반복 괄호)</translation>
+        <translation>테르차 볼타</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="527"/>
@@ -30943,19 +31012,19 @@ failed.</source>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="594"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1785"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1786"/>
         <source>RH guitar fingering %1</source>
         <translation>오른손 기타 운지법 %1</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="602"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1793"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1794"/>
         <source>LH guitar fingering %1</source>
         <translation>왼손 기타 운지법 %1</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="609"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1800"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1801"/>
         <source>String number %1</source>
         <translation>현 번호 %1</translation>
     </message>
@@ -30972,7 +31041,7 @@ failed.</source>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="692"/>
         <source>Articulations</source>
-        <translation>아티큘레이션</translation>
+        <translation>연주기호</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="697"/>
@@ -31004,23 +31073,23 @@ failed.</source>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="929"/>
         <source>Brace</source>
-        <translation>중괄호(Brace)</translation>
+        <translation>중괄호</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="930"/>
         <source>Square</source>
-        <translation>사각 대괄호</translation>
+        <translation>꺽쇠괄호</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="931"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1290"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1291"/>
         <source>Line</source>
         <translation>선</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="952"/>
         <source>Breaths &amp; pauses</source>
-        <translation>숨표 및 휴지</translation>
+        <translation>숨표 및 쉬기</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="999"/>
@@ -31035,7 +31104,7 @@ failed.</source>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1091"/>
         <source>Grace notes</source>
-        <translation>전타음/후타음</translation>
+        <translation>앞꾸밈음</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1112"/>
@@ -31045,558 +31114,559 @@ failed.</source>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1132"/>
         <source>Lines</source>
-        <translation>선</translation>
+        <translation>선 기호</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1213"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1879"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1881"/>
         <source>Pedal (with ped and line)</source>
-        <translation>페달(Ped. 및 연장선)</translation>
+        <translation>페달 (Ped. 및 지속선)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1220"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1872"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1221"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1874"/>
         <source>Pedal (with ped and asterisk)</source>
         <translation>페달(Ped. 및 * 기호)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1228"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1887"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1229"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1889"/>
         <source>Pedal (straight hooks)</source>
-        <translation>페달(직각 꺾임)</translation>
+        <translation>페달 (직선 꺾임)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1237"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1895"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1238"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1897"/>
         <source>Pedal (angled end hook)</source>
-        <translation>페달(끝부분 사선 꺾임)</translation>
+        <translation>페달 (각진 끝 꺾임)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1245"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1903"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1246"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1905"/>
         <source>Pedal (both hooks angled)</source>
-        <translation>페달(양끝 사선 꺾임)</translation>
+        <translation>페달 (양쪽 각진 꺾임)</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1253"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1911"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1254"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1913"/>
         <source>Pedal (angled start hook)</source>
-        <translation>페달(시작부분 사선 꺾임)</translation>
+        <translation>페달 (각진 시작 꺾임</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1273"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1518"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1274"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1519"/>
         <source>Staff text line</source>
         <translation>보표 텍스트 선</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1279"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1528"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1280"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1529"/>
         <source>System text line</source>
-        <translation>시스템 텍스트 선</translation>
+        <translation>단 텍스트 선</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1285"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1286"/>
         <source>Text line</source>
         <translation>텍스트 선</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1305"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1959"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1306"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1961"/>
         <source>Ambitus</source>
-        <translation>음역(Ambitus)</translation>
+        <translation>음역</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1308"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1755"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1309"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1756"/>
         <source>Let ring</source>
-        <translation>렛 링(Let ring)</translation>
+        <translation>렛 링</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1326"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1752"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1327"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1753"/>
         <source>Palm mute</source>
         <translation>팜 뮤트</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="396"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1328"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1913"/>
-        <source>Chord bracket</source>
-        <translation>화음 묶음표</translation>
-    </message>
-    <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="397"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="496"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1329"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1914"/>
-        <source>Chord bracket (play with left hand)</source>
-        <translation>화음 묶음표(왼손 연주)</translation>
-    </message>
-    <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="398"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1330"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1915"/>
-        <source>Chord bracket (play with right hand)</source>
-        <translation>화음 묶음표(오른손 연주)</translation>
+        <source>Chord bracket</source>
+        <translation>코드 대괄호</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1344"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="497"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1330"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1916"/>
+        <source>Chord bracket (play with left hand)</source>
+        <translation>코드 대괄호 (왼손 연주)</translation>
+    </message>
+    <message>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="498"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1331"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1917"/>
+        <source>Chord bracket (play with right hand)</source>
+        <translation>코드 대괄호 (오른손 연주)</translation>
+    </message>
+    <message>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1345"/>
         <source>Tempo</source>
         <translation>템포</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1365"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1366"/>
         <source>Half note = 80 BPM</source>
         <translation>2분음표 = 80BPM</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1368"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1369"/>
         <source>Quarter note = 80 BPM</source>
         <translation>4분음표 = 80BPM</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1371"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1372"/>
         <source>Eighth note = 80 BPM</source>
         <translation>8분음표 = 80BPM</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1374"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1375"/>
         <source>Dotted half note = 80 BPM</source>
         <translation>점2분음표 = 80BPM</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1377"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1378"/>
         <source>Dotted quarter note = 80 BPM</source>
         <translation>점4분음표 = 80BPM</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1380"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1381"/>
         <source>Dotted eighth note = 80 BPM</source>
         <translation>점8분음표 = 80BPM</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1398"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1399"/>
         <source>Metric modulation: quarter note = dotted quarter note</source>
         <translation>리듬 변조: 4분음표 = 점4분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1401"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1402"/>
         <source>Metric modulation: dotted quarter note = quarter note</source>
         <translation>리듬 변조: 점4분음표 = 4분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1404"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1405"/>
         <source>Metric modulation: half note = quarter note</source>
         <translation>리듬 변조: 2분음표 = 4분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1407"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1408"/>
         <source>Metric modulation: quarter note = half note</source>
         <translation>리듬 변조: 4분음표 = 2분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1410"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1411"/>
         <source>Metric modulation: eighth note = eighth note</source>
         <translation>리듬 변조: 8분음표 = 8분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1413"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1414"/>
         <source>Metric modulation: quarter note = quarter note</source>
         <translation>리듬 변조: 4분음표 = 4분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1416"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1417"/>
         <source>Metric modulation: dotted eighth note = quarter note</source>
         <translation>리듬 변조: 점8분음표 = 4분음표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1437"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1444"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1438"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1445"/>
         <source>accel.</source>
         <translation>accel.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1438"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1445"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1439"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1446"/>
         <source>allarg.</source>
         <translation>allarg.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1439"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1450"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1440"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1451"/>
         <source>rall.</source>
         <translation>rall.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1440"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1451"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1441"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1452"/>
         <source>rit.</source>
         <translation>rit.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1446"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1447"/>
         <source>calando</source>
         <translation>calando</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1447"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1448"/>
         <source>lentando</source>
         <translation>lentando</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1448"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1449"/>
         <source>morendo</source>
         <translation>morendo</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1449"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1450"/>
         <source>precipitando</source>
         <translation>precipitando</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1452"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1453"/>
         <source>smorz.</source>
         <translation>smorz.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1453"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1454"/>
         <source>sost.</source>
         <translation>sost.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1454"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1455"/>
         <source>string.</source>
         <translation>string.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1466"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1467"/>
         <source>a tempo</source>
         <translation>a tempo</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1473"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1474"/>
         <source>tempo primo</source>
         <translation>tempo primo</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1482"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1484"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1483"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1485"/>
         <source>Swing</source>
-        <translation>스윙(Swing)</translation>
+        <translation>Swing</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1491"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1497"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1492"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1498"/>
         <source>Straight</source>
         <extracomment>System text to switch from swing rhythm back to straight rhythm</extracomment>
-        <translation>스트레이트(Straight)</translation>
+        <translation>Straight</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1506"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1507"/>
         <source>Text</source>
         <translation>텍스트</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1512"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1513"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1514"/>
         <source>Staff text</source>
         <translation>보표 텍스트</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1521"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1522"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1523"/>
         <source>System text</source>
-        <translation>시스템 텍스트</translation>
+        <translation>단 텍스트</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1532"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1533"/>
         <source>expression</source>
-        <translation>익스프레션</translation>
+        <translation>나타냄말</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1534"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1535"/>
         <source>Expression text</source>
-        <translation>익스프레션 텍스트</translation>
+        <translation>나타냄말 텍스트</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1537"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="207"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1538"/>
         <source>Change instr.</source>
         <translation>악기 변경</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1538"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1539"/>
         <source>Instrument change</source>
         <translation>악기 변경</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1542"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1543"/>
         <source>Rehearsal mark</source>
         <translation>연습 번호</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1552"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1553"/>
         <source>legato</source>
         <translation>레가토</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1553"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1554"/>
         <source>pizz.</source>
         <translation>pizz.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1554"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1555"/>
         <source>arco</source>
-        <translation>arco</translation>
+        <translation>아르코</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1554"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1555"/>
         <source>Arco</source>
         <translation>Arco</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1555"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1556"/>
         <source>tremolo</source>
         <translation>트레몰로</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1557"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1558"/>
         <source>mute</source>
         <extracomment>For brass and plucked string instruments: staff text that prescribes to use mute while playing, see https://en.wikipedia.org/wiki/Mute_(music)</extracomment>
-        <translation>뮤트(Mute)</translation>
-    </message>
-    <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1559"/>
-        <source>open</source>
-        <extracomment>For brass and plucked string instruments: staff text that prescribes to play without mute, see https://en.wikipedia.org/wiki/Mute_(music)</extracomment>
-        <translation>오픈(Open)</translation>
+        <translation>뮤트</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1560"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1841"/>
-        <source>distort</source>
-        <translation>디스토션</translation>
+        <source>open</source>
+        <extracomment>For brass and plucked string instruments: staff text that prescribes to play without mute, see https://en.wikipedia.org/wiki/Mute_(music)</extracomment>
+        <translation>오픈</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1561"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1842"/>
-        <source>overdrive</source>
-        <translation>오버드라이브</translation>
+        <source>distort</source>
+        <translation>디스토션</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1562"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1843"/>
-        <source>harmonics</source>
-        <translation>하모닉스</translation>
+        <source>overdrive</source>
+        <translation>오버드라이브</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1563"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1844"/>
-        <source>jazz tone</source>
-        <translation>재즈 톤</translation>
+        <source>harmonics</source>
+        <translation>하모닉스</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1564"/>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1845"/>
-        <source>normal</source>
-        <translation>보통(Normal)</translation>
+        <source>jazz tone</source>
+        <translation>재즈 톤</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1584"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1565"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1846"/>
+        <source>normal</source>
+        <translation>노멀</translation>
+    </message>
+    <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1585"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1586"/>
         <source>Measure number</source>
         <translation>마디 번호</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1588"/>
-        <source>détaché</source>
-        <translation>데타셰(détaché)</translation>
-    </message>
-    <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1589"/>
-        <source>martelé</source>
-        <translation>마르텔레(martelé)</translation>
+        <source>détaché</source>
+        <translation>데타셰</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1590"/>
-        <source>col legno</source>
-        <translation>콜 레뇨(col legno)</translation>
+        <source>martelé</source>
+        <translation>마르텔레</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1591"/>
-        <source>sul pont.</source>
-        <translation>술 폰티첼로(sul pont.)</translation>
+        <source>col legno</source>
+        <translation>콜 레뇨</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1592"/>
-        <source>sul tasto</source>
-        <translation>술 타스토(sul tasto)</translation>
+        <source>sul pont.</source>
+        <translation>술 폰티첼로</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/palettecreator.cpp" line="1593"/>
+        <source>sul tasto</source>
+        <translation>술 타스토</translation>
+    </message>
+    <message>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1594"/>
         <source>vibrato</source>
         <translation>비브라토</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1617"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1618"/>
         <location filename="../../src/palette/widgets/masterpalette.cpp" line="170"/>
         <location filename="../../src/palette/widgets/timedialog.cpp" line="44"/>
         <source>Time signatures</source>
         <translation>박자표</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1675"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1676"/>
         <source>Fretboard diagrams</source>
         <translation>프렛보드 다이어그램</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1688"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1689"/>
         <source>C</source>
         <translation>C</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1689"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1690"/>
         <source>Cm</source>
         <translation>Cm</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1690"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1691"/>
         <source>C7</source>
         <translation>C7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1692"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1693"/>
         <source>D</source>
         <translation>D</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1693"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1694"/>
         <source>Dm</source>
         <translation>Dm</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1694"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1695"/>
         <source>D7</source>
         <translation>D7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1696"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1697"/>
         <source>E</source>
         <translation>E</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1697"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1698"/>
         <source>Em</source>
         <translation>Em</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1698"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1699"/>
         <source>E7</source>
         <translation>E7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1700"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1701"/>
         <source>F</source>
         <translation>F</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1701"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1702"/>
         <source>Fm</source>
         <translation>Fm</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1702"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1703"/>
         <source>F7</source>
         <translation>F7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1704"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1705"/>
         <source>G</source>
         <translation>G</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1705"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1706"/>
         <source>Gm</source>
         <translation>Gm</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1706"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1707"/>
         <source>G7</source>
         <translation>G7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1708"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1709"/>
         <source>A</source>
         <translation>A</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1709"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1710"/>
         <source>Am</source>
         <translation>Am</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1710"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1711"/>
         <source>A7</source>
         <translation>A7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1712"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1713"/>
         <source>B</source>
         <translation>B</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1713"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1714"/>
         <source>Bm</source>
         <translation>Bm</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1714"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1715"/>
         <source>B7</source>
         <translation>B7</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1740"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1741"/>
         <source>Guitar</source>
         <translation>기타</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1749"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1750"/>
         <source>Barré line</source>
         <translation>바레 선</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecompat.cpp" line="287"/>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1758"/>
+        <location filename="../../src/palette/internal/palettecompat.cpp" line="301"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1759"/>
         <source>Whammy bar</source>
-        <translation>와미 바(아밍)</translation>
+        <translation>와미 바</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1863"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1864"/>
         <source>Keyboard</source>
-        <translation>키보드(건반 악기)</translation>
+        <translation>키보드</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1930"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1932"/>
         <source>Pitch</source>
         <extracomment>The name of a palette</extracomment>
         <translation>피치</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1966"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1968"/>
         <source>Harp</source>
         <translation>하프</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1972"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1974"/>
         <source>Harp pedal diagram</source>
         <translation>하프 페달 다이어그램</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1977"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1979"/>
         <source>Harp pedal text diagram</source>
         <translation>하프 페달 텍스트 다이어그램</translation>
     </message>
     <message>
-        <location filename="../../src/palette/internal/palettecreator.cpp" line="1985"/>
+        <location filename="../../src/palette/internal/palettecreator.cpp" line="1987"/>
         <source>Handbells</source>
         <translation>핸드벨</translation>
     </message>
@@ -31618,7 +31688,7 @@ failed.</source>
     <message>
         <location filename="../../src/palette/internal/paletteprovider.cpp" line="345"/>
         <source>Hide</source>
-        <translation>숨기기</translation>
+        <translation>숨김</translation>
     </message>
     <message>
         <location filename="../../src/palette/internal/paletteprovider.cpp" line="346"/>
@@ -31703,33 +31773,33 @@ failed.</source>
         <translation>모든 팔레트 접기</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="601"/>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="652"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="602"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="653"/>
         <source>MuseScore drumset file</source>
         <translation>MuseScore 드럼셋 파일</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="603"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="604"/>
         <source>Load drumset</source>
         <translation>드럼셋 불러오기</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="620"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="621"/>
         <source>Drumset file too old</source>
         <translation>드럼셋 파일 버전이 너무 낮음</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="621"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="622"/>
         <source>MuseScore Studio may not be able to load this drumset file.</source>
         <translation>MuseScore Studio에서 이 드럼셋 파일을 불러오지 못할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="654"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="655"/>
         <source>Save drumset</source>
         <translation>드럼셋 저장</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="662"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="663"/>
         <source>Opening file
 %1
 failed: %2</source>
@@ -31738,17 +31808,17 @@ failed: %2</source>
 사유: %2</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="663"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="664"/>
         <source>Open file</source>
         <translation>파일 열기</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="674"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="675"/>
         <source>Writing file failed: %1</source>
         <translation>파일 기록 실패: %1</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="675"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="676"/>
         <source>Write drumset</source>
         <translation>드럼셋 기록</translation>
     </message>
@@ -31769,12 +31839,12 @@ failed: %2</source>
         <translation>빔 선택기</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1131"/>
+        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1145"/>
         <source>Delete palette cell</source>
         <translation>팔레트 칸 삭제</translation>
     </message>
     <message>
-        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1132"/>
+        <location filename="../../src/palette/widgets/palettewidget.cpp" line="1146"/>
         <source>Are you sure you want to delete palette cell “%1”?</source>
         <translation>팔레트 칸 &quot;%1&quot;을 삭제하시겠습니까?</translation>
     </message>
@@ -33323,7 +33393,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/NotationPage/NotationPage.qml" line="627"/>
         <source>Audio is processed in the background while you work. To trigger processing yourself, turn off automatic processing in Preferences &gt; Audio &amp; MIDI &gt; Online sounds.</source>
-        <translation>작업 중에 오디오가 백그라운드에서 처리됩니다. 직접 처리를 실행하려면 설정 &gt; 오디오 및 MIDI &gt; 온라인 사운드에서 자동 처리를 끄십시오.</translation>
+        <translation>작업 중에 오디오가 백그라운드에서 처리됩니다. 직접 처리를 실행하려면 설정 &gt; 오디오 및 MIDI &gt; 온라인 사운드에서 자동 처리를 끄세요.</translation>
     </message>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/NotationPage/NotationPage.qml" line="641"/>
@@ -33335,7 +33405,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/appshell/qml/MuseScore/AppShell/NotationPage/NotationPage.qml" line="642"/>
         <source>Click to manually process online sounds.</source>
-        <translation>온라인 사운드를 수동으로 처리하려면 클릭하십시오.</translation>
+        <translation>온라인 사운드를 수동으로 처리하려면 클릭합니다.</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/internal/AudioResourceControl.qml" line="99"/>
@@ -33409,7 +33479,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/internal/PlaybackSpeedPopup.qml" line="43"/>
         <source>Playback speed popup</source>
-        <translation>재생 속도 팝업</translation>
+        <translation>플레이백 속도 팝업</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/internal/PlaybackSpeedPopup.qml" line="52"/>
@@ -33453,7 +33523,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/PlaybackToolBar.qml" line="40"/>
         <source>Playback toolbar</source>
-        <translation>재생 도구 모음</translation>
+        <translation>플레이백 도구 모음</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/SoundFlagPopup.qml" line="82"/>
@@ -33468,7 +33538,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/SoundProfilesDialog.qml" line="35"/>
         <source>Playback setup</source>
-        <translation>재생 설정</translation>
+        <translation>플레이백 설정</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/SoundProfilesDialog.qml" line="86"/>
@@ -33493,7 +33563,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/SoundProfilesDialog.qml" line="211"/>
         <source>Set as default for new scores</source>
-        <translation>새 악보의 기본값으로 설정</translation>
+        <translation>새 악보의 기본값으로 지정</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/SoundProfilesDialog.qml" line="247"/>
@@ -33503,7 +33573,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/playback/internal/onlinesoundscontroller.cpp" line="180"/>
         <source>This may be due to a poor internet connection or server issue. Your score will still play, but some sounds may be missing. Please check your connection, and make sure MuseHub is running and you are logged in. &lt;a href=&quot;%1&quot;&gt;Learn more here&lt;/a&gt;.</source>
-        <translation>인터넷 연결 상태가 좋지 않거나 서버 문제일 수 있습니다. 악보는 계속 재생되지만 일부 사운드가 누락될 수 있습니다. 연결 상태를 확인하고, MuseHub가 실행 중인지 및 로그인되어 있는지 확인하십시오. &lt;a href=&quot;%1&quot;&gt;자세히 알아보기&lt;/a&gt;.</translation>
+        <translation>인터넷 연결 상태가 좋지 않거나 서버 문제일 수 있습니다. 악보는 계속 재생되지만 일부 사운드가 누락될 수 있습니다. 연결 상태를 확인하고, MuseHub가 실행 중인지 및 로그인되어 있는지 확인합니다. &lt;a href=&quot;%1&quot;&gt;자세히 알아보기&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../../src/playback/internal/onlinesoundscontroller.cpp" line="186"/>
@@ -33544,17 +33614,17 @@ failed: %2</source>
         <translation>Aux %1</translation>
     </message>
     <message>
-        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1077"/>
+        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1073"/>
         <source>Metronome</source>
         <translation>메트로놈</translation>
     </message>
     <message>
-        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1087"/>
+        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1083"/>
         <source>Chords</source>
-        <translation>화음</translation>
+        <translation>코드</translation>
     </message>
     <message>
-        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1448"/>
+        <location filename="../../src/playback/internal/playbackcontroller.cpp" line="1410"/>
         <source>Loading audio samples</source>
         <translation>오디오 샘플 로드 중</translation>
     </message>
@@ -33564,28 +33634,28 @@ failed: %2</source>
         <translation>추가 사운드 얻기</translation>
     </message>
     <message>
-        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="392"/>
+        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="393"/>
         <source>SoundFonts</source>
         <translation>사운드폰트</translation>
     </message>
     <message>
-        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="435"/>
+        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="436"/>
         <source>Bank %1, preset %2</source>
         <translation>뱅크 %1, 프리셋 %2</translation>
     </message>
     <message>
-        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="490"/>
-        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="555"/>
+        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="491"/>
+        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="556"/>
         <source>Choose automatically</source>
         <translation>자동 선택</translation>
     </message>
     <message>
-        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="536"/>
+        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="537"/>
         <source>Preset %1</source>
         <translation>프리셋 %1</translation>
     </message>
     <message>
-        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="546"/>
+        <location filename="../../src/playback/qml/MuseScore/Playback/inputresourceitem.cpp" line="547"/>
         <source>Bank %1</source>
         <translation>뱅크 %1</translation>
     </message>
@@ -33642,7 +33712,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/onlinesoundsstatusmodel.cpp" line="132"/>
         <source>Please check your connection, and make sure MuseHub is running and you are logged in.</source>
-        <translation>연결 상태를 확인하고, MuseHub가 실행 중인지 및 로그인되어 있는지 확인하십시오.</translation>
+        <translation>연결 상태를 확인하고, MuseHub가 실행 중인지 및 로그인되어 있는지 확인합니다.</translation>
     </message>
     <message>
         <location filename="../../src/playback/qml/MuseScore/Playback/outputresourceitem.cpp" line="17"/>
@@ -33741,8 +33811,8 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/AudioApiSection.qml" line="42"/>
-        <source>Audio API</source>
-        <translation>오디오 API</translation>
+        <source>Audio driver</source>
+        <translation>오디오 드라이버</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/AudioEngineSection.qml" line="31"/>
@@ -33767,7 +33837,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/AutomaticUpdateSection.qml" line="58"/>
         <source>Update checking requires network access. In order to protect your privacy, MuseScore Studio does not store any personal information. See our &lt;a href=&quot;%1&quot;&gt;privacy policy&lt;/a&gt; for more info.</source>
-        <translation>업데이트를 확인하려면 네트워크 액세스가 필요합니다. 개인 정보를 보호하기 위해 MuseScore Studio는 어떠한 개인 정보도 저장하지 않습니다. 자세한 내용은 &lt;a href=&quot;%1&quot;&gt;개인정보 처리방침&lt;/a&gt;을 참조하십시오.</translation>
+        <translation>업데이트를 확인하려면 네트워크 액세스가 필요합니다. 개인 정보를 보호하기 위해 MuseScore Studio는 어떠한 개인 정보도 저장하지 않습니다. 자세한 내용은 &lt;a href=&quot;%1&quot;&gt;개인정보 처리방침&lt;/a&gt;을 참조합니다.</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/AutoSaveSection.qml" line="30"/>
@@ -33865,6 +33935,11 @@ failed: %2</source>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/preferencesmodel.cpp" line="195"/>
         <source>Folders</source>
         <translation>폴더</translation>
+    </message>
+    <message>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/FoldersSection.qml" line="86"/>
+        <source>Rescan VST3 plugins</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/FFmpegSection.qml" line="30"/>
@@ -33992,7 +34067,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/MnxSection.qml" line="32"/>
         <source>Disabling this may cause errors. Try only for files that fail to import otherwise.</source>
-        <translation>이 기능을 비활성화하면 오류가 발생할 수 있습니다. 다른 방법으로 가져오기에 실패한 파일에 대해서만 시도하십시오.</translation>
+        <translation>이 기능을 비활성화하면 오류가 발생할 수 있습니다. 다른 방법으로 가져오기에 실패한 파일에 대해서만 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/MnxSection.qml" line="42"/>
@@ -34093,7 +34168,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/NoteInput/NoteInputSection.qml" line="62"/>
         <source>Apply accidentals, augmentation dots, and articulations</source>
-        <translation>임시표, 부점 및 아티큘레이션 적용 대상</translation>
+        <translation>임시표, 증가점 및 연주기호 적용</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/NoteInput/NoteInputSection.qml" line="69"/>
@@ -34133,12 +34208,12 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/NoteInput/NotePreviewSection.qml" line="73"/>
         <source>Playback duration</source>
-        <translation>재생 음길이</translation>
+        <translation>플레이백 음길이</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/NoteInput/NotePreviewSection.qml" line="96"/>
         <source>Play chord when editing</source>
-        <translation>편집 시 화음 재생</translation>
+        <translation>편집 시 코드 재생</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/NoteInput/NotePreviewSection.qml" line="113"/>
@@ -34203,7 +34278,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/OnlineSoundsSection.qml" line="102"/>
         <source>To process online sounds, press ‘Process online sounds’ in the status bar at the bottom of the app window</source>
-        <translation>온라인 사운드를 처리하려면 앱 창 하단 상태 표시줄의 &apos;온라인 사운드 처리&apos;를 누르십시오.</translation>
+        <translation>온라인 사운드를 처리하려면 앱 창 하단 상태 표시줄의 &apos;온라인 사운드 처리&apos;를 누르세요.</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/OnlineSoundsSection.qml" line="113"/>
@@ -34218,7 +34293,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/OnlineSoundsSection.qml" line="126"/>
         <source>Only if processing is unfinished during playback</source>
-        <translation>재생 중 처리가 완료되지 않은 경우에만</translation>
+        <translation>플레이백 중 처리가 완료되지 않은 경우에만</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/OnlineSoundsSection.qml" line="129"/>
@@ -34328,7 +34403,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/ThemesSection.qml" line="76"/>
         <source>Follow system theme</source>
-        <translation>시스템 설정 따름</translation>
+        <translation>단 테마 따르기</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/ThemesSection.qml" line="91"/>
@@ -34435,42 +34510,42 @@ failed: %2</source>
         <translation>아래로</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="91"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="100"/>
         <source>Scores</source>
         <translation>악보</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="95"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="104"/>
         <source>Styles</source>
         <translation>스타일</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="99"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="108"/>
         <source>Instruments and score orders</source>
         <translation>악기 및 악보 정렬 방식</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="104"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="113"/>
         <source>Templates</source>
         <translation>템플릿</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="108"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="117"/>
         <source>Plugins</source>
         <translation>플러그인</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="112"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="121"/>
         <source>SoundFonts</source>
         <translation>사운드폰트</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="117"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="126"/>
         <source>Musical symbol fonts</source>
         <translation>음악 기호 글꼴</translation>
     </message>
     <message>
-        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="123"/>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/folderspreferencesmodel.cpp" line="132"/>
         <source>VST3</source>
         <translation>VST3</translation>
     </message>
@@ -34482,7 +34557,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/generalpreferencesmodel.cpp" line="111"/>
         <source>System default</source>
-        <translation>시스템 기본값</translation>
+        <translation>단 기본값</translation>
     </message>
     <message>
         <location filename="../../src/preferences/qml/MuseScore/Preferences/generalpreferencesmodel.cpp" line="192"/>
@@ -34624,6 +34699,26 @@ failed: %2</source>
         <source>Braille</source>
         <translation>점자</translation>
     </message>
+    <message>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/audiomidipreferencesmodel.cpp" line="64"/>
+        <source>No audio devices available</source>
+        <translation>사용 가능한 오디오 장치 없음</translation>
+    </message>
+    <message>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/audiomidipreferencesmodel.cpp" line="65"/>
+        <source>The selected audio driver does not have any available audio devices. MuseScore Studio will use the default audio driver instead. To use %1, ensure your hardware is set up correctly, then restart MuseScore Studio and try again.</source>
+        <translation>선택한 오디오 드라이버에 사용 가능한 오디오 장치가 없습니다. MuseScore Studio는 기본 오디오 드라이버를 사용합니다. %1을 사용하려면 하드웨어 설정이 올바른지 확인한 후 MuseScore Studio를 다시 시작하고 다시 시도하십시오.</translation>
+    </message>
+    <message>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/PlaybackQualitySection.qml" line="30"/>
+        <source>Playback quality</source>
+        <translation>재생 품질</translation>
+    </message>
+    <message>
+        <location filename="../../src/preferences/qml/MuseScore/Preferences/internal/PlaybackQualitySection.qml" line="41"/>
+        <source>Use warmer instrument sound (MS Basic/SoundFont only)</source>
+        <translation type="unfinished"/>
+    </message>
 </context>
 <context>
     <name>preferences/score</name>
@@ -34663,7 +34758,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/framework/cloud/qml/Muse/Cloud/CloudScoresView.qml" line="155"/>
         <source>Log in or create a new account on &lt;a href=&quot;%1&quot;&gt;MuseScore.com&lt;/a&gt; to view online scores.</source>
-        <translation>온라인 악보를 보려면 &lt;a href=&quot;%1&quot;&gt;MuseScore.com&lt;/a&gt;에 로그인하거나 새 계정을 만드십시오.</translation>
+        <translation>온라인 악보를 보려면 &lt;a href=&quot;%1&quot;&gt;MuseScore.com&lt;/a&gt;에 로그인하거나 새 계정을 만드세요.</translation>
     </message>
     <message>
         <location filename="../../src/framework/cloud/qml/Muse/Cloud/CloudScoresView.qml" line="218"/>
@@ -34701,9 +34796,9 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/NewScore/GeneralInfoView.qml" line="71"/>
-        <location filename="../../src/project/internal/notationproject.cpp" line="86"/>
+        <location filename="../../src/project/internal/notationproject.cpp" line="88"/>
         <source>Untitled score</source>
-        <translation>제목 없는 악보</translation>
+        <translation>악보 제목 없음</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/NewScore/GeneralInfoView.qml" line="83"/>
@@ -34775,7 +34870,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/ProjectUploadedDialog.qml" line="162"/>
         <source>Publish your finished scores on MuseScore.com</source>
-        <translation>완성된 악보를 MuseScore.com에 게시하십시오</translation>
+        <translation>완성된 악보를 MuseScore.com에 게시합니다</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/ProjectUploadedDialog.qml" line="187"/>
@@ -34890,25 +34985,25 @@ failed: %2</source>
         <translation>온라인으로 저장 중…</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2353"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2355"/>
         <source>File “%1” seems not corrupted</source>
         <translation>“%1” 파일이 손상되지 않은 것으로 보입니다</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2354"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2356"/>
         <source>This file does not seem to contain errors.</source>
         <translation>이 파일에는 오류가 없는 것으로 보입니다.</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2357"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1787"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2359"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1793"/>
         <source>File “%1” is corrupted</source>
         <translation>“%1” 파일이 손상되었습니다</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2359"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2361"/>
         <source>This file contains errors that could cause MuseScore Studio to malfunction. Please fix those at the earliest, to prevent crashes and further corruptions.</source>
-        <translation>이 파일에는 MuseScore Studio의 오작동을 일으킬 수 있는 오류가 포함되어 있습니다. 충돌 및 추가 파일 손상을 방지하려면 가능한 한 빨리 오류를 수정하십시오.</translation>
+        <translation>이 파일에는 MuseScore Studio의 오작동을 일으킬 수 있는 오류가 포함되어 있습니다. 충돌 및 추가 파일 손상을 방지하려면 가능한 한 빨리 오류를 수정합니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="107"/>
@@ -34931,222 +35026,222 @@ failed: %2</source>
         <translation>이 악보는 유효하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="743"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="749"/>
         <source>Do you want to save changes to the score “%1” before closing?</source>
         <translation>닫기 전에 “%1” 악보의 변경 사항을 저장하시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="746"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="752"/>
         <source>Your changes will be lost if you don’t save them.</source>
         <translation>저장하지 않으면 변경 사항을 모두 잃게 됩니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1523"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1615"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1529"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1621"/>
         <source>Your score cannot be uploaded to the cloud</source>
         <translation>악보를 클라우드에 업로드할 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1526"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1532"/>
         <source>This score has become corrupted and contains errors. You can fix the errors manually, or save the score to your computer and get help for this issue on MuseScore.org.</source>
         <translation>이 악보가 손상되어 오류가 발생했습니다. 오류를 수동으로 수정하거나, 악보를 컴퓨터에 저장한 후 MuseScore.org에서 이 문제에 대한 도움을 받으실 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1534"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1540"/>
         <source>Save as…</source>
         <translation>다른 이름으로 저장…</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1539"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1581"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1545"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1587"/>
         <source>Revert to last saved</source>
         <translation>마지막 저장 시점으로 되돌리기</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1562"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1568"/>
         <source>This score has become corrupted and contains errors</source>
         <translation>이 악보가 손상되어 오류가 발생했습니다</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1566"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1572"/>
         <source>You can continue saving it locally, although the file may become unusable. You can try to fix the errors manually, or get help for this issue on MuseScore.org.</source>
         <translation>로컬 저장을 계속할 수 있지만, 파일을 나중에 사용할 수 없게 될 수도 있습니다. 오류를 직접 수정하거나 MuseScore.org에서 도움을 받으실 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1568"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1574"/>
         <source>You can continue saving it locally, although the file may become unusable. To preserve your score, revert to the last saved version, or fix the errors manually. You can also get help for this issue on MuseScore.org.</source>
-        <translation>로컬 저장을 계속할 수 있지만, 파일을 나중에 사용할 수 없게 될 수도 있습니다. 악보를 보존하려면 마지막으로 저장된 버전으로 되돌리거나 오류를 직접 수정하십시오. MuseScore.org에서 도움을 받으실 수도 있습니다.</translation>
+        <translation>로컬 저장을 계속할 수 있지만, 파일을 나중에 사용할 수 없게 될 수도 있습니다. 악보를 보존하려면 마지막으로 저장된 버전으로 되돌리거나 오류를 직접 수정합니다. MuseScore.org에서 도움을 받으실 수도 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1576"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1582"/>
         <source>Save anyway</source>
         <translation>무시하고 저장</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1614"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1620"/>
         <source>Your score cannot be saved</source>
         <translation>악보를 저장할 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1618"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1624"/>
         <source>This score is corrupted. You can get help for this issue on MuseScore.org.</source>
         <translation>이 악보는 손상되었습니다. MuseScore.org에서 도움을 받으실 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1621"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1809"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1627"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1815"/>
         <source>Get help</source>
         <translation>도움 받기</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1671"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1677"/>
         <source>Try again</source>
         <translation>다시 시도</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1686"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1692"/>
         <source>Revert to last saved?</source>
         <translation>마지막 저장 시점으로 되돌리시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1687"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1693"/>
         <source>Your changes will be lost. This action cannot be undone.</source>
         <translation>변경 사항을 잃게 됩니다. 이 작업은 되돌릴 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1767"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1792"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1773"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1798"/>
         <source>Open anyway</source>
         <translation>무시하고 열기</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1779"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1823"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1785"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1829"/>
         <source>Cannot read file %1</source>
         <translation>%1 파일을 읽을 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1780"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1786"/>
         <source>This file was saved using a newer version of MuseScore Studio. Please visit &lt;a href=&quot;%1&quot;&gt;MuseScore.org&lt;/a&gt; to obtain the latest version.</source>
-        <translation>이 파일은 더 최신 버전의 MuseScore Studio에서 저장되었습니다. &lt;a href=&quot;%1&quot;&gt;MuseScore.org&lt;/a&gt;를 방문하여 최신 버전을 설치하십시오.</translation>
+        <translation>이 파일은 더 최신 버전의 MuseScore Studio에서 저장되었습니다. &lt;a href=&quot;%1&quot;&gt;MuseScore.org&lt;/a&gt;를 방문하여 최신 버전을 설치합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1789"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1795"/>
         <source>This file contains errors that could cause MuseScore Studio to malfunction.</source>
         <translation>이 파일에 MuseScore Studio의 오작동을 일으킬 수 있는 오류가 포함되어 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1804"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1810"/>
         <source>File “%1” is corrupted and cannot be opened</source>
         <translation>“%1” 파일이 손상되어 열 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1806"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1812"/>
         <source>Get help for this issue on MuseScore.org.</source>
         <translation>MuseScore.org에서 이 문제에 대한 도움을 받으실 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1828"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1834"/>
         <source>This file does not exist or cannot be accessed at the moment.</source>
         <translation>이 파일이 존재하지 않거나 현재 접근할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1831"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1837"/>
         <source>This file could not be opened. Please make sure that MuseScore Studio has permission to read this file.</source>
-        <translation>이 파일을 열 수 없습니다. MuseScore Studio에 이 파일을 읽을 수 있는 권한이 있는지 확인하십시오.</translation>
+        <translation>이 파일을 열 수 없습니다. MuseScore Studio에 이 파일을 읽을 수 있는 권한이 있는지 확인합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1838"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1844"/>
         <source>An error occurred while reading this file.</source>
         <translation>이 파일을 읽는 동안 오류가 발생했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1894"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1905"/>
         <source>All supported files</source>
         <translation>모든 지원 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1895"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1906"/>
         <source>MuseScore files</source>
         <translation>MuseScore 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1896"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1907"/>
         <source>MusicXML files</source>
         <translation>MusicXML 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1897"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1908"/>
         <source>MIDI files</source>
         <translation>MIDI 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1898"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1909"/>
         <source>MNX files (experimental)</source>
         <translation>MNX 파일 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1899"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1910"/>
         <source>MuseData files</source>
         <translation>MuseData 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1900"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1911"/>
         <source>Capella files</source>
         <translation>Capella 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1901"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1912"/>
         <source>BB files (experimental)</source>
         <translation>BB 파일 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1902"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1913"/>
         <source>Overture / Score Writer files (experimental)</source>
         <translation>Overture / Score Writer 파일 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1903"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1914"/>
         <source>Bagpipe Music Writer files (experimental)</source>
         <translation>Bagpipe Music Writer 파일 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1904"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1915"/>
         <source>Guitar Pro files</source>
         <translation>Guitar Pro 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1905"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1916"/>
         <source>Power Tab Editor files (experimental)</source>
         <translation>Power Tab Editor 파일 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1906"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1917"/>
         <source>MEI files</source>
         <translation>MEI 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1907"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1918"/>
         <source>TablEdit files (experimental)</source>
         <translation>TablEdit 파일 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1908"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1919"/>
         <source>Uncompressed MuseScore folders (experimental)</source>
         <translation>압축되지 않은 MuseScore 폴더 (실험적 기능)</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1909"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1920"/>
         <source>MuseScore developer files</source>
         <translation>MuseScore 개발자 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1910"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1921"/>
         <source>MuseScore backup files</source>
         <translation>MuseScore 백업 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1922"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1923"/>
         <source>Open</source>
         <translation>열기</translation>
     </message>
@@ -35156,7 +35251,7 @@ failed: %2</source>
         <translation>변경 사항 저장 전 디스크에 백업 파일 만들기</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectconfiguration.cpp" line="353"/>
+        <location filename="../../src/project/internal/projectconfiguration.cpp" line="367"/>
         <source>Untitled</source>
         <translation>제목 없음</translation>
     </message>
@@ -35273,10 +35368,14 @@ failed: %2</source>
         <translation>MuseScore.com에서 알 수 없는 오류 코드를 반환했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="477"/>
-        <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="609"/>
         <source>Please try again later, or get help for this problem on MuseScore.org.</source>
         <translation>나중에 다시 시도하거나 MuseScore.org에서 이 문제에 대한 도움을 받으세요.</translation>
+    </message>
+    <message>
+        <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="477"/>
+        <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="609"/>
+        <source>Please try again later, or get help for this problem on MuseScore.com.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="493"/>
@@ -35406,7 +35505,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/Export/MeiSettingsPage.qml" line="31"/>
         <source>Include page and system breaks</source>
-        <translation>페이지 및 단 줄바꿈 포함</translation>
+        <translation>페이지 및 단 바꿈 포함</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/Export/MeiSettingsPage.qml" line="45"/>
@@ -35494,17 +35593,17 @@ failed: %2</source>
         <translation>마스킹 호환성(Adobe Illustrator 전용)</translation>
     </message>
     <message>
-        <location filename="../../src/importexport/audioexport/internal/audioexportconfiguration.cpp" line="142"/>
+        <location filename="../../src/importexport/audioexport/internal/audioexportconfiguration.cpp" line="131"/>
         <source>16-bit integer</source>
         <translation>16비트 정수형</translation>
     </message>
     <message>
-        <location filename="../../src/importexport/audioexport/internal/audioexportconfiguration.cpp" line="144"/>
+        <location filename="../../src/importexport/audioexport/internal/audioexportconfiguration.cpp" line="133"/>
         <source>24-bit integer</source>
         <translation>24비트 정수형</translation>
     </message>
     <message>
-        <location filename="../../src/importexport/audioexport/internal/audioexportconfiguration.cpp" line="146"/>
+        <location filename="../../src/importexport/audioexport/internal/audioexportconfiguration.cpp" line="135"/>
         <source>32-bit float</source>
         <translation>32비트 부동 소수점</translation>
     </message>
@@ -35561,12 +35660,12 @@ failed: %2</source>
         <translation>파일 %1을(를) 쓰는 동안 오류가 발생했습니다. 다시 시도하시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/exportprojectscenario.cpp" line="440"/>
+        <location filename="../../src/project/internal/exportprojectscenario.cpp" line="449"/>
         <source>Exporting audio…</source>
         <translation>오디오 내보내는 중…</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/exportprojectscenario.cpp" line="440"/>
+        <location filename="../../src/project/internal/exportprojectscenario.cpp" line="449"/>
         <source>Exporting…</source>
         <translation>내보내는 중…</translation>
     </message>
@@ -35731,43 +35830,53 @@ failed: %2</source>
         <translation>LRC 파일</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="363"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="370"/>
         <source>Each page to a separate file</source>
         <translation>각 페이지를 개별 파일로</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="364"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="371"/>
         <source>Each part to a separate file</source>
         <translation>각 파트를 개별 파일로</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="365"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="372"/>
         <source>All parts combined in one file</source>
         <translation>모든 파트를 하나의 파일로 결합</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="816"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="628"/>
+        <source>Use page layout</source>
+        <translation>페이지 레이아웃 사용</translation>
+    </message>
+    <message>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="629"/>
+        <source>Reflow to fit video resolution</source>
+        <translation>비디오 해상도에 맞게 화면 재배치</translation>
+    </message>
+    <message>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="857"/>
         <source>All layout</source>
         <extracomment>Specifies to which extent layout customizations should be exported to MusicXML.</extracomment>
         <translation>모든 레이아웃</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="818"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="859"/>
         <source>System and page breaks</source>
         <extracomment>Specifies to which extent layout customizations should be exported to MusicXML.</extracomment>
-        <translation>단 및 페이지 줄바꿈</translation>
+        <translation>단 및 페이지 바꿈</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="820"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="861"/>
         <source>Manually added system and page breaks only</source>
         <extracomment>Specifies to which extent layout customizations should be exported to MusicXML.</extracomment>
-        <translation>수동으로 추가된 단 및 페이지 줄바꿈만</translation>
+        <translation>수동으로 추가된 단 및 페이지 바꿈만</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="822"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/exportdialogmodel.cpp" line="863"/>
         <source>No system or page breaks</source>
         <extracomment>Specifies to which extent layout customizations should be exported to MusicXML.</extracomment>
-        <translation>단 및 페이지 줄바꿈 없음</translation>
+        <translation>단 및 페이지 바꿈 없음</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/Export/Mp4SettingsPage.qml" line="51"/>
@@ -35791,11 +35900,11 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/Export/Mp4SettingsPage.qml" line="116"/>
-        <source>Video resolution:</source>
-        <translation>비디오 해상도:</translation>
+        <source>Video resolution</source>
+        <translation>비디오 해상도</translation>
     </message>
     <message>
-        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/Mp4SettingsPage.qml" line="140"/>
+        <location filename="../../src/project/qml/MuseScore/Project/internal/Export/Mp4SettingsPage.qml" line="165"/>
         <source>Each selected part will be exported as a separate video file.</source>
         <translation>선택한 각 파트를 개별 비디오 파일로 내보냅니다.</translation>
     </message>
@@ -35811,7 +35920,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/Migration/MigrationContentFor362.qml" line="75"/>
         <source>Please note that the appearance of your score will change due to improvements we have made to default settings for beaming, ties, slurs, system objects and horizontal spacing.</source>
-        <translation>음표 묶음, 붙임줄, 이음줄, 단 객체 및 가로 간격에 대한 기본 설정이 개선됨에 따라 악보의 모양새이 변경될 수 있음을 알려드립니다.</translation>
+        <translation>음표 묶음, 붙임줄, 이음줄, 단 객체 및 가로 간격에 대한 기본 설정이 개선됨에 따라 악보의 모양새가 변경될 수 있음을 알려드립니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/internal/Migration/MigrationContentFor362.qml" line="85"/>
@@ -36304,7 +36413,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/AudioGenerationSettingsDialog.qml" line="77"/>
         <source>Generate MP3 audio for web playback?</source>
-        <translation>웹 재생을 위한 MP3 오디오를 생성하시겠습니까?</translation>
+        <translation>웹 플레이백을 위한 MP3 오디오를 생성하시겠습니까?</translation>
     </message>
     <message>
         <location filename="../../src/project/qml/MuseScore/Project/AudioGenerationSettingsDialog.qml" line="87"/>
@@ -36412,12 +36521,12 @@ failed: %2</source>
         <translation>공유</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/notationproject.cpp" line="969"/>
+        <location filename="../../src/project/internal/notationproject.cpp" line="956"/>
         <source>File “%1” could not be opened for validation. %2</source>
         <translation>검증을 위해 “%1” 파일을 열 수 없습니다. %2</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/notationproject.cpp" line="980"/>
+        <location filename="../../src/project/internal/notationproject.cpp" line="967"/>
         <source>“%1” is corrupted or damaged.</source>
         <translation>“%1” 파일이 손상되었거나 깨졌습니다.</translation>
     </message>
@@ -36446,14 +36555,14 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="235"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1026"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1032"/>
         <source>Log in to MuseScore.com to save this score to the cloud.</source>
-        <translation>악보를 클라우드에 저장하려면 musescore.com에 로그인하십시오.</translation>
+        <translation>악보를 클라우드에 저장하려면 musescore.com에 로그인합니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="236"/>
         <source>Log in to MuseScore.com to publish this score.</source>
-        <translation>악보를 게시하려면 musescore.com에 로그인하십시오.</translation>
+        <translation>악보를 게시하려면 musescore.com에 로그인합니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="357"/>
@@ -36464,7 +36573,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="358"/>
         <source>We will need to generate a new MP3 for web playback.</source>
-        <translation>웹 재생을 위해 새로운 MP3 파일을 생성해야 합니다.</translation>
+        <translation>웹 플레이백을 위해 새로운 MP3 파일을 생성해야 합니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="360"/>
@@ -36479,7 +36588,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="391"/>
         <source>Your saved changes will be publicly visible. We will also need to generate a new MP3 for public playback.</source>
-        <translation>저장된 변경 사항이 공개됩니다. 또한 공개 재생을 위한 새로운 MP3 파일을 생성해야 합니다.</translation>
+        <translation>저장된 변경 사항이 공개됩니다. 또한 공개 플레이백을 위한 새로운 MP3 파일을 생성해야 합니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="401"/>
@@ -36491,11 +36600,11 @@ failed: %2</source>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="412"/>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="426"/>
         <source>Please check your internet connection or try again later.</source>
-        <translation>인터넷 연결을 확인하거나 나중에 다시 시도하십시오.</translation>
+        <translation>인터넷 연결을 확인하거나 나중에 다시 시도합니다.</translation>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="411"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1471"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1477"/>
         <source>Unable to connect to the cloud</source>
         <translation>클라우드에 연결할 수 없음</translation>
     </message>
@@ -36557,55 +36666,55 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/project/internal/opensaveprojectscenario.cpp" line="587"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1667"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1673"/>
         <source>Save as…</source>
         <translation>다른 이름으로 저장…</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="462"/>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="555"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="464"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="557"/>
         <source>Log in or create a free account on MuseScore.com to open this score.</source>
-        <translation>악보를 열려면 로그인하거나 musescore.com에서 무료 계정을 만들기하십시오.</translation>
+        <translation>악보를 열려면 로그인하거나 musescore.com에서 무료 계정을 만들기합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1393"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1399"/>
         <source>View online</source>
         <translation>온라인으로 보기</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1396"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1402"/>
         <source>All saved changes will now update to the cloud. You can manage this file in the score manager on MuseScore.com.</source>
         <translation>저장된 모든 변경 사항이 클라우드에 업데이트됩니다. 이 파일은 MuseScore.com의 악보 관리자에서 관리할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1472"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1478"/>
         <source>Your changes will be saved to a local file until the connection resumes.</source>
         <translation>연결이 다시 시작될 때까지 변경 내용이 로컬 파일에 저장됩니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1487"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1493"/>
         <source>Please add at least one instrument to enable saving.</source>
         <translation>저장 기능을 활성화하려면 악기를 하나 이상 추가해 주세요.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1637"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1643"/>
         <source>An unknown error occurred while saving this file.</source>
         <translation>파일을 저장하는 중 알 수 없는 오류가 발생했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1645"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1651"/>
         <source>Your score could not be saved</source>
         <translation>악보가 저장되지 못했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1655"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1661"/>
         <source>An error occurred while saving your score</source>
         <translation>악보를 저장하는 중 오류가 발생했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1657"/>
+        <location filename="../../src/project/internal/projectactionscontroller.cpp" line="1663"/>
         <source>To preserve your score, try saving it again. If this message still appears, please save your score as new copy. You can also get help for this issue on %1.&lt;br/&gt;&lt;br/&gt;Error details (please cite when asking for support): %2</source>
-        <translation>악보를 보호하려면 다시 저장해 보세요. 이 메시지가 계속 표시되면 악보를 새 복사본으로 저장하십시오. 이 문제에 대한 도움말은 %1에서 확인하실 수 있습니다.&lt;br/&gt;&lt;br/&gt;오류 세부 정보(지원 요청 시 인용해 주세요): %2</translation>
+        <translation>악보를 보호하려면 다시 저장해 보세요. 이 메시지가 계속 표시되면 악보를 새 복사본으로 저장합니다. 이 문제에 대한 도움말은 %1에서 확인하실 수 있습니다.&lt;br/&gt;&lt;br/&gt;오류 세부 정보(지원 요청 시 인용해 주세요): %2</translation>
     </message>
 </context>
 <context>
@@ -36662,7 +36771,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/framework/midiremote/qml/Muse/MidiRemote/EditMidiMappingDialog.qml" line="94"/>
         <source>Press a key or adjust a control on your MIDI device to assign it to this action.</source>
-        <translation>MIDI 장치에서 키를 누르거나 설정을 조절해 이 동작에 할당하십시오.</translation>
+        <translation>MIDI 장치에서 키를 누르거나 설정을 조절해 이 동작에 할당합니다.</translation>
     </message>
     <message>
         <location filename="../../src/framework/midiremote/qml/Muse/MidiRemote/EditMidiMappingDialog.qml" line="103"/>
@@ -36689,7 +36798,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/framework/shortcuts/qml/Muse/Shortcuts/EditShortcutDialogContent.qml" line="122"/>
         <source>Type to set shortcut</source>
-        <translation>단축키를 설정하십시오</translation>
+        <translation>단축키를 지정합니다</translation>
     </message>
     <message>
         <location filename="../../src/framework/midiremote/qml/Muse/MidiRemote/internal/MidiMappingBottomPanel.qml" line="43"/>
@@ -36828,8 +36937,8 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/framework/midiremote/midiremotetypes.h" line="66"/>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="506"/>
-        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="700"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="507"/>
+        <location filename="../../src/palette/widgets/customizekitdialog.cpp" line="701"/>
         <source>None</source>
         <extracomment>No MIDI remote event</extracomment>
         <translation>없음</translation>
@@ -37266,7 +37375,7 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/braille/internal/notationbraille.cpp" line="738"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="2878"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="2880"/>
         <source>Add slur</source>
         <translation>이음줄 추가</translation>
     </message>
@@ -37322,7 +37431,7 @@ failed: %2</source>
         <translation>레세 비브레(l.v.) 토글</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/editing/edit.cpp" line="4571"/>
+        <location filename="../../src/engraving/editing/edit.cpp" line="4590"/>
         <source>Enter rest</source>
         <translation>쉼표 입력</translation>
     </message>
@@ -37338,9 +37447,9 @@ failed: %2</source>
         <translation>악보 데이터 손상시키기</translation>
     </message>
     <message>
-        <location filename="../../src/engraving/tests/voiceswitching_tests.cpp" line="118"/>
+        <location filename="../../src/engraving/tests/voiceswitching_tests.cpp" line="209"/>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/inspectormodelwithvoiceandpositionoptions.cpp" line="165"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6088"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6109"/>
         <source>Change voice</source>
         <translation>성부 변경</translation>
     </message>
@@ -37360,7 +37469,7 @@ failed: %2</source>
         <translation>%1 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/inspector/qml/MuseScore/Inspector/abstractinspectormodel.cpp" line="594"/>
+        <location filename="../../src/inspector/qml/MuseScore/Inspector/abstractinspectormodel.cpp" line="599"/>
         <location filename="../../src/notationscene/widgets/editstyle.cpp" line="1271"/>
         <source>Edit style</source>
         <translation>스타일 편집</translation>
@@ -37368,7 +37477,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/emptystaves/emptystavesvisiblitysettingsmodel.cpp" line="85"/>
         <source>Hide empty staves</source>
-        <translation>빈 보표 숨기기</translation>
+        <translation>빈 보표 숨김</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/emptystaves/emptystavesvisiblitysettingsmodel.cpp" line="108"/>
@@ -37395,7 +37504,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/barlines/barlinesettingsmodel.cpp" line="234"/>
         <source>Set barline span interval as staff default</source>
-        <translation>세로줄 확장 간격을 보표 기본값으로 설정</translation>
+        <translation>세로줄 확장 간격을 보표 기본값으로 지정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/bends/bendsettingsmodel.cpp" line="455"/>
@@ -37405,27 +37514,27 @@ failed: %2</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/fretframe/fretframechordlistmodel.cpp" line="106"/>
         <source>Make chord(s) visible</source>
-        <translation>화음 표시</translation>
+        <translation>코드 표시</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/fretframe/fretframechordlistmodel.cpp" line="107"/>
         <source>Make chord(s) invisible</source>
-        <translation>화음 숨기기</translation>
+        <translation>코드 숨기기</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/fretframe/fretframechordlistmodel.cpp" line="135"/>
         <source>Move chord(s) up</source>
-        <translation>화음 위로 이동</translation>
+        <translation>코드 위로 이동</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/fretframe/fretframechordlistmodel.cpp" line="157"/>
         <source>Move chord(s) down</source>
-        <translation>화음 아래로 이동</translation>
+        <translation>코드 아래로 이동</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/frames/fretframe/fretframechordssettingsmodel.cpp" line="130"/>
         <source>Reset fretboard diagram legend chords list</source>
-        <translation>지판 다이어그램 범례 화음 목록 재설정</translation>
+        <translation>지판 다이어그램 범례 코드 목록 재설정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/fretdiagrams/internal/fretcanvas.cpp" line="273"/>
@@ -37455,12 +37564,12 @@ failed: %2</source>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/ornaments/ornamentsettingsmodel.cpp" line="257"/>
         <source>Set ornament interval step</source>
-        <translation>꾸밈음 음정 단계 설정</translation>
+        <translation>꾸밈음 음정 단계 지정</translation>
     </message>
     <message>
         <location filename="../../src/inspector/qml/MuseScore/Inspector/notation/ornaments/ornamentsettingsmodel.cpp" line="289"/>
         <source>Set ornament interval type</source>
-        <translation>꾸밈음 음정 유형 설정</translation>
+        <translation>꾸밈음 음정 유형 지정</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/instrumentsettingsmodel.cpp" line="129"/>
@@ -37477,12 +37586,12 @@ failed: %2</source>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/systemobjectslayersettingsmodel.cpp" line="99"/>
         <source>Make system marking(s) visible</source>
-        <translation>시스템 기호 표시</translation>
+        <translation>단 기호 표시</translation>
     </message>
     <message>
         <location filename="../../src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/systemobjectslayersettingsmodel.cpp" line="100"/>
         <source>Make system marking(s) invisible</source>
-        <translation>시스템 기호 숨기기</translation>
+        <translation>단 기호 숨기기</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/excerptnotation.cpp" line="110"/>
@@ -37508,70 +37617,70 @@ failed: %2</source>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="106"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="867"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="868"/>
         <source>Remove instruments</source>
         <translation>악기 제거</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="121"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="987"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="988"/>
         <source>Remove staves</source>
         <translation>보표 제거</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="140"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="592"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="612"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="593"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="613"/>
         <source>Add staff</source>
         <translation>보표 추가</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="167"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="636"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="637"/>
         <source>Add linked staff</source>
         <translation>연결된 보표 추가</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="191"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="697"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="698"/>
         <source>Replace instrument</source>
         <translation>악기 교체</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="226"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="722"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="723"/>
         <source>Edit drumset</source>
         <translation>드럼세트 편집</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="264"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="762"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="763"/>
         <source>Add system markings</source>
-        <translation>시스템 기호 추가</translation>
+        <translation>단 기호 추가</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="277"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="776"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="777"/>
         <source>Remove system markings</source>
-        <translation>시스템 기호 제거</translation>
+        <translation>단 기호 제거</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="286"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="795"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="796"/>
         <source>Move system markings</source>
-        <translation>시스템 기호 이동</translation>
+        <translation>단 기호 이동</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="303"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="804"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="805"/>
         <source>Add system object layer below the bottom staff</source>
-        <translation>최하단 보표 아래에 시스템 객체 레이어 추가</translation>
+        <translation>최하단 보표 아래에 단 기호 레이어 추가</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/masternotationparts.cpp" line="316"/>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="813"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="814"/>
         <source>Remove system object layer below the bottom staff</source>
-        <translation>최하단 보표 아래의 시스템 객체 레이어 제거</translation>
+        <translation>최하단 보표 아래의 단 기호 레이어 제거</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationinteraction.cpp" line="603"/>
@@ -37604,537 +37713,537 @@ failed: %2</source>
         <translation>팔레트 요소 적용: %1</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="3393"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="3395"/>
         <source>Add chord symbol to fretboard diagram</source>
-        <translation>지판 다이어그램에 화음 기호 추가</translation>
+        <translation>지판 다이어그램에 코드 기호 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="3961"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="3963"/>
         <source>Move chord/rest to staff</source>
-        <translation>화음/쉼표를 보표로 이동</translation>
+        <translation>코드/쉼표를 보표로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="3991"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="3993"/>
         <source>Move chord/rest</source>
-        <translation>화음/쉼표 이동</translation>
+        <translation>코드/쉼표 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4041"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4043"/>
         <source>Toggle snap to previous</source>
         <translation>이전 위치에 스냅 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4082"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4084"/>
         <source>Toggle snap to next</source>
         <translation>다음 위치에 스냅 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4222"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4224"/>
         <source>Change vertical position</source>
         <translation>수직 위치 변경</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4225"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4227"/>
         <source>Change pitch</source>
         <translation>피치 변경</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4238"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4240"/>
         <source>Move lyrics</source>
         <translation>가사 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4250"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4252"/>
         <source>Nudge element</source>
         <translation>요소 미세 조정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4286"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4288"/>
         <source>Nudge</source>
         <translation>미세 조정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4400"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4402"/>
         <source>Edit text</source>
         <translation>텍스트 편집</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4452"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4504"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4529"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4561"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4454"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4508"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4533"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4565"/>
         <source>Keystroke edit</source>
         <extracomment>Means: an editing operation triggered by a keystroke</extracomment>
         <translation>키 입력 편집</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4963"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="4973"/>
         <source>Move element anchors</source>
         <translation>요소 앵커 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5009"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5019"/>
         <source>Split measure</source>
-        <translation>마디 나누기</translation>
+        <translation>마디 분할하기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5024"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5034"/>
         <source>Join measures</source>
-        <translation>마디 합치기</translation>
+        <translation>마디 연결하기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5164"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5174"/>
         <source>Add horizontal frame</source>
         <translation>수평 프레임 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5165"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5175"/>
         <source>Add vertical frame</source>
         <translation>수직 프레임 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5166"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5176"/>
         <source>Add text frame</source>
         <translation>텍스트 프레임 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5167"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5177"/>
         <source>Add fretboard diagram legend</source>
         <translation>지판 다이어그램 범례 추가</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5168"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5178"/>
         <source>Add %Ln measure(s)</source>
         <translation><numerusform>%Ln개 마디 추가</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5255"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5276"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5308"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5265"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5286"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5329"/>
         <source>Repeat selection</source>
         <translation>선택영역 반복</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5330"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5351"/>
         <source>Paste</source>
         <translation>붙여넣기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5412"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5433"/>
         <source>Delete</source>
         <translation>삭제</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5438"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5459"/>
         <source>Flip direction</source>
         <translation>방향 뒤집기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5451"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5472"/>
         <source>Flip horizontally</source>
         <translation>수평으로 뒤집기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5511"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5532"/>
         <source>Add ottava</source>
         <translation>옥타브(ottava) 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5518"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5558"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5539"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5579"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/dynamicpopupmodel.cpp" line="207"/>
         <source>Add hairpin</source>
         <translation>헤어핀 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5619"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5640"/>
         <source>Add brackets</source>
         <translation>대괄호 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5624"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5645"/>
         <source>Add braces</source>
         <translation>중괄호 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5629"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5650"/>
         <source>Add parentheses</source>
         <translation>괄호 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5656"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5677"/>
         <source>Toggle accidental</source>
         <translation>임시표 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5699"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8256"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5720"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8277"/>
         <source>Toggle articulation</source>
-        <translation>아티큘레이션 토글</translation>
+        <translation>연주기호 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5716"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5737"/>
         <source>Toggle augmentation dots</source>
-        <translation>부점 토글</translation>
+        <translation>증가점 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5750"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5771"/>
         <source>Add grace note</source>
-        <translation>꾸밈음 추가</translation>
+        <translation>앞꾸밈음 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5777"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5798"/>
         <location filename="../../src/notation/internal/notationnoteinput.cpp" line="708"/>
         <source>Add tuplet</source>
         <translation>잇단음표 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5798"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5819"/>
         <source>Set beam type</source>
-        <translation>빔 유형 설정</translation>
+        <translation>빔 유형 지정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5810"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5831"/>
         <source>Decrease duration</source>
         <translation>음표 음길이 감소</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5811"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5832"/>
         <source>Increase duration</source>
         <translation>음표 음길이 증가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5828"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5849"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/dynamicpopupmodel.cpp" line="199"/>
         <source>Change hairpin type</source>
         <translation>헤어핀 유형 변경</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5871"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5892"/>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/dynamicpopupmodel.cpp" line="159"/>
         <source>Add dynamic</source>
         <translation>강약 기호 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5922"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5943"/>
         <source>Toggle layout break</source>
         <translation>레이아웃 줄바꿈 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5933"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5954"/>
         <source>Move measure to previous system</source>
-        <translation>마디를 이전 줄로 이동</translation>
+        <translation>마디를 이전 단으로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5944"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5965"/>
         <source>Move measure to next system</source>
-        <translation>마디를 다음 줄로 이동</translation>
+        <translation>마디를 다음 단으로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5951"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5972"/>
         <source>Lock/unlock selected system(s)</source>
-        <translation>선택한 줄 고정/해제</translation>
+        <translation>선택한 단 고정/해제</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5958"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5979"/>
         <source>Lock/unlock all systems</source>
-        <translation>모든 줄 고정/해제</translation>
+        <translation>모든 단 고정/해제</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5971"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5992"/>
         <source>Create system from selection</source>
-        <translation>선택영역으로 줄 만들기</translation>
+        <translation>선택영역에서 단 만들기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5978"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5999"/>
         <source>Apply system lock to selection</source>
-        <translation>선택영역에 줄 고정 적용</translation>
+        <translation>선택영역에 단 고정 적용</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5988"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6009"/>
         <source>Measures per system</source>
-        <translation>한 줄당 마디 수</translation>
+        <translation>단당 마디 수</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="5995"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6016"/>
         <source>Transposition</source>
-        <translation>이조</translation>
+        <translation>조옮김</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6019"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6040"/>
         <source>Swap voices</source>
         <translation>성부 교체</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6066"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6087"/>
         <source>Add interval</source>
         <translation>음정 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6073"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6094"/>
         <source>Enter note at fret %1</source>
         <translation>%1번 프렛에 음표 입력</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6099"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6120"/>
         <source>Change voice assignment</source>
         <translation>성부 할당 변경</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6110"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6131"/>
         <source>Add note-anchored line</source>
         <translation>음표에 고정된 선 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6197"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6218"/>
         <source>Add text</source>
         <translation>텍스트 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6265"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6286"/>
         <source>Add image</source>
         <translation>이미지 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6284"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6305"/>
         <source>Add figured bass</source>
         <translation>숫자 저음 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6299"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6320"/>
         <source>Increase layout stretch</source>
         <translation>레이아웃 늘이기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6300"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6321"/>
         <source>Decrease layout stretch</source>
         <translation>레이아웃 줄이기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6323"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6344"/>
         <source>Add time signature</source>
         <translation>박자표 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6334"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6355"/>
         <source>Explode</source>
         <translation>성부 펼치기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6350"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6371"/>
         <source>Implode</source>
         <translation>성부 모으기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6366"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6387"/>
         <source>Realize chord symbols</source>
-        <translation>화음 기호 실현</translation>
+        <translation>코드 기호 실현</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6377"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6398"/>
         <source>Extend to next note</source>
         <translation>다음 음표까지 연장</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6423"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6444"/>
         <source>Delete %Ln measure(s)</source>
         <translation><numerusform>%Ln개 마디 삭제</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6434"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6455"/>
         <source>Delete range</source>
         <translation>범위 삭제</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6441"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6462"/>
         <source>Remove empty trailing measures</source>
         <translation>끝부분의 빈 마디 제거</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6452"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6473"/>
         <source>Fill with slashes</source>
         <translation>슬래시로 채우기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6463"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6484"/>
         <source>Toggle rhythmic slash notation</source>
         <translation>리듬 슬래시 기보 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6470"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6491"/>
         <source>Change enharmonic spelling</source>
         <translation>이명동음 표기 변경</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6477"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6498"/>
         <source>Optimize enharmonic spelling</source>
         <translation>이명동음 표기 최적화</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6484"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6505"/>
         <source>Respell pitches with sharps</source>
         <translation>올림표로 피치 재표기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6491"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6512"/>
         <source>Respell pitches with flats</source>
         <translation>내림표로 피치 재표기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6498"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6519"/>
         <source>Regroup rhythms</source>
         <translation>리듬 다시 묶기</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6505"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6526"/>
         <source>Resequence rehearsal marks</source>
         <translation>연습 번호 순서 재정렬</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6512"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6533"/>
         <source>Reset layout stretch</source>
         <translation>레이아웃 늘이기 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6519"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6540"/>
         <source>Reset text style overrides</source>
         <translation>텍스트 스타일 재지정 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6526"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6547"/>
         <source>Reset beams</source>
         <translation>빔 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6543"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6564"/>
         <source>Reset shapes and positions</source>
         <translation>모양 및 위치 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6563"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6584"/>
         <source>Reset to default layout</source>
         <translation>기본 레이아웃으로 복원</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6589"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6610"/>
         <source>Set score view settings</source>
-        <translation>악보 보기 설정</translation>
+        <translation>악보 보기 지정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6759"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6780"/>
         <source>Navigate to lyrics</source>
         <translation>가사로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6890"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6950"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6911"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6971"/>
         <source>Navigate to next syllable</source>
         <translation>다음 음절로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6912"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="6933"/>
         <source>Add partial lyrics dash</source>
         <translation>부분 가사 대시(-) 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7116"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7137"/>
         <source>Navigate to verse</source>
         <translation>절(verse)로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7173"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7263"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7194"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7284"/>
         <source>Navigate to next chord symbol</source>
-        <translation>다음 화음 기호로 이동</translation>
+        <translation>다음 코드 기호로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7306"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7327"/>
         <source>Navigate to chord symbol</source>
-        <translation>화음 기호로 이동</translation>
+        <translation>코드 기호로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7363"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7409"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7384"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7430"/>
         <source>Navigate to next figured bass</source>
         <translation>다음 숫자 저음으로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7457"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7478"/>
         <source>Navigate to figured bass</source>
         <translation>숫자 저음으로 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7755"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7784"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7845"/>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7905"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7776"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7805"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7866"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7926"/>
         <source>Enter lyrics extension line</source>
         <translation>가사 연장선 입력</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7930"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7951"/>
         <source>Add lyrics verse</source>
         <translation>가사 절 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7970"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="7991"/>
         <source>Enter guitar bend</source>
         <translation>기타 벤드 입력</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8039"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8060"/>
         <source>Add fretboard diagram</source>
         <translation>지판 다이어그램 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8180"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8201"/>
         <source>Format text</source>
         <translation>텍스트 서식 설정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8200"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8221"/>
         <source>Toggle subscript</source>
         <translation>아래 첨자 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8202"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8223"/>
         <source>Toggle superscript</source>
         <translation>위 첨자 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8204"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8225"/>
         <source>Toggle subscript/superscript</source>
         <translation>위/아래 첨자 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8261"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8282"/>
         <source>Toggle ornament</source>
         <translation>꾸밈음 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8266"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8287"/>
         <source>Toggle automatic placement</source>
         <translation>자동 배치 토글</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8277"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8298"/>
         <source>Add clef</source>
         <translation>음자리표 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8282"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8303"/>
         <source>Add accidental</source>
         <translation>임시표 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8287"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8308"/>
         <source>Transpose semitone</source>
-        <translation>반음 단위 이조</translation>
+        <translation>반음 단위 조옮김</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8294"/>
+        <location filename="../../src/notation/internal/notationinteraction.cpp" line="8315"/>
         <source>Transpose diatonically</source>
-        <translation>온음계 단위 이조</translation>
+        <translation>온음 단위 조옮김</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationmidiinput.cpp" line="323"/>
@@ -38151,7 +38260,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/notation/internal/notationnoteinput.cpp" line="448"/>
         <source>Add note to chord</source>
-        <translation>화음에 음표 추가</translation>
+        <translation>코드에 음표 추가</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationnoteinput.cpp" line="450"/>
@@ -38181,54 +38290,54 @@ failed: %2</source>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="251"/>
         <source>Set score order</source>
-        <translation>악보 순서 설정</translation>
+        <translation>악보 순서 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="273"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3033"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3054"/>
         <source>Show instrument</source>
         <translation>악기 표시</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="274"/>
-        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3034"/>
+        <location filename="../../src/notationscene/widgets/timeline.cpp" line="3055"/>
         <source>Hide instrument</source>
-        <translation>악기 숨기기</translation>
+        <translation>악기 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="305"/>
         <source>Set sharps/flats no preference</source>
-        <translation>올림표/내림표 우선순위 없음 설정</translation>
+        <translation>올림표/내림표 우선순위 없음 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="306"/>
         <source>Set prefer flats</source>
-        <translation>내림표 우선 설정</translation>
+        <translation>내림표 우선 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="307"/>
         <source>Set prefer sharps</source>
-        <translation>올림표 우선 설정</translation>
+        <translation>올림표 우선 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="308"/>
         <source>Set sharps/flats automatic</source>
-        <translation>올림표/내림표 자동 설정</translation>
+        <translation>올림표/내림표 자동 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="310"/>
         <source>Set sharps/flats preference</source>
-        <translation>올림표/내림표 기본 설정</translation>
+        <translation>올림표/내림표 기본 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="431"/>
         <source>Set instrument name</source>
-        <translation>악기 이름 설정</translation>
+        <translation>악기 이름 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="458"/>
         <source>Set abbreviated instrument name</source>
-        <translation>악기 약칭 설정</translation>
+        <translation>악기 약칭 지정</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="477"/>
@@ -38238,7 +38347,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="478"/>
         <source>Hide voice %1</source>
-        <translation>%1 성부 숨기기</translation>
+        <translation>%1 성부 숨김</translation>
     </message>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="517"/>
@@ -38248,35 +38357,35 @@ failed: %2</source>
     <message>
         <location filename="../../src/notation/internal/notationparts.cpp" line="518"/>
         <source>Hide staff</source>
-        <translation>보표 숨기기</translation>
+        <translation>보표 숨김</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="548"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="549"/>
         <source>Set staff type</source>
-        <translation>보표 유형 설정</translation>
+        <translation>보표 유형 지정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="570"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="571"/>
         <source>Edit staff properties</source>
         <translation>보표 속성 편집</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="657"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="658"/>
         <source>Add instrument</source>
         <translation>악기 추가</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="677"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="678"/>
         <source>Reset instrument formatting</source>
         <translation>악기 서식 재설정</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="1009"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="1010"/>
         <source>Move instruments</source>
         <translation>악기 이동</translation>
     </message>
     <message>
-        <location filename="../../src/notation/internal/notationparts.cpp" line="1037"/>
+        <location filename="../../src/notation/internal/notationparts.cpp" line="1038"/>
         <source>Move staves</source>
         <translation>보표 이동</translation>
     </message>
@@ -38306,12 +38415,12 @@ failed: %2</source>
         <translation>온마디 쉼표 입력</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2177"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2179"/>
         <source>Display concert pitch</source>
         <translation>연주용 피치 화면표시</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2178"/>
+        <location filename="../../src/notationscene/internal/notationactioncontroller.cpp" line="2180"/>
         <source>Display transposed</source>
         <translation>조옮김된 음으로 화면표시</translation>
     </message>
@@ -38328,7 +38437,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/stringtuningssettingsmodel.cpp" line="142"/>
         <source>Set string tuning</source>
-        <translation>현 조율 설정</translation>
+        <translation>현 조율 지정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/stringtuningssettingsmodel.cpp" line="230"/>
@@ -38338,7 +38447,7 @@ failed: %2</source>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/stringtuningssettingsmodel.cpp" line="283"/>
         <source>Set number of strings</source>
-        <translation>현 개수 설정</translation>
+        <translation>현 개수 지정</translation>
     </message>
     <message>
         <location filename="../../src/notationscene/qml/MuseScore/NotationScene/elementpopups/stringtuningssettingsmodel.cpp" line="354"/>
@@ -38356,7 +38465,7 @@ failed: %2</source>
         <translation>페이지 설정 편집</translation>
     </message>
     <message>
-        <location filename="../../src/notationscene/widgets/stafftextpropertiesdialog.cpp" line="148"/>
+        <location filename="../../src/notationscene/widgets/stafftextpropertiesdialog.cpp" line="150"/>
         <source>Edit staff text properties</source>
         <translation>보표 텍스트 속성 편집</translation>
     </message>
@@ -38386,7 +38495,7 @@ failed: %2</source>
         <translation>‘모든 보표에 사운드 플래그 적용’ 토글</translation>
     </message>
     <message>
-        <location filename="../../src/project/internal/notationproject.cpp" line="1243"/>
+        <location filename="../../src/project/internal/notationproject.cpp" line="1226"/>
         <source>Edit project properties</source>
         <translation>프로젝트 속성 편집</translation>
     </message>

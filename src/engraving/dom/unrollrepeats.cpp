@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -26,6 +26,7 @@
 
 #include "style/style.h"
 #include "../editing/editexcerpt.h"
+#include "../editing/transaction/transaction.h"
 
 #include "barline.h"
 #include "engravingitem.h"
@@ -39,8 +40,6 @@
 #include "segment.h"
 
 #include "log.h"
-
-using namespace mu;
 
 namespace mu::engraving {
 static void removeRepeatMarkings(Score* score)
@@ -98,20 +97,19 @@ static void createExcerpts(MasterScore* cs, const std::vector<Excerpt*>& excerpt
         Score* nscore = e->masterScore()->createScore();
         e->setExcerptScore(nscore);
         nscore->style().set(Sid::createMultiMeasureRests, true);
-        cs->startCmd(TranslatableString("undoableAction", "Create parts"));
-        cs->undo(new AddExcerpt(e));
-        Excerpt::createExcerpt(e);
+        cs->transactionManager()->transaction(TranslatableString("undoableAction", "Create parts"), [&](auto& tx) {
+            tx.push(new AddExcerpt(e));
+            Excerpt::createExcerpt(e);
 
-        // borrowed from excerptsdialog.cpp
-        // a new excerpt is created in AddExcerpt, make sure the parts are filed
-        for (Excerpt* ee : e->masterScore()->excerpts()) {
-            if (ee->excerptScore() == nscore && ee != e) {
-                ee->parts().clear();
-                ee->parts().insert(ee->parts().end(), e->parts().begin(), e->parts().end());
+            // borrowed from excerptsdialog.cpp
+            // a new excerpt is created in AddExcerpt, make sure the parts are filed
+            for (Excerpt* ee : e->masterScore()->excerpts()) {
+                if (ee->excerptScore() == nscore && ee != e) {
+                    ee->parts().clear();
+                    ee->parts().insert(ee->parts().end(), e->parts().begin(), e->parts().end());
+                }
             }
-        }
-
-        cs->endCmd();
+        });
     }
 }
 
@@ -127,16 +125,15 @@ MasterScore* MasterScore::unrollRepeats()
     // create a copy of the original score to play with
     MasterScore* score = original->clone();
 
-    // figure out repeat structure
-    original->setExpandRepeats(true);
-
     // if no repeats, just return the score as-is
-    if (original->repeatList().size() == 1) {
+    const RepeatList& expandedRepeats = original->expandedRepeatList();
+    if (expandedRepeats.size() == 1) {
         return score;
     }
 
     // remove excerpts for now (they are re-created after unrolling master score)
     std::vector<Excerpt*> excerpts;
+    excerpts.reserve(score->excerpts().size());
     for (Excerpt* e : score->excerpts()) {
         excerpts.push_back(new Excerpt(*e, false));
         score->masterScore()->deleteExcerpt(e);
@@ -144,7 +141,7 @@ MasterScore* MasterScore::unrollRepeats()
 
     // follow along with the repeatList
     bool first = true;
-    for (const RepeatSegment* rs: original->repeatList()) {
+    for (const RepeatSegment* rs: expandedRepeats) {
         Fraction startTick = Fraction::fromTicks(rs->tick);
         Fraction endTick   = Fraction::fromTicks(rs->endTick());
 
@@ -161,7 +158,7 @@ MasterScore* MasterScore::unrollRepeats()
 
     removeRepeatMarkings(score);
 
-    score->setUpTempoMap();
+    score->updateTicksAndTimeSigMap();
 
     score->setLayoutAll();
     score->doLayout();

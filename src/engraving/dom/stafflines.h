@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -49,7 +49,7 @@ public:
     const std::vector<LineF>& lines() const { return m_lines; }
     void setLines(const std::vector<LineF>& l) { m_lines = l; }
 
-    Measure* measure() const { return (Measure*)explicitParent(); }
+    Measure* measure() const { return (Measure*)ownershipParent(); }
     double y1() const;
 
     double lw() const { return m_lw; }

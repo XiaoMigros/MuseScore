@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -34,7 +34,7 @@ ProjectFileInfoProvider::ProjectFileInfoProvider(NotationProject* project)
 
 bool ProjectFileInfoProvider::saved() const
 {
-    return !m_project->needSave().val;
+    return !m_project->isNeedSave();
 }
 
 //! TODO: maybe implement this class further for Cloud Projects
@@ -66,4 +66,9 @@ DateTime ProjectFileInfoProvider::birthTime() const
 DateTime ProjectFileInfoProvider::lastModified() const
 {
     return filesystem()->lastModified(path());
+}
+
+bool ProjectFileInfoProvider::isNewlyCreated() const
+{
+    return m_project->isNewlyCreated();
 }

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,7 +24,6 @@
 
 #include "translation.h"
 
-#include "../editing/undo.h"
 #include "../types/symnames.h"
 
 #include "articulation.h"
@@ -110,9 +109,9 @@ BarLine::~BarLine()
     muse::DeleteAll(m_el);
 }
 
-void BarLine::setParent(Segment* parent)
+void BarLine::setOwnershipParent(Segment* parent)
 {
-    EngravingItem::setParent(parent);
+    EngravingItem::setOwnershipParent(parent);
 }
 
 //---------------------------------------------------------
@@ -122,7 +121,7 @@ void BarLine::setParent(Segment* parent)
 PointF BarLine::canvasPos() const
 {
     PointF pos = EngravingItem::canvasPos();
-    if (explicitParent()) {
+    if (ownershipParent()) {
         System* system = measure()->system();
         double yoff = system ? system->staff(staffIdx())->y() : 0.0;
         pos.ry() += yoff;
@@ -232,7 +231,7 @@ void BarLine::calcY()
 {
     BarLine::LayoutData* data = mutldata();
     double _spatium = spatium();
-    if (!explicitParent()) {
+    if (!ownershipParent()) {
         // for use in palette
         data->y1 = m_spanFrom * _spatium * .5;
         data->y2 = (8 - m_spanTo) * _spatium * .5;
@@ -394,7 +393,7 @@ bool BarLine::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* BarLine::drop(EditData& data)
+EngravingItem* BarLine::drop(Transaction& tx, EditData& data)
 {
     EngravingItem* e = data.dropElement;
 
@@ -446,12 +445,12 @@ EngravingItem* BarLine::drop(EditData& data)
         delete e;
     } else if (e->isArticulationFamily()) {
         Articulation* atr = toArticulation(e);
-        atr->setParent(this);
+        atr->setOwnershipParent(this);
         atr->setTrack(track());
         score()->undoAddElement(atr);
         return atr;
     } else if (e->isSymbol() || e->isImage()) {
-        e->setParent(this);
+        e->setOwnershipParent(this);
         e->setTrack(track());
         score()->undoAddElement(e);
         return e;
@@ -465,14 +464,14 @@ EngravingItem* BarLine::drop(EditData& data)
                 } else {
                     e->setPlacement(el->placement());
                     e->setTrack(track());
-                    e->setParent(segment());
+                    e->setOwnershipParent(segment());
                     score()->undoChangeElement(el, e);
                     return e;
                 }
             }
         }
         e->setTrack(track());
-        e->setParent(segment());
+        e->setOwnershipParent(segment());
         score()->undoAddElement(e);
         return e;
     } else if (e->isMeasureNumber() || e->isJump() || e->isMarker() || e->isLayoutBreak()) {
@@ -481,7 +480,7 @@ EngravingItem* BarLine::drop(EditData& data)
             if (left && segment()->isEndBarLineType() && m->nextMeasureMM()) {
                 m = m->nextMeasureMM();
             }
-            return m->drop(data);
+            return m->drop(tx, data);
         }
     }
     return nullptr;
@@ -546,7 +545,7 @@ std::vector<PointF> BarLine::gripsPositions(const EditData& ed) const
 
 void BarLine::styleChanged()
 {
-    if (explicitParent() && m_barLineType == BarLineType::END_REPEAT) {
+    if (ownershipParent() && m_barLineType == BarLineType::END_REPEAT) {
         score()->undoUpdatePlayCountText(measure());
     }
     EngravingItem::styleChanged();
@@ -683,7 +682,7 @@ void BarLine::endDragGrip(EditData& ed)
                 b = toBarLine(linkedClone());
                 b->setSpanStaff(true);
                 b->setTrack(staffIdx * VOICES);
-                b->setParent(s);
+                b->setOwnershipParent(s);
                 score()->undoAddElement(b);
             }
             breakLast = b->spanTo();
@@ -742,7 +741,7 @@ void BarLine::setTrack(track_idx_t t)
 
 void BarLine::add(EngravingItem* e)
 {
-    e->setParent(this);
+    e->setOwnershipParent(this);
     switch (e->type()) {
     case ElementType::ARTICULATION:
     case ElementType::SYMBOL:

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,12 +19,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "slurtie.h"
 
-#include "draw/types/pen.h"
+#include "iengravingconfiguration.h" // IWYU pragma: keep
 
 #include "../editing/elementeditdata.h"
 #include "../editing/mscoreview.h"
+#include "../rendering/iscorerenderer.h"
 
 #include "note.h"
 #include "page.h"
@@ -42,8 +44,8 @@ namespace mu::engraving {
 //   SlurTieSegment
 //---------------------------------------------------------
 
-SlurTieSegment::SlurTieSegment(const ElementType& type, System* parent)
-    : SpannerSegment(type, parent)
+SlurTieSegment::SlurTieSegment(const ElementType& type, SlurTie* sp)
+    : SpannerSegment(type, sp)
 {
     setFlag(ElementFlag::ON_STAFF, true);
 }
@@ -218,15 +220,32 @@ void SlurTieSegment::endDragGrip(EditData& ed)
 }
 
 //---------------------------------------------------------
+//   propertyDelegate
+//---------------------------------------------------------
+
+EngravingObject* SlurTieSegment::propertyDelegate(Pid pid) const
+{
+    switch (pid) {
+    case Pid::SLUR_STYLE_TYPE:
+    case Pid::SLUR_DIRECTION:
+    case Pid::MASK_SLURTIE:
+        return slurTie();
+    default:
+        return SpannerSegment::propertyDelegate(pid);
+    }
+}
+
+//---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
 
 PropertyValue SlurTieSegment::getProperty(Pid propertyId) const
 {
+    if (EngravingObject* e = const_cast<SlurTieSegment*>(this)->propertyDelegate(propertyId)) {
+        return e->getProperty(propertyId);
+    }
+
     switch (propertyId) {
-    case Pid::SLUR_STYLE_TYPE:
-    case Pid::SLUR_DIRECTION:
-        return slurTie()->getProperty(propertyId);
     case Pid::SLUR_UOFF1:
         return ups(Grip::START).off;
     case Pid::SLUR_UOFF2:
@@ -246,10 +265,11 @@ PropertyValue SlurTieSegment::getProperty(Pid propertyId) const
 
 bool SlurTieSegment::setProperty(Pid propertyId, const PropertyValue& v)
 {
+    if (EngravingObject* e = const_cast<SlurTieSegment*>(this)->propertyDelegate(propertyId)) {
+        return e->setProperty(propertyId, v);
+    }
+
     switch (propertyId) {
-    case Pid::SLUR_STYLE_TYPE:
-    case Pid::SLUR_DIRECTION:
-        return slurTie()->setProperty(propertyId, v);
     case Pid::SLUR_UOFF1:
         ups(Grip::START).off = v.value<PointF>();
         break;
@@ -275,10 +295,11 @@ bool SlurTieSegment::setProperty(Pid propertyId, const PropertyValue& v)
 
 PropertyValue SlurTieSegment::propertyDefault(Pid id) const
 {
+    if (EngravingObject* e = const_cast<SlurTieSegment*>(this)->propertyDelegate(id)) {
+        return e->propertyDefault(id);
+    }
+
     switch (id) {
-    case Pid::SLUR_STYLE_TYPE:
-    case Pid::SLUR_DIRECTION:
-        return slurTie()->propertyDefault(id);
     case Pid::SLUR_UOFF1:
     case Pid::SLUR_UOFF2:
     case Pid::SLUR_UOFF3:
@@ -331,6 +352,7 @@ SlurTie::SlurTie(const ElementType& type, EngravingItem* parent)
     m_slurDirection = DirectionV::AUTO;
     m_up            = true;
     m_styleType     = SlurStyleType::Solid;
+    m_maskSlurTie   = AutoOnOff::AUTO;
 }
 
 SlurTie::SlurTie(const SlurTie& t)
@@ -339,6 +361,7 @@ SlurTie::SlurTie(const SlurTie& t)
     m_up            = t.m_up;
     m_slurDirection = t.m_slurDirection;
     m_styleType     = t.m_styleType;
+    m_maskSlurTie   = t.m_maskSlurTie;
 }
 
 //---------------------------------------------------------
@@ -369,6 +392,8 @@ PropertyValue SlurTie::getProperty(Pid propertyId) const
         return styleType();
     case Pid::SLUR_DIRECTION:
         return PropertyValue::fromValue<DirectionV>(slurDirection());
+    case Pid::MASK_SLURTIE:
+        return maskSlurTie();
     default:
         return Spanner::getProperty(propertyId);
     }
@@ -386,6 +411,9 @@ bool SlurTie::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::SLUR_DIRECTION:
         setSlurDirection(v.value<DirectionV>());
+        break;
+    case Pid::MASK_SLURTIE:
+        setMaskSlurTie(v.value<AutoOnOff>());
         break;
     default:
         return Spanner::setProperty(propertyId, v);
@@ -405,6 +433,8 @@ PropertyValue SlurTie::propertyDefault(Pid id) const
         return SlurStyleType::Solid;
     case Pid::SLUR_DIRECTION:
         return PropertyValue::fromValue<DirectionV>(DirectionV::AUTO);
+    case Pid::MASK_SLURTIE:
+        return AutoOnOff::AUTO;
     default:
         return Spanner::propertyDefault(id);
     }
@@ -416,7 +446,7 @@ PropertyValue SlurTie::propertyDefault(Pid id) const
 
 void SlurTie::fixupSegments(unsigned nsegs)
 {
-    Spanner::fixupSegments(nsegs, [this](System* parent) { return newSlurTieSegment(parent); });
+    Spanner::fixupSegments(nsegs, [this]() { return newSlurTieSegment(); });
 }
 
 //---------------------------------------------------------
@@ -428,6 +458,7 @@ void SlurTie::reset()
     EngravingItem::reset();
     undoResetProperty(Pid::SLUR_DIRECTION);
     undoResetProperty(Pid::SLUR_STYLE_TYPE);
+    undoResetProperty(Pid::MASK_SLURTIE);
 }
 
 muse::TranslatableString SlurTie::subtypeUserName() const

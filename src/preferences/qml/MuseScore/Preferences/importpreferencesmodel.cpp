@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,6 +24,8 @@
 #include <QTextCodec>
 
 #include "engraving/types/constants.h"
+
+#include "importexport/finale/ifinaleconfiguration.h"
 
 #include "translation.h"
 
@@ -75,6 +77,14 @@ void ImportPreferencesModel::load()
     musicXmlConfiguration()->needAskAboutApplyingNewStyleChanged().onReceive(this, [this](bool val) {
         emit needAskAboutApplyingNewStyleChanged(val);
     });
+
+    finaleConfiguration()->importPositionsTypeChanged().onReceive(this, [this](iex::finale::IFinaleConfiguration::ImportPositionsType val) {
+        emit importPositionsTypeChanged(static_cast<int>(val));
+    });
+
+    finaleConfiguration()->convertTextSymbolsChanged().onReceive(this, [this](bool val) {
+        emit convertTextSymbolsChanged(val);
+    });
 }
 
 QVariantList ImportPreferencesModel::charsets() const
@@ -104,6 +114,26 @@ QVariantList ImportPreferencesModel::shortestNotes() const
         QVariantMap { { "title", muse::qtrc("preferences", "256th") }, { "value", division / 64 } },
         QVariantMap { { "title", muse::qtrc("preferences", "512th") }, { "value", division / 128 } },
         QVariantMap { { "title", muse::qtrc("preferences", "1024th") }, { "value", division / 256 } }
+    };
+
+    return result;
+}
+
+QVariantList ImportPreferencesModel::importPositionsTypes() const
+{
+    QVariantList result = {
+        QVariantMap {
+            { "title", muse::qtrc("preferences", "Use MuseScore positions") },
+            { "value", static_cast<int>(iex::finale::IFinaleConfiguration::ImportPositionsType::None) }
+        },
+        QVariantMap {
+            { "title", muse::qtrc("preferences", "Keep manual adjustments") },
+            { "value", static_cast<int>(iex::finale::IFinaleConfiguration::ImportPositionsType::AdjustmentsOnly) }
+        },
+        QVariantMap {
+            { "title", muse::qtrc("preferences", "Use Finale positions") },
+            { "value", static_cast<int>(iex::finale::IFinaleConfiguration::ImportPositionsType::All) }
+        }
     };
 
     return result;
@@ -177,6 +207,16 @@ bool ImportPreferencesModel::meiImportLayout() const
 bool ImportPreferencesModel::mnxRequireExactSchemaValidation() const
 {
     return mnxConfiguration()->mnxRequireExactSchemaValidation();
+}
+
+int ImportPreferencesModel::importPositionsType() const
+{
+    return static_cast<int>(finaleConfiguration()->importPositionsType());
+}
+
+bool ImportPreferencesModel::convertTextSymbols() const
+{
+    return finaleConfiguration()->convertTextSymbols();
 }
 
 void ImportPreferencesModel::setStyleFileImportPath(QString path)
@@ -277,4 +317,22 @@ void ImportPreferencesModel::setMnxRequireExactSchemaValidation(bool value)
 
     mnxConfiguration()->setMnxRequireExactSchemaValidation(value);
     emit mnxRequireExactSchemaValidationChanged(value);
+}
+
+void ImportPreferencesModel::setImportPositionsType(int import)
+{
+    if (import == importPositionsType()) {
+        return;
+    }
+
+    finaleConfiguration()->setImportPositionsType(static_cast<iex::finale::IFinaleConfiguration::ImportPositionsType>(import));
+}
+
+void ImportPreferencesModel::setConvertTextSymbols(bool value)
+{
+    if (value == convertTextSymbols()) {
+        return;
+    }
+
+    finaleConfiguration()->setConvertTextSymbols(value);
 }

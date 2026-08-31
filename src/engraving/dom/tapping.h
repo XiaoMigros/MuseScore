@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -87,7 +87,7 @@ class TappingHalfSlurSegment : public SlurSegment
     DECLARE_CLASSOF(ElementType::TAPPING_HALF_SLUR_SEGMENT)
 
 public:
-    TappingHalfSlurSegment(System* parent);
+    TappingHalfSlurSegment(TappingHalfSlur* sp);
     TappingHalfSlurSegment(const TappingHalfSlurSegment& other);
     TappingHalfSlurSegment* clone() const override { return new TappingHalfSlurSegment(*this); }
 
@@ -106,9 +106,12 @@ public:
     TappingHalfSlur(EngravingItem* parent);
     TappingHalfSlur(const TappingHalfSlur&);
     TappingHalfSlur* clone() const override { return new TappingHalfSlur(*this); }
-    TappingHalfSlurSegment* newSlurTieSegment(System* parent) override { return new TappingHalfSlurSegment(parent); }
+    TappingHalfSlurSegment* newSlurTieSegment() override { return new TappingHalfSlurSegment(this); }
 
-    Tapping* tapping() const { return toTapping(parent()); }
+    Tapping* tapping() const { return toTapping(ownershipParent()); }
+
+protected:
+    bool isInSpannerMap() const override { return false; }
 
 private:
     bool m_isHalfSlurAbove = true;
@@ -123,6 +126,8 @@ public:
     TappingText(Tapping* parent = nullptr);
     TappingText(const TappingText& t);
     TappingText* clone() const override { return new TappingText(*this); }
+
+    Tapping* tapping() const { return toTapping(ownershipParent()); }
 
     Color curColor(const rendering::PaintOptions& opt) const override;
 

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2023 MuseScore Limited
+ * Copyright (C) 2023 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -32,6 +32,7 @@
 #include "passresetlayoutdata.h"
 #include "passlayoutindependentitems.h"
 
+#include "headerfooterlayout.h"
 #include "measurelayout.h"
 #include "systemlayout.h"
 #include "pagelayout.h"
@@ -147,13 +148,14 @@ void ScorePageViewLayout::prepareScore(Score* score, const LayoutContext& ctx)
                     score->setSelectionChanged(true);
                 }
             }
-            s->resetExplicitParent();
+            // no need to clear the page placement: the systems are deleted below,
+            // and ~System unlinks itself from its page
         }
 
         for (MeasureBase* mb = score->first(); mb; mb = mb->next()) {
-            mb->resetExplicitParent();
+            mb->setSystem(nullptr);
             if (mb->isMeasure() && toMeasure(mb)->mmRest()) {
-                toMeasure(mb)->mmRest()->moveToDummy();
+                toMeasure(mb)->mmRest()->setSystem(nullptr);
             }
         }
         muse::DeleteAll(score->systems());
@@ -252,4 +254,30 @@ void ScorePageViewLayout::layoutFinished(Score* score, LayoutContext& ctx)
     }
 
     score->systems().insert(score->systems().end(), state.systemList().begin(), state.systemList().end());
+
+    /* If the headers/footers involve page count, we need to re-calculate them. This needs to
+     * be done after laying out all pages, so that the total number of pages will be known: */
+    if (state.mustRecomputeHeadersFooters()) {
+        doLayoutHeadersFooters(ctx);
+        state.setMustRecomputeHeadersFooters(false);
+    }
+}
+
+void ScorePageViewLayout::layoutHeadersFooters(LayoutContext& ctx)
+{
+    TRACEFUNC;
+
+    LAYOUT_CALL_CLEAR();
+    LAYOUT_CALL();
+
+    doLayoutHeadersFooters(ctx);
+
+    LAYOUT_CALL_PRINT();
+}
+
+void ScorePageViewLayout::doLayoutHeadersFooters(LayoutContext& ctx)
+{
+    for (const auto& page : ctx.dom().pages()) {
+        HeaderFooterLayout::layoutHeaderFooter(ctx, page);
+    }
 }

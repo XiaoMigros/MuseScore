@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -33,7 +33,7 @@
 #include "engraving/dom/sig.h"
 #include "engraving/dom/staff.h"
 #include "engraving/dom/synthesizerstate.h"
-#include "engraving/dom/tempo.h"
+#include "engraving/dom/tempotimeline.h"
 
 #include "engraving/compat/midi/event.h"
 #include "engraving/compat/midi/compatmidirender.h"
@@ -182,22 +182,22 @@ void ExportMidi::writeHeader(const CompatMidiRendererInternal::Context& context)
         return;
     }
 
-    const TempoMap* tempomap = context.pauseMap->tempomapWithPauses();
-    BeatsPerSecond tempoMultiplier = tempomap->tempoMultiplier();
-    for (auto it = tempomap->cbegin(); it != tempomap->cend(); ++it) {
+    const std::map<int, double>& tempoEvents = context.pauseMap->tempoEvents();
+    BeatsPerSecond tempoMultiplier = m_score->tempoTimeline().tempoMultiplier();
+    for (const auto& [tick, bps] : tempoEvents) {
         MidiEvent ev;
         ev.setType(ME_META);
         //
         // compute midi tempo: microseconds / quarter note
         //
-        int tempo = lrint((1.0 / it->second.tempo.val * tempoMultiplier.val) * 1000000.0);
+        int tempo = lrint((1.0 / bps * tempoMultiplier.val) * 1000000.0);
 
         ev.setMetaType(META_TEMPO);
         ev.setLen(3);
         ev.setEData({ static_cast<unsigned char>(tempo >> 16),
                       static_cast<unsigned char>(tempo >> 8),
                       static_cast<unsigned char>(tempo) });
-        track.insert(it->first, ev);
+        track.insert(tick, ev);
     }
 }
 
@@ -360,6 +360,7 @@ bool ExportMidi::write(QIODevice* device, bool midiExpandRepeats, bool exportRPN
         }
 
         // Export lyrics and RehearsalMarks as Meta events
+        const TrackRange trackRange = part->trackRange();
         for (const RepeatSegment* rs : m_score->repeatList()) {
             int endTick    = rs->endTick();
             int tickOffset = rs->utick - rs->tick;
@@ -367,7 +368,7 @@ bool ExportMidi::write(QIODevice* device, bool midiExpandRepeats, bool exportRPN
             // export Lyrics
             SegmentType st = SegmentType::ChordRest;
             for (Segment* seg = rs->firstMeasure()->first(st); seg && seg->tick().ticks() < endTick; seg = seg->next1(st)) {
-                for (track_idx_t i = part->startTrack(); i < part->endTrack(); ++i) {
+                for (track_idx_t i = trackRange.startTrack; i < trackRange.endTrack; ++i) {
                     ChordRest* cr = toChordRest(seg->element(i));
                     if (cr) {
                         for (const auto& lyric : cr->lyrics()) {
@@ -396,9 +397,9 @@ bool ExportMidi::write(QIODevice* device, bool midiExpandRepeats, bool exportRPN
 
             // export RehearsalMarks only for first track
             if (staffIdx == 0) {
-                for (Segment* seg = rs->firstMeasure()->first(Segment::CHORD_REST_OR_TIME_TICK_TYPE);
+                for (Segment* seg = rs->firstMeasure()->first(SegmentType::Duration);
                      seg && seg->tick().ticks() < endTick;
-                     seg = seg->next1(Segment::CHORD_REST_OR_TIME_TICK_TYPE)) {
+                     seg = seg->next1(SegmentType::Duration)) {
                     for (EngravingItem* e : seg->annotations()) {
                         if (e->isRehearsalMark()) {
                             RehearsalMark* r = toRehearsalMark(e);

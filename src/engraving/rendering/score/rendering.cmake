@@ -27,12 +27,16 @@ set(RENDERING_SCORE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/lyricslayout.h
     ${CMAKE_CURRENT_LIST_DIR}/measurelayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/measurelayout.h
+    ${CMAKE_CURRENT_LIST_DIR}/mmrestlayout.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mmrestlayout.h
     ${CMAKE_CURRENT_LIST_DIR}/beamlayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/beamlayout.h
     ${CMAKE_CURRENT_LIST_DIR}/beamtremololayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/beamtremololayout.h
     ${CMAKE_CURRENT_LIST_DIR}/chordlayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/chordlayout.h
+    ${CMAKE_CURRENT_LIST_DIR}/chordbracketlayout.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/chordbracketlayout.h
     ${CMAKE_CURRENT_LIST_DIR}/accidentalslayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/accidentalslayout.h
     ${CMAKE_CURRENT_LIST_DIR}/tupletlayout.cpp
@@ -99,4 +103,7 @@ set(RENDERING_SCORE_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/dumplayoutdata.cpp
     ${CMAKE_CURRENT_LIST_DIR}/dumplayoutdata.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/stavesharinglayout.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/stavesharinglayout.h
 )

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -90,6 +90,7 @@ Instrument::Instrument(const Instrument& i)
     m_midiActions  = i.m_midiActions;
     m_articulation = i.m_articulation;
     m_singleNoteDynamics = i.m_singleNoteDynamics;
+    m_channel.reserve(i.m_channel.size());
     for (InstrChannel* c : i.m_channel) {
         m_channel.push_back(new InstrChannel(*c));
     }
@@ -122,6 +123,7 @@ void Instrument::operator=(const Instrument& i)
     m_midiActions  = i.m_midiActions;
     m_articulation = i.m_articulation;
     m_singleNoteDynamics = i.m_singleNoteDynamics;
+    m_channel.reserve(i.m_channel.size());
     for (InstrChannel* c : i.m_channel) {
         m_channel.push_back(new InstrChannel(*c));
     }
@@ -1118,6 +1120,13 @@ Instrument Instrument::fromTemplate(const InstrumentTemplate* templ)
 
     for (const InstrChannel& c : templ->channel) {
         instrument.m_channel.push_back(new InstrChannel(c));
+    }
+
+    if (instrument.m_channel.empty()) {
+        InstrChannel* fallbackChannel = new InstrChannel;
+        fallbackChannel->setName(String::fromUtf8(InstrChannel::DEFAULT_NAME));
+        fallbackChannel->setProgram(instrument.recognizeMidiProgram());
+        instrument.m_channel.push_back(fallbackChannel);
     }
 
     instrument.setStringData(templ->stringData);

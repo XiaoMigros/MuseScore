@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -47,7 +47,9 @@ using namespace muse::ui;
 mu::engraving::NoteHeadScheme noteHeadSchemes[] = {
     mu::engraving::NoteHeadScheme::HEAD_NORMAL,
     mu::engraving::NoteHeadScheme::HEAD_PITCHNAME,
+    mu::engraving::NoteHeadScheme::HEAD_PITCHNAME_NO_ACCIDENTALS,
     mu::engraving::NoteHeadScheme::HEAD_PITCHNAME_GERMAN,
+    mu::engraving::NoteHeadScheme::HEAD_PITCHNAME_GERMAN_NO_ACCIDENTALS,
     mu::engraving::NoteHeadScheme::HEAD_SOLFEGE,
     mu::engraving::NoteHeadScheme::HEAD_SOLFEGE_FIXED,
     mu::engraving::NoteHeadScheme::HEAD_SHAPE_NOTE_4,
@@ -157,7 +159,7 @@ EditStaffType::EditStaffType(const muse::modularity::ContextPtr& ctx, QWidget* p
     connect(templateReset,  &QPushButton::clicked, this, &EditStaffType::resetToTemplateClicked);
     connect(addToTemplates, &QPushButton::clicked, this, &EditStaffType::addToTemplatesClicked);
 
-    connect(editTextStyleButton, &QPushButton::clicked, this, [=]() {
+    connect(editTextStyleButton, &QPushButton::clicked, this, [this]() {
         UriQuery uri("musescore://notation/style");
         uri.addParam("currentPageCode", Val("text-styles"));
         uri.addParam("currentSubPageCode", Val("tab-fret-number"));
@@ -212,7 +214,9 @@ void EditStaffType::enablePresets()
 
     fretFontName->setCurrentIndex(static_cast<int>(staffType.fretPresetIdx()));
     fretFontSize->setValue(staffType.fretFontSize());
-    fretY->setValue(staffType.fretFontUserY());
+    // Displayed: positive = up, negative = down
+    // Internal:  negative = up, positive = down
+    fretY->setValue(-staffType.fretFontUserY());
 }
 
 void EditStaffType::enableTextStyles()
@@ -268,7 +272,6 @@ Ret EditStaffType::loadScore(mu::engraving::MasterScore* score, const muse::io::
     }
     score->rebuildMidiMapping();
     for (mu::engraving::Score* s : score->scoreList()) {
-        s->setPlaylistDirty();
         s->setLayoutAll();
     }
     score->updateChannel();
@@ -352,7 +355,9 @@ void EditStaffType::setValues()
         }
         durFontName->setCurrentIndex(idx);
         durFontSize->setValue(staffType.durationFontSize());
-        durY->setValue(staffType.durationFontUserY());
+        // Displayed: positive = up, negative = down
+        // Internal:  negative = up, positive = down
+        durY->setValue(-staffType.durationFontUserY());
         // convert combined values of genDurations and slashStyle/stemless into noteValuesx radio buttons
         // Above/Below, Beside/Through and minim are only used if stems-and-beams
         // but set them from stt values anyway, to ensure preset matching
@@ -430,7 +435,9 @@ void EditStaffType::durFontNameChanged(int idx)
     qreal size, yOff;
     if (mu::engraving::StaffType::tabFontData(true, idx, size, yOff)) {
         durFontSize->setValue(size);
-        durY->setValue(yOff);
+        // Displayed: positive = up, negative = down
+        // Internal:  negative = up, positive = down
+        durY->setValue(-yOff);
     }
     updatePreview();
 }
@@ -440,7 +447,9 @@ void EditStaffType::fretFontNameChanged(int idx)
     qreal size, yOff;
     if (mu::engraving::StaffType::tabFontData(false, idx, size, yOff)) {
         fretFontSize->setValue(size);
-        fretY->setValue(yOff);
+        // Displayed: positive = up, negative = down
+        // Internal:  negative = up, positive = down
+        fretY->setValue(-yOff);
     }
     updatePreview();
 }
@@ -528,14 +537,18 @@ void EditStaffType::setFromDlg()
     if (staffType.group() == mu::engraving::StaffGroup::TAB) {
         staffType.setDurationFontName(durFontName->currentText());
         staffType.setDurationFontSize(durFontSize->value());
-        staffType.setDurationFontUserY(durY->value());
+        // Displayed: positive = up, negative = down
+        // Internal:  negative = up, positive = down
+        staffType.setDurationFontUserY(-durY->value());
         staffType.setFretUseTextStyle(textStyleRadioButton->isChecked());
         if (staffType.fretUseTextStyle()) {
             staffType.setFretTextStyle(getTextStyle(textStyleComboBox->currentText()));
         } else {
             staffType.setFretPresetIdx(fretFontName->currentIndex());
             staffType.setFretFontSize(fretFontSize->value());
-            staffType.setFretFontUserY(fretY->value());
+            // Displayed: positive = up, negative = down
+            // Internal:  negative = up, positive = down
+            staffType.setFretFontUserY(-fretY->value());
         }
         staffType.setLinesThrough(linesThroughRadio->isChecked());
         staffType.setMinimStyle(minimNoneRadio->isChecked() ? mu::engraving::TablatureMinimStyle::NONE

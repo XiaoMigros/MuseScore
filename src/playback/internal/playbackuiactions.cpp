@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,6 +25,8 @@
 #include "context/uicontext.h"
 #include "context/shortcutcontext.h"
 #include "types/translatablestring.h"
+#include "notation/inotationinteraction.h"
+#include "notation/inotationselection.h"
 
 using namespace mu::playback;
 using namespace mu::notation;
@@ -216,11 +218,7 @@ PlaybackUiActions::PlaybackUiActions(std::shared_ptr<PlaybackController> control
 
 void PlaybackUiActions::init()
 {
-    m_controller->actionCheckedChanged().onReceive(this, [this](const ActionCode& code) {
-        m_actionCheckedChanged.send({ code });
-    });
-
-    m_controller->isPlayAllowedChanged().onNotify(this, [this]() {
+    m_controller->isPlayAllowedChanged().onReceive(this, [this](bool) {
         const UiActionList& actions = actionsList();
 
         ActionCodeList codes;
@@ -297,9 +295,9 @@ bool PlaybackUiActions::actionEnabled(const UiAction& act) const
     return true;
 }
 
-bool PlaybackUiActions::actionChecked(const UiAction& act) const
+bool PlaybackUiActions::actionChecked(const UiAction&) const
 {
-    return m_controller->actionChecked(act.code);
+    return false;
 }
 
 muse::async::Channel<ActionCodeList> PlaybackUiActions::actionEnabledChanged() const

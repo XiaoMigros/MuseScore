@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,12 +31,11 @@
 
 #include "dynamic.h"
 #include "dynamichairpingroup.h"
+#include "measure.h"
 #include "score.h"
 #include "segment.h"
 #include "system.h"
 #include "text.h"
-
-#include "log.h"
 
 using namespace mu;
 using namespace muse::draw;
@@ -68,7 +67,6 @@ static const ElementStyle hairpinStyle {
     { Sid::hairpinLineWidth,                   Pid::LINE_WIDTH },
     { Sid::hairpinHeight,                      Pid::HAIRPIN_HEIGHT },
     { Sid::hairpinContHeight,                  Pid::HAIRPIN_CONT_HEIGHT },
-    { Sid::hairpinPosBelow,                    Pid::OFFSET },
     { Sid::hairpinLineStyle,                   Pid::LINE_STYLE },
     { Sid::hairpinLineDashLineLen,             Pid::DASH_LINE_LEN },
     { Sid::hairpinLineDashGapLen,              Pid::DASH_GAP_LEN },
@@ -93,8 +91,8 @@ static const ElementStyle hairpinStyle {
 //   HairpinSegment
 //---------------------------------------------------------
 
-HairpinSegment::HairpinSegment(Hairpin* sp, System* parent)
-    : TextLineBaseSegment(ElementType::HAIRPIN_SEGMENT, sp, parent, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
+HairpinSegment::HairpinSegment(Hairpin* sp)
+    : TextLineBaseSegment(ElementType::HAIRPIN_SEGMENT, sp, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
 {
     m_text->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
     m_endText->setTextStyleType(propertyDefault(Pid::TEXT_STYLE).value<TextStyleType>());
@@ -109,7 +107,7 @@ bool HairpinSegment::acceptDrop(EditData& data) const
     return false;
 }
 
-EngravingItem* HairpinSegment::drop(EditData& data)
+EngravingItem* HairpinSegment::drop(Transaction& tx, EditData& data)
 {
     EngravingItem* e = data.dropElement;
     if (!e->isDynamic()) {
@@ -118,7 +116,7 @@ EngravingItem* HairpinSegment::drop(EditData& data)
 
     if (EngravingItem* item = ldata()->itemSnappedAfter()) {
         if (item->isDynamic()) {
-            return item->drop(data);
+            return item->drop(tx, data);
         }
     }
 
@@ -128,7 +126,7 @@ EngravingItem* HairpinSegment::drop(EditData& data)
 
     Dynamic* d = toDynamic(e->clone());
     d->setTrack(hairpin()->track());
-    d->setParent(segment);
+    d->setOwnershipParent(segment);
     d->setVoiceAssignment(hairpin()->voiceAssignment());
     score()->undoAddElement(d);
 
@@ -273,11 +271,6 @@ EngravingObject* HairpinSegment::propertyDelegate(Pid pid) const
 Sid HairpinSegment::getPropertyStyle(Pid pid) const
 {
     switch (pid) {
-    case Pid::OFFSET:
-        if (hairpin()->isLineType()) {
-            return spanner()->placeAbove() ? Sid::hairpinLinePosAbove : Sid::hairpinLinePosBelow;
-        }
-        return spanner()->placeAbove() ? Sid::hairpinPosAbove : Sid::hairpinPosBelow;
     case Pid::BEGIN_TEXT:
         switch (hairpin()->hairpinType()) {
         default:
@@ -472,11 +465,6 @@ TextBase* HairpinSegment::findEndDynamicOrExpression(bool ignoreInvisible, bool 
 Sid Hairpin::getPropertyStyle(Pid pid) const
 {
     switch (pid) {
-    case Pid::OFFSET
-        : if (isLineType()) {
-            return placeAbove() ? Sid::hairpinLinePosAbove : Sid::hairpinLinePosBelow;
-        }
-        return placeAbove() ? Sid::hairpinPosAbove : Sid::hairpinPosBelow;
     case Pid::BEGIN_TEXT:
         switch (hairpinType()) {
         default:
@@ -602,13 +590,12 @@ void Hairpin::setHairpinType(HairpinType val)
 //---------------------------------------------------------
 
 static const ElementStyle hairpinSegmentStyle {
-    { Sid::hairpinPosBelow, Pid::OFFSET },
     { Sid::hairpinMinDistance, Pid::MIN_DISTANCE },
 };
 
-LineSegment* Hairpin::createLineSegment(System* parent)
+LineSegment* Hairpin::createLineSegment()
 {
-    HairpinSegment* h = new HairpinSegment(this, parent);
+    HairpinSegment* h = new HairpinSegment(this);
     h->setTrack(track());
     h->initElementStyle(&hairpinSegmentStyle);
     return h;
@@ -846,5 +833,13 @@ muse::TranslatableString Hairpin::subtypeUserName() const
     default:
         return TranslatableString("engraving/hairpintype", "Custom");
     }
+}
+
+Sid Hairpin::defaultPosSid() const
+{
+    if (isLineType()) {
+        return placeAbove() ? Sid::hairpinLinePosAbove : Sid::hairpinLinePosBelow;
+    }
+    return placeAbove() ? Sid::hairpinPosAbove : Sid::hairpinPosBelow;
 }
 }

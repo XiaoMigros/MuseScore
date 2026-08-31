@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,7 @@
 #include "engraving/dom/fret.h"
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/masterscore.h"
+#include "engraving/dom/measure.h"
 
 #include "utils/scorerw.h"
 
@@ -61,7 +62,7 @@ public:
             diagram->updateDiagram(chord);
 
             diagram->setTrack(0);
-            diagram->setParent(segment);
+            diagram->setOwnershipParent(segment);
 
             diagram->assignNewEID();
 
@@ -92,7 +93,7 @@ public:
         diagram->updateDiagram(chord);
 
         diagram->setTrack(0);
-        diagram->setParent(segment);
+        diagram->setOwnershipParent(segment);
 
         diagram->assignNewEID();
 

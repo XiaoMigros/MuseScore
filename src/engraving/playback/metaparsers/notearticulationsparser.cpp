@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 
 #include "notearticulationsparser.h"
 
+#include "dom/measure.h"
 #include "dom/note.h"
 #include "dom/spanner.h"
 #include "dom/laissezvib.h"
@@ -69,7 +70,7 @@ void NoteArticulationsParser::doParse(const EngravingItem* item, const Rendering
         return;
     }
 
-    parsePlayingTechnique(ctx, result);
+    parsePlayingTechnique(ctx, note->track(), result);
     parseGhostNote(note, ctx, result);
     parseNoteHead(note, ctx, result);
     parseSymbols(note, ctx, result);
@@ -131,10 +132,11 @@ ArticulationType NoteArticulationsParser::articulationTypeByNoteheadGroup(const 
     }
 }
 
-void NoteArticulationsParser::parsePlayingTechnique(const RenderingContext& ctx, mpe::ArticulationMap& result, bool sustainAllowed)
+void NoteArticulationsParser::parsePlayingTechnique(const RenderingContext& ctx, const track_idx_t trackIdx,
+                                                    mpe::ArticulationMap& result, bool sustainAllowed)
 {
     const int chordPosTickWithOffset = ctx.nominalPositionStartTick + ctx.positionTickOffset;
-    const std::pair<timestamp_t, PlayingTechniqueType> tech = ctx.playbackCtx->playingTechnique(ctx.score, chordPosTickWithOffset);
+    const std::pair<timestamp_t, PlayingTechniqueType> tech = ctx.playbackCtx->playingTechnique(trackIdx, chordPosTickWithOffset);
     if (tech.second == PlayingTechniqueType::HandbellsLV && !sustainAllowed) {
         return;
     }
@@ -153,7 +155,7 @@ void NoteArticulationsParser::parsePlayingTechnique(const RenderingContext& ctx,
     duration_t duration = ctx.nominalDuration;
 
     if (tech.second == PlayingTechniqueType::HandbellsLV) {
-        const timestamp_t dampTime = ctx.playbackCtx->findPlayingTechniqueTimestamp(ctx.score, PlayingTechniqueType::HandbellsDamp,
+        const timestamp_t dampTime = ctx.playbackCtx->findPlayingTechniqueTimestamp(trackIdx, PlayingTechniqueType::HandbellsDamp,
                                                                                     chordPosTickWithOffset);
         timestamp = tech.first;
         duration = dampTime > 0 ? dampTime - timestamp : mpe::INFINITE_DURATION;

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,10 +38,61 @@ using namespace mu::engraving;
 //   Page
 //---------------------------------------------------------
 
-Page::Page(RootItem* parent)
+Page::Page(Score* parent)
     : EngravingItem(ElementType::PAGE, parent, ElementFlag::NOT_SELECTABLE)
 {
+    // Owned by its score right away; Score::m_pages manages page lifetime
+    setOwnershipParent(parent);
+
     m_bspTreeValid = false;
+}
+
+void Page::setOwnershipParent(Score* score)
+{
+    EngravingItem::setOwnershipParent(score);
+}
+
+EngravingItem* Page::layoutParent() const
+{
+    // A page is the top of the visual hierarchy: it is not laid out inside anything.
+    return nullptr;
+}
+
+EngravingItem* Page::accessibleParentItem() const
+{
+    // Above the visual hierarchy sits the root item, which exists only to head the
+    // accessibility tree. (The dummy's page hangs off the dummy's own root item, which
+    // the base implementation finds as its raw parent.)
+    EngravingItem* parent = EngravingItem::accessibleParentItem();
+
+    return parent ? parent : score()->rootItem();
+}
+
+Page::~Page()
+{
+    for (System* s : m_systems) {
+        if (s->page() == this) {
+            s->setPage(nullptr);
+        }
+    }
+}
+
+MeasureBase* Page::firstMeasureBase() const
+{
+    if (m_systems.empty()) {
+        return nullptr;
+    }
+    System* firstSys = m_systems.front();
+    return firstSys ? firstSys->first() : nullptr;
+}
+
+MeasureBase* Page::lastMeasureBase() const
+{
+    if (m_systems.empty()) {
+        return nullptr;
+    }
+    System* lastSys = m_systems.back();
+    return lastSys ? lastSys->last() : nullptr;
 }
 
 //---------------------------------------------------------
@@ -70,8 +121,18 @@ std::vector<EngravingItem*> Page::items(const PointF& point)
 
 void Page::appendSystem(System* s)
 {
-    s->moveToPage(this);
+    s->setPage(this);
     m_systems.push_back(s);
+}
+
+EngravingItemList Page::accessibleChildren() const
+{
+    // The systems are owned by the score, but it is the page that places them, so the
+    // page is where the accessibility tree finds them.
+    EngravingItemList children = EngravingItem::accessibleChildren();
+    children.insert(children.end(), m_systems.begin(), m_systems.end());
+
+    return children;
 }
 
 #ifndef ENGRAVING_NO_ACCESSIBILITY
@@ -153,12 +214,21 @@ void Page::doRebuildBspTree()
 }
 
 //---------------------------------------------------------
+//   getDisplayPageNumber
+//---------------------------------------------------------
+
+int Page::getDisplayPageNumber() const
+{
+    return static_cast<int>(m_pageNumber) + 1 + score()->pageNumberOffset();
+}
+
+//---------------------------------------------------------
 //   isOdd
 //---------------------------------------------------------
 
 bool Page::isOdd() const
 {
-    return (m_pageNumber + 1 + score()->pageNumberOffset()) & 1;
+    return getDisplayPageNumber() & 1;
 }
 
 //---------------------------------------------------------
@@ -253,4 +323,27 @@ RectF Page::tbbox() const
 Fraction Page::endTick() const
 {
     return m_systems.empty() ? Fraction(-1, 1) : m_systems.back()->measures().back()->endTick();
+}
+
+Measure* Page::firstMeasure() const
+{
+    for (System* s : m_systems) {
+        if (Measure* m = s->firstMeasure()) {
+            return m;
+        }
+    }
+
+    return nullptr;
+}
+
+bool Page::isLocked() const
+{
+    MeasureBase* firstMeasure = firstMeasureBase();
+    return firstMeasure ? firstMeasure->isStartOfPageLock() : false;
+}
+
+const RangeLock* Page::pageLock() const
+{
+    MeasureBase* firstMeasure = firstMeasureBase();
+    return firstMeasure ? firstMeasure->pageLock() : nullptr;
 }

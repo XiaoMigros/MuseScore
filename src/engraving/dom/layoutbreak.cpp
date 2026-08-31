@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,6 +21,8 @@
  */
 
 #include "log.h"
+
+#include "iengravingconfiguration.h" // IWYU pragma: keep
 
 #include "types/typesconv.h"
 
@@ -75,9 +77,9 @@ LayoutBreak::LayoutBreak(const LayoutBreak& lb)
     m_showCourtesy           = lb.m_showCourtesy;
 }
 
-void LayoutBreak::setParent(MeasureBase* parent)
+void LayoutBreak::setOwnershipParent(MeasureBase* parent)
 {
-    EngravingItem::setParent(parent);
+    EngravingItem::setOwnershipParent(parent);
 }
 
 char16_t LayoutBreak::iconCode() const
@@ -119,7 +121,7 @@ bool LayoutBreak::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* LayoutBreak::drop(EditData& data)
+EngravingItem* LayoutBreak::drop(Transaction&, EditData& data)
 {
     EngravingItem* e = data.dropElement;
     score()->undoChangeElement(this, e);
@@ -162,7 +164,6 @@ bool LayoutBreak::setProperty(Pid propertyId, const PropertyValue& v)
         break;
     case Pid::PAUSE:
         setPause(v.toDouble());
-        score()->setUpTempoMapLater();
         break;
     case Pid::START_WITH_LONG_NAMES:
         setStartWithLongNames(v.toBool());
@@ -187,7 +188,7 @@ bool LayoutBreak::setProperty(Pid propertyId, const PropertyValue& v)
         triggerLayoutToEnd();
     } else {
         triggerLayout();
-        if (explicitParent() && measure()->next()) {
+        if (ownershipParent() && measure()->next()) {
             measure()->next()->triggerLayout();
         }
     }
@@ -236,24 +237,6 @@ muse::TranslatableString LayoutBreak::subtypeUserName() const
 String LayoutBreak::accessibleInfo() const
 {
     return translatedSubtypeUserName();
-}
-
-void LayoutBreak::added()
-{
-    IF_ASSERT_FAILED(score()) {
-        return;
-    }
-
-    score()->setUpTempoMapLater();
-}
-
-void LayoutBreak::removed()
-{
-    IF_ASSERT_FAILED(score()) {
-        return;
-    }
-
-    score()->setUpTempoMapLater();
 }
 
 Font LayoutBreak::font() const

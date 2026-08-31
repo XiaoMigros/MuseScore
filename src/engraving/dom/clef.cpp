@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,8 +29,9 @@
 
 #include "translation.h"
 
-#include "../editing/undo.h"
+#include "../editing/editclef.h"
 #include "../editing/editproperty.h"
+#include "../editing/transaction/transaction.h"
 #include "../types/typesconv.h"
 
 #include "ambitus.h"
@@ -128,7 +129,7 @@ bool Clef::acceptDrop(EditData& data) const
 //   drop
 //---------------------------------------------------------
 
-EngravingItem* Clef::drop(EditData& data)
+EngravingItem* Clef::drop(Transaction& tx, EditData& data)
 {
     EngravingItem* e = data.dropElement;
     Clef* c = 0;
@@ -136,7 +137,7 @@ EngravingItem* Clef::drop(EditData& data)
         Clef* clef = toClef(e);
         ClefType stype  = clef->clefType();
         if (clefType() != stype) {
-            score()->undoChangeClef(staff(), this, stype);
+            EditClef::undoChangeClef(tx, score(), staff(), this, stype);
             c = this;
         }
     } else if (e->isAmbitus()) {
@@ -148,7 +149,7 @@ EngravingItem* Clef::drop(EditData& data)
                 score()->undoRemoveElement(segm->element(track()));
             }
             Ambitus* r = Factory::createAmbitus(segm);
-            r->setParent(segm);
+            r->setOwnershipParent(segm);
             r->setTrack(track());
             score()->undoAddElement(r);
         }
@@ -242,14 +243,14 @@ void Clef::undoSetShowCourtesy(bool v)
 Clef* Clef::otherClef()
 {
     // if not in a clef-segment-measure hierarchy, do nothing
-    if (!explicitParent() || !explicitParent()->isSegment()) {
+    if (!ownershipParent() || !ownershipParent()->isSegment()) {
         return nullptr;
     }
-    Segment* segm = toSegment(explicitParent());
-    if (!segm->explicitParent() || !segm->explicitParent()->isMeasure()) {
+    Segment* segm = toSegment(ownershipParent());
+    if (!segm->ownershipParent() || !segm->ownershipParent()->isMeasure()) {
         return 0;
     }
-    Measure* meas = toMeasure(segm->explicitParent());
+    Measure* meas = toMeasure(segm->ownershipParent());
     Measure* otherMeas = nullptr;
     Segment* otherSegm = nullptr;
     Fraction segmTick  = segm->tick();
@@ -342,7 +343,7 @@ void Clef::changeClefToBarlinePos(ClefToBarlinePosition newPos)
 {
     m_clefToBarlinePosition = newPos;
 
-    if (!explicitParent()) {
+    if (!ownershipParent()) {
         return;
     }
 
@@ -390,7 +391,8 @@ void Clef::manageExclusionFromParts(bool exclude)
         if (!nextEl) {
             nextEl = nextElement();
         }
-        score()->undoChangeClef(staff(), nextEl, clefType(), false, this);
+        Transaction& tx = score()->transactionManager()->currentOrDummyTransaction();
+        EditClef::undoChangeClef(tx, score(), staff(), nextEl, clefType(), false, this);
     }
 }
 

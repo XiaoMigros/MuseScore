@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,7 +38,7 @@ class VibratoSegment final : public LineSegment
     DECLARE_CLASSOF(ElementType::VIBRATO_SEGMENT)
 
 public:
-    VibratoSegment(Vibrato* sp, System* parent);
+    VibratoSegment(Vibrato* sp);
 
     VibratoSegment* clone() const override { return new VibratoSegment(*this); }
 
@@ -53,8 +53,6 @@ public:
     void symbolLine(SymId start, SymId fill, SymId end);
 
 private:
-    virtual Sid getPropertyStyle(Pid) const override;
-
     SymIdList m_symbols;
 };
 
@@ -73,14 +71,16 @@ public:
 
     Vibrato* clone() const override { return new Vibrato(*this); }
 
-    LineSegment* createLineSegment(System* parent) override;
+    Anchor anchor() const override { return Anchor::SEGMENT; }
+
+    LineSegment* createLineSegment() override;
     PointF linePos(Grip grip, System** system) const override;
 
     void setVibratoType(VibratoType tt) { m_vibratoType = tt; }
     VibratoType vibratoType() const { return m_vibratoType; }
     String vibratoTypeUserName() const;
 
-    Segment* segment() const { return (Segment*)explicitParent(); }
+    Segment* segment() const { return (Segment*)ownershipParent(); }
 
     PropertyValue getProperty(Pid propertyId) const override;
     bool setProperty(Pid propertyId, const PropertyValue&) override;
@@ -91,9 +91,6 @@ public:
     TranslatableString subtypeUserName() const override;
 
 private:
-
-    Sid getPropertyStyle(Pid) const override;
-
     VibratoType m_vibratoType = VibratoType::GUITAR_VIBRATO;
 };
 } // namespace mu::engraving

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2025 MuseScore Limited
+ * Copyright (C) 2025 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -35,7 +35,7 @@ public:
     IndicatorIcon(const ElementType& type, System* parent = nullptr, ElementFlags = ElementFlag::NOTHING);
     IndicatorIcon* clone() const override { return new IndicatorIcon(*this); }
 
-    System* system() const { return toSystem(explicitParent()); }
+    System* system() const { return toSystem(ownershipParent()); }
 
     struct LayoutData : public EngravingItem::LayoutData {
         ld_field<RectF> rangeRect = { "[IndicatorIcon] rangeRect", RectF() };
@@ -43,6 +43,8 @@ public:
     DECLARE_LAYOUTDATA_METHODS(IndicatorIcon)
 
     muse::draw::Font font() const;
+
+    Fraction tick() const override;
 
     virtual char16_t iconCode() const { return 0x000; }
 

@@ -5,7 +5,7 @@
  * MuseScore Studio
  * Music Composition & Notation
  *
- * Copyright (C) 2021 MuseScore Limited
+ * Copyright (C) 2021 MuseScore Limited and others
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -103,7 +103,7 @@ std::vector<LineF> SystemDivider::dragAnchorLines() const
 {
     std::vector<LineF> result;
 
-    const System* system = toSystem(parentItem());
+    const System* system = this->system();
     IF_ASSERT_FAILED(system) {
         return result;
     }
