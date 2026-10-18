@@ -446,6 +446,26 @@ bool FinaleParser::processEntryInfo(EntryInfoPtr::InterpretedIterator result, En
         logger()->logWarning(String(u"Given ChordRest duration not supported in MuseScore"));
         return false;
     }
+    // An entry that completes a tuplet ends at the tuplet's endpoint, even if its written duration would carry it further.
+    // Write the chord with the longest duration that fits, so that it does not overlap the next entry.
+    if (!isGrace && entryInfo->actualDuration != entryInfo->untruncatedActualDuration && entryInfo->cumulativeRatio != 0) {
+        const Fraction fittedLen = musxFractionToFraction(entryInfo->actualDuration / entryInfo->cumulativeRatio).reduced();
+        const TDuration fitted(fittedLen, /*truncate*/ true);
+        if (fitted.isValid()) {
+            d = fitted;
+            if (fitted.fraction() == fittedLen) {
+                logger()->logInfo(String(u"Entry %1 overfills its tuplet. Its duration is shortened to fit the tuplet.").arg(
+                                      currentEntryNumber), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
+            } else {
+                logger()->logWarning(String(u"Entry %1 overfills its tuplet, and no single duration fills the rest of the tuplet. "
+                                            u"Its duration is shortened to the longest that fits.").arg(currentEntryNumber),
+                                     m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
+            }
+        } else {
+            logger()->logWarning(String(u"Entry %1 overfills its tuplet, and no duration fits the rest of the tuplet.").arg(
+                                     currentEntryNumber), m_doc, entryInfo.getStaff(), entryInfo.getMeasure());
+        }
+    }
 
     ChordRest* cr = nullptr;
     int crossStaffMove = 0;
