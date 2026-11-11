@@ -825,7 +825,7 @@ void FinaleParser::importSmartShapes()
                 const SlurStyleType slurStyleType = smartShape->calcIsDashed() ? SlurStyleType::Dashed : SlurStyleType::Solid;
                 setAndStyleProperty(slur, Pid::SLUR_STYLE_TYPE, slurStyleType);
                 if (importCustomPositions()) {
-                    setAndStyleProperty(slur, Pid::SLUR_DIRECTION, directionVFromShapeContour(smartShape->calcContourDirection()));
+                    setAndStyleProperty(slur, Pid::SLUR_DIRECTION, directionVFromShapeContour(smartShape->calcDefinitionContourDirection()));
                 }
                 if (importAllPositions()) {
                     if (slur->slurDirection() == DirectionV::AUTO) {
